@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Data & artifacts (veliki fajlovi — eksterni disk/cloud, ne git)
+data/
+models/*.h5
+models/*.keras
+models/*.tflite
+results/*.npy
+results/features/
+
+# Rezultati koji IDU u git: results/*.csv, results/*.png, models/*.json
+
+# ESP-IDF
+firmware/esp32s3_asd/build/
+firmware/esp32s3_asd/managed_components/
+firmware/esp32s3_asd/sdkconfig
+firmware/esp32s3_asd/sdkconfig.old
+firmware/esp32s3_asd/dependencies.lock
+
+# OS/editor
+.vscode/
+Thumbs.db

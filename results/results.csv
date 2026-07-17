@@ -1,0 +1,4 @@
+tag,machine,variant,seed,score,precision,n_params,auc_source,auc_target,pauc,hmean
+fan_tiny32_s0,fan,tiny32,0,mse,fp32,44840,0.572,0.4412,0.5237,0.5064
+fan_tiny32_s0,fan,tiny32,0,mse,fp32_tflite,44840,0.572,0.4412,0.5237,0.5064
+fan_tiny32_s0,fan,tiny32,0,mse,int8,44840,0.572,0.4414,0.5237,0.5065
