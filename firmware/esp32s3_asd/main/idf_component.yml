@@ -1,0 +1,5 @@
+## Managed komponente (idf.py ih sam povuče pri prvom buildu)
+dependencies:
+  espressif/esp-tflite-micro: "^1.3.3"   # TFLM + esp-nn optimizovani kerneli (PIE)
+  espressif/esp-dsp: "^1.6.0"            # FFT (kasnija optimizacija front-enda)
+  idf: ">=5.1"
