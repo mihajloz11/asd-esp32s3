@@ -29,7 +29,9 @@ def sweep_status(machine: str) -> str:
     log = RESULTS / f"sweep_{machine}.log"
     if not log.exists():
         return "u redu čekanja"
-    txt = log.read_text(encoding="utf-8", errors="ignore")
+    raw = log.read_bytes()  # PowerShell *>> pise UTF-16 LE sa BOM-om
+    txt = raw.decode("utf-16") if raw[:2] in (b"\xff\xfe", b"\xfe\xff") \
+        else raw.decode("utf-8", "ignore")
     if "GOTOVO" in txt:
         return "završeno ✔"
     m_var = re.findall(r"=== \w+ / (\w+) : trening", txt)
