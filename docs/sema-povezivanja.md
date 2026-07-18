@@ -1,0 +1,87 @@
+# Šema povezivanja — INMP441 + INA226 na ESP32-S3 (N32R16V)
+
+Vizuelna šema: [sema-povezivanja.svg](sema-povezivanja.svg)
+Sve ide na protoboard MB-102, žice do mikrofona **< 10 cm**.
+
+## 1. INMP441 mikrofon (I2S) — ovo je stalna veza, treba ti odmah
+
+INMP441 breakout ima 6 pinova. Povezuješ ovako:
+
+| INMP441 pin | Ide na | Napomena |
+|---|---|---|
+| **VDD** | 3V3 | + **100 nF keramika i 10 µF** između VDD i GND, ŠTO BLIŽE mikrofonu |
+| **GND** | GND | |
+| **SCK** (nekad piše BCLK) | **GPIO 4** | I2S bit clock |
+| **WS** (nekad LRCL) | **GPIO 5** | I2S word select |
+| **SD** (nekad DOUT) | **GPIO 6** | I2S data → u S3 |
+| **L/R** | **GND** | = lijevi kanal. Firmware čita lijevi slot — ako ovo visi u vazduhu, dobijaš tišinu (rizik C1) |
+
+```
+INMP441                            ESP32-S3
+┌──────────┐                      ┌──────────────┐
+│ VDD ●────┼──────┬──── 3V3 ──────┤ 3V3          │
+│          │  100nF + 10µF        │              │
+│ GND ●────┼──────┴──── GND ──────┤ GND          │
+│ SCK ●────┼─────────────────────►│ GPIO 4       │
+│ WS  ●────┼─────────────────────►│ GPIO 5       │
+│ SD  ●────┼─────────────────────►│ GPIO 6       │
+│ L/R ●────┼──── na GND!          │              │
+└──────────┘                      └──────────────┘
+```
+
+Test poslije lemljenja: snimi 5 s WAV na flash, otvori u Audacity (prije ikakvog ML-a).
+
+## 2. INA226 senzor struje — SAMO za E5 mjerenja energije, ne treba za razvoj
+
+INA226 mjeri struju kroz svoj **shunt** (IN+ → IN−), tj. mora biti **u seriji sa
+napajanjem** ploče. Dvije veze: mjerna (shunt) + I2C (očitavanje).
+
+| INA226 pin | Ide na | Napomena |
+|---|---|---|
+| **VCC** | 3V3 (S3) | napajanje logike samog senzora |
+| **GND** | GND (zajednička masa sa izvorom i S3!) | |
+| **SDA** | **GPIO 8** | I2C (moduli imaju pull-up otpornike na sebi) |
+| **SCL** | **GPIO 9** | I2C, adresa default 0x40 (A0=A1=GND) |
+| **IN+** | + izvora 3.3 V | izvor: lab. napajanje / baterija + regulator |
+| **IN−** | **3V3 pin ploče S3** | + **≥470 µF elektrolit** između IN− i GND (rizik C7 — brownout) |
+
+```
+  3.3 V izvor                INA226                     ESP32-S3
+┌────────────┐          ┌──────────────┐            ┌──────────────┐
+│         + ●┼─────────►│ IN+     IN− ●┼─────┬─────►│ 3V3 (napaja  │
+│            │          │   (shunt)    │  ≥470µF    │  cijelu ploču)│
+│         − ●┼────┬─────┤ GND          │     │      │              │
+└────────────┘    │     │ VCC ●────────┼─── (3V3)   │              │
+                  │     │ SDA ●────────┼───────────►│ GPIO 8       │
+                  └─────┤ SCL ●────────┼───────────►│ GPIO 9       │
+                   GND  └──────────────┘        ────┤ GND          │
+                  (zajednička masa za sve!)         └──────────────┘
+```
+
+**Pravila za E5 mjerenje (iz plana, sekcija 6.2/D2):**
+1. **USB OTKAČEN** sa S3 tokom mjerenja — USB-UART most i njegov LED zagađuju
+   potrošnju. Logove čitaš poslije (iz flasha) ili preko posebnog UART adaptera.
+2. Napajanje ide na **3V3 pin direktno** (zaobilazi onboard LDO — to i hoćeš,
+   mjeriš samo modul). **Nikad USB i externo 3V3 istovremeno.**
+3. Wi-Fi/BT isključeni, CPU fiksno 240 MHz (već u sdkconfig).
+4. Za razvoj (van mjerenja): normalno preko USB-a, INA226 ti tada ne treba —
+   možeš je ostaviti povezanu samo na I2C, a 3V3 pin vratiti na USB napajanje.
+
+## 3. Opciono: LED + taster (demo na odbrani)
+
+| Šta | Ide na | Napomena |
+|---|---|---|
+| LED (+ otpornik 220 Ω na katodu→GND) | **GPIO 2** | svijetli = normal, gasi = anomalija |
+| Taster | **GPIO 10** ↔ GND | interni pull-up; bira izvor: mikrofon / klipovi sa flasha |
+
+## 4. Šta NIKAKO
+
+- **GPIO 35, 36, 37 ne koristiti ni za šta** — zauzeti oktalnim PSRAM-om (N32R16V).
+- Strapping pinove 0, 3, 45, 46 izbjegavati.
+- Ne dirati eFuse / VDD_SPI (1.8 V "V" varijanta) — pogrešan SPIRAM mod u
+  sdkconfig-u daje samo boot-loop (vrati config), ali eFuse je TRAJNO.
+
+## 5. Isti spoj na ESP32 DevKit V1 (E4 kontrola)
+
+Identična logika, samo drugi pinovi: SCK→26, WS→25, SD→33, SDA→21, SCL→22
+(GPIO 6–11 su tamo flash — zabranjeni). Vidi pins.h — bira se automatski pri buildu.
