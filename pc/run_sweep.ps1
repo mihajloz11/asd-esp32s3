@@ -4,17 +4,18 @@
 param(
     [Parameter(Mandatory = $true)][string]$Machine,
     [int]$Epochs = 100,
+    [int]$Seed = 0,
     [string[]]$Variants = @("baseline", "tiny64", "tiny32", "tiny16", "tiny32b4")
 )
 $py = (Resolve-Path (Join-Path $PSScriptRoot "..\.venv\Scripts\python.exe")).Path
 $data = "..\data\dcase2026_dev\$Machine"
 
 foreach ($v in $Variants) {
-    Write-Host "=== $Machine / $v : trening ($Epochs epoha) ==="
-    & $py -m asd.train --data $data --variant $v --epochs $Epochs
+    Write-Host "=== $Machine / $v : trening ($Epochs epoha, seed $Seed) ==="
+    & $py -m asd.train --data $data --variant $v --epochs $Epochs --seed $Seed
     if ($LASTEXITCODE -ne 0) { Write-Host "TRAIN FAIL: $v" ; continue }
     Write-Host "=== $Machine / $v : PTQ int8 ==="
-    & $py -m asd.quantize --data $data --tag "${Machine}_${v}_s0"
+    & $py -m asd.quantize --data $data --tag "${Machine}_${v}_s${Seed}"
     if ($LASTEXITCODE -ne 0) { Write-Host "QUANT FAIL: $v" }
 }
 Write-Host "=== GOTOVO: $Machine - vidi results\results.csv ==="
