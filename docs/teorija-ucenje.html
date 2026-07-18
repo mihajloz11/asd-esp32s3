@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teorija iza master rada — ML + Embedded, jasno i redom</title>
+<style>
+  :root {
+    --bg: #fafafa; --card: #ffffff; --text: #1f2328; --muted: #57606a;
+    --accent: #0b57d0; --accent2: #146c2e; --warn: #b3261e;
+    --box: #eef3fe; --box2: #e9f5ec; --border: #d8dee4; --code: #f0f2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c; --card: #1e2126; --text: #e6e8eb; --muted: #9aa4af;
+      --accent: #7cacf8; --accent2: #6dd58c; --warn: #f2b8b5;
+      --box: #1d2635; --box2: #1d2b21; --border: #343a42; --code: #262b33;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.65 "Segoe UI", system-ui, sans-serif;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); margin-bottom: 28px; }
+  h2 {
+    font-size: 1.45rem; margin: 44px 0 8px; padding-top: 18px;
+    border-top: 2px solid var(--border);
+  }
+  h3 { font-size: 1.12rem; margin: 26px 0 6px; color: var(--accent); }
+  p { margin: 8px 0; }
+  code {
+    background: var(--code); padding: 1px 6px; border-radius: 5px;
+    font-size: 0.88em; font-family: Consolas, monospace;
+  }
+  .mi {
+    background: var(--box2); border-left: 4px solid var(--accent2);
+    padding: 10px 14px; margin: 12px 0; border-radius: 0 8px 8px 0;
+  }
+  .mi b:first-child { color: var(--accent2); }
+  .idea {
+    background: var(--box); border-left: 4px solid var(--accent);
+    padding: 10px 14px; margin: 12px 0; border-radius: 0 8px 8px 0;
+  }
+  .pipe {
+    background: var(--code); border-radius: 10px; padding: 14px 18px;
+    font-family: Consolas, monospace; font-size: 0.85rem; overflow-x: auto;
+    white-space: pre; line-height: 1.5; margin: 14px 0;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 0.93rem; }
+  th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code); }
+  .toc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 22px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc ol { margin: 6px 0; padding-left: 22px; }
+  .warn { color: var(--warn); font-weight: 600; }
+  .q { font-style: italic; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Teorija iza master rada</h1>
+<div class="subtitle">Detekcija anomalija zvuka mašina na ESP32-S3 — svi pojmovi koje projekat koristi,
+objašnjeni od nule, uz oznaku šta smo tačno mi uradili. Zelene kutije = naš projekat.</div>
+
+<div class="toc">
+<b>Sadržaj</b>
+<ol>
+  <li><a href="#slika">Velika slika — šta sistem uopšte radi</a></li>
+  <li><a href="#ml1">Vrste mašinskog učenja — i zašto je naš problem poseban</a></li>
+  <li><a href="#featuri">Od zvuka do brojeva — featuring</a></li>
+  <li><a href="#ae">Autoencoder — model koji uči šta je „normalno"</a></li>
+  <li><a href="#trening">Kako se model trenira</a></li>
+  <li><a href="#metrike">Kako znamo da li valja — AUC, pAUC, prag</a></li>
+  <li><a href="#kvant">Kvantizacija — od 1 MB do 68 KB</a></li>
+  <li><a href="#tflm">TFLM — kako neuronska mreža radi na mikrokontroleru</a></li>
+  <li><a href="#esp">Embedded strana — memorije, I2S, DMA, FreeRTOS</a></li>
+  <li><a href="#dsp">DSP — FFT, prozori, streaming</a></li>
+  <li><a href="#metod">Zašto rezultatima vjerujemo — metodologija</a></li>
+  <li><a href="#recnik">Mini rječnik za brzo podsjećanje</a></li>
+</ol>
+</div>
+
+<h2 id="slika">1. Velika slika</h2>
+<p>Cilj: jeftin uređaj koji sluša mašinu (ventilator, pumpu, ležaj) i sam kaže
+„ovo ne zvuči normalno" — bez interneta, bez servera. Cijeli lanac:</p>
+<div class="pipe">mikrofon → digitalni zvuk (16000 brojeva u sekundi)
+        → featuri (kompaktan opis zvuka, log-mel)
+        → autoencoder (mreža trenirana SAMO na normalnom zvuku)
+        → anomaly score (koliko je zvuk „čudan")
+        → poređenje s pragom → LED / alarm</div>
+<p>Lijeva polovina lanca se <b>razvija na PC-u u Pythonu</b> (trening, eksperimenti),
+a onda se <b>cijeli lanac preseljava u C na ESP32-S3</b>. Najveći dio inženjerskog
+posla je upravo to preseljenje: da na uređaju sa 512 KB RAM-a radi isto što i na
+laptopu, i da to možemo dokazati.</p>
+
+<h2 id="ml1">2. Vrste mašinskog učenja — i zašto je naš problem poseban</h2>
+
+<h3>Supervised learning (nadgledano učenje)</h3>
+<p>Modelu daješ parove <i>ulaz → tačan odgovor</i> (slika → „mačka", zvuk → „kvar").
+Model uči preslikavanje. Ovo je najčešći i najlakši režim — ali traži da za svaki
+trening primjer <b>znaš odgovor</b> (labelu).</p>
+
+<h3>Unsupervised learning (nenadgledano učenje)</h3>
+<p>Modelu daješ samo ulaze, bez odgovora. Model uči <b>strukturu podataka</b> —
+šta je tipično, šta se ponavlja, kako se podaci grupišu.</p>
+
+<h3>Zašto mi NE MOŽEMO supervised?</h3>
+<p>Za supervised „detektor kvara" trebali bi nam snimci kvarova — puno njih, svih
+vrsta. U realnosti: mašine se rijetko kvare, kvarovi su međusobno različiti, i
+najgore — <b>budući kvar može zvučati kako niko nije predvidio</b>. Zato se
+oblast (DCASE Challenge) definisala ovako:</p>
+<div class="idea"><b>Anomaly detection postavka:</b> treniraj SAMO na normalnom zvuku.
+Nauči kako „normalno" izgleda. Sve što odstupa od naučenog = anomalija.
+Ne moraš unaprijed znati kako kvar zvuči.</div>
+<div class="mi"><b>Mi:</b> koristimo <b>unsupervised</b> pristup — DCASE 2026 dataset ima u
+trening dijelu isključivo normalne zvuke (npr. 990 klipova ventilatora po 10 s).
+Anomalije postoje samo u test dijelu, i koristimo ih JEDINO za ocjenjivanje,
+nikad za učenje.</div>
+
+<h3>Domain shift (pomak domena)</h3>
+<p>Model treniran na mašini u jednim uslovima (brzina, opterećenje, pozadinska buka)
+sretne istu mašinu u drugim uslovima. Zvuk se promijenio, a mašina je i dalje
+ispravna — model to lako pobrka s anomalijom. DCASE zato dijeli test na
+<b>source</b> domen (uslovi kao u treningu, puno primjera) i <b>target</b> domen
+(promijenjeni uslovi, svega par primjera u treningu) i ocjenjuje oba posebno.</p>
+<div class="mi"><b>Mi:</b> računamo AUC odvojeno za source i target — to je standardni
+DCASE protokol i vidjeli smo ga u praksi: naš fan model ima osjetno bolji source
+nego target AUC, što je poznato i za zvanične baseline sisteme.</div>
+
+<h2 id="featuri">3. Od zvuka do brojeva — featuring</h2>
+<p>Neuronskoj mreži ne daješ sirovi zvuk (160 000 uzoraka za 10 s) — daješ joj
+<b>featuri</b>: kompaktan, informativan opis. Za zvuk je standard spektralni opis:</p>
+
+<h3>Uzorkovanje (sampling)</h3>
+<p>Mikrofon daje kontinualan napon; ADC ga mjeri 16 000 puta u sekundi (16 kHz).
+Po Nyquistu tako hvatamo frekvencije do 8 kHz — dovoljno za zvuk mašina.</p>
+
+<h3>STFT — Short-Time Fourier Transform</h3>
+<p>Furijeova transformacija kaže koje frekvencije signal sadrži, ali za cijeli
+signal odjednom. Zvuk mašine se mijenja kroz vrijeme, pa signal siječemo na kratke
+<b>frejmove</b> (kod nas 1024 uzorka = 64 ms) sa preklapanjem od 50 % (hop 512),
+i FFT radimo na svakom frejmu. Rezultat je <b>spektrogram</b>: slika
+vrijeme × frekvencija.</p>
+
+<h3>Mel skala</h3>
+<p>Ljudsko uho ne čuje linearno: razliku 100→200 Hz čuješ ogromnu, a 7000→7100 Hz
+jedva. <b>Mel filterbanka</b> grupiše FFT binove u perceptualno ravnomjerne
+kanale — niske frekvencije fino, visoke grubo. Time 513 FFT vrijednosti postaje
+128 mel vrijednosti, uz zadržavanje onoga što je bitno.</p>
+
+<h3>Logaritam</h3>
+<p>Glasnoća se doživljava logaritamski (zato postoje decibeli). <code>log</code>
+sabija ogroman dinamički opseg (šapat vs. mašina) u raspon s kojim mreža može
+raditi. Finalni featur = <b>log-mel spektrogram</b>.</p>
+
+<h3>Kontekst — konkatenacija frejmova</h3>
+<p>Jedan frejm od 64 ms je prekratak da opiše zvuk. Zato se <b>P = 5 uzastopnih
+frejmova</b> spoji u jedan vektor: 5 × 128 = <b>640 brojeva</b> — to je ulaz u mrežu.
+Klip od 10 s tako daje ~308 vektora.</p>
+<div class="mi"><b>Mi:</b> identičan front-end kao zvanični DCASE baseline (128 mela,
+64 ms frejm, 50 % hop, P=5). Napisali smo ga DVAPUT: u numpy-ju (za trening) i u
+C-u (za uređaj) — i dokazali testom da daju isti rezultat na realnom klipu do
+0.00004 dB. Dvije svjesne izmjene vs librosa biblioteke: bez paddinga na
+rubovima (center=False — jer na uređaju rubovi ne postoje) i fiksan epsilon u
+logaritmu (1e-12, vrijednost koju float32 može predstaviti).</div>
+
+<h2 id="ae">4. Autoencoder — model koji uči šta je „normalno"</h2>
+<p><b>Autoencoder (AE)</b> je neuronska mreža koja uči da <b>reprodukuje svoj
+ulaz</b>: ulaz 640 brojeva → izlaz opet 640 brojeva, cilj je izlaz ≈ ulaz.
+Zvuči besmisleno dok ne vidiš arhitekturu:</p>
+<div class="pipe">640 → 128 → 128 → 128 → 128 → [ 8 ] → 128 → 128 → 128 → 128 → 640
+      ─────────── enkoder ───────────  usko   ─────────── dekoder ───────────
+                                       grlo</div>
+<p>U sredini je <b>bottleneck (usko grlo)</b> od samo 8 brojeva. Mreža je
+prisiljena da 640 brojeva sabije u 8 i onda ih iz njih rekonstruiše. To je moguće
+samo ako nauči <b>suštinu</b> — tipične obrasce normalnog zvuka — jer sve drugo
+kroz 8 brojeva ne staje.</p>
+<div class="idea"><b>Ključni trik:</b> mreža trenirana samo na normalnom zvuku nauči
+rekonstruisati samo normalan zvuk. Kad dođe anomalija (struganje, udarac,
+promijenjen huk), rekonstrukcija ne valja → <b>greška rekonstrukcije je velika</b>.
+Ta greška (MSE — srednji kvadrat razlike ulaza i izlaza) je naš <b>anomaly score</b>.</div>
+
+<h3>Slojevi od kojih je mreža sastavljena</h3>
+<table>
+<tr><th>Sloj</th><th>Šta radi</th></tr>
+<tr><td><b>Dense (fully-connected)</b></td><td>Svaki izlazni neuron = ponderisana suma SVIH ulaza + bias. Matrično množenje <code>y = Wx + b</code>. Naša mreža je čitava od ovih.</td></tr>
+<tr><td><b>ReLU</b></td><td>Aktivacija: <code>max(0, x)</code>. Unosi nelinearnost — bez nje bi se svi slojevi urušili u jedno jedino matrično množenje i mreža ne bi mogla učiti složene obrasce.</td></tr>
+<tr><td><b>BatchNorm</b></td><td>Normalizuje izlaze sloja tokom treninga (stabilnije i brže učenje). Bitno: poslije treninga se matematički <b>stopi u Dense sloj</b> — na uređaju ne postoji kao poseban korak.</td></tr>
+</table>
+<div class="mi"><b>Mi:</b> baseline AE (gore, ~267 000 parametara — identičan zvaničnom
+DCASE) + familija manjih „tiny" varijanti (44 k, 11 k parametara...) da izmjerimo
+koliko tačnosti se gubi smanjivanjem — to je Pareto analiza tačnost↔veličina,
+jedan od glavnih doprinosa rada.</div>
+
+<h2 id="trening">5. Kako se model trenira</h2>
+<p><b>Loss funkcija</b> mjeri koliko mreža griješi — kod nas MSE između ulaza i
+rekonstrukcije. Trening je postepeno smanjivanje lossa:</p>
+<ol>
+<li>Provuci grupu primjera (<b>batch</b>, kod nas 256 vektora) kroz mrežu.</li>
+<li>Izračunaj loss.</li>
+<li><b>Backpropagation:</b> izračunaj za svaki od 267 000 parametara u kom smjeru
+ga pomjeriti da loss padne (gradijent).</li>
+<li>Pomjeri parametre malo u tom smjeru — korak određuje <b>learning rate</b>.
+Mi koristimo <b>Adam</b>, standardni optimizator koji korak prilagođava po parametru.</li>
+<li>Ponavljaj dok ne prođeš sve podatke — to je jedna <b>epoha</b>. Mi: 100 epoha.</li>
+</ol>
+<p><b>Validacija:</b> 10 % trening podataka mreža ne uči, samo na njima mjerimo
+loss. Ako trening-loss pada a validacioni raste → mreža <b>bubá napamet</b>
+(overfitting) umjesto da uči obrasce. Kod nas se oba spuštaju zajedno — zdravo.</p>
+<div class="mi"><b>Mi:</b> Adam (lr=0.001), batch 256, 100 epoha, seed fiksiran radi
+ponovljivosti. Na tvom laptopu (CPU) jedna varijanta traje 15–60 min — zato sweep
+ide preko noći skriptom.</div>
+
+<h2 id="metrike">6. Kako znamo da li valja — AUC, pAUC, prag</h2>
+
+<h3>Zašto ne „procenat tačnih"?</h3>
+<p>Ako je 95 % klipova normalno, model koji UVIJEK kaže „normalno" ima 95 %
+tačnost — a ne detektuje ništa. Uz to, „tačno" zavisi od izbora praga, a prag je
+poslovna odluka (koliko lažnih alarma tolerišeš). Treba metrika nezavisna od praga.</p>
+
+<h3>ROC i AUC</h3>
+<p>Model daje score svakom klipu. Zamisli da prag klizaš od najmanjeg do najvećeg
+score-a: za svaki položaj dobiješ odnos <i>tačno uhvaćenih anomalija</i> (TPR) i
+<i>lažnih alarma</i> (FPR). Ta kriva je <b>ROC</b>; <b>AUC</b> je površina ispod
+nje.</p>
+<div class="idea"><b>Intuicija za AUC:</b> uzmi nasumičan anomalan i nasumičan normalan
+klip — AUC je vjerovatnoća da je anomalni dobio veći score. 1.0 = savršeno
+razdvajanje, 0.5 = bacanje novčića.</div>
+<p><b>pAUC</b> je isto to, ali računato samo u zoni malog broja lažnih alarma
+(FPR ≤ 0.1) — jer u fabrici sistem koji stalno lažno alarmira niko ne koristi.
+DCASE zvanični skor je <b>harmonijska sredina</b> AUC-a (source), AUC-a (target)
+i pAUC-a — harmonijska zato što nemilosrdno kažnjava ako je bilo koja od tri
+komponenta loša.</p>
+
+<h3>Prag i gamma raspodjela</h3>
+<p>Za AUC prag ne treba, ali uređaju na zidu treba: „pisni ili ne". Prag se bira
+<b>samo iz normalnih (trening) score-ova</b>: na njih se fituje gamma raspodjela
+(asimetrična, s repom — score-ovi tako izgledaju) i prag = njen 90. percentil.
+<span class="warn">Prag se NIKAD ne štimuje na test skupu</span> — to bi bilo
+varanje (curenje informacija iz testa) i DCASE to eksplicitno zabranjuje.</p>
+<div class="mi"><b>Mi:</b> gamma fit radimo na dva načina i poredimo: scipy (MLE, na
+PC-u) i <b>momentna metoda</b> — zatvorena formula iz srednje vrijednosti i
+varijanse koja stane u 30 linija C-a. Uz Wilson–Hilferty aproksimaciju inverzne
+gamma raspodjele, uređaj može SAM sebi izračunati prag na novoj mašini
+(on-device kalibracija, eksperiment E6). Provjereno na PC-u: C daje prag unutar
+2 % od scipy-ja.</div>
+
+<h2 id="kvant">7. Kvantizacija — od 1 MB do 68 KB</h2>
+<p>Mreža poslije treninga drži parametre kao <b>float32</b> (32-bitni realni
+brojevi): 267 k parametara ≈ 1.1 MB. <b>Kvantizacija</b> ih pretvara u
+<b>int8</b> (cijeli brojevi −128..127): 4× manje memorije, a int8 aritmetika je
+na malim čipovima višestruko brža (i podržana SIMD instrukcijama).</p>
+<p>Kako realan broj stane u int8? <b>Afina kvantizacija</b>:</p>
+<div class="pipe">realna vrijednost ≈ scale × (int8_vrijednost − zero_point)</div>
+<p><code>scale</code> i <code>zero_point</code> se odrede za svaki tenzor (ili
+kanal) tako da pokriju opseg vrijednosti koje se tu stvarno pojavljuju. A da bi se
+znalo koje se vrijednosti pojavljuju NA ULAZIMA slojeva, konverteru se da
+<b>reprezentativni dataset</b> — par hiljada stvarnih trening vektora koje on
+provuče i izmjeri opsege.</p>
+<table>
+<tr><th>Pristup</th><th>Šta je</th><th>Cijena</th></tr>
+<tr><td><b>PTQ</b> (post-training quantization)</td><td>Kvantizuj već istreniran model</td><td>Jeftino, par minuta — <b>naš izbor</b></td></tr>
+<tr><td><b>QAT</b> (quantization-aware training)</td><td>Treniraj mrežu koja „zna" da će biti kvantizovana</td><td>Ponovni trening — čuvamo kao rezervu</td></tr>
+</table>
+<div class="mi"><b>Mi:</b> PTQ u TFLite converteru, reprezentativni skup 2000 vektora.
+Prvi rezultati: <b>ΔAUC ≈ 0</b> — int8 na fan mašini ne gubi ništa (0.542 vs
+0.5405, čak mrvu bolji — šum mjerenja). Model tiny32: 68 KB. To što degradacije
+nema nije garantovano unaprijed — mjerenje toga po mašinama JE eksperiment E3.</div>
+
+<h2 id="tflm">8. TFLM — kako neuronska mreža radi na mikrokontroleru</h2>
+<p>Na PC-u mrežu izvršava TensorFlow — stotine MB koda. Na mikrokontroleru radi
+<b>TensorFlow Lite Micro (TFLM)</b>: mini-interpreter (desetine KB) koji čita
+<code>.tflite</code> fajl (model = graf operacija + kvantizovane težine) i
+izvršava ga operaciju po operaciju. Bitni pojmovi:</p>
+<table>
+<tr><th>Pojam</th><th>Šta je</th></tr>
+<tr><td><b>.tflite flatbuffer</b></td><td>Serijalizovan model. Kod nas se pretvori u C niz i upeče u flash — ne troši RAM.</td></tr>
+<tr><td><b>Op resolver</b></td><td>Spisak operacija koje interpreter zna. Registruješ SAMO ono što tvoj model koristi → manji firmware. Naš model poslije fuzija ima jedan jedini tip operacije: <code>FULLY_CONNECTED</code> (provjerili smo ispisom grafa).</td></tr>
+<tr><td><b>Tensor arena</b></td><td>Jedan unaprijed rezervisan komad RAM-a iz kog interpreter uzima prostor za međurezultate. Nema dinamičke alokacije u toku rada — zato je TFLM predvidljiv. Veličinu izmjeriš (<code>arena_used_bytes</code>) pa skrešeš.</td></tr>
+<tr><td><b>esp-nn</b></td><td>Espressifovi ručno optimizovani int8 kerneli koji koriste <b>PIE</b> — SIMD instrukcije S3 jezgra (jedna instrukcija obradi više brojeva odjednom). Uporediti PIE on/off je naš eksperiment E4.</td></tr>
+</table>
+
+<h2 id="esp">9. Embedded strana — memorije, I2S, DMA, FreeRTOS</h2>
+
+<h3>Tri vrste memorije (i zašto je to pola projekta)</h3>
+<table>
+<tr><th>Memorija</th><th>Kod nas</th><th>Osobine</th></tr>
+<tr><td><b>SRAM (interni)</b></td><td>512 KB</td><td>Najbrža, jedina koju DMA vidi, uvijek je malo</td></tr>
+<tr><td><b>PSRAM (eksterni)</b></td><td>16 MB (oktalni)</td><td>Velika ali sporija (ide preko SPI magistrale) i troši struju; <span class="warn">DMA periferije je NE vide</span></td></tr>
+<tr><td><b>Flash</b></td><td>32 MB</td><td>Trajna, samo za čitanje u radu; tu žive kod, model, mel tabele, test klipovi</td></tr>
+</table>
+<p>Odatle pravilo koje se provlači kroz naš kod: <b>DMA baferi u SRAM, veliki
+baferi u PSRAM, konstante u flash</b>. I odatle vrijednost tvoje N32R16V ploče:
+16 MB PSRAM-a znači da i „preveliki" modeli mogu da rade — pa možemo izmjeriti
+koliko to košta u brzini i struji (to je rezultat, ne hack).</p>
+
+<h3>I2S — kako digitalni mikrofon šalje zvuk</h3>
+<p><b>I2S</b> je serijski protokol za audio sa tri linije: <b>BCLK</b> (takt po
+bitu), <b>WS</b> (word select — kaže lijevi/desni kanal) i <b>SD</b> (podaci).
+ESP32 je master (generiše taktove), INMP441 samo šalje bite. Fora našeg mikrofona:
+šalje 24-bitni uzorak unutar 32-bitnog slota, poravnat uz MSB — zato u drajveru
+čitamo 32 bita pa pomjerimo udesno (<code>&gt;&gt;14</code>) da dobijemo 16-bitni PCM.</p>
+
+<h3>DMA — Direct Memory Access</h3>
+<p>Da CPU sam preuzima svaki uzorak (16 000/s), stalno bi ga prekidali.
+<b>DMA kontroler</b> je hardver koji sam prebacuje podatke iz periferije u
+memoriju; CPU dobije prekid tek kad je cijeli blok (kod nas 1024 uzorka) spreman.
+CPU za to vrijeme računa FFT i mrežu.</p>
+
+<h3>FreeRTOS — više poslova „istovremeno"</h3>
+<p>Operativni sistem za mikrokontrolere. Posao se dijeli na <b>taskove</b> sa
+prioritetima; scheduler ih smjenjuje. ESP32-S3 ima dva jezgra, pa se task može
+<b>zakucati za jezgro</b>. Naš raspored: capture task (uzima audio iz DMA, visok
+prioritet, jezgro 0) i glavna petlja (featuring + inferenca, jezgro 1).
+Između njih je <b>ring buffer</b> — kružni red koji amortizuje razlike u brzini:
+ako inferenca na tren zakasni, uzorci se ne gube nego čekaju u redu.</p>
+<div class="mi"><b>Mi:</b> upravo ta arhitektura je u <code>audio_i2s.c</code> +
+<code>app_main.c</code>. Brojimo i dropovane uzorke — ako ih ikad bude, znači da
+dizajn ne stiže i to se vidi u logu odmah, ne kroz misteriozno loš AUC.</div>
+
+<h2 id="dsp">10. DSP — FFT, prozori, streaming</h2>
+
+<h3>FFT i zašto je brza</h3>
+<p>Diskretna Furijeova transformacija (DFT) direktno = N² operacija; za N=1024 to
+je milion. <b>FFT (radix-2)</b> algoritam to spusti na N·log₂N ≈ 10 000 —
+100× manje. Zato se veličine frejmova biraju kao stepeni dvojke.</p>
+
+<h3>Hann prozor</h3>
+<p>Kad iz signala isiječeš frejm, na rubovima napraviš vještačke skokove koji u
+spektru ostave „razmaz" (spectral leakage). <b>Prozorska funkcija</b> (mi: Hann)
+frejm na rubovima glatko prigasi ka nuli i razmaz drastično smanji. Detalj koji
+ujeda u praksi: postoje „simetrična" i „periodična" varijanta prozora —
+biblioteke se razlikuju u defaultu, a mi smo fiksirali periodičnu (istu koju
+koristi librosa) i na PC-u i u C-u.</p>
+
+<h3>Streaming umjesto batch obrade</h3>
+<p>Na PC-u učitaš cijeli klip u RAM i obradiš. Na uređaju bi 10 s zvuka kao
+float značilo 640 KB — više od cijelog SRAM-a. Rješenje: <b>streaming</b> —
+obrađuj po 512 uzoraka (32 ms) čim stignu:</p>
+<div class="pipe">novih 512 uzoraka → gurni u klizni prozor od 1024
+                → FFT + mel + log → jedan novi frejm (128 brojeva)
+                → drži samo ZADNJIH 5 frejmova (ring)
+                → od njih složi vektor 640 → inferenca → dodaj score u prosjek</div>
+<p>Ukupan RAM: ispod 25 KB. Bonus: posao je ravnomjerno raspoređen kroz vrijeme
+(svakih 32 ms malo), umjesto ogromnog špica na kraju klipa.</p>
+<div class="mi"><b>Mi:</b> streaming je implementiran u <code>features_c.c</code> i
+dokazano <b>bit-identičan</b> batch obradi (test na realnom klipu: razlika
+tačno 0.0). Zato svi PC rezultati važe i za uređaj — i zato isti firmware radi i
+na starom ESP32 bez PSRAM-a, što nam treba za E4 poređenje.</div>
+
+<h2 id="metod">11. Zašto rezultatima vjerujemo — metodologija</h2>
+<p>Ovo je dio po kom se rad brani pred komisijom. Principi koje projekat prati:</p>
+<table>
+<tr><th>Princip</th><th>Kod nas konkretno</th></tr>
+<tr><td><b>Testiraj sloj po sloj, ne end-to-end</b></td><td>Zvuk→WAV test u Audacity; featuri PC vs C (unit test, &lt;4e-5 dB); model sa hardkodovanim „poznato dobrim" vektorom (eksportovani test vektori); tek onda cijeli lanac. Kad nešto pukne, znaš U KOM sloju.</td></tr>
+<tr><td><b>Isti kod = nema razlike po definiciji</b></td><td>Featuring je JEDAN C fajl; Python ga poziva kroz ctypes u testu. Najčešći uzrok „AUC padne na uređaju" (razlika featura) time je eliminisan strukturno, ne debagovanjem.</td></tr>
+<tr><td><b>Nema curenja iz testa</b></td><td>Svi izbori (arhitektura, epohe, prag) — samo iz trening podataka. Test klipovi se diraju isključivo za finalne tabele.</td></tr>
+<tr><td><b>Ponovljivost</b></td><td>Fiksni seedovi, pinovane verzije biblioteka, git tag po eksperimentu — svaki broj u radu ima commit iz kog je nastao.</td></tr>
+<tr><td><b>Mjerenja: ≥5 ponavljanja, mean ± std</b></td><td>Za latenciju/energiju na hardveru (E4/E5); prvi prolaz se odbacuje (hladan keš), CPU fiksiran na 240 MHz, Wi-Fi ugašen.</td></tr>
+<tr><td><b>Loš rezultat ≠ propao rad</b></td><td>Ako int8 negdje degradira, ako baseline ne stane u SRAM — to su REZULTATI ako su čisto izmjereni i pošteno diskutovani. Rad mjeri kompromise, ne juri rekord.</td></tr>
+</table>
+
+<h2 id="recnik">12. Mini rječnik</h2>
+<table>
+<tr><th>Pojam</th><th>U jednoj rečenici</th></tr>
+<tr><td>ASD</td><td>Anomalous Sound Detection — detekcija anomalija u zvuku.</td></tr>
+<tr><td>DCASE</td><td>Godišnji naučni challenge za audio ML; Task 2 = ASD za mašine; definiše dataset, protokol i baseline s kojim se poredimo.</td></tr>
+<tr><td>Featur</td><td>Broj/vektor koji opisuje sirov podatak na način koristan modelu.</td></tr>
+<tr><td>Log-mel spektrogram</td><td>Vrijeme×frekvencija opis zvuka, sabijen po uzoru na ljudski sluh, u dB skali.</td></tr>
+<tr><td>Autoencoder</td><td>Mreža koja uči da reprodukuje ulaz kroz usko grlo; greška reprodukcije = mjera neobičnosti.</td></tr>
+<tr><td>Bottleneck</td><td>Najuži sloj AE; prisiljava mrežu da nauči suštinu umjesto kopiranja.</td></tr>
+<tr><td>MSE</td><td>Mean Squared Error — prosjek kvadrata razlika; naš loss i naš anomaly score.</td></tr>
+<tr><td>Epoha / batch / lr</td><td>Jedan prolaz kroz sve podatke / grupa primjera po koraku / veličina koraka učenja.</td></tr>
+<tr><td>Overfitting</td><td>Model nabubao trening podatke umjesto obrazaca; vidi se po rastu validacionog lossa.</td></tr>
+<tr><td>AUC / pAUC</td><td>Vjerovatnoća da anomalija dobije veći score od normalnog klipa / isto ali u zoni malo lažnih alarma.</td></tr>
+<tr><td>Domain shift</td><td>Promjena uslova rada između treninga i primjene; source/target evaluacija.</td></tr>
+<tr><td>Gamma prag</td><td>Prag alarma = 90. percentil gamma raspodjele fitovane na normalne score-ove.</td></tr>
+<tr><td>PTQ / QAT</td><td>Kvantizacija poslije treninga / trening svjestan kvantizacije.</td></tr>
+<tr><td>scale / zero-point</td><td>Dva broja koja mapiraju int8 opseg na realne vrijednosti tenzora.</td></tr>
+<tr><td>TFLM / arena / resolver</td><td>Mini ML interpreter za MCU / njegov unaprijed rezervisan RAM / spisak operacija koje zna.</td></tr>
+<tr><td>SRAM / PSRAM / flash</td><td>Brza mala / velika sporija (DMA je ne vidi) / trajna memorija za kod i konstante.</td></tr>
+<tr><td>I2S (BCLK/WS/SD)</td><td>Serijski audio protokol: takt, izbor kanala, podaci.</td></tr>
+<tr><td>DMA</td><td>Hardver koji sam prenosi podatke periferija↔memorija bez CPU-a.</td></tr>
+<tr><td>Ring buffer</td><td>Kružni red između bržeg proizvođača i sporijeg potrošača podataka.</td></tr>
+<tr><td>FreeRTOS task</td><td>Nit sa prioritetom kojom upravlja scheduler; može se zakucati za jezgro.</td></tr>
+<tr><td>FFT / Hann</td><td>Brzi algoritam za spektar / prozor koji smanjuje razmaz spektra na rubovima frejma.</td></tr>
+<tr><td>PIE / esp-nn / SIMD</td><td>Vektorske instrukcije S3 jezgra / Espressifovi kerneli koji ih koriste / „jedna instrukcija, više podataka".</td></tr>
+<tr><td>Pareto kriva</td><td>Skup najboljih kompromisa dvije suprotstavljene veličine (tačnost vs veličina modela).</td></tr>
+</table>
+
+<p style="margin-top:36px; color: var(--muted); font-size: 0.9rem;">
+Dokument prati stanje projekta na dan 18.07.2026 — repo <code>Desktop/master new</code>,
+plan u <code>plan-master-rada.md</code>, praktični detalji u <code>docs/</code>.</p>
+
+</div>
+</body>
+</html>
