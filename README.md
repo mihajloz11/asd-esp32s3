@@ -48,16 +48,21 @@ cd pc
 Svi rezultati se dopisuju u `results/results.csv` (kolona `precision`: fp32 /
 fp32_tflite / int8 — ΔAUC analiza je pivot po toj koloni).
 
-## Firmware (na mašini sa ESP-IDF v5.x)
+## Firmware (na mašini sa ESP-IDF v5.x) — dva targeta
 
 ```bash
 cd firmware/esp32s3_asd
-idf.py set-target esp32s3
+idf.py set-target esp32s3   # glavna platforma (N32R16V)
+# ili: idf.py set-target esp32   # DevKit V1 — E4 kontrola (bez PIE/PSRAM)
 idf.py build flash monitor
 ```
 
-Pin-plan i zabranjeni pinovi (GPIO 35/36/37 = oktalni PSRAM): `main/pins.h`.
-PSRAM/flash config za N32R16V: `sdkconfig.defaults` (OCT mod — quad daje boot-loop).
+Per-target pinovi i sdkconfig se biraju automatski (`main/pins.h`,
+`sdkconfig.defaults.<target>`). Zabranjeni pinovi: S3 GPIO 35/36/37 (oktalni
+PSRAM), ESP32 GPIO 6–11 (flash). Firmware koristi **streaming** featuring
+(hop-po-hop, <25 KB RAM — bit-identičan batch putu, testirano) pa isti kod radi
+na obje ploče. Detalji: [docs/edge-adaptacija.md](docs/edge-adaptacija.md),
+inventar i nabavka: [docs/hardware.md](docs/hardware.md).
 
 ## Ključne odluke (odstupanja od librosa/baseline — za pogl. 5 rada)
 

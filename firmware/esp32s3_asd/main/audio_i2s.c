@@ -40,21 +40,18 @@ static void capture_task(void *arg) {
 }
 
 esp_err_t audio_i2s_init(void) {
-    /* Ring buffer u PSRAM-u (MALLOC_CAP_SPIRAM) preko static ringbuf strukture */
+    /* Ring buffer: PSRAM ako postoji, inače interni SRAM (2 s @ 16 kHz 16-bit
+     * = 64 KB — staje i na klasični ESP32). DMA baferi drajvera ostaju u
+     * internom SRAM-u u oba slučaja (S3 DMA ne vidi PSRAM). */
     static StaticRingbuffer_t rb_struct;
-    uint8_t *rb_storage = heap_caps_malloc(AUDIO_RING_LEN * sizeof(int16_t),
-                                           MALLOC_CAP_SPIRAM);
+    const size_t ring_bytes = AUDIO_RING_LEN * sizeof(int16_t);
+    uint8_t *rb_storage = heap_caps_malloc(ring_bytes, MALLOC_CAP_SPIRAM);
     if (!rb_storage) {
-        ESP_LOGW(TAG, "PSRAM alloc failed, fallback na interni SRAM (manji ring)");
-        rb_storage = heap_caps_malloc(AUDIO_RING_LEN * sizeof(int16_t) / 4,
-                                      MALLOC_CAP_INTERNAL);
-        if (!rb_storage) return ESP_ERR_NO_MEM;
-        ring = xRingbufferCreateStatic(AUDIO_RING_LEN * sizeof(int16_t) / 4,
-                                       RINGBUF_TYPE_BYTEBUF, rb_storage, &rb_struct);
-    } else {
-        ring = xRingbufferCreateStatic(AUDIO_RING_LEN * sizeof(int16_t),
-                                       RINGBUF_TYPE_BYTEBUF, rb_storage, &rb_struct);
+        rb_storage = heap_caps_malloc(ring_bytes, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+        ESP_LOGI(TAG, "ring buffer u internom SRAM-u (%u B)", (unsigned)ring_bytes);
     }
+    if (!rb_storage) return ESP_ERR_NO_MEM;
+    ring = xRingbufferCreateStatic(ring_bytes, RINGBUF_TYPE_BYTEBUF, rb_storage, &rb_struct);
     if (!ring) return ESP_ERR_NO_MEM;
 
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
