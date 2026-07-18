@@ -20,3 +20,14 @@ bearingEmu_baseline_s0,bearingEmu,baseline,0,mse,int8,269992,0.5898,0.568,0.5889
 bearingEmu_tiny64_s0,bearingEmu,tiny64,0,mse,fp32,93096,0.5834,0.576,0.5695,0.5762
 bearingEmu_tiny64_s0,bearingEmu,tiny64,0,mse,fp32_tflite,93096,0.5834,0.576,0.5695,0.5762
 bearingEmu_tiny64_s0,bearingEmu,tiny64,0,mse,int8,93096,0.5826,0.5712,0.5668,0.5735
+fan_baseline_s0,fan,baseline,0,mahala,fp32,269992,0.6118,0.531,0.5305,0.5553
+bearingEmu_tiny32_s0,bearingEmu,tiny32,0,mse,fp32,44840,0.5822,0.5722,0.5905,0.5815
+bearingEmu_tiny32_s0,bearingEmu,tiny32,0,mse,fp32_tflite,44840,0.5822,0.5722,0.5905,0.5815
+bearingEmu_tiny32_s0,bearingEmu,tiny32,0,mse,int8,44840,0.577,0.5678,0.5895,0.578
+fan_tiny64_s0,fan,tiny64,0,mahala,fp32,93096,0.592,0.5192,0.5242,0.5432
+fan_tiny32_s0,fan,tiny32,0,mahala,fp32,44840,0.5896,0.5202,0.5163,0.54
+bearingEmu_tiny16_s0,bearingEmu,tiny16,0,mse,fp32,22100,0.5244,0.5286,0.5189,0.524
+bearingEmu_tiny16_s0,bearingEmu,tiny16,0,mse,fp32_tflite,22100,0.5244,0.5286,0.5189,0.524
+bearingEmu_tiny16_s0,bearingEmu,tiny16,0,mse,int8,22100,0.5242,0.5274,0.5211,0.5242
+fan_tiny16_s0,fan,tiny16,0,mahala,fp32,22100,0.5868,0.5442,0.5147,0.547
+fan_tiny32b4_s0,fan,tiny32b4,0,mahala,fp32,44564,0.577,0.5404,0.5121,0.5419

@@ -102,15 +102,17 @@ def main() -> None:
         # zbirna tabela hmean po masini x varijanti (fp32 / int8)
         h.append("<h2>hmean po mašini i varijanti</h2>")
         for prec in ("fp32", "int8"):
-            piv = df[df["precision"] == prec].pivot_table(index="variant", columns="machine",
-                                                          values="hmean", aggfunc="last")
+            sel = df[(df["precision"] == prec) & (df["score"] == "mse")]
+            piv = sel.pivot_table(index="variant", columns="machine",
+                                  values="hmean", aggfunc="last")
             piv = piv.reindex(["baseline", "tiny64", "tiny32", "tiny32b4", "tiny16"])
             h.append(f"<h3>{prec}</h3>" + piv.round(4).to_html(border=0, na_rep="—"))
 
         # ΔAUC int8 - fp32
         h.append("<h2>E3: ΔhMean (int8 − fp32) — gdje kvantizacija boli</h2>")
-        f32 = df[df["precision"] == "fp32"].set_index(["machine", "variant"])["hmean"]
-        i8 = df[df["precision"] == "int8"].set_index(["machine", "variant"])["hmean"]
+        mse = df[df["score"] == "mse"]
+        f32 = mse[mse["precision"] == "fp32"].set_index(["machine", "variant"])["hmean"]
+        i8 = mse[mse["precision"] == "int8"].set_index(["machine", "variant"])["hmean"]
         delta = (i8 - f32).dropna().reset_index()
         piv = delta.pivot_table(index="variant", columns="machine", values="hmean", aggfunc="last")
         piv = piv.reindex(["baseline", "tiny64", "tiny32", "tiny32b4", "tiny16"])
