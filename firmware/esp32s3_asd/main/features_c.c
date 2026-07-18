@@ -91,6 +91,41 @@ int asd_logmel(const float *y, int n_samples, float *out, int max_frames) {
     return n_frames;
 }
 
+void asd_stream_reset(asd_stream_t *s) {
+    memset(s, 0, sizeof(*s));
+}
+
+int asd_stream_push_hop(asd_stream_t *s, const float *samples) {
+    if (s->filled < ASD_N_FFT) {
+        memcpy(s->window + s->filled, samples, ASD_HOP * sizeof(float));
+        s->filled += ASD_HOP;
+        if (s->filled < ASD_N_FFT) return 0;
+    } else {
+        memmove(s->window, s->window + ASD_HOP,
+                (ASD_N_FFT - ASD_HOP) * sizeof(float));
+        memcpy(s->window + (ASD_N_FFT - ASD_HOP), samples,
+               ASD_HOP * sizeof(float));
+    }
+    asd_logmel_frame(s->window, s->lm_hist[s->lm_count % ASD_N_FRAMES]);
+    s->lm_count++;
+    return 1;
+}
+
+int asd_stream_vector(const asd_stream_t *s, const float *mean,
+                      const float *std, float *out_vec) {
+    if (s->lm_count < ASD_N_FRAMES) return 0;
+    /* najstariji od zadnjih P frejmova je (lm_count - P) % P u ringu */
+    for (int p = 0; p < ASD_N_FRAMES; p++) {
+        const float *src = s->lm_hist[(s->lm_count - ASD_N_FRAMES + p) % ASD_N_FRAMES];
+        float *dst = out_vec + (long)p * ASD_N_MELS;
+        const float *mu = mean + (long)p * ASD_N_MELS;
+        const float *sd = std + (long)p * ASD_N_MELS;
+        for (int i = 0; i < ASD_N_MELS; i++)
+            dst[i] = (src[i] - mu[i]) / sd[i];
+    }
+    return 1;
+}
+
 void asd_make_vector(const float *logmel, int t, const float *mean,
                      const float *std, float *out_vec) {
     for (int p = 0; p < ASD_N_FRAMES; p++) {

@@ -13,10 +13,19 @@
 
 static const char *TAG = "tflm";
 
-/* Arena: kreni 512 KB u PSRAM-u, očitaj arena_used pa smanji (rizik C5).
- * Za "sve u SRAM" varijantu (AE-tiny, E4/E5): -DASD_ARENA_INTERNAL + manja arena. */
+/* Arena: na S3 kreni 512 KB u PSRAM-u, očitaj arena_used pa smanji (rizik C5).
+ * Bez PSRAM-a (klasični ESP32, ili E4/E5 "sve u SRAM" varijanta sa
+ * -DASD_ARENA_INTERNAL): 96 KB u internom SRAM-u — dovoljno za AE-tiny int8. */
+#include "sdkconfig.h"
+#if !CONFIG_SPIRAM && !defined(ASD_ARENA_INTERNAL)
+#define ASD_ARENA_INTERNAL
+#endif
 #ifndef ASD_ARENA_SIZE
+#ifdef ASD_ARENA_INTERNAL
+#define ASD_ARENA_SIZE (96 * 1024)
+#else
 #define ASD_ARENA_SIZE (512 * 1024)
+#endif
 #endif
 
 static tflite::MicroInterpreter *interp;

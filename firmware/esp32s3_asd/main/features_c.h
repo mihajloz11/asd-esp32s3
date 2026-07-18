@@ -35,6 +35,28 @@ int asd_logmel(const float *y, int n_samples, float *out, int max_frames);
 void asd_make_vector(const float *logmel, int t, const float *mean,
                      const float *std, float *out_vec);
 
+/* ---- Streaming API (edge put): hop-po-hop, bez baferovanja cijelog klipa ----
+ * RAM: 1024 float prozor + P x 128 float istorija ~ 7 KB — staje i na klasični
+ * ESP32 bez PSRAM-a. Identična aritmetika kao batch put (isti kod ispod),
+ * PC test: pc/tests/test_features_c.py::test_streaming_equals_batch. */
+typedef struct {
+    float window[ASD_N_FFT];                     /* klizni prozor uzoraka */
+    int filled;                                  /* popunjenost prozora */
+    float lm_hist[ASD_N_FRAMES][ASD_N_MELS];     /* ring zadnjih P frejmova */
+    int lm_count;                                /* ukupno proizvedenih frejmova */
+} asd_stream_t;
+
+void asd_stream_reset(asd_stream_t *s);
+
+/* Push tačno ASD_HOP novih uzoraka. Vraća 1 ako je proizveden nov log-mel
+ * frejm (upisan u ring), 0 dok se prozor još puni. */
+int asd_stream_push_hop(asd_stream_t *s, const float *samples);
+
+/* Standardizovan ulazni vektor iz zadnjih P frejmova ringa.
+ * Vraća 1 ako ima dovoljno frejmova (lm_count >= P), inače 0. */
+int asd_stream_vector(const asd_stream_t *s, const float *mean,
+                      const float *std, float *out_vec);
+
 #ifdef __cplusplus
 }
 #endif

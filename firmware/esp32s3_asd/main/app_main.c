@@ -1,8 +1,11 @@
-/* ASD na ESP32-S3 — glavna petlja (plan 5.2):
- * [I2S capture task, core 0] -> ring buffer (PSRAM)
- * [main/inference, core 1]  -> log-mel -> AE int8 (TFLM) -> score -> prag -> LED
+/* ASD — glavna petlja, STREAMING arhitektura (radi na S3 i klasičnom ESP32):
+ * [I2S capture task, core 0] -> ring buffer
+ * [main loop, core 1] hop (512 uzoraka) -> log-mel frejm -> klizni vektor 640
+ *                     -> AE int8 (TFLM) -> score -> agregacija po klipu -> LED
  *
- * Mjerni hooks: esp_timer_get_time() po fazi, ispis svakih N klipova (E4).
+ * RAM featuring puta: ~9 KB (asd_stream_t + vektor) — bez PSRAM zavisnosti;
+ * PSRAM (ako postoji) koristi samo TFLM arena i audio ring buffer.
+ * Mjerni hooks po fazi (E4): akumulirano vrijeme featuringa i inferencije po klipu.
  */
 #include <stdio.h>
 #include <string.h>
@@ -23,64 +26,63 @@
 
 static const char *TAG = "asd";
 
-#define CLIP_SEC       10
-#define CLIP_SAMPLES   (AUDIO_SR * CLIP_SEC)
-#define MAX_LM_FRAMES  (1 + (CLIP_SAMPLES - ASD_N_FFT) / ASD_HOP)  /* 312 */
+#define CLIP_SEC   10
+#define HOPS_PER_CLIP (AUDIO_SR * CLIP_SEC / ASD_HOP)   /* 312 */
 
-/* Veliki baferi u PSRAM-u (16 MB na N32R16V) */
-static float *clip_f32;   /* CLIP_SAMPLES */
-static float *logmel_buf; /* MAX_LM_FRAMES x 128 */
+static asd_stream_t stream;
 
 static void process_clip(void) {
-    static int16_t pcm[ASD_HOP];  /* čitamo u komadima */
-    int64_t t0 = esp_timer_get_time();
-
-    /* 1) capture: 10 s klipa iz ring buffera, konverzija u float [-1,1] */
-    for (int off = 0; off < CLIP_SAMPLES; off += ASD_HOP) {
-        size_t n = audio_read(pcm, ASD_HOP);
-        for (size_t i = 0; i < n; i++)
-            clip_f32[off + i] = (float)pcm[i] / 32768.0f;
-    }
-    int64_t t_cap = esp_timer_get_time();
-
-    /* 2) featuring */
-    int n_frames = asd_logmel(clip_f32, CLIP_SAMPLES, logmel_buf, MAX_LM_FRAMES);
-    int64_t t_feat = esp_timer_get_time();
-
-    /* 3) inferenca: score = mean MSE preko svih vektora klipa */
+    static int16_t pcm[ASD_HOP];
+    static float hop_f32[ASD_HOP];
     static float vec[ASD_INPUT_DIM];
-    float score_sum = 0.0f;
-    int n_vec = n_frames - ASD_N_FRAMES + 1;
-    for (int t = 0; t < n_vec; t++) {
-        asd_make_vector(logmel_buf, t, asd_norm_mean, asd_norm_std, vec);
-        score_sum += tflm_score_vector(vec);
-    }
-    float score = score_sum / (float)n_vec;
-    int64_t t_inf = esp_timer_get_time();
 
+    int64_t t_feat = 0, t_inf = 0;
+    float score_sum = 0.0f;
+    int n_vec = 0;
+
+    int64_t t0 = esp_timer_get_time();
+    asd_stream_reset(&stream);
+
+    for (int h = 0; h < HOPS_PER_CLIP; h++) {
+        audio_read(pcm, ASD_HOP);
+        for (int i = 0; i < ASD_HOP; i++)
+            hop_f32[i] = (float)pcm[i] / 32768.0f;
+
+        int64_t a = esp_timer_get_time();
+        int new_frame = asd_stream_push_hop(&stream, hop_f32);
+        int64_t b = esp_timer_get_time();
+        t_feat += b - a;
+
+        if (new_frame && asd_stream_vector(&stream, asd_norm_mean, asd_norm_std, vec)) {
+            int64_t c = esp_timer_get_time();
+            score_sum += tflm_score_vector(vec);
+            t_inf += esp_timer_get_time() - c;
+            n_vec++;
+        }
+    }
+    int64_t t_total = esp_timer_get_time() - t0;
+
+    float score = score_sum / (float)n_vec;
     int anomaly = score > ASD_SCORE_THRESHOLD;
     gpio_set_level(PIN_LED, !anomaly);
 
-    ESP_LOGI(TAG, "score=%.5f thr=%.5f %s | cap=%lld ms feat=%lld ms inf=%lld ms "
+    ESP_LOGI(TAG, "score=%.5f thr=%.5f %s | feat=%lld ms inf=%lld ms total=%lld ms "
              "(%d vec) dropped=%lu",
              score, (float)ASD_SCORE_THRESHOLD, anomaly ? "ANOMALIJA" : "normal",
-             (t_cap - t0) / 1000, (t_feat - t_cap) / 1000, (t_inf - t_feat) / 1000,
+             t_feat / 1000, t_inf / 1000, t_total / 1000,
              n_vec, (unsigned long)audio_dropped_samples());
 }
 
 void app_main(void) {
+#if CONFIG_SPIRAM
     ESP_LOGI(TAG, "PSRAM: %u B", (unsigned)heap_caps_get_total_size(MALLOC_CAP_SPIRAM));
+#else
+    ESP_LOGI(TAG, "bez PSRAM-a (SRAM-only konfiguracija)");
+#endif
+    ESP_LOGI(TAG, "free heap: %u B", (unsigned)esp_get_free_heap_size());
 
     gpio_config_t io = {.pin_bit_mask = 1ULL << PIN_LED, .mode = GPIO_MODE_OUTPUT};
     gpio_config(&io);
-
-    clip_f32 = heap_caps_malloc(CLIP_SAMPLES * sizeof(float), MALLOC_CAP_SPIRAM);
-    logmel_buf = heap_caps_malloc((size_t)MAX_LM_FRAMES * ASD_N_MELS * sizeof(float),
-                                  MALLOC_CAP_SPIRAM);
-    if (!clip_f32 || !logmel_buf) {
-        ESP_LOGE(TAG, "PSRAM alloc failed — provjeri sdkconfig (SPIRAM_MODE_OCT)");
-        return;
-    }
 
     asd_features_init();
     if (tflm_init() != 0) {
@@ -91,7 +93,8 @@ void app_main(void) {
 
     ESP_ERROR_CHECK(audio_i2s_init());
     ESP_ERROR_CHECK(audio_i2s_start());
-    ESP_LOGI(TAG, "start — klip %d s, prag %.5f", CLIP_SEC, (float)ASD_SCORE_THRESHOLD);
+    ESP_LOGI(TAG, "start — klip %d s (%d hopova), prag %.5f",
+             CLIP_SEC, HOPS_PER_CLIP, (float)ASD_SCORE_THRESHOLD);
 
     while (1) {
         process_clip();

@@ -104,6 +104,44 @@ def test_pc_vs_c_real_wav(clib):
     assert max_diff < 1e-3
 
 
+def test_streaming_equals_batch(clib):
+    """Streaming put (hop-po-hop, edge arhitektura) mora dati BIT-IDENTIČNE
+    featuri kao batch put — isti kod, isti uzorci po frejmu."""
+    import soundfile as sf
+    wavs = sorted((ROOT / "data" / "dcase2026_dev" / "fan" / "train").glob("*.wav"))
+    if not wavs:
+        pytest.skip("fan dataset nije raspakovan")
+    y, _ = sf.read(wavs[0], dtype="float32", always_2d=True)
+    y = np.ascontiguousarray(y[:, 0])
+
+    batch = _c_logmel(clib, y)
+
+    class Stream(ctypes.Structure):
+        _fields_ = [("window", ctypes.c_float * features.N_FFT),
+                    ("filled", ctypes.c_int),
+                    ("lm_hist", (ctypes.c_float * features.N_MELS) * features.N_FRAMES),
+                    ("lm_count", ctypes.c_int)]
+
+    clib.asd_stream_push_hop.restype = ctypes.c_int
+    s = Stream()
+    clib.asd_stream_reset(ctypes.byref(s))
+    frames = []
+    n_hops = len(y) // features.HOP
+    for h in range(n_hops):
+        chunk = np.ascontiguousarray(y[h * features.HOP:(h + 1) * features.HOP])
+        if clib.asd_stream_push_hop(ctypes.byref(s),
+                                    chunk.ctypes.data_as(ctypes.POINTER(ctypes.c_float))):
+            idx = (s.lm_count - 1) % features.N_FRAMES
+            frames.append(np.array(s.lm_hist[idx], dtype=np.float32))
+    stream = np.stack(frames)
+
+    n = min(len(batch), len(stream))
+    assert n >= len(batch) - 1
+    max_diff = float(np.max(np.abs(batch[:n] - stream[:n])))
+    print(f"[streaming] frames={n} max|batch-stream| = {max_diff:.2e}")
+    assert max_diff == 0.0, "streaming i batch moraju biti bit-identicni"
+
+
 def test_numpy_vs_librosa_melfb():
     """Sanity: naša STFT putanja vs librosa (center=False) na istom signalu."""
     import librosa
