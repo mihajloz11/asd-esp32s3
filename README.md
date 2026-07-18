@@ -43,6 +43,11 @@ cd pc
 ..\.venv\Scripts\python.exe tools\export_test_vectors.py --wav <klip.wav> --tag fan_baseline_s0
 # PC↔C testovi (traže gcc u PATH):
 ..\.venv\Scripts\python.exe -m pytest tests\ -v
+# dashboard svih eksperimenata (results\dashboard.html):
+..\.venv\Scripts\python.exe tools\gen_dashboard.py
+# E4: klipovi za flash particiju + PC referenca + poredjenje sa uredjajem:
+..\.venv\Scripts\python.exe tools\prepare_eval_clips.py --data ..\data\dcase2026_dev\fan --tag fan_baseline_s0
+..\.venv\Scripts\python.exe tools\compare_eval.py --machine fan
 ```
 
 Svi rezultati se dopisuju u `results/results.csv` (kolona `precision`: fp32 /

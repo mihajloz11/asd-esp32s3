@@ -23,6 +23,7 @@
 #include "tflm_infer.h"
 #include "calib_gamma.h"
 #include "model_data.h"
+#include "eval_mode.h"
 
 static const char *TAG = "asd";
 
@@ -90,6 +91,21 @@ void app_main(void) {
         return;
     }
     ESP_LOGI(TAG, "TFLM arena used: %u B", (unsigned)tflm_arena_used());
+
+    /* Eval mod (E4): taster drzan pri bootu, ili build sa -DASD_EVAL_MODE */
+    gpio_config_t btn = {.pin_bit_mask = 1ULL << PIN_BUTTON,
+                         .mode = GPIO_MODE_INPUT, .pull_up_en = GPIO_PULLUP_ENABLE};
+    gpio_config(&btn);
+    vTaskDelay(pdMS_TO_TICKS(50));
+#ifndef ASD_EVAL_MODE
+    if (gpio_get_level(PIN_BUTTON) == 0)
+#endif
+    {
+        ESP_LOGI(TAG, "ulazim u EVAL mod (klipovi sa flash particije)");
+        eval_mode_run();
+        ESP_LOGI(TAG, "eval zavrsen — restartuj bez tastera za zivi rad");
+        while (1) vTaskDelay(portMAX_DELAY);
+    }
 
     ESP_ERROR_CHECK(audio_i2s_init());
     ESP_ERROR_CHECK(audio_i2s_start());
