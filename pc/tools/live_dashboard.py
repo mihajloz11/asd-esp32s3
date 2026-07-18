@@ -113,13 +113,13 @@ function spark(a,b){if(!a.length)return '<i style="color:var(--mut)">nema podata
 function pivot(rows,prec){const ms=[...new Set(rows.map(r=>r.machine))];
  let h='<table><tr><th>'+prec+'</th>'+ms.map(m=>`<th>${m}</th>`).join('')+'</tr>';
  for(const v of ["baseline","tiny64","tiny32","tiny32b4","tiny16"]){h+=`<tr><td>${v}</td>`;
-  for(const m of ms){const c=rows.filter(r=>r.machine==m&&r.variant==v&&r.precision==prec).pop();
+  for(const m of ms){const c=rows.filter(r=>r.machine==m&&r.variant==v&&r.precision==prec&&r.score=='mse').pop();
    h+=`<td>${c?(+c.hmean).toFixed(4):'—'}</td>`}h+='</tr>'}return h+'</table>'}
 function deltaTbl(rows){const ms=[...new Set(rows.map(r=>r.machine))];
  let h='<table><tr><th>&Delta;</th>'+ms.map(m=>`<th>${m}</th>`).join('')+'</tr>';
  for(const v of ["baseline","tiny64","tiny32","tiny32b4","tiny16"]){h+=`<tr><td>${v}</td>`;
-  for(const m of ms){const f=rows.filter(r=>r.machine==m&&r.variant==v&&r.precision=='fp32').pop();
-   const i=rows.filter(r=>r.machine==m&&r.variant==v&&r.precision=='int8').pop();
+  for(const m of ms){const f=rows.filter(r=>r.machine==m&&r.variant==v&&r.precision=='fp32'&&r.score=='mse').pop();
+   const i=rows.filter(r=>r.machine==m&&r.variant==v&&r.precision=='int8'&&r.score=='mse').pop();
    if(f&&i){const d=(+i.hmean)-(+f.hmean);h+=`<td class="${d<-0.005?'neg':''}">${d>=0?'+':''}${d.toFixed(4)}</td>`}
    else h+='<td>—</td>'}h+='</tr>'}return h+'</table>'}
 async function tick(){try{
