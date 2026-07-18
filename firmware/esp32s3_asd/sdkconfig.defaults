@@ -1,22 +1,11 @@
-# ESP32-S3-WROOM-1 N32R16V: 32 MB flash + 16 MB OKTALNI PSRAM (plan 5.6)
-CONFIG_IDF_TARGET="esp32s3"
-
-# PSRAM — OBAVEZNO OCT mod; quad daje boot-loop (rizik C3)
-CONFIG_SPIRAM=y
-CONFIG_SPIRAM_MODE_OCT=y
-CONFIG_SPIRAM_SPEED_80M=y
-CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=4096
-
-# Flash 32 MB
-CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE="32MB"
+# Zajednički defaults za oba targeta (esp32s3 / esp32).
+# Target se bira sa: idf.py set-target esp32s3   (ili esp32)
+# Per-target specifičnosti: sdkconfig.defaults.esp32s3 / sdkconfig.defaults.esp32
 
 # CPU 240 MHz fiksno (mjerna validnost, plan 6.3)
 CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
 
-# Custom particije (FAT za test klipove, plan 5.6 tačka 5)
-CONFIG_PARTITION_TABLE_CUSTOM=y
-CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
-
 # Veći main task stack (TFLM init)
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+CONFIG_PARTITION_TABLE_CUSTOM=y

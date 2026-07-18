@@ -1,0 +1,6 @@
+# 4 MB flash (DevKit V1): app 2.5 MB + FAT ~1.4 MB (~4 test klipa za E4 latenciju)
+# Name,   Type, SubType, Offset,   Size,     Flags
+nvs,      data, nvs,     0x9000,   0x6000,
+phy_init, data, phy,     0xf000,   0x1000,
+factory,  app,  factory, 0x10000,  0x280000,
+storage,  data, fat,     ,         0x160000,
