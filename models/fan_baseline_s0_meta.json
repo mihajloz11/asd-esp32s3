@@ -1,12 +1,12 @@
 {
- "tag": "fan_tiny32_s0",
+ "tag": "fan_baseline_s0",
  "machine": "fan",
- "variant": "tiny32",
+ "variant": "baseline",
  "seed": 0,
  "score_mode": "mse",
- "n_params": 44840,
+ "n_params": 269992,
  "epochs": 100,
- "train_time_s": 398.3,
+ "train_time_s": 34896.7,
  "input_dim": 640,
  "mean": [
   -10.388016700744629,
@@ -1292,16 +1292,16 @@
   3.9292194843292236,
   3.337674140930176
  ],
- "auc_source": 0.5933999999999999,
- "auc_target": 0.45159999999999995,
- "pauc": 0.5226315789473684,
- "hmean": 0.5160893746305191,
+ "auc_source": 0.6392,
+ "auc_target": 0.4682,
+ "pauc": 0.5405263157894737,
+ "hmean": 0.5405070739171222,
  "gamma": {
-  "shape": 1521.7557029323796,
-  "scale": 0.0004943772859446976,
-  "threshold": 0.7771402611904938,
-  "k_moment": 1355.3883733151697,
-  "theta_moment": 0.0005550596929251047,
-  "threshold_moment": 0.7786257499566637
+  "shape": 2784.846729617657,
+  "scale": 0.00026201740915831505,
+  "threshold": 0.7474536111709706,
+  "k_moment": 2584.7412935397147,
+  "theta_moment": 0.0002823022663123688,
+  "threshold_moment": 0.7481309852862127
  }
 }
