@@ -151,10 +151,23 @@ akumulira klipove s prefiksom 'n', ispisuje E6CALIB liniju.
 
 ### 19.07 — PC-strana bez hardvera (5-seed, MAHALA-int8, pisanje)
 
-**MAHALA-int8** (tools/score_mahala_int8.py, batched int8 interpreter): pokrenuto
-za svih 35 modela. Prvi nalaz — fan baseline int8+MAHALA 0.5577 vs fp32+MAHALA
-0.5553 → **uplift MAHALA preživljava kvantizaciju** (int8 ne ubija target-domain
-dobitak). Puna tabela po završetku.
+**MAHALA-int8** (tools/score_mahala_int8.py): GOTOVO za svih 35 modela.
+**Zaključak: MAHALA uplift potpuno preživljava int8** — razlika MAHALA int8 vs
+fp32 po mašinama (baseline) u opsegu [−0.003, +0.003], tj. u šumu:
+
+| mašina | MSE fp32 | MAHALA fp32 | MAHALA int8 | int8−fp32 |
+|---|---|---|---|---|
+| fan | 0.5405 | 0.5553 | 0.5577 | +0.0024 |
+| bearingEmu | 0.5836 | 0.5888 | 0.5878 | −0.0010 |
+| gearboxEmu | 0.5162 | 0.5440 | 0.5439 | −0.0001 |
+| sliderEmu | 0.5292 | 0.5092 | 0.5101 | +0.0009 |
+| ToyCar | 0.3698 | 0.4077 | 0.4107 | +0.0030 |
+| ToyCarEmu | 0.5497 | 0.5042 | 0.5012 | −0.0030 |
+| valveEmu | 0.6158 | 0.6367 | 0.6360 | −0.0007 |
+
+Znači: i "pametni" backend (Mahalanobis, sa kovarijansom fitovanom na fp32
+greškama) radi na int8 modelu bez gubitka → int8 je kompletno bezbjedan za
+deployment, ne samo za MSE nego i za MAHALA. Dashboard regenerisan.
 
 **5-seed finalne tabele:** seed_queue.ps1 pokrenut (čeka MAHALA-int8 da izbjegne
 konflikt upisa u results.csv) — fan seeds 1-4 prvo (kompletan 5-seed za fan),
