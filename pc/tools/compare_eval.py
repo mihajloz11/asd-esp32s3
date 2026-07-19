@@ -57,6 +57,19 @@ def main() -> None:
 
     print(f"\nmax rel razlika: {max(rels):.3e} (prag {args.tol})")
     print(f"AUC iz device score-ova: {roc_auc_score(labels, scores):.4f}")
+
+    # E6: uporedi on-device gamma prag sa PC gamma pragom na ISTIM normalnim klipovima
+    e6 = re.search(r"E6CALIB,n_normal=(\d+),thr_device=([\d.eE+-]+)", dev_path.read_text("utf-8", "ignore"))
+    if e6:
+        from scipy import stats
+        norm_pc = [pc for _, (pc, lab, _) in ref.items() if lab == 0]
+        m, v = np.mean(norm_pc), np.var(norm_pc)
+        k, th = m * m / v, v / m
+        thr_pc = float(stats.gamma.ppf(0.9, k, scale=th))
+        thr_dev = float(e6.group(2))
+        rel_e6 = abs(thr_dev - thr_pc) / thr_pc
+        print(f"E6 gamma prag: device={thr_dev:.5f}  PC(iste normalne)={thr_pc:.5f}  "
+              f"rel={rel_e6:.2%}  (n_normal={e6.group(1)})")
     print(f"latencija po klipu: feat {np.mean(feat_ms):.0f}±{np.std(feat_ms):.0f} ms, "
           f"inf {np.mean(inf_ms):.0f}±{np.std(inf_ms):.0f} ms")
     if max(rels) > args.tol:

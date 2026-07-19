@@ -18,7 +18,9 @@
 | MAHALA scoring (7 mašina × 5 varijanti) | ✔ — pomaže na 5/7 mašina |
 | Firmware (streaming, oba targeta) | ✔ builduje se bez grešaka |
 | **On-device verifikacija (uređaj == PC)** | ✔ **max rel razlika 1.5e-04** |
-| E4 latencija S3 vs ESP32 | ✔ prva matrica (results/e4_latency.md): S3 2.76× brži ukupno, 3.6× na inferenci; esp-nn on/off na S3 još ostaje |
+| E4 latencija | ✔ KOMPLETNO: S3 vs ESP32 2.76× (platforma); esp-nn on/off na S3 1.33× (čist PIE) — results/e4_latency.md |
+| Puna on-device AUC | ✔ 60 klipova na S3: AUC 0.596, score-ovi vs PC max 2.2e-04 |
+| E6 on-device gamma prag | ✔ device 0.77090 vs PC 0.77064 = rel 0.03% — kalibracija radi na čipu |
 | E5 energija | čeka INA226 (naručuje se) |
 | Živi zvuk | čeka INMP441 (naručuje se) |
 | E6 on-device gamma kalibracija | C kod ✔ + PC test ✔; on-device test čeka |
@@ -130,6 +132,22 @@ Flešovan isti eval firmware (`set-target esp32`, 4 klipa na 1.4 MB FAT). Score-
 S3 665+870 ms vs ESP32 1095+3140 ms → **S3 2.76× brži ukupno, 3.6× na inferenci**
 (esp-nn PIE int8). Arena 7960 B na oba. Detalji: results/e4_latency.md.
 Zaključak: čak i klasični ESP32 bez PSRAM-a nosi model komotno (42 % real-time).
+
+### 19.07 — E4 dovršen + puna on-device AUC (#2) + E6 (#3)
+
+**esp-nn on/off na S3 (čist PIE):** inferenca 870 ms (asm) vs 1157 ms (ANSI C) =
+**1.33×**. Razdvaja PIE (1.33×) od pune platformske razlike prema klasičnom
+ESP32 (3.6×). Featuring nepromijenjen (FFT je naš kod, ne esp-nn).
+
+**#2 Puna on-device AUC:** 60 fan klipova (30 normal + 30 anomalija, source+target)
+na S3 20 MB FAT particiji. Device AUC = **0.596**, score-ovi vs PC max razlika
+**2.2e-04** → hardver reprodukuje PC na PUNOM setu, ne samo na 16 verifikacionih.
+
+**#3 E6 on-device kalibracija:** uređaj SAM fitovao gamma prag iz 30 normalnih
+score-ova (momentna metoda + Wilson–Hilferty u C): **0.77090** vs PC gamma na
+istim klipovima **0.77064** = **rel 0.03 %**. On-device adaptacija bez clouda
+dokazana na hardveru — E6 iz "stretch" prešao u "urađeno". Kod: eval_mode.c
+akumulira klipove s prefiksom 'n', ispisuje E6CALIB liniju.
 
 ## REZULTATI — GLAVNE TABELE (1 seed; finalno ide 5 seedova)
 
