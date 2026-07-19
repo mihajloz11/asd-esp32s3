@@ -64,7 +64,11 @@ def main() -> None:
         for i, c in enumerate(chosen):
             # kratko 8.3 ime (FAT bez LFN podrške u fatfsgen-u zna praviti probleme)
             short = f"{'n' if c.label == 0 else 'a'}{c.domain[0]}{i:03d}.wav"
-            shutil.copy2(c.path, out_dir / short)
+            # mono kanal 0, PCM16 — isto što PC pipeline koristi (DCASE 2026
+            # klipovi su stereo: blizu/daleko mikrofon), firmware čita mono
+            import soundfile as sf
+            y, sr = sf.read(c.path, dtype="int16", always_2d=True)
+            sf.write(out_dir / short, y[:, 0], sr, subtype="PCM_16")
             vecs = features.wav_to_vectors(str(c.path))
             xn = (vecs - mean) / std
             rec = pred(xn)
