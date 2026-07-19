@@ -18,7 +18,7 @@
 | MAHALA scoring (7 mašina × 5 varijanti) | ✔ — pomaže na 5/7 mašina |
 | Firmware (streaming, oba targeta) | ✔ builduje se bez grešaka |
 | **On-device verifikacija (uređaj == PC)** | ✔ **max rel razlika 1.5e-04** |
-| E4 latencija S3 | prvi brojevi ✔ (665+870 ms/klip); matrica čeka klasični ESP32 build |
+| E4 latencija S3 vs ESP32 | ✔ prva matrica (results/e4_latency.md): S3 2.76× brži ukupno, 3.6× na inferenci; esp-nn on/off na S3 još ostaje |
 | E5 energija | čeka INA226 (naručuje se) |
 | Živi zvuk | čeka INMP441 (naručuje se) |
 | E6 on-device gamma kalibracija | C kod ✔ + PC test ✔; on-device test čeka |
@@ -122,6 +122,14 @@ sve sa tačnim razlogom za sekundu. Fix: prepare_eval_clips konvertuje u mono
 kanal 0. Pouka = zlatno pravilo 1 (testiraj sloj po sloj) radi u praksi.
 
 ---
+
+### 19.07 — E4 klasični ESP32 (DevKit V1, ESP32-D0WD-V3, COM5/CP2102)
+
+Flešovan isti eval firmware (`set-target esp32`, 4 klipa na 1.4 MB FAT). Score-ovi
+**bit-identični** S3/PC-u → korektnost cross-platform. Latencija (po 10 s klipu):
+S3 665+870 ms vs ESP32 1095+3140 ms → **S3 2.76× brži ukupno, 3.6× na inferenci**
+(esp-nn PIE int8). Arena 7960 B na oba. Detalji: results/e4_latency.md.
+Zaključak: čak i klasični ESP32 bez PSRAM-a nosi model komotno (42 % real-time).
 
 ## REZULTATI — GLAVNE TABELE (1 seed; finalno ide 5 seedova)
 
