@@ -80,6 +80,8 @@ objašnjeni od nule, uz oznaku šta smo tačno mi uradili. Zelene kutije = naš 
   <li><a href="#esp">Embedded strana — memorije, I2S, DMA, FreeRTOS</a></li>
   <li><a href="#dsp">DSP — FFT, prozori, streaming</a></li>
   <li><a href="#metod">Zašto rezultatima vjerujemo — metodologija</a></li>
+  <li><a href="#rezultati">Naši rezultati — šta su brojevi stvarno rekli</a></li>
+  <li><a href="#deploy">Od koda do čipa — build, flešovanje, prvi život na pločici</a></li>
   <li><a href="#recnik">Mini rječnik za brzo podsjećanje</a></li>
 </ol>
 </div>
@@ -249,6 +251,20 @@ gamma raspodjele, uređaj može SAM sebi izračunati prag na novoj mašini
 (on-device kalibracija, eksperiment E6). Provjereno na PC-u: C daje prag unutar
 2 % od scipy-ja.</div>
 
+<h3>Mahalanobisova distanca — pametniji score od MSE</h3>
+<p>MSE tretira svaku od 640 dimenzija greške jednako: "koliko si ukupno
+promašio". Ali AE i na normalnom zvuku uvijek malo griješi — i to na
+<b>karakterističan način</b> (neke dimenzije uvijek malo bježe, neke se
+razilaze zajedno). <b>Mahalanobisova distanca</b> na trening podacima nauči taj
+tipičan oblik greške (kovarijansnu matricu — koje dimenzije koliko variraju i
+kako se kreću zajedno), pa novi klip mjeri pitanjem: <i>"koliko je tvoja greška
+neobična U ODNOSU na greške koje pravim i na normalnom zvuku?"</i></p>
+<div class="idea"><b>Zašto to pomaže kod domain shifta:</b> kad se uslovi rada promijene
+(target domen), greška rekonstrukcije poraste svuda pomalo — MSE to vidi kao
+"anomaliju". Mahalanobis zna da su pomaci duž uobičajenih pravaca jeftini, a
+kažnjava samo greške u pravcima u kojima normalan zvuk NIKAD ne griješi — pa
+bolje razdvaja "drugačiji ali ispravan" od "pokvaren".</div>
+
 <h2 id="kvant">7. Kvantizacija — od 1 MB do 68 KB</h2>
 <p>Mreža poslije treninga drži parametre kao <b>float32</b> (32-bitni realni
 brojevi): 267 k parametara ≈ 1.1 MB. <b>Kvantizacija</b> ih pretvara u
@@ -364,7 +380,96 @@ na starom ESP32 bez PSRAM-a, što nam treba za E4 poređenje.</div>
 <tr><td><b>Loš rezultat ≠ propao rad</b></td><td>Ako int8 negdje degradira, ako baseline ne stane u SRAM — to su REZULTATI ako su čisto izmjereni i pošteno diskutovani. Rad mjeri kompromise, ne juri rekord.</td></tr>
 </table>
 
-<h2 id="recnik">12. Mini rječnik</h2>
+<h2 id="rezultati">12. Naši rezultati — šta su brojevi stvarno rekli</h2>
+<p>E1–E3 su završeni za svih 7 mašina: 5 veličina modela × {fp32, int8} sa MSE
+score-om, plus MAHALA na svemu. Ukupno 155 mjerenja. Četiri nalaza:</p>
+
+<h3>1. Kvantizacija je (za ovu klasu modela) besplatna</h3>
+<p>Najgora degradacija int8 vs fp32 na bilo kojoj kombinaciji mašina×model:
+<b>−0.005 hmean</b> — unutar šuma mjerenja; na ToyCar int8 čak +0.011. Hipoteza
+je bila "degradacija nije uniformna"; odgovor je jači: uniformno je ≈ nula.
+Za rad: <i>deploy int8 modela na MCU ne košta ništa tačnosti.</i></p>
+
+<h3>2. Pareto kriva je plitka — mali modeli su legitimni</h3>
+<p>Baseline (270 k param.) → tiny16 (22 k, 12× manje): gubitak tipično 2–3 p.p.
+hmean-a. Uz to, nijedna veličina ne pobjeđuje svuda (na ToyCar najbolji tiny32,
+na gearbox tiny64) — isto što literatura kaže za arhitekture, mi pokazujemo za
+veličinu.</p>
+
+<h3>3. MAHALA pomaže — ali mašinski zavisno (5 od 7)</h3>
+<table>
+<tr><th>Mašina</th><th>hmean MSE → MAHALA (baseline)</th><th>Verdikt</th></tr>
+<tr><td>fan</td><td>0.540 → 0.555 (target AUC +6 p.p., na tiny16 čak +10)</td><td>pomaže ✔</td></tr>
+<tr><td>bearingEmu</td><td>0.584 → 0.589</td><td>pomaže ✔</td></tr>
+<tr><td>gearboxEmu</td><td>0.516 → 0.544</td><td>pomaže ✔</td></tr>
+<tr><td>valveEmu</td><td>0.616 → 0.637</td><td>pomaže ✔</td></tr>
+<tr><td>ToyCar</td><td>0.370 → 0.408 (ali vidi nalaz 4)</td><td>pomaže* ✔</td></tr>
+<tr><td>sliderEmu</td><td>0.529 → 0.509</td><td><b>škodi ✗</b></td></tr>
+<tr><td>ToyCarEmu</td><td>0.550 → 0.504</td><td><b>škodi ✗</b></td></tr>
+</table>
+<p>Zaključak za rad: backend score-a treba birati po mašini — na malom modelu
+MAHALA zna nadoknaditi ono što se izgubilo smanjivanjem (fan tiny16 sa MAHALA ≈
+baseline sa MSE).</p>
+
+<h3>4. ToyCar — studija slučaja ekstremnog domain shifta</h3>
+<p>ToyCar source AUC 0.79, a <b>target AUC 0.25 — ispod slučajnosti</b>: model
+target-NORMALNE klipove rangira kao anomalnije od pravih anomalija. Promjena
+uslova rada je "veća anomalija" od kvara. Ovo nije bug nego savršena ilustracija
+zašto DCASE uopšte mjeri domain shift — i ide u diskusiju rada kao studija
+slučaja (uz provjeru protiv zvaničnih baseline tabela).</p>
+<div class="mi"><b>Ograda koju pošteno navodimo:</b> sve je 1 seed. Za finalne tabele
+ide 5 nezavisnih treninga i mean ± std (alat spreman: results_stats.py) —
+pojedinačne razlike &lt;1 p.p. dotle ne tretiramo kao nalaze.</div>
+
+<h2 id="deploy">13. Od koda do čipa — build, flešovanje, prvi život na pločici</h2>
+
+<h3>Šta se stvarno dešava kad "spustiš model na pločicu"</h3>
+<p>Trening je gotov, imamo .tflite od 68 KB — kako on završi u čipu? Lanac:</p>
+<div class="pipe">model.tflite → gen_model_header.py → model_data.h (C niz bajtova)
+    → kompajler (xtensa-esp32s3-elf-gcc) ga upeče u firmware binarku
+    → esptool preko USB/UART upiše binarku u flash čipa
+    → pri bootu TFLM čita model DIREKTNO iz flasha (0 B RAM-a za težine)</div>
+<p><b>Toolchain:</b> ESP-IDF (Espressifov SDK) donosi cross-kompajler — GCC koji
+radi na PC-u a proizvodi kod za Xtensa jezgro — plus CMake/Ninja build i
+esptool za upis. Firmware se sastoji od tri dijela koja se flešuju na fiksne
+adrese: <b>bootloader</b> (pokreće sve), <b>partition table</b> (mapa flasha:
+gdje je aplikacija, gdje NVS, gdje naša 20 MB FAT particija sa klipovima) i
+<b>aplikacija</b>.</p>
+
+<h3>Šta je boot log rekao (i zašto su ti brojevi bitni)</h3>
+<div class="pipe">I (282) esp_psram: Found 16MB PSRAM device      ← OCT PSRAM config tačan, nema boot-loopa
+I (1289) tflm: arena used: 7960 B               ← TFLM-u treba samo 7.9 KB RAM-a!
+I (11379) asd: score=690.9 ... ANOMALIJA
+         feat=662 ms  inf=766 ms  (307 vec)  dropped=0</div>
+<ul>
+<li><b>arena 7.9 KB</b> — procjena je bila 20–40 KB; stvarnost je 5× bolja. Cijeli
+inference put (arena + streaming baferi) staje u ~20 KB RAM-a — komotno i za
+najmanji MCU, PSRAM za tiny32 uopšte ne treba.</li>
+<li><b>662 + 766 ms po 10 s klipa</b> — obrada zauzima 14 % realnog vremena
+(raspoređeno tokom snimanja po ~4.6 ms na svakih 32 ms zvuka). Real-time
+kriterijum E4 prolazi sa 7× rezerve, i prije ikakvih optimizacija.</li>
+<li><b>score 690 vs prag 0.78</b> — mikrofon još nije stigao, I2S ulaz visi i čita
+elektronski šum → featuri su smeće → džinovski score. Sistem je ISPRAVNO
+rekao "ovo nije zvuk na kom sam treniran". Detektor radi.</li>
+<li><b>dropped=0</b> — ring buffer arhitektura stiže; nijedan uzorak izgubljen.</li>
+</ul>
+
+<h3>Eval mod — dokaz da uređaj računa isto što i PC</h3>
+<p>Umjesto mikrofona, uređaj čita DCASE klipove sa svoje flash particije
+(vlastiti WAV parser u C-u) i ispisuje score po klipu preko UART-a. Isti klipovi
+prolaze kroz PC pipeline → dvije kolone brojeva koje moraju da se poklope na
+&lt;0.1 %. Time se dokazuje da su featuring, kvantizacija i model NA UREĐAJU
+ekvivalentni onome što je evaluirano u Pythonu — pa AUC tabele iz sekcije 12
+važe za stvarni hardver, ne samo za simulaciju.</p>
+<div class="mi"><b>Lekcija iz prakse (ista noć):</b> prvi pokušaj eval moda je pao —
+parser je javio <code>ch=2</code>: DCASE 2026 klipovi su STEREO (par
+blizu/daleko mikrofona iz noise-aware postavke), a PC pipeline tiho uzima kanal
+0. Da smo testirali end-to-end ("zašto je AUC čudan?"), tražili bismo danima;
+ovako je parser sa provjerom formata prijavio tačan uzrok za sekundu. To je
+zlatno pravilo iz sekcije 11 — svaki sloj provjerava svoje ulaze — na djelu.
+Fix: priprema klipova sada eksplicitno vadi kanal 0 u mono.</div>
+
+<h2 id="recnik">14. Mini rječnik</h2>
 <table>
 <tr><th>Pojam</th><th>U jednoj rečenici</th></tr>
 <tr><td>ASD</td><td>Anomalous Sound Detection — detekcija anomalija u zvuku.</td></tr>
@@ -390,10 +495,16 @@ na starom ESP32 bez PSRAM-a, što nam treba za E4 poređenje.</div>
 <tr><td>FFT / Hann</td><td>Brzi algoritam za spektar / prozor koji smanjuje razmaz spektra na rubovima frejma.</td></tr>
 <tr><td>PIE / esp-nn / SIMD</td><td>Vektorske instrukcije S3 jezgra / Espressifovi kerneli koji ih koriste / „jedna instrukcija, više podataka".</td></tr>
 <tr><td>Pareto kriva</td><td>Skup najboljih kompromisa dvije suprotstavljene veličine (tačnost vs veličina modela).</td></tr>
+<tr><td>Mahalanobisova distanca</td><td>"Koliko je greška neobična u odnosu na tipičan oblik grešaka" — MSE ponderisan naučenom kovarijansom.</td></tr>
+<tr><td>Cross-kompajler</td><td>Kompajler koji radi na PC-u a proizvodi kod za drugi procesor (Xtensa).</td></tr>
+<tr><td>Bootloader / partition table</td><td>Prvi kod koji se izvrši pri paljenju / mapa flasha (gdje je app, NVS, FAT particija).</td></tr>
+<tr><td>esptool / flešovanje</td><td>Alat i čin upisa binarke u flash čipa preko USB/UART-a.</td></tr>
+<tr><td>UART / boot log</td><td>Serijska veza kojom čip ispisuje logove; prvi prozor u ono što se na njemu dešava.</td></tr>
 </table>
 
 <p style="margin-top:36px; color: var(--muted); font-size: 0.9rem;">
-Dokument prati stanje projekta na dan 18.07.2026 — repo <code>Desktop/master new</code>,
+Dokument prati stanje projekta na dan 19.07.2026 (E1–E3 kompletni za svih 7
+mašina + prvi firmware na stvarnom hardveru) — repo <code>Desktop/master new</code>,
 plan u <code>plan-master-rada.md</code>, praktični detalji u <code>docs/</code>.</p>
 
 </div>
