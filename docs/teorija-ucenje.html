@@ -82,6 +82,7 @@ objašnjeni od nule, uz oznaku šta smo tačno mi uradili. Zelene kutije = naš 
   <li><a href="#metod">Zašto rezultatima vjerujemo — metodologija</a></li>
   <li><a href="#rezultati">Naši rezultati — šta su brojevi stvarno rekli</a></li>
   <li><a href="#deploy">Od koda do čipa — build, flešovanje, prvi život na pločici</a></li>
+  <li><a href="#e4">E4 — dvije ploče, isti model: šta PIE donosi</a></li>
   <li><a href="#recnik">Mini rječnik za brzo podsjećanje</a></li>
 </ol>
 </div>
@@ -469,7 +470,26 @@ ovako je parser sa provjerom formata prijavio tačan uzrok za sekundu. To je
 zlatno pravilo iz sekcije 11 — svaki sloj provjerava svoje ulaze — na djelu.
 Fix: priprema klipova sada eksplicitno vadi kanal 0 u mono.</div>
 
-<h2 id="recnik">14. Mini rječnik</h2>
+<h2 id="e4">14. E4 — dvije ploče, isti model: šta PIE zapravo donosi</h2>
+<p>Isti firmware, isti tiny32 int8 model, isti klipovi — na ESP32-S3 i na
+klasičnom ESP32 (DevKit V1). Prvo iznenađenje: <b>score-ovi su bit-identični</b>
+(razlika &lt; 1.5e-04 vs PC na obje). int8 aritmetika je deterministička —
+korektnost se ne mijenja sa hardverom, samo brzina.</p>
+<table>
+<tr><th>Faza (po 10 s klipu)</th><th>ESP32-S3 (PIE + esp-nn)</th><th>ESP32 klasični (LX6)</th><th>S3 brži</th></tr>
+<tr><td>Featuring (FFT+mel)</td><td>665 ms</td><td>~1095 ms</td><td>1.65×</td></tr>
+<tr><td><b>Inferenca (int8 AE)</b></td><td>~870 ms</td><td>~3140 ms</td><td><b>3.6×</b></td></tr>
+<tr><td>Ukupno</td><td>~1535 ms</td><td>~4235 ms</td><td>2.76×</td></tr>
+</table>
+<div class="idea"><b>Poenta za rad:</b> inferenca je gdje S3 dominira (3.6×) — to je
+efekat <b>PIE SIMD int8 kernela</b> (esp-nn) koje LX7 jezgro ima a LX6 nema.
+Featuring (float FFT) dobija skromnijih 1.65× od FPU-a. Oba čipa daleko ispod
+real-time granice: S3 na 15 %, klasični ESP32 na 42 % iskorišćenja — čak i
+ploča bez PSRAM-a nosi model komotno. Sljedeći korak (za čist ablation): isti
+esp-nn <b>uključen/isključen na istom S3</b> — izoluje PIE od svih drugih
+platformskih razlika (cache, PSRAM).</div>
+
+<h2 id="recnik">15. Mini rječnik</h2>
 <table>
 <tr><th>Pojam</th><th>U jednoj rečenici</th></tr>
 <tr><td>ASD</td><td>Anomalous Sound Detection — detekcija anomalija u zvuku.</td></tr>
