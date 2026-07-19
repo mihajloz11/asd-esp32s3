@@ -2,6 +2,7 @@
 #include "features_c.h"
 #include "tflm_infer.h"
 #include "model_data.h"
+#include "calib_gamma.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -49,7 +50,7 @@ static long wav_open(FILE *f) {
     }
 }
 
-static int score_file(const char *path) {
+static int score_file(const char *path, float *out_score) {
     FILE *f = fopen(path, "rb");
     if (!f) { ESP_LOGE(TAG, "fopen %s", path); return -1; }
     long n_samples = wav_open(f);
@@ -82,8 +83,10 @@ static int score_file(const char *path) {
     }
     fclose(f);
     if (!n_vec) return -1;
+    float score = (float)(score_sum / n_vec);
+    if (out_score) *out_score = score;
     /* CSV na stdout — hvataš monitorom: idf.py monitor | tee eval_device.csv */
-    printf("EVALCSV,%s,%.8f,%lld,%lld,%d\n", path, score_sum / n_vec,
+    printf("EVALCSV,%s,%.8f,%lld,%lld,%d\n", path, score,
            t_feat / 1000, t_inf / 1000, n_vec);
     return 0;
 }
@@ -105,14 +108,27 @@ int eval_mode_run(void) {
     printf("EVALCSV,file,score,feat_ms,inf_ms,n_vec\n");
     struct dirent *e;
     int n = 0, fail = 0;
+    gamma_calib_t calib;                 /* E6: on-device kalibracija praga */
+    gamma_calib_reset(&calib);
     while ((e = readdir(d)) != NULL) {
         const char *dot = strrchr(e->d_name, '.');
         if (!dot || (strcasecmp(dot, ".wav") != 0)) continue;
         char path[300];
         snprintf(path, sizeof(path), MOUNT_POINT "/%s", e->d_name);
-        if (score_file(path) == 0) n++; else fail++;
+        float sc = 0.0f;
+        if (score_file(path, &sc) == 0) {
+            n++;
+            /* normalni klipovi imaju prefiks 'n' (prepare_eval_clips) — samo njih
+             * u kalibraciju, kao što bi uređaj radio na terenu (samo normal rad) */
+            if (e->d_name[0] == 'n' || e->d_name[0] == 'N')
+                gamma_calib_add(&calib, sc);
+        } else fail++;
     }
     closedir(d);
-    ESP_LOGI(TAG, "eval gotov: %d klipova OK, %d gresaka", n, fail);
+    /* E6: prag iz gamma fita normalnih score-ova (momentna metoda + Wilson-Hilferty) */
+    float thr = gamma_calib_threshold(&calib, 0.9f);
+    printf("E6CALIB,n_normal=%d,thr_device=%.8f,thr_baked=%.8f\n",
+           calib.n, thr, (float)ASD_SCORE_THRESHOLD);
+    ESP_LOGI(TAG, "eval gotov: %d klipova OK, %d gresaka; E6 prag(dev)=%.5f", n, fail, thr);
     return fail ? -2 : 0;
 }
