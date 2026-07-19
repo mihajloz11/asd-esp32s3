@@ -149,6 +149,21 @@ istim klipovima **0.77064** = **rel 0.03 %**. On-device adaptacija bez clouda
 dokazana na hardveru — E6 iz "stretch" prešao u "urađeno". Kod: eval_mode.c
 akumulira klipove s prefiksom 'n', ispisuje E6CALIB liniju.
 
+### 19.07 — PC-strana bez hardvera (5-seed, MAHALA-int8, pisanje)
+
+**MAHALA-int8** (tools/score_mahala_int8.py, batched int8 interpreter): pokrenuto
+za svih 35 modela. Prvi nalaz — fan baseline int8+MAHALA 0.5577 vs fp32+MAHALA
+0.5553 → **uplift MAHALA preživljava kvantizaciju** (int8 ne ubija target-domain
+dobitak). Puna tabela po završetku.
+
+**5-seed finalne tabele:** seed_queue.ps1 pokrenut (čeka MAHALA-int8 da izbjegne
+konflikt upisa u results.csv) — fan seeds 1-4 prvo (kompletan 5-seed za fan),
+zatim ostale mašine preko noći. Agregacija: tools/results_stats.py (mean±std + LaTeX).
+
+**Pisanje:** draft poglavlja 2 (pregled literature) i 3 (teorija) — docs/
+rad-poglavlje-2-pregled.md, rad-poglavlje-3-teorija.md. HTML pregled cijelog
+projekta (plan vs urađeno, hronologija, hardver planovi): docs/pregled-projekta.html.
+
 ## REZULTATI — GLAVNE TABELE (1 seed; finalno ide 5 seedova)
 
 ### hmean po mašini (baseline / najbolji tiny, MSE fp32)
