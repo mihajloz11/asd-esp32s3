@@ -31,9 +31,11 @@ def main() -> None:
     dev = {}
     dev_path = ROOT / "results" / f"eval_device_{args.machine}.csv"
     for line in dev_path.read_text(encoding="utf-8", errors="ignore").splitlines():
-        m = re.match(r"EVALCSV,(?:/clips/)?([\w.]+\.wav),([\d.eE+-]+),(\d+),(\d+),(\d+)", line)
+        m = re.match(r"EVALCSV,(?:/clips/)?([\w.]+\.wav),([\d.eE+-]+),(\d+),(\d+),(\d+)",
+                     line, re.IGNORECASE)
         if m:
-            dev[m.group(1)] = (float(m.group(2)), int(m.group(3)), int(m.group(4)))
+            # FAT vraca 8.3 imena velikim slovima — normalizuj
+            dev[m.group(1).lower()] = (float(m.group(2)), int(m.group(3)), int(m.group(4)))
 
     if not dev:
         raise SystemExit(f"nema EVALCSV linija u {dev_path}")
