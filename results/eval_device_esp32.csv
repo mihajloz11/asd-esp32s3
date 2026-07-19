@@ -1,0 +1,100 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:6280
+load:0x40078000,len:15836
+ho 0 tail 12 room 4
+load:0x40080400,len:3920
+entry 0x40080644
+I (29) boot: ESP-IDF v5.5.5-34-g21f3b71cbbf 2nd stage bootloader
+I (29) boot: compile time Jul 19 2026 13:37:57
+I (29) boot: Multicore bootloader
+I (32) boot: chip revision: v3.1
+I (35) boot.esp32: SPI Speed      : 40MHz
+I (38) boot.esp32: SPI Mode       : DIO
+I (42) boot.esp32: SPI Flash Size : 4MB
+I (46) boot: Enabling RNG early entropy source...
+I (50) boot: Partition Table:
+I (53) boot: ## Label            Usage          Type ST Offset   Length
+I (59) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (66) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (72) boot:  2 factory          factory app      00 00 00010000 00280000
+I (79) boot:  3 storage          Unknown data     01 81 00290000 00160000
+I (85) boot: End of partition table
+I (88) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=21ef0h (138992) map
+I (143) esp_image: segment 1: paddr=00031f18 vaddr=3ffb0000 size=028b4h ( 10420) load
+I (148) esp_image: segment 2: paddr=000347d4 vaddr=40080000 size=0b844h ( 47172) load
+I (166) esp_image: segment 3: paddr=00040020 vaddr=400d0020 size=2362ch (144940) map
+I (216) esp_image: segment 4: paddr=00063654 vaddr=4008b844 size=017e4h (  6116) load
+I (219) esp_image: segment 5: paddr=00064e40 vaddr=50000000 size=00020h (    32) load
+I (227) boot: Loaded app from partition at offset 0x10000
+I (227) boot: Disabling RNG early entropy source...
+I (242) cpu_start: Multicore app
+I (250) cpu_start: GPIO 3 and 1 are used as console UART I/O pins
+I (250) cpu_start: Pro cpu start user code
+I (251) cpu_start: cpu freq: 240000000 Hz
+I (252) app_init: Application information:
+I (256) app_init: Project name:     esp32s3_asd
+I (260) app_init: App version:      on-device-verified-1-g96fb560
+I (266) app_init: Compile time:     Jul 19 2026 13:32:58
+I (271) app_init: ELF file SHA256:  4a9dd43b0...
+I (276) app_init: ESP-IDF:          v5.5.5-34-g21f3b71cbbf
+I (281) efuse_init: Min chip rev:     v0.0
+I (285) efuse_init: Max chip rev:     v3.99 
+I (289) efuse_init: Chip rev:         v3.1
+I (293) heap_init: Initializing. RAM available for dynamic allocation:
+I (299) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM
+I (304) heap_init: At 3FFBA550 len 00025AB0 (150 KiB): DRAM
+I (309) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM
+I (315) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM
+I (320) heap_init: At 4008D028 len 00012FD8 (75 KiB): IRAM
+W (326) spi_flash: Detected boya flash chip but using generic driver. For optimal functionality, enable `SPI_FLASH_SUPPORT_BOYA_CHIP` in menuconfig
+I (338) spi_flash: detected chip: generic
+I (342) spi_flash: flash io: dio
+I (346) main_task: Started on CPU0
+I (346) main_task: Calling app_main()
+I (346) asd: bez PSRAM-a (SRAM-only konfiguracija)
+I (356) asd: free heap: 269636 B
+I (376) tflm: arena used: 7960 B
+I (376) asd: TFLM arena used: 7960 B
+I (426) asd: ulazim u EVAL mod (klipovi sa flash particije)
+EVALCSV,file,score,feat_ms,inf_ms,n_vec
+EVALCSV,/clips/AS008.WAV,0.75074988,1086,3121,307
+E (5416) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (5416) task_wdt:  - IDLE0 (CPU 0)
+E (5416) task_wdt: Tasks currently running:
+E (5416) task_wdt: CPU 0: main
+E (5416) task_wdt: CPU 1: IDLE1
+E (5416) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x400E36DA:0x3FFB10F0 0x400E3A9C:0x3FFB1110 0x40082A89:0x3FFB1140 0x400D74D6:0x3FFBC7D0 0x400D763D:0x3FFBC800 0x400D7D50:0x3FFBC820 0x400D7EF7:0x3FFBC880 0x400D7320:0x3FFBC9F0 0x400F2EA0:0x3FFBCA40 0x40085C11:0x3FFBCA70
+
+EVALCSV,/clips/AS009.WAV,0.75349778,1123,3121,307
+E (10416) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (10416) task_wdt:  - IDLE0 (CPU 0)
+E (10416) task_wdt: Tasks currently running:
+E (10416) task_wdt: CPU 0: main
+E (10416) task_wdt: CPU 1: IDLE1
+E (10416) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x400E36DA:0x3FFB10F0 0x400E3A9C:0x3FFB1110 0x40082A89:0x3FFB1140 0x400D76A5:0x3FFBC7F0 0x400D7D88:0x3FFBC820 0x400D7EF7:0x3FFBC880 0x400D7320:0x3FFBC9F0 0x400F2EA0:0x3FFBCA40 0x40085C11:0x3FFBCA70
+
+EVALCSV,/clips/AS010.WAV,0.74392334,1086,3157,307
+E (15416) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (15416) task_wdt:  - IDLE0 (CPU 0)
+E (15416) task_wdt: Tasks currently running:
+E (15416) task_wdt: CPU 0: main
+E (15416) task_wdt: CPU 1: IDLE1
+E (15416) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x400E36DA:0x3FFB10F0 0x400E3A9C:0x3FFB1110 0x40082A89:0x3FFB1140 0x400E1320:0x3FFBC480 0x400DE515:0x3FFBC4C0 0x400E06DA:0x3FFBC7A0 0x400DC8F2:0x3FFBC7D0 0x400D77E1:0x3FFBC7F0 0x400D7D91:0x3FFBC820 0x400D7EF7:0x3FFBC880 0x400D7320:0x3FFBC9F0 0x400F2EA0:0x3FFBCA40 0x40085C11:0x3FFBCA70
+
+EVALCSV,/clips/AS011.WAV,0.76474779,1086,3164,307
+I (18146) eval: eval gotov: 4 klipova OK, 0 gresaka
+I (18146) asd: eval zavrsen — restartuj bez tastera za zivi rad
