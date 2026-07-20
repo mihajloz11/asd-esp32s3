@@ -83,6 +83,10 @@ objašnjeni od nule, uz oznaku šta smo tačno mi uradili. Zelene kutije = naš 
   <li><a href="#rezultati">Naši rezultati — šta su brojevi stvarno rekli</a></li>
   <li><a href="#deploy">Od koda do čipa — build, flešovanje, prvi život na pločici</a></li>
   <li><a href="#e4">E4 — dvije ploče, isti model: šta PIE donosi</a></li>
+  <li><a href="#dataset">Dataset — kakvi su podaci i u kom formatu</a></li>
+  <li><a href="#seed">Seed i ponovljivost — zašto treniramo 5 puta</a></li>
+  <li><a href="#formule">Sve formule na jednom mjestu (i gdje su u kodu)</a></li>
+  <li><a href="#kodmapa">Mapa koda — koji pojam živi u kom fajlu</a></li>
   <li><a href="#recnik">Mini rječnik za brzo podsjećanje</a></li>
 </ol>
 </div>
@@ -489,7 +493,99 @@ ploča bez PSRAM-a nosi model komotno. Sljedeći korak (za čist ablation): isti
 esp-nn <b>uključen/isključen na istom S3</b> — izoluje PIE od svih drugih
 platformskih razlika (cache, PSRAM).</div>
 
-<h2 id="recnik">15. Mini rječnik</h2>
+<h2 id="dataset">15. Dataset — kakvi su podaci i u kom formatu</h2>
+<p>Koristimo <b>DCASE 2026 Task 2 Development Dataset</b> (sa Zenodo, ~4.6 GB,
+7 zipova). Sedam tipova mašina: <code>fan, bearingEmu, gearboxEmu, sliderEmu,
+ToyCar, ToyCarEmu, valveEmu</code>. Svaka mašina ima dva foldera:</p>
+<div class="pipe">data/dcase2026_dev/&lt;masina&gt;/
+    train/   ~990 klipova — SAMO normalan rad (unsupervised!)
+    test/    ~200 klipova — normalni + anomalni, pomiješani</div>
+
+<h3>Kako izgleda jedan klip</h3>
+<table>
+<tr><th>Svojstvo</th><th>Vrijednost</th></tr>
+<tr><td>Format</td><td>WAV, PCM 16-bit</td></tr>
+<tr><td>Frekvencija</td><td>16 kHz</td></tr>
+<tr><td>Trajanje</td><td>~10 sekundi (≈ 160 000 uzoraka)</td></tr>
+<tr><td>Kanali</td><td><b>2 (stereo)</b> — par mikrofona blizu/daleko od mašine (2026 noise-aware postavka). Mi uzimamo kanal 0.</td></tr>
+<tr><td>Veličina</td><td>~640 KB stereo / ~320 KB mono po klipu</td></tr>
+</table>
+
+<h3>Ime fajla nosi labele</h3>
+<p>Primjer: <code>section_00_source_train_normal_0000_spd_1.wav</code></p>
+<table>
+<tr><td><code>section_00</code></td><td>podskup mašine (ovdje uvijek 00)</td></tr>
+<tr><td><code>source</code> / <code>target</code></td><td>domen — uslovi kao u treningu (source) ili promijenjeni (target). Za AUC se broje odvojeno.</td></tr>
+<tr><td><code>train</code> / <code>test</code></td><td>skup</td></tr>
+<tr><td><code>normal</code> / <code>anomaly</code></td><td>labela (anomaly postoji samo u test-u)</td></tr>
+<tr><td><code>spd_1</code>...</td><td>atributi rada (brzina, opterećenje) — u <code>attributes_00.csv</code></td></tr>
+</table>
+<div class="mi"><b>Gdje u kodu:</b> ovo ime parsira <code>pc/asd/data.py</code>
+(regex u <code>parse_clip</code>) i iz njega vadi domen i labelu — bez toga se ne
+bi znalo šta je anomalija pri računanju AUC-a. Stereo→mono kanal 0 radi
+<code>features.wav_to_vectors</code> i <code>prepare_eval_clips.py</code>.</div>
+
+<h2 id="seed">16. Seed i ponovljivost — zašto treniramo 5 puta</h2>
+<p>Trening neuronske mreže kreće od <b>slučajno</b> inicijalizovanih težina.
+<b>Seed</b> je broj koji fiksira tu slučajnost: isti seed → isti početak → isti
+rezultat (ponovljivost). Različiti seedovi → mreža se svaki put istrenira malo
+drugačije, pa AUC varira za par desetinki.</p>
+<div class="idea"><b>Zašto 5 seedova:</b> jedan trening ne dokazuje kvalitet modela —
+mogao si imati sreće. Zato se trenira 5 puta i prijavljuje <b>prosjek ± standardna
+devijacija</b> (npr. <code>0.539 ± 0.005</code>). To je razlika između
+"studentskog projekta" i broja koji komisija prihvata. DCASE zvanično traži 5
+nezavisnih treninga.</div>
+<p><b>Gdje u kodu:</b> <code>train.py</code> prima <code>--seed</code> i poziva
+<code>tf.keras.utils.set_random_seed</code>; <code>run_sweep.ps1 -Seed N</code>
+pušta cijeli komplet; <code>results_stats.py</code> grupiše po seedu i računa
+mean±std. Do sada imamo 1 seed (trend); finalne tabele idu na 5.</p>
+
+<h2 id="formule">17. Sve formule na jednom mjestu (i gdje su u kodu)</h2>
+<table>
+<tr><th>Pojam</th><th>Formula</th><th>Gdje u kodu</th></tr>
+<tr><td>STFT power</td><td>|FFT(frejm · Hann)|²</td><td><code>features.py: stft_power</code> / <code>features_c.c: asd_logmel_frame</code></td></tr>
+<tr><td>Log-mel</td><td>(20/2)·log₁₀(mel·|X|² + ε)</td><td><code>features.py: log_mel</code> (ε = 1e-12)</td></tr>
+<tr><td>Ulazni vektor</td><td>konkat. 5 frejmova × 128 = 640</td><td><code>features.py: frame_vectors</code></td></tr>
+<tr><td>Standardizacija</td><td>x̂ = (x − μ)/σ</td><td><code>data.py: fit_norm</code>, primjena u <code>eval.py</code> i <code>features_c.c: asd_make_vector</code></td></tr>
+<tr><td>Dense sloj</td><td>y = W·x + b</td><td>u modelu <code>model.py: build_ae</code> (Keras); na čipu TFLM <code>FULLY_CONNECTED</code></td></tr>
+<tr><td>ReLU</td><td>max(0, x)</td><td><code>model.py</code> (layers.ReLU)</td></tr>
+<tr><td>MSE score</td><td>(1/D)·Σ(x̂ᵢ − x̂ᵢ_rek)²</td><td><code>eval.py: clip_scores_mse</code> / <code>tflm_infer.cc: tflm_score_vector</code></td></tr>
+<tr><td>Mahalanobis</td><td>(e−μ)ᵀ · Σ⁻¹ · (e−μ)</td><td><code>eval.py: clip_scores_mahala</code> (Σ iz <code>fit_mahala</code>)</td></tr>
+<tr><td>Afina kvantizacija</td><td>r ≈ scale·(q − zero_point)</td><td><code>quantize.py</code> (PTQ) / <code>tflm_infer.cc</code> (dekvant.)</td></tr>
+<tr><td>Gamma prag</td><td>k = m²/v, θ = v/m; prag = gamma_ppf(0.9)</td><td><code>eval.py: gamma_threshold</code> / <code>calib_gamma.c</code> (Wilson–Hilferty)</td></tr>
+<tr><td>AUC / pAUC</td><td>površina ispod ROC / do FPR≤0.1</td><td><code>eval.py: dcase_metrics</code> (sklearn)</td></tr>
+<tr><td>Zvanični skor</td><td>harm. sredina(AUC_s, AUC_t, pAUC)</td><td><code>eval.py: dcase_metrics</code> (scipy.hmean)</td></tr>
+</table>
+
+<h2 id="kodmapa">18. Mapa koda — koji pojam živi u kom fajlu</h2>
+<h3>PC strana (Python, <code>pc/asd/</code> i <code>pc/tools/</code>)</h3>
+<table>
+<tr><th>Fajl</th><th>Šta radi</th></tr>
+<tr><td><code>asd/features.py</code></td><td>log-mel featuring (STFT, mel, log, slaganje frejmova)</td></tr>
+<tr><td><code>asd/data.py</code></td><td>čita dataset, parsira imena (domen/labela), keš featura, normalizacija</td></tr>
+<tr><td><code>asd/model.py</code></td><td>AE arhitekture (baseline + tiny sweep)</td></tr>
+<tr><td><code>asd/train.py</code></td><td>trening + evaluacija jedne varijante (piše results.csv, meta.json)</td></tr>
+<tr><td><code>asd/eval.py</code></td><td>MSE/Mahalanobis score, AUC/pAUC/hmean, gamma prag</td></tr>
+<tr><td><code>asd/quantize.py</code></td><td>PTQ int8 (TFLite converter), evaluacija .tflite</td></tr>
+<tr><td><code>tools/gen_*_header.py</code></td><td>mel/model → C header za firmware</td></tr>
+<tr><td><code>tools/*_eval*.py</code></td><td>priprema klipova + poređenje uređaj vs PC</td></tr>
+</table>
+<h3>Firmware (C/C++, <code>firmware/esp32s3_asd/main/</code>)</h3>
+<table>
+<tr><th>Fajl</th><th>Šta radi</th></tr>
+<tr><td><code>features_c.c</code></td><td>ISTI log-mel u C-u (batch + streaming); testiran protiv Pythona</td></tr>
+<tr><td><code>audio_i2s.c</code></td><td>INMP441 I2S capture, DMA, ring buffer</td></tr>
+<tr><td><code>tflm_infer.cc</code></td><td>TFLM int8 inferenca, MSE score</td></tr>
+<tr><td><code>calib_gamma.c</code></td><td>on-device gamma prag (Welford + Wilson–Hilferty)</td></tr>
+<tr><td><code>eval_mode.c</code></td><td>čita klipove sa flasha, ispisuje score + E6 prag</td></tr>
+<tr><td><code>app_main.c</code></td><td>glavna petlja: capture → featuri → inferenca → odluka</td></tr>
+<tr><td><code>model_data.h / mel_data.h</code></td><td>generisani: model + mel tabele (u flash)</td></tr>
+</table>
+<div class="mi"><b>Zlatna nit:</b> <code>features.py</code> i <code>features_c.c</code>
+računaju ISTU stvar (dokazano testom) — to je zašto model treniran na PC-u radi
+identično na čipu. Cijeli projekat visi na toj jednakosti.</div>
+
+<h2 id="recnik">19. Mini rječnik</h2>
 <table>
 <tr><th>Pojam</th><th>U jednoj rečenici</th></tr>
 <tr><td>ASD</td><td>Anomalous Sound Detection — detekcija anomalija u zvuku.</td></tr>
@@ -520,6 +616,11 @@ platformskih razlika (cache, PSRAM).</div>
 <tr><td>Bootloader / partition table</td><td>Prvi kod koji se izvrši pri paljenju / mapa flasha (gdje je app, NVS, FAT particija).</td></tr>
 <tr><td>esptool / flešovanje</td><td>Alat i čin upisa binarke u flash čipa preko USB/UART-a.</td></tr>
 <tr><td>UART / boot log</td><td>Serijska veza kojom čip ispisuje logove; prvi prozor u ono što se na njemu dešava.</td></tr>
+<tr><td>Seed</td><td>Broj koji fiksira slučajnost treninga; isti seed → ponovljiv rezultat. 5 seedova → mean±std.</td></tr>
+<tr><td>Dataset (train/test)</td><td>Trening = samo normalni klipovi; test = normalni + anomalni (za ocjenu).</td></tr>
+<tr><td>source / target domen</td><td>Uslovi rada kao u treningu / promijenjeni; AUC se računa odvojeno.</td></tr>
+<tr><td>Standardizacija</td><td>(x−μ)/σ po dimenziji, μ/σ sa treninga; pomaže i int8 kvantizaciji.</td></tr>
+<tr><td>Reprezentativni skup</td><td>Podskup trening vektora kojim PTQ procjenjuje opsege za scale/zero-point.</td></tr>
 </table>
 
 <p style="margin-top:36px; color: var(--muted); font-size: 0.9rem;">
