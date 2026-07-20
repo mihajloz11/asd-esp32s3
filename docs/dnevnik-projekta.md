@@ -177,6 +177,24 @@ zatim ostale mašine preko noći. Agregacija: tools/results_stats.py (mean±std 
 rad-poglavlje-2-pregled.md, rad-poglavlje-3-teorija.md. HTML pregled cijelog
 projekta (plan vs urađeno, hronologija, hardver planovi): docs/pregled-projekta.html.
 
+### 20.07 — fan 5-seed komplet GOTOV (mean ± std)
+
+Prva mašina sa punih 5 seedova (int8, MSE). Niska varijansa = pouzdani brojevi:
+
+| Varijanta | hmean (mean ± std, n=5) | min–max |
+|---|---|---|
+| baseline | **0.543 ± 0.006** | 0.537–0.550 |
+| tiny64 | 0.526 ± 0.003 | 0.523–0.530 |
+| tiny32 | 0.517 ± 0.002 | 0.513–0.519 |
+| tiny16 | 0.513 ± 0.003 | 0.510–0.517 |
+| tiny32b4 | 0.511 ± 0.006 | 0.503–0.520 |
+
+std ≤ 0.006 svuda → jednoseed brojevi su bili reprezentativni; Pareto poredak
+stabilan (baseline > tiny64 > tiny32 > tiny16 ≈ tiny32b4). Za rad: ove ± vrijednosti
+idu u finalnu tabelu. Ostale 6 mašina 5-seed = opciono (dugo, preko noći uz
+wakelock). Agregacija: results/results_stats.csv (tools/results_stats.py).
+Napomena: seed run pao prvi put (laptop sleep) — riješeno keep_awake.ps1 wakelockom.
+
 ## REZULTATI — GLAVNE TABELE (1 seed; finalno ide 5 seedova)
 
 ### hmean po mašini (baseline / najbolji tiny, MSE fp32)
