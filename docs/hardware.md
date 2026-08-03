@@ -13,15 +13,54 @@
 
 ## Za kupovinu (jedino što fali)
 
-| Stavka | Kom | Najjeftinije nađeno (17.07) | Cijena |
-|---|---|---|---|
-| INMP441 I2S MEMS mikrofon | 2 | [KP — Inđija](https://www.kupujemprodajem.com/elektronika-i-komponente/moduli-za-samoizgradnju/mikrofon-za-arduino-inmp441-i2s-microphone/oglas/142894803) (jedini na KP) | 600 din/kom |
-| INA226 (bolji od INA219 — 16-bit, brži sampling za E5) | 1 | [KP — Kikinda, 521 ocjena](https://www.kupujemprodajem.com/elektronika-i-komponente/moduli-za-samoizgradnju/ina226-i2c-dvosmerni-digitalni-merac-struje-i-napona/oglas/124510988) | 270 din |
-| INA219 (fallback ako 226 ode) | (1) | [KP — Zvezdara, lično preuzimanje](https://www.kupujemprodajem.com/elektronika-i-komponente/moduli-za-samoizgradnju/zero-drift-ina219-i2c-modul-current-power-sensor-ina-219/oglas/151504648) | 240 din |
-| Keramika 100 nF + elektrolit 10 µF (decoupling uz mikrofon) + ≥470 µF (poslije INA, rizik C7) | par | bilo koja lokalna prodavnica komponenti | ~300 din |
+Izvor: **elektromodul.rs** (lager u Srbiji, sve u jednoj pošiljci, isti dan do 13h).
+Nazivi su tačno kako stoje na sajtu — kucaš ih u pretragu. Cijene provjerene 22.07.2026.
 
-Ukupno ≈ **1800 din (~15 €)** — u budžetu iz plana (≤18 €).
-Preporuka: **INA226 iz Kikinde + 2× INMP441 iz Inđije** (KP dostava), kondenzatori lokalno.
+### Obavezno (bez ovoga nema E5/E6/demo)
+
+| Naziv na sajtu | Kom | Cijena | Svrha |
+|---|---|---|---|
+| INMP441 I2S Mikrofon za Arduino | 2 | 600 | Audio ulaz. 1 obavezan, 2. je rezerva (MEMS krhak, rizik C1) + po jedan na S3 i DevKit V1 |
+| INA226 I2C senzor struje i snage | 1 | 300 | Cijeli E5. Provjeri šant po dolasku: R100=0,1 Ω / R010=0,01 Ω; kalibriši multimetrom |
+| Set 120 Elektrolitskih Kondenzatora 1µF-470µF — 12 Vrednosti | 1 | 500 | Daje **10 µF** (bulk uz mikrofon) i **470 µF** (poslije INA, rizik C7) |
+| Keramički kondenzator 470NF (Monolithic Ceramic) – MLCC 50V | 3 | 16 | HF decoupling uz VDD mikrofona. Datasheet traži 100 nF X7R; sajt nema pojedinačni 100 nF — 470 nF je funkcionalno identičan za digitalni MEMS. Po jedan na svaki mik + rezerva |
+
+### Za E5 mjerenje potrošnje (rizik D2 — napajanje bez USB-a)
+
+| Naziv na sajtu | Kom | Cijena | Svrha |
+|---|---|---|---|
+| AMS1117 3.3V LDO Regulator Modul 800mA | 1 | 120 | Powerbank 5V → čist 3,3 V → INA → ploča. Linearni (nema switching ripple u mjerenju). Izmjeri izlaz multimetrom prije spajanja S3 |
+| CP2102 USB to TTL UART modul 6Pin 3.3V/5V | 1 | 450 | Čitanje logova kad je USB otkačen. Veži **samo TX(S3)→RXD i GND→GND, NE VCC** |
+
+### Montaža
+
+| Naziv na sajtu | Kom | Cijena | Svrha |
+|---|---|---|---|
+| Muska Pin Letvica 40 Pinova 2.54mm za Arduino | 1 | 28 | INMP441 breakout često stigne bez zalemljenih headera |
+| Dvoslojna prototipna ploča 4×6 cm | 1 | 120 | Kratke I2S veze (<10 cm) — integritet digitalnog signala, rizik C1 |
+
+### Demo na odbrani (opciono)
+
+| Naziv na sajtu | Kom | Cijena | Svrha |
+|---|---|---|---|
+| LED 5mm crvena dioda F5mm | 1 | 14 | Anomalija |
+| LED 5mm Prozirna Dioda Zeleno Svetlo F5mm | 1 | 80 | Normalan rad |
+| Crveni taster za arkadne igrice i DIY 30 mm | 1 | 140 | Momentary, 2 žice na GPIO10+GND (interni pull-up). Firmware čita GPIO10/27 — **NE** BOOT (GPIO0 je strapping) |
+
+**NE naručuj** (imaš / donosi s posla):
+- 2× otpornik ~330 Ω za LED (set 600 kom je bacanje para za 2 komada)
+- 10 µF i 470 µF posebno — već u setu elektrolita
+
+Ukupno: obavezno = **2.048 din**, +E5 = **2.618**, +montaža = **2.766**, sve sa demo = **~3.000 din (~26 €)**.
+
+### Ispravke u odnosu na prvu verziju (22.07)
+1. **1 µF MLCC → 470 nF** (bliže datasheet 100 nF; 1 µF je bila greška).
+2. **BOOT dugme NIJE user-taster** — firmware čita GPIO10/27, treba fizički taster.
+3. **LED treba serijski otpornik** (~330 Ω); firmware sad pali **jednu** LED (GPIO2) —
+   za zeleno/crveno demo treba 2. LED (GPIO11) + izmjena u app_main.c.
+4. **470 µF ublažava strujni špic koji mjeriš u E5** — mjeri prvo BEZ njega, dodaj samo
+   ako se javi brownout, dokumentuj oba slučaja (dopuna rizika C7/D2).
+5. **Potvrdi da je S3 devkit sa USB+3V3 pinom** (ne goli WROOM-1 modul) prije naručivanja.
 
 ## Kompatibilnost sa našim pločama (provjereno)
 

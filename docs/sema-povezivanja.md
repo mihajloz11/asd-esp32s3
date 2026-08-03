@@ -66,6 +66,10 @@ napajanjem** ploče. Dvije veze: mjerna (shunt) + I2C (očitavanje).
 3. Wi-Fi/BT isključeni, CPU fiksno 240 MHz (već u sdkconfig).
 4. Za razvoj (van mjerenja): normalno preko USB-a, INA226 ti tada ne treba —
    možeš je ostaviti povezanu samo na I2C, a 3V3 pin vratiti na USB napajanje.
+5. **470 µF je mjerni kompromis**: ublažava strujni špic koji baš pokušavaš izmjeriti
+   (INA226 ga vidi kao odgođeno punjenje → energija se pripiše pogrešnoj fazi).
+   Zato: mjeri **prvo BEZ 470 µF**; dodaj ga samo ako se javi brownout reset; dokumentuj
+   oba slučaja ("bez" i "sa 470 µF"). 470 µF je za stabilnost (C7), ne stalni dio mjerenja.
 
 ## 3. Opciono: LED + taster (demo na odbrani)
 
