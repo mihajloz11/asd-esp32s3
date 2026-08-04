@@ -7,7 +7,7 @@
 
 ---
 
-## STANJE (zadnje ažuriranje: 19.07.2026)
+## STANJE (zadnje ažuriranje: 04.08.2026)
 
 | Oblast | Status |
 |---|---|
@@ -21,8 +21,9 @@
 | E4 latencija | ✔ KOMPLETNO: S3 vs ESP32 2.76× (platforma); esp-nn on/off na S3 1.33× (čist PIE) — results/e4_latency.md |
 | Puna on-device AUC | ✔ 60 klipova na S3: AUC 0.596, score-ovi vs PC max 2.2e-04 |
 | E6 on-device gamma prag | ✔ device 0.77090 vs PC 0.77064 = rel 0.03% — kalibracija radi na čipu |
-| E5 energija | čeka INA226 (naručuje se) |
-| Živi zvuk | čeka INMP441 (naručuje se) |
+| **Hardver (INMP441, INA226, AMS1117, pasive, demo)** | ✔ **stigao 04.08.2026** — vidi docs/hardver-lista.md |
+| E5 energija | hardver na stolu; **blokira INA226 I2C drajver** (ne postoji u firmware-u) |
+| Živi zvuk | hardver na stolu; čeka lemljenje headera (docs/lemljenje.md) |
 | E6 on-device gamma kalibracija | C kod ✔ + PC test ✔; on-device test čeka |
 | 5-seed finalne tabele | alati ✔; treninzi nisu pušteni |
 | Pisanje rada | sažetak za mentora ✔ (čeka slanje); poglavlja nisu počela |
@@ -195,6 +196,37 @@ idu u finalnu tabelu. Ostale 6 mašina 5-seed = opciono (dugo, preko noći uz
 wakelock). Agregacija: results/results_stats.csv (tools/results_stats.py).
 Napomena: seed run pao prvi put (laptop sleep) — riješeno keep_awake.ps1 wakelockom.
 
+### 04.08 — HARDVER STIGAO (kompletna porudžbina elektromodul.rs)
+
+**Isporučeno sve sa spiska, 3.118 RSD** (2.578 roba + 540 dostava, ~27 €) — u budžetu
+plana (≤18 € je bila stara procjena bez E5/demo dijela; sa AMS1117 i demo komponentama
+ispalo 27 €). Detaljan inventar: docs/hardver-lista.md.
+
+2× INMP441, 1× INA226, set od 120 elektrolita, 3× keramika 470 nF, AMS1117 3.3 V LDO,
+2× muška pin letvica 40 pin, prototipna ploča 4×6, LED crvena + zelena, arkadni taster
+30 mm. **Jedino odstupanje:** taster je isporučen plavi (SKU A4059) umjesto crvenog —
+isti mikroprekidač, bez uticaja na šemu ni kod.
+
+**Napisan docs/lemljenje.md** — procedura u dvije faze: faza 1 samo headeri (~19 spojeva:
+2×6 na mikrofone, 4 na INA226, 3 na AMS1117) da moduli uđu u MB-102; faza 2 finalni
+zalemljeni sklop na ploči 4×6 tek pošto cijeli lanac proradi na breadboardu. Kondenzatori,
+LED i otpornici se do tada samo ubadaju.
+
+**Tri stvari koje su ispale iz nabavke (blokiraju dijelove demoa):**
+1. **Otpornici 220–330 Ω za LED nisu kupljeni** — bili su na spisku "iz firme". Do tada
+   LED se ne smije vezati na GPIO. *(Usput: sema-povezivanja.md piše 220 Ω, a
+   porudzbina-elektromodul.md 330 Ω — oba rade, nesklad nije ispravljan.)*
+2. **Ženski headeri nisu naručeni** — na ploči 4×6 moduli bi išli fiksno zalemljeni.
+   Ako INMP441 treba da ostane vadiv, dokupiti (~30 din) prije faze 2.
+3. **Firmware pali samo jednu LED (GPIO 2)** — kupljene su dvije (crvena + zelena), ali
+   za obje treba 2. pin (GPIO 11) + izmjena u app_main.c. Za sad ide jedna.
+
+**Zaključak / redoslijed:** kritični put više nije nabavka nego (a) lemljenje 6 pinova na
+prvi INMP441 → test 5 s WAV u Audacity (rizik C1), i (b) **INA226 I2C drajver — i dalje ne
+postoji u firmware-u**, pa E5 ne može ni da počne iako je senzor na stolu. Pinovi za I2C
+su definisani (8/9 na S3), ali nema koda za čitanje struje. To je sad jedini softverski
+blokator E5, procjena ~pola dana.
+
 ## REZULTATI — GLAVNE TABELE (1 seed; finalno ide 5 seedova)
 
 ### hmean po mašini (baseline / najbolji tiny, MSE fp32)
@@ -236,15 +268,18 @@ Napomena: seed run pao prvi put (laptop sleep) — riješeno keep_awake.ps1 wake
 ## SLJEDEĆI KORACI (prioritet)
 
 1. **Mihajlo:** poslati sažetak mentoru (docs/sazetak-za-mentora.md) — kritični put
-2. **Mihajlo:** naručiti 2× INMP441 + INA226 (docs/hardware.md, KP linkovi)
-3. Klasični ESP32 build + flash (`set-target esp32`) → prva polovina E4 matrice
+2. ~~naručiti 2× INMP441 + INA226~~ ✔ **stiglo 04.08** (docs/hardver-lista.md)
+3. **Mihajlo:** donijeti 2× otpornik 220–330 Ω s posla (jedino što fali za LED demo)
+4. Zalemiti header na INMP441 #1 → živi audio lanac → test WAV u Audacity (rizik C1);
+   procedura: docs/lemljenje.md
+5. **Napisati INA226 I2C drajver** (~pola dana) — bez njega E5 ne kreće iako je senzor tu
+6. Klasični ESP32 build + flash (`set-target esp32`) → prva polovina E4 matrice
    (PIE ablation: S3 esp-nn vs ESP32 generic)
-4. esp-nn on/off na samom S3 (Kconfig) → druga polovina E4
-5. 5-seed treninzi preko noći (run_sweep -Seed 1..4)
-6. Kad stigne INMP441: živi audio lanac (test: WAV snimak u Audacity — rizik C1)
-7. Kad stigne INA226: E5 energija (šema u docs/sema-povezivanja.md)
-8. Pisanje: poglavlje 2 (pregled literature) i 3 (teorija) — materijal spreman
-   u teorija-ucenje.html
+7. esp-nn on/off na samom S3 (Kconfig) → druga polovina E4
+8. 5-seed treninzi preko noći (run_sweep -Seed 1..4)
+9. E5 energija: AMS1117 → INA226 → 3V3, USB otkačen (šema u docs/sema-povezivanja.md)
+10. Pisanje: poglavlje 2 (pregled literature) i 3 (teorija) — materijal spreman
+    u teorija-ucenje.html
 
 ## ARTEFAKTI — GDJE JE ŠTA
 
@@ -253,8 +288,8 @@ Napomena: seed run pao prvi put (laptop sleep) — riješeno keep_awake.ps1 wake
 - `firmware/esp32s3_asd/` — kompletan firmware (build: export.bat pa idf.py)
 - `results/results.csv` — svi brojevi; `results/dashboard.html` — pregled;
   live: `python tools/live_dashboard.py` → :8765
-- `docs/` — hardware, šema povezivanja, edge-adaptacija, teorija (HTML),
-  sažetak za mentora, ovaj dnevnik
+- `docs/` — hardware, hardver-lista (inventar), lemljenje, šema povezivanja,
+  edge-adaptacija, teorija (HTML), sažetak za mentora, ovaj dnevnik
 - ESP-IDF: `%USERPROFILE%\esp\esp-idf` (v5.5); eval build: `set ASD_EVAL_MODE=1`
 - Eval poređenje: prepare_eval_clips.py → fatfsgen → parttool → serial capture
   → compare_eval.py

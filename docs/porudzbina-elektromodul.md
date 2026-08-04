@@ -1,7 +1,12 @@
-# Porudžbina — elektromodul.rs (spreman za korpu)
+# Porudžbina — elektromodul.rs (✅ ISPORUČENO 04.08.2026)
 
-> Jedna narudžba, sve na lageru. Dostava fiksno **540 din** (bez praga za besplatnu),
-> pa se isplati staviti sve odjednom. Cijene provjerene 22.07.2026.
+> **STATUS: naručeno i stiglo kompletno — 3.118 RSD.** Sve stavke 1–10 su na stolu.
+> Jedina razlika: taster je isporučen u **plavoj** varijanti (SKU A4059) umjesto crvene —
+> isti mikroprekidač, bez uticaja na šemu. Inventar: [hardver-lista.md](hardver-lista.md).
+> **Šta se lemi i kojim redom: [lemljenje.md](lemljenje.md).**
+>
+> Ostatak dokumenta je originalna analiza prije kupovine (cijene provjerene 22.07.2026);
+> ostavljena je zbog obrazloženja izbora komponenti i analize rizika.
 > Detaljno obrazloženje svake stavke: [hardware.md](hardware.md).
 
 ## ✅ ŠTA IMAŠ (ne poručuj)
