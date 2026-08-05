@@ -25,127 +25,342 @@ I (72) boot:  1 phy_init         RF data          01 01 0000f000 00001000
 I (79) boot:  2 factory          factory app      00 00 00010000 00400000
 I (85) boot:  3 storage          Unknown data     01 81 00410000 01400000
 I (92) boot: End of partition table
-I (95) esp_image: segment 0: paddr=00010020 vaddr=3c030020 size=22c28h (142376) map
-I (137) esp_image: segment 1: paddr=00032c50 vaddr=3fc93a00 size=033fch ( 13308) load
-I (146) esp_image: segment 2: paddr=00036054 vaddr=40374000 size=09fc4h ( 40900) load
-I (158) esp_image: segment 3: paddr=00040020 vaddr=42000020 size=28dbch (167356) map
-I (198) esp_image: segment 4: paddr=00068de4 vaddr=4037dfc4 size=059c4h ( 22980) load
-I (210) esp_image: segment 5: paddr=0006e7b0 vaddr=50000000 size=00020h (    32) load
+I (95) esp_image: segment 0: paddr=00010020 vaddr=3c030020 size=22c78h (142456) map
+I (137) esp_image: segment 1: paddr=00032ca0 vaddr=3fc93a00 size=033fch ( 13308) load
+I (146) esp_image: segment 2: paddr=000360a4 vaddr=40374000 size=09f74h ( 40820) load
+I (158) esp_image: segment 3: paddr=00040020 vaddr=42000020 size=296ach (169644) map
+I (199) esp_image: segment 4: paddr=000696d4 vaddr=4037df74 size=05a14h ( 23060) load
+I (211) esp_image: segment 5: paddr=0006f0f0 vaddr=50000000 size=00020h (    32) load
 I (217) boot: Loaded app from partition at offset 0x10000
 I (217) boot: Disabling RNG early entropy source...
-I (228) octal_psram: vendor id    : 0x0d (AP)
-I (228) octal_psram: dev id       : 0x03 (generation 4)
+I (229) octal_psram: vendor id    : 0x0d (AP)
+I (229) octal_psram: dev id       : 0x03 (generation 4)
 I (229) octal_psram: density      : 0x05 (128 Mbit)
 I (231) octal_psram: good-die     : 0x01 (Pass)
-I (235) octal_psram: Latency      : 0x01 (Fixed)
-I (239) octal_psram: VCC          : 0x00 (1.8V)
+I (236) octal_psram: Latency      : 0x01 (Fixed)
+I (240) octal_psram: VCC          : 0x00 (1.8V)
 I (244) octal_psram: SRF          : 0x01 (Fast Refresh)
 I (249) octal_psram: BurstType    : 0x01 (Hybrid Wrap)
-I (253) octal_psram: BurstLen     : 0x01 (32 Byte)
+I (254) octal_psram: BurstLen     : 0x01 (32 Byte)
 I (258) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
-I (263) octal_psram: DriveStrength: 0x00 (1/1)
-I (267) MSPI Timing: Enter psram timing tuning
-I (272) esp_psram: Found 16MB PSRAM device
-I (275) esp_psram: Speed: 80MHz
-I (278) cpu_start: Multicore app
-I (1133) esp_psram: SPI SRAM memory test OK
-I (1141) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
+I (264) octal_psram: DriveStrength: 0x00 (1/1)
+I (268) MSPI Timing: Enter psram timing tuning
+I (273) esp_psram: Found 16MB PSRAM device
+I (276) esp_psram: Speed: 80MHz
+I (279) cpu_start: Multicore app
+I (1134) esp_psram: SPI SRAM memory test OK
+I (1142) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
 I (1142) cpu_start: Pro cpu start user code
 I (1142) cpu_start: cpu freq: 240000000 Hz
-I (1144) app_init: Application information:
+I (1145) app_init: Application information:
 I (1148) app_init: Project name:     esp32s3_asd
-I (1152) app_init: App version:      mahala-all-2-gb05bdcb-dirty
-I (1158) app_init: Compile time:     Jul 19 2026 12:45:38
-I (1163) app_init: ELF file SHA256:  3b479c2e5...
-I (1167) app_init: ESP-IDF:          v5.5.5-34-g21f3b71cbbf
-I (1173) efuse_init: Min chip rev:     v0.0
-I (1177) efuse_init: Max chip rev:     v0.99 
-I (1181) efuse_init: Chip rev:         v0.2
-I (1185) heap_init: Initializing. RAM available for dynamic allocation:
-I (1191) heap_init: At 3FC9EB38 len 0004ABD8 (298 KiB): RAM
-I (1196) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+I (1153) app_init: App version:      on-device-verified-4-gedc7363-d
+I (1159) app_init: Compile time:     Jul 19 2026 16:44:25
+I (1164) app_init: ELF file SHA256:  d0d74dd94...
+I (1168) app_init: ESP-IDF:          v5.5.5-34-g21f3b71cbbf
+I (1174) efuse_init: Min chip rev:     v0.0
+I (1178) efuse_init: Max chip rev:     v0.99 
+I (1182) efuse_init: Chip rev:         v0.2
+I (1186) heap_init: Initializing. RAM available for dynamic allocation:
+I (1192) heap_init: At 3FC9EB38 len 0004ABD8 (298 KiB): RAM
+I (1197) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
 I (1202) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
-I (1207) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
-I (1212) esp_psram: Adding pool of 16384K of PSRAM memory to heap allocator
-W (1219) spi_flash: Octal flash chip is using but dio mode is selected, will automatically switch to Octal mode
-I (1229) spi_flash: detected chip: mxic (opi)
-I (1233) spi_flash: flash io: opi_str
-I (1236) sleep_gpio: Configure to isolate all GPIO pins in sleep state
-I (1243) sleep_gpio: Enable automatic switching of GPIO sleep configuration
-I (1249) main_task: Started on CPU0
-I (1259) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
-I (1259) main_task: Calling app_main()
-I (1259) asd: PSRAM: 16777216 B
-I (1269) asd: free heap: 17121475 B
-I (1279) tflm: arena used: 7960 B
-I (1279) asd: TFLM arena used: 7960 B
-I (1329) asd: ulazim u EVAL mod (klipovi sa flash particije)
+I (1208) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+I (1213) esp_psram: Adding pool of 16384K of PSRAM memory to heap allocator
+W (1220) spi_flash: Octal flash chip is using but dio mode is selected, will automatically switch to Octal mode
+I (1230) spi_flash: detected chip: mxic (opi)
+I (1234) spi_flash: flash io: opi_str
+I (1237) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1244) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1250) main_task: Started on CPU0
+I (1260) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+I (1260) main_task: Calling app_main()
+I (1260) asd: PSRAM: 16777216 B
+I (1270) asd: free heap: 17121475 B
+I (1280) tflm: arena used: 7960 B
+I (1280) asd: TFLM arena used: 7960 B
+I (1330) asd: ulazim u EVAL mod (klipovi sa flash particije)
 EVALCSV,file,score,feat_ms,inf_ms,n_vec
-EVALCSV,/clips/AS008.WAV,0.75074988,665,857,307
-EVALCSV,/clips/AS009.WAV,0.75349778,665,857,307
-EVALCSV,/clips/AS010.WAV,0.74392334,665,857,307
-E (6319) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
-E (6319) task_wdt:  - IDLE0 (CPU 0)
-E (6319) task_wdt: Tasks currently running:
-E (6319) task_wdt: CPU 0: main
-E (6319) task_wdt: CPU 1: IDLE1
-E (6319) task_wdt: Print CPU 0 (current core) backtrace
+EVALCSV,/clips/AS030.WAV,0.78674942,663,1149,307
+EVALCSV,/clips/AS031.WAV,0.75110435,663,1148,307
+E (6310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (6310) task_wdt:  - IDLE0 (CPU 0)
+E (6310) task_wdt: Tasks currently running:
+E (6310) task_wdt: CPU 0: main
+E (6310) task_wdt: CPU 1: IDLE1
+E (6310) task_wdt: Print CPU 0 (current core) backtrace
 
 
-Backtrace: 0x42017A22:0x3FC94C30 0x42017E38:0x3FC94C50 0x40376F3D:0x3FC94C80 0x42014C24:0x3FCA15C0 0x42011D75:0x3FCA2030 0x42013F4E:0x3FCA2310 0x42010122:0x3FCA2340 0x4200AEC9:0x3FCA2360 0x4200B478:0x3FCA2390 0x4200B5E7:0x3FCA23F0 0x4200A9FF:0x3FCA2560 0x42028617:0x3FCA25B0 0x4037B305:0x3FCA25E0
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x42015248:0x3FCA1FD0 0x42012491:0x3FCA2010 0x4201466A:0x3FCA22F0 0x4201083E:0x3FCA2320 0x4200AFF9:0x3FCA2340 0x4200B5B1:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
 
-EVALCSV,/clips/AS011.WAV,0.76474779,665,900,307
-EVALCSV,/clips/AT012.WAV,0.75252448,665,857,307
-EVALCSV,/clips/AT013.WAV,0.76382413,665,857,307
-E (11319) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
-E (11319) task_wdt:  - IDLE0 (CPU 0)
-E (11319) task_wdt: Tasks currently running:
-E (11319) task_wdt: CPU 0: main
-E (11319) task_wdt: CPU 1: IDLE1
-E (11319) task_wdt: Print CPU 0 (current core) backtrace
-
-
-Backtrace: 0x42017A22:0x3FC94C30 0x42017E38:0x3FC94C50 0x40376F3D:0x3FC94C80 0x42014C21:0x3FCA15C0 0x42011D75:0x3FCA2030 0x42013F4E:0x3FCA2310 0x42010122:0x3FCA2340 0x4200AEC9:0x3FCA2360 0x4200B478:0x3FCA2390 0x4200B5E7:0x3FCA23F0 0x4200A9FF:0x3FCA2560 0x42028617:0x3FCA25B0 0x4037B305:0x3FCA25E0
-
-EVALCSV,/clips/AT014.WAV,0.75044638,665,901,307
-EVALCSV,/clips/AT015.WAV,0.76044730,665,857,307
-EVALCSV,/clips/NS000.WAV,0.75495140,665,857,307
-E (16319) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
-E (16319) task_wdt:  - IDLE0 (CPU 0)
-E (16319) task_wdt: Tasks currently running:
-E (16319) task_wdt: CPU 0: main
-E (16319) task_wdt: CPU 1: IDLE1
-E (16319) task_wdt: Print CPU 0 (current core) backtrace
+EVALCSV,/clips/AS032.WAV,0.78355014,663,1191,307
+EVALCSV,/clips/AS033.WAV,0.75742245,663,1148,307
+EVALCSV,/clips/AS034.WAV,0.74979371,663,1149,307
+E (11310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (11310) task_wdt:  - IDLE0 (CPU 0)
+E (11310) task_wdt: Tasks currently running:
+E (11310) task_wdt: CPU 0: main
+E (11310) task_wdt: CPU 1: IDLE1
+E (11310) task_wdt: Print CPU 0 (current core) backtrace
 
 
-Backtrace: 0x42017A22:0x3FC94C30 0x42017E38:0x3FC94C50 0x40376F3D:0x3FC94C80 0x42014C26:0x3FCA1FA0 0x42011D75:0x3FCA2030 0x42013F4E:0x3FCA2310 0x42010122:0x3FCA2340 0x4200AEC9:0x3FCA2360 0x4200B478:0x3FCA2390 0x4200B5E7:0x3FCA23F0 0x4200A9FF:0x3FCA2560 0x42028617:0x3FCA25B0 0x4037B305:0x3FCA25E0
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABDF:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
 
-EVALCSV,/clips/NS001.WAV,0.73610414,665,900,307
-EVALCSV,/clips/NS002.WAV,0.75277543,665,857,307
-EVALCSV,/clips/NS003.WAV,0.75883215,665,858,307
-E (21319) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
-E (21319) task_wdt:  - IDLE0 (CPU 0)
-E (21319) task_wdt: Tasks currently running:
-E (21319) task_wdt: CPU 0: main
-E (21319) task_wdt: CPU 1: IDLE1
-E (21319) task_wdt: Print CPU 0 (current core) backtrace
-
-
-Backtrace: 0x42017A22:0x3FC94C30 0x42017E38:0x3FC94C50 0x40376F3D:0x3FC94C80 0x42014C29:0x3FCA1F40 0x42011D75:0x3FCA2030 0x42013F4E:0x3FCA2310 0x42010122:0x3FCA2340 0x4200AEC9:0x3FCA2360 0x4200B478:0x3FCA2390 0x4200B5E7:0x3FCA23F0 0x4200A9FF:0x3FCA2560 0x42028617:0x3FCA25B0 0x4037B305:0x3FCA25E0
-
-EVALCSV,/clips/NT004.WAV,0.74972044,665,900,307
-EVALCSV,/clips/NT005.WAV,0.74309987,665,857,307
-EVALCSV,/clips/NT006.WAV,0.77167495,665,857,307
-E (26319) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
-E (26319) task_wdt:  - IDLE0 (CPU 0)
-E (26319) task_wdt: Tasks currently running:
-E (26319) task_wdt: CPU 0: main
-E (26319) task_wdt: CPU 1: IDLE1
-E (26319) task_wdt: Print CPU 0 (current core) backtrace
+EVALCSV,/clips/AS035.WAV,0.74776512,702,1148,307
+EVALCSV,/clips/AS036.WAV,0.75047910,663,1149,307
+E (16310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (16310) task_wdt:  - IDLE0 (CPU 0)
+E (16310) task_wdt: Tasks currently running:
+E (16310) task_wdt: CPU 0: main
+E (16310) task_wdt: CPU 1: IDLE1
+E (16310) task_wdt: Print CPU 0 (current core) backtrace
 
 
-Backtrace: 0x42017A22:0x3FC94C30 0x42017E38:0x3FC94C50 0x40376F3D:0x3FC94C80 0x420118A2:0x3FCA2030 0x42013F4E:0x3FCA2310 0x42010122:0x3FCA2340 0x4200AEC9:0x3FCA2360 0x4200B478:0x3FCA2390 0x4200B5E7:0x3FCA23F0 0x4200A9FF:0x3FCA2560 0x42028617:0x3FCA25B0 0x4037B305:0x3FCA25E0
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABB1:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
 
-EVALCSV,/clips/NT007.WAV,0.77110867,665,899,307
-I (27149) eval: eval gotov: 16 klipova OK, 0 gresaka
-I (27149) asd: eval zavrsen — restartuj bez tastera za zivi rad
+EVALCSV,/clips/AS037.WAV,0.75460929,702,1148,307
+EVALCSV,/clips/AS038.WAV,0.74998212,663,1149,307
+EVALCSV,/clips/AS039.WAV,0.79481435,663,1148,307
+E (21310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (21310) task_wdt:  - IDLE0 (CPU 0)
+E (21310) task_wdt: Tasks currently running:
+E (21310) task_wdt: CPU 0: main
+E (21310) task_wdt: CPU 1: IDLE1
+E (21310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABF7:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/AS040.WAV,0.74997866,702,1149,307
+EVALCSV,/clips/AS041.WAV,0.74541754,663,1148,307
+EVALCSV,/clips/AS042.WAV,0.76617736,663,1149,307
+E (26310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (26310) task_wdt:  - IDLE0 (CPU 0)
+E (26310) task_wdt: Tasks currently running:
+E (26310) task_wdt: CPU 0: main
+E (26310) task_wdt: CPU 1: IDLE1
+E (26310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x420274A7:0x3FCA2320 0x4200AFD9:0x3FCA2340 0x4200B5B1:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/AS043.WAV,0.76017845,663,1186,307
+EVALCSV,/clips/AS044.WAV,0.75441861,663,1149,307
+E (31310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (31310) task_wdt:  - IDLE0 (CPU 0)
+E (31310) task_wdt: Tasks currently running:
+E (31310) task_wdt: CPU 0: main
+E (31310) task_wdt: CPU 1: IDLE1
+E (31310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x42015238:0x3FCA1FD0 0x42012491:0x3FCA2010 0x4201466A:0x3FCA22F0 0x4201083E:0x3FCA2320 0x4200AFF9:0x3FCA2340 0x4200B5B1:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/AT045.WAV,0.77053469,663,1191,307
+EVALCSV,/clips/AT046.WAV,0.77778047,663,1149,307
+EVALCSV,/clips/AT047.WAV,0.76370806,663,1148,307
+E (36310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (36310) task_wdt:  - IDLE0 (CPU 0)
+E (36310) task_wdt: Tasks currently running:
+E (36310) task_wdt: CPU 0: main
+E (36310) task_wdt: CPU 1: IDLE1
+E (36310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABEB:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/AT048.WAV,0.75880206,702,1149,307
+EVALCSV,/clips/AT049.WAV,0.75050908,663,1148,307
+EVALCSV,/clips/AT050.WAV,0.75979149,663,1149,307
+E (41310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (41310) task_wdt:  - IDLE0 (CPU 0)
+E (41310) task_wdt: Tasks currently running:
+E (41310) task_wdt: CPU 0: main
+E (41310) task_wdt: CPU 1: IDLE1
+E (41310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABA5:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/AT051.WAV,0.75024945,702,1148,307
+EVALCSV,/clips/AT052.WAV,0.76382411,663,1149,307
+E (46310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (46310) task_wdt:  - IDLE0 (CPU 0)
+E (46310) task_wdt: Tasks currently running:
+E (46310) task_wdt: CPU 0: main
+E (46310) task_wdt: CPU 1: IDLE1
+E (46310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABE8:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/AT053.WAV,0.75246137,702,1148,307
+EVALCSV,/clips/AT054.WAV,0.76630652,663,1149,307
+EVALCSV,/clips/AT055.WAV,0.75354892,663,1148,307
+E (51310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (51310) task_wdt:  - IDLE0 (CPU 0)
+E (51310) task_wdt: Tasks currently running:
+E (51310) task_wdt: CPU 0: main
+E (51310) task_wdt: CPU 1: IDLE1
+E (51310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABBC:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/AT056.WAV,0.74513668,702,1149,307
+EVALCSV,/clips/AT057.WAV,0.76044732,663,1148,307
+E (56310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (56310) task_wdt:  - IDLE0 (CPU 0)
+E (56310) task_wdt: Tasks currently running:
+E (56310) task_wdt: CPU 0: main
+E (56310) task_wdt: CPU 1: IDLE1
+E (56310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200AC09:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/AT058.WAV,0.75486940,702,1149,307
+EVALCSV,/clips/AT059.WAV,0.75530183,663,1148,307
+EVALCSV,/clips/NS000.WAV,0.74561292,663,1149,307
+E (61310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (61310) task_wdt:  - IDLE0 (CPU 0)
+E (61310) task_wdt: Tasks currently running:
+E (61310) task_wdt: CPU 0: main
+E (61310) task_wdt: CPU 1: IDLE1
+E (61310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABA5:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NS001.WAV,0.74226278,702,1148,307
+EVALCSV,/clips/NS002.WAV,0.75941432,663,1149,307
+EVALCSV,/clips/NS003.WAV,0.73518378,663,1148,307
+E (66310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (66310) task_wdt:  - IDLE0 (CPU 0)
+E (66310) task_wdt: Tasks currently running:
+E (66310) task_wdt: CPU 0: main
+E (66310) task_wdt: CPU 1: IDLE1
+E (66310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x40056154:0x3FCA2330 0x4200AED3:0x3FCA2340 0x4200B5A8:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NS004.WAV,0.75525582,663,1186,307
+EVALCSV,/clips/NS005.WAV,0.76501352,663,1148,307
+E (71310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (71310) task_wdt:  - IDLE0 (CPU 0)
+E (71310) task_wdt: Tasks currently running:
+E (71310) task_wdt: CPU 0: main
+E (71310) task_wdt: CPU 1: IDLE1
+E (71310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4201523B:0x3FCA1FD0 0x42012491:0x3FCA2010 0x4201466A:0x3FCA22F0 0x4201083E:0x3FCA2320 0x4200AFF9:0x3FCA2340 0x4200B5B1:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NS006.WAV,0.76750225,663,1192,307
+EVALCSV,/clips/NS007.WAV,0.73604977,663,1148,307
+EVALCSV,/clips/NS008.WAV,0.78727865,663,1149,307
+E (76310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (76310) task_wdt:  - IDLE0 (CPU 0)
+E (76310) task_wdt: Tasks currently running:
+E (76310) task_wdt: CPU 0: main
+E (76310) task_wdt: CPU 1: IDLE1
+E (76310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABD6:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NS009.WAV,0.75364012,702,1148,307
+EVALCSV,/clips/NS010.WAV,0.75277543,663,1149,307
+EVALCSV,/clips/NS011.WAV,0.74568528,663,1148,307
+E (81310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (81310) task_wdt:  - IDLE0 (CPU 0)
+E (81310) task_wdt: Tasks currently running:
+E (81310) task_wdt: CPU 0: main
+E (81310) task_wdt: CPU 1: IDLE1
+E (81310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABEE:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NS012.WAV,0.75770700,702,1149,307
+EVALCSV,/clips/NS013.WAV,0.73955351,663,1148,307
+E (86310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (86310) task_wdt:  - IDLE0 (CPU 0)
+E (86310) task_wdt: Tasks currently running:
+E (86310) task_wdt: CPU 0: main
+E (86310) task_wdt: CPU 1: IDLE1
+E (86310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABFD:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NS014.WAV,0.74328870,702,1149,307
+EVALCSV,/clips/NT015.WAV,0.74972045,663,1148,307
+EVALCSV,/clips/NT016.WAV,0.76183844,663,1149,307
+E (91310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (91310) task_wdt:  - IDLE0 (CPU 0)
+E (91310) task_wdt: Tasks currently running:
+E (91310) task_wdt: CPU 0: main
+E (91310) task_wdt: CPU 1: IDLE1
+E (91310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200AC09:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NT017.WAV,0.77467644,702,1148,307
+EVALCSV,/clips/NT018.WAV,0.77018034,663,1149,307
+E (96310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (96310) task_wdt:  - IDLE0 (CPU 0)
+E (96310) task_wdt: Tasks currently running:
+E (96310) task_wdt: CPU 0: main
+E (96310) task_wdt: CPU 1: IDLE1
+E (96310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABB4:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NT019.WAV,0.76216233,702,1148,307
+EVALCSV,/clips/NT020.WAV,0.74532664,663,1149,307
+EVALCSV,/clips/NT021.WAV,0.76358259,663,1148,307
+E (101310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (101310) task_wdt:  - IDLE0 (CPU 0)
+E (101310) task_wdt: Tasks currently running:
+E (101310) task_wdt: CPU 0: main
+E (101310) task_wdt: CPU 1: IDLE1
+E (101310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABB1:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NT022.WAV,0.74674153,703,1149,307
+EVALCSV,/clips/NT023.WAV,0.75702977,663,1148,307
+EVALCSV,/clips/NT024.WAV,0.73847920,663,1149,307
+E (106310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (106310) task_wdt:  - IDLE0 (CPU 0)
+E (106310) task_wdt: Tasks currently running:
+E (106310) task_wdt: CPU 0: main
+E (106310) task_wdt: CPU 1: IDLE1
+E (106310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABF1:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NT025.WAV,0.75236648,703,1148,307
+EVALCSV,/clips/NT026.WAV,0.75289756,663,1149,307
+E (111310) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+E (111310) task_wdt:  - IDLE0 (CPU 0)
+E (111310) task_wdt: Tasks currently running:
+E (111310) task_wdt: CPU 0: main
+E (111310) task_wdt: CPU 1: IDLE1
+E (111310) task_wdt: Print CPU 0 (current core) backtrace
+
+
+Backtrace: 0x42017D1E:0x3FC94C30 0x42018134:0x3FC94C50 0x40376F3D:0x3FC94C80 0x4200ABEE:0x3FCA2300 0x4200AD18:0x3FCA2320 0x4200AE55:0x3FCA2350 0x4200B572:0x3FCA2370 0x4200B74E:0x3FCA23D0 0x4200AB2F:0x3FCA2560 0x42028F07:0x3FCA25B0 0x4037B305:0x3FCA25E0
+
+EVALCSV,/clips/NT027.WAV,0.74686974,703,1148,307
+EVALCSV,/clips/NT028.WAV,0.77104396,663,1149,307
+EVALCSV,/clips/NT029.WAV,0.76661223,663,1148,307
+E6CALIB,n_normal=30,thr_device=0.77090490,thr_baked=0.77862573
+I (115460) eval: eval gotov: 60 klipova OK, 0 gresaka; E6 prag(dev)=0.77090
+I (115470) asd: eval zavrsen — restartuj bez tastera za zivi rad
