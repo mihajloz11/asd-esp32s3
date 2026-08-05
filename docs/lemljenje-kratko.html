@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lemljenje — kratko, sa slikama komponenti</title>
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--tx:#1f2328;--mut:#57606a;--acc:#0b57d0;--ok:#146c2e;--warn:#b3261e;--bd:#dce1e6;--box:#eef3fe;--okbox:#e7f4ec;--wbox:#fdeceb;--code:#eef1f4;--imgbg:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#15171b;--card:#1e2126;--tx:#e6e8eb;--mut:#9aa4af;--acc:#7cacf8;--ok:#6dd58c;--warn:#f2b8b5;--bd:#333a42;--box:#1c2634;--okbox:#18291f;--wbox:#2c1d1d;--code:#262b32;--imgbg:#f0f0f0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 'Segoe UI',system-ui,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:30px 20px 80px}
+h1{font-size:1.85rem;margin:0 0 2px}.sub{color:var(--mut);margin-bottom:8px}
+h2{font-size:1.4rem;margin:40px 0 8px;padding-top:16px;border-top:2px solid var(--bd)}
+h3{font-size:1.1rem;color:var(--acc);margin:26px 0 6px}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.92rem}
+th,td{border:1px solid var(--bd);padding:7px 10px;text-align:left;vertical-align:middle}
+th{background:var(--code)}
+.box{background:var(--box);border-left:4px solid var(--acc);padding:10px 14px;margin:12px 0;border-radius:0 8px 8px 0}
+.okb{background:var(--okbox);border-left:4px solid var(--ok);padding:10px 14px;margin:12px 0;border-radius:0 8px 8px 0}
+.wb{background:var(--wbox);border-left:4px solid var(--warn);padding:10px 14px;margin:12px 0;border-radius:0 8px 8px 0}
+code{background:var(--code);padding:1px 6px;border-radius:5px;font-size:.88em;font-family:Consolas,monospace}
+pre{background:var(--code);padding:14px 16px;border-radius:10px;overflow-x:auto;font-size:.88rem;font-family:Consolas,monospace;line-height:1.7}
+.pill{display:inline-block;padding:2px 11px;border-radius:20px;font-size:.78rem;font-weight:700}
+.plemi{background:#e37400;color:#fff}.pne{background:var(--okbox);color:var(--ok)}
+img.comp{background:var(--imgbg);border:1px solid var(--bd);border-radius:8px;display:block;max-width:100%}
+.sema{width:100%;border:1px solid var(--bd);border-radius:12px;background:#fff;margin:16px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin:14px 0}
+.grid figure{margin:0;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px;text-align:center}
+.grid img{background:var(--imgbg);border-radius:6px;width:100%;height:120px;object-fit:contain}
+.grid figcaption{font-size:.84rem;margin-top:8px;color:var(--mut)}
+.grid b{color:var(--tx);display:block;font-size:.92rem}
+.side{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin:14px 0}
+.side img{background:var(--imgbg);border:1px solid var(--bd);border-radius:10px;width:250px;max-width:100%}
+.side>div{flex:1;min-width:260px}
+.tot{font-size:1.05rem;font-weight:700}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Lemljenje — kratko, sa slikama</h1>
+<div class="sub">Komponente stigle 04.08.2026. Provjereno na stvarnim komadima i fotkama sa elektromodul.rs, 05.08.2026.<br>
+Puna procedura: <a href="lemljenje.md">lemljenje.md</a> · Šema spajanja: <a href="sema-povezivanja.svg">sema-povezivanja.svg</a></div>
+
+<div class="okb"><b>Suština:</b> lemiš <b>samo letvice</b> na tri uređaja — ESP32-S3, oba mikrofona, INA226.
+Poslije toga svaki modul ima nožice i <b>sve ide jumperima u breadboard</b>. Ništa se više ne lemi.</div>
+
+<img class="sema" src="sema-lemljenje.svg" alt="Šema — šta se lemi">
+
+<h2>1. Lemi se troje</h2>
+
+<table>
+<tr><th>Komponenta</th><th>Kako je stiglo</th><th>Lemi?</th><th>Spojeva</th></tr>
+<tr><td><b>ESP32-S3</b></td><td>bez pinova, idu 40-pinske letvice</td><td><span class="pill plemi">DA</span></td><td>~44 (2×22)</td></tr>
+<tr><td><b>INMP441 ×2</b></td><td>6 rupa u <b>2 reda po 3</b> + 2 letvice po 3 pina</td><td><span class="pill plemi">DA</span></td><td>6 + 6</td></tr>
+<tr><td><b>INA226</b></td><td>8 rupa u jednom redu + letvica od 8</td><td><span class="pill plemi">DA</span></td><td>8</td></tr>
+<tr><td>AMS1117 3.3V</td><td>4 muška pina <b>već zalemljena</b></td><td><span class="pill pne">NE</span></td><td>0</td></tr>
+<tr><td>Taster arkadni</td><td>faston jezičci 2,8 mm</td><td><span class="pill pne">NE</span></td><td>0</td></tr>
+<tr><td>Kondenzatori, LED, otpornik</td><td>nožice</td><td><span class="pill pne">NE sad</span></td><td>0</td></tr>
+<tr><td>Ploča 4×6</td><td>prazna</td><td><span class="pill pne">NE sad</span></td><td>0</td></tr>
+</table>
+
+<p class="tot">Ukupno ~64 spoja. Računaj 1,5–2 h mirnog rada.</p>
+
+<div class="box">Bilans letvica: 2× 40 = 80 pinova, S3 troši ~44 → 36 rezerve.
+Mikrofoni i INA226 su došli sa svojim letvicama, pa se 80 pinova troši <b>samo na S3</b>.</div>
+
+<h2>2. Ponesi na posao</h2>
+
+<div class="grid">
+<figure><img src="img/inmp441.jpg" alt="INMP441"><figcaption><b>INMP441 ×2</b>+ obje letvice po 3 pina</figcaption></figure>
+<figure><img src="img/ina226.jpeg" alt="INA226"><figcaption><b>INA226</b>+ letvica od 8 pinova</figcaption></figure>
+<figure><img src="img/letvica40.jpg" alt="Letvica 40 pin"><figcaption><b>Letvica 40 pin ×2</b>za ESP32-S3</figcaption></figure>
+</div>
+
+<p>Plus <b>ESP32-S3 ploču</b>. Sve ostalo ostaje kod kuće.</p>
+
+<div class="box"><b>Redoslijed na poslu:</b> prvo <b>S3</b> (najviše pinova, padovi veliki i praštaju — tu podesiš lemilicu),
+pa <b>INA226</b>, pa <b>mikrofoni na kraju</b> kad si uhodan — oni su jedini krhki.</div>
+
+<h2>3. Šta se za šta lemi</h2>
+
+<h3>ESP32-S3 — 2 reda headera, ~44 pina</h3>
+<ol>
+<li><b>Prebroj rupe</b> po redu prije sječenja (obično 22, može i 20).</li>
+<li>Presiječi letvicu na dužinu — zarezni kliještima pa prelomi.</li>
+<li><b>Obje letvice ubodi u MB-102</b> preko srednjeg kanala, nasloni ploču odozgo — breadboard je drži pod 90°.</li>
+<li>Zalemi <b>po jedan ugaoni pin sa svake strane</b>, provjeri da stoji ravno, tek onda ostale.</li>
+</ol>
+<p>Pinovi su fiksirani u <a href="../firmware/esp32s3_asd/main/pins.h">pins.h</a>:
+<code>4</code> BCLK · <code>5</code> WS · <code>6</code> SD · <code>8</code> SDA · <code>9</code> SCL · <code>2</code> LED · <code>10</code> taster.<br>
+Zabranjeni: GPIO 35/36/37 (oktalni PSRAM), strapping 0/3/45/46.</p>
+
+<h3>INMP441 ×2 — 6 pinova u <u>dva reda po 3</u></h3>
+<div class="side">
+<img src="img/inmp441-2.jpg" alt="INMP441 dimenzije">
+<div>
+<p>Okrugla pločica 12×14 mm. Rupe <b>nisu u jednom redu</b> — 3 gore, 3 dolje.
+Zato i dolaze dvije letvice po 3 pina. Obje ubodi u breadboard na tačan razmak,
+nasloni pločicu odozgo, pa lemi.</p>
+<table>
+<tr><th>Pin mikrofona</th><th>Ide na S3</th></tr>
+<tr><td>VDD</td><td>3V3</td></tr>
+<tr><td>GND</td><td>GND</td></tr>
+<tr><td>SCK</td><td>GPIO 4</td></tr>
+<tr><td>WS</td><td>GPIO 5</td></tr>
+<tr><td>SD</td><td>GPIO 6</td></tr>
+<tr><td>L/R</td><td><b>GND</b> — obavezno</td></tr>
+</table>
+</div>
+</div>
+<div class="wb">Silk oznake su sitne i na donjoj strani — pročitaj ih <b>prije</b> lemljenja, dok su rupe prazne.</div>
+
+<h3>INA226 — 8 pinova, koristi se 6</h3>
+<div class="side">
+<img src="img/ina226.jpeg" alt="INA226 pinout">
+<div>
+<p>Silk redoslijed sa fotke, slijeva nadesno:<br>
+<code>IN+ · IN− · VBS · ALE · SDA · SCL · GND · VCC</code></p>
+<p>Šant je <b>R100 = 0,1 Ω</b> — piše na komponenti, ne moraš mjeriti.
+Zalemi svih 8 zbog stabilnosti, priključuješ 6:</p>
+<table>
+<tr><th>Pin</th><th>Ide na</th></tr>
+<tr><td>VCC</td><td>3V3</td></tr>
+<tr><td>GND</td><td>GND</td></tr>
+<tr><td>SDA</td><td>GPIO 8</td></tr>
+<tr><td>SCL</td><td>GPIO 9</td></tr>
+<tr><td>IN+</td><td>dolazi 5 V sa izvora</td></tr>
+<tr><td>IN−</td><td>ide dalje na potrošač (ESP32)</td></tr>
+<tr><td>VBS, ALE</td><td>ostaju prazni</td></tr>
+</table>
+</div>
+</div>
+
+<h3>AMS1117 — ne lemi se</h3>
+<div class="side">
+<img src="img/ams1117.webp" alt="AMS1117">
+<div>
+<p>Ima <b>4 muška pina već zalemljena, po 2 na svakom kraju</b>:
+<code>IN+ / IN−</code> na jednoj strani, <code>OUT+ / OUT−</code> na drugoj. Minusi su GND.
+Ženski jumper ide direktno.</p>
+<p>IN+ ← 5 V zidni punjač · OUT+ → 3V3 ploče · minusi zajednički GND.</p>
+<div class="wb">Samo za E5 mjerenje. <b>Nikad USB i eksterno 3V3 istovremeno.</b></div>
+</div>
+</div>
+
+<h2>4. Šta sa dvoslojnom pločom 4×6?</h2>
+<div class="side">
+<img src="img/ploca4x6.jpg" alt="Prototipna ploča 4x6">
+<div>
+<p><b>Za sad ništa — ostavi je u kesi.</b> To je faza 2, finalni zalemljeni sklop za odbranu.</p>
+<p>To je breadboard koji se ne raspada: ista mreža rupa na 2.54 mm, ali <b>svaka rupa je sama za sebe</b> —
+ništa nije unaprijed povezano. Ubodeš komponentu, zalemiš je, pa <b>ti sam praviš svaku vezu</b>
+žicom sa donje strane ili kalajnim mostom. Po ivicama ima izdužene padove za konektore.</p>
+<p><b>Zašto uopšte:</b> (1) kad nosiš sklop na odbranu, breadboard se strese u torbi i jumper ispadne;
+(2) I2S linije sa dugim jumperima hvataju šum.</p>
+</div>
+</div>
+<div class="okb"><b>Savjet:</b> prvo neka radi, pa se onda brini za izgled. Ako budeš bez vremena,
+breadboard je sasvim legitiman za demo — samo ga zalijepi za nešto čvrsto i ne diraj.</div>
+
+<h2>5. Ostaje kod kuće (za sad)</h2>
+<div class="grid">
+<figure><img src="img/ams1117.webp" alt="AMS1117"><figcaption><b>AMS1117</b>gotov, ide u E5</figcaption></figure>
+<figure><img src="img/taster30.webp" alt="Taster"><figcaption><b>Taster 30 mm</b>faston, nikad se ne lemi</figcaption></figure>
+<figure><img src="img/keramika470nf.jpg" alt="Keramika 470nF"><figcaption><b>Keramika 470 nF</b>faza 2</figcaption></figure>
+<figure><img src="img/kondenzatori-set.jpg" alt="Set kondenzatora"><figcaption><b>Set elektrolita</b>faza 2 — vadiš 10 µF i 470 µF</figcaption></figure>
+<figure><img src="img/ploca4x6.jpg" alt="Ploča 4x6"><figcaption><b>Ploča 4×6</b>faza 2</figcaption></figure>
+</div>
+
+<h2>6. Nađi na poslu</h2>
+<table>
+<tr><th>Šta</th><th>Kom</th><th>Zašto</th></tr>
+<tr><td><b>Otpornik 220–330 Ω</b> (1/4 W)</td><td>2</td><td><b>Obavezno</b> — bez njega LED ne ide na GPIO, spržiš pin</td></tr>
+<tr><td>Keramika <b>100 nF X7R</b></td><td>2–3</td><td>Opciono — datasheet-tačna vrijednost za mikrofon (bolja od 470 nF)</td></tr>
+<tr><td>Ženski header 2.54 mm</td><td>1</td><td>Opciono — da INMP441 ostane vadiv na ploči 4×6</td></tr>
+<tr><td>Lemilica sa podesivom temp., tanki vrh</td><td>—</td><td>300–350 °C</td></tr>
+<tr><td>Kalaj 0,5–0,8 mm, pinceta, kliješta, multimetar</td><td>—</td><td>Multimetar je obavezan za bring-up</td></tr>
+</table>
+
+<h2>7. Redoslijed</h2>
+<pre>0. Na poslu: headeri na S3 (~44), INA226 (8), pa mikrofoni (6+6)
+1. Kod kuće: ubodi S3 u MB-102, flešuj — provjeri da se ploča i dalje javlja
+2. Spoji INMP441 na S3 (4/5/6, VDD/GND, L/R→GND)
+3. TEST: snimi 5 s WAV na flash → Audacity    ← ovdje se vidi je li mikrofon živ
+4. Eval mod (taster pri bootu) → klipovi s flasha
+5. Živi rad → LED reaguje
+6. INA226 + AMS1117 → E5, tek poslije I2C drajvera
+7. NA KRAJU: sve na ploču 4×6 (faza 2)</pre>
+
+<h2>Tri stvari koje te mogu koštati</h2>
+<div class="wb"><b>1. INMP441 je jedina komponenta koju možeš uništiti.</b>
+300–350 °C, <b>max 2–3 s po pinu</b>, pauza između. <b>Ne diraj sound port</b>
+(ni prstom, ni fluksom, ni izopropanolom), <b>ne peri ploču</b> poslije.
+Uzemlji se prije vađenja iz kese. Zato lemiš jedan po jedan.</div>
+<div class="wb"><b>2. Otpornici fale</b> — bez 220–330 Ω ne vezuj LED na GPIO.</div>
+<div class="wb"><b>3. Firmware pali samo jednu LED (GPIO 2).</b> Imaš crvenu i zelenu; za obje treba
+GPIO 11 + izmjena u <a href="../firmware/esp32s3_asd/main/app_main.c">app_main.c</a>.
+Za sad zalemi zelenu (svijetli = normal, gasi se pri anomaliji).</div>
+
+<p style="color:var(--mut);font-size:.85rem;margin-top:40px">Slike komponenti: elektromodul.rs, preuzete za internu dokumentaciju (repo je privatan).</p>
+
+</div>
+</body>
+</html>
