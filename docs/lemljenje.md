@@ -1,5 +1,7 @@
 # Lemljenje — šta, kojim redom, na šta paziti
 
+> **Kratka verzija za na posao:** [lemljenje-kratko.md](lemljenje-kratko.md) (+ šema [sema-lemljenje.svg](sema-lemljenje.svg))
+>
 > Komponente stigle 04.08.2026 (vidi [hardver-lista.md](hardver-lista.md)).
 > Pinovi su fiksirani u [pins.h](../firmware/esp32s3_asd/main/pins.h), šema u
 > [sema-povezivanja.md](sema-povezivanja.md). **Ništa ne lemi dok ne provjeriš pin-mapu.**

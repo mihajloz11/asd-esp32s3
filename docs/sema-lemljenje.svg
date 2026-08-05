@@ -1,0 +1,186 @@
+<svg viewBox="0 0 900 940" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, sans-serif">
+  <rect width="900" height="940" fill="#ffffff"/>
+
+  <text x="40" y="32" font-size="19" font-weight="bold" fill="#202124">Šta se lemi — komponente sa stola (04.08.2026)</text>
+  <text x="40" y="54" font-size="12" fill="#5f6368">Faza 1 = samo headeri. Sve ostalo se ubada u MB-102 dok razvijaš. Zlatni kvadrat = pad koji se lemi.</text>
+
+  <!-- ============ ROW 1: INMP441 ============ -->
+  <rect x="30" y="70" width="840" height="124" fill="#f8f9fa" rx="6"/>
+
+  <rect x="70" y="95" width="180" height="78" rx="3" fill="#5b4a94"/>
+  <rect x="88" y="110" width="46" height="34" rx="2" fill="#d0d3d8"/>
+  <circle cx="111" cy="127" r="5" fill="#202124"/>
+  <text x="142" y="124" font-size="9" fill="#ffffff">sound port</text>
+  <text x="142" y="136" font-size="9" fill="#f28b82">NE DIRAJ</text>
+  <rect x="78" y="165" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="106" y="165" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="134" y="165" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="162" y="165" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="190" y="165" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="218" y="165" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="70" y="160" width="172" height="26" fill="none" stroke="#e37400" stroke-width="2" stroke-dasharray="5 3" rx="3"/>
+  <text x="86" y="190" font-size="9" text-anchor="middle" fill="#202124">VDD</text>
+  <text x="114" y="190" font-size="9" text-anchor="middle" fill="#202124">GND</text>
+  <text x="142" y="190" font-size="9" text-anchor="middle" fill="#202124">SCK</text>
+  <text x="170" y="190" font-size="9" text-anchor="middle" fill="#202124">WS</text>
+  <text x="198" y="190" font-size="9" text-anchor="middle" fill="#202124">SD</text>
+  <text x="226" y="190" font-size="9" text-anchor="middle" fill="#202124">L/R</text>
+
+  <text x="310" y="104" font-size="14" font-weight="bold" fill="#202124">INMP441 ×2 — I2S MEMS mikrofon</text>
+  <text x="310" y="126" font-size="12" fill="#202124">Lemi: <tspan font-weight="bold">muška letvica 6 pinova</tspan>, po modulu</text>
+  <text x="310" y="145" font-size="11" fill="#5f6368">VDD · GND · SCK · WS · SD · L/R</text>
+  <text x="310" y="164" font-size="11" fill="#d93025">300–350 °C, max 2–3 s po pinu. Prvo #1, testiraj, pa #2.</text>
+  <text x="310" y="182" font-size="11" fill="#5f6368">Redoslijed pinova varira po proizvođaču — čitaj silk na svom komadu.</text>
+
+  <rect x="680" y="110" width="170" height="44" rx="6" fill="#e37400"/>
+  <text x="765" y="130" font-size="13" font-weight="bold" text-anchor="middle" fill="#ffffff">LEMI</text>
+  <text x="765" y="146" font-size="11" text-anchor="middle" fill="#ffffff">6 + 6 spojeva</text>
+
+  <!-- ============ ROW 2: AMS1117 ============ -->
+  <rect x="30" y="198" width="840" height="124" fill="#ffffff" rx="6"/>
+
+  <rect x="90" y="225" width="140" height="62" rx="3" fill="#a83240"/>
+  <rect x="104" y="236" width="42" height="26" rx="2" fill="#202124"/>
+  <rect x="112" y="230" width="26" height="8" fill="#8b9096"/>
+  <text x="160" y="252" font-size="9" fill="#ffffff">AMS1117</text>
+  <rect x="104" y="280" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="144" y="280" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="184" y="280" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="97" y="275" width="110" height="26" fill="none" stroke="#e37400" stroke-width="2" stroke-dasharray="5 3" rx="3"/>
+  <text x="112" y="311" font-size="9" text-anchor="middle" fill="#202124">IN</text>
+  <text x="152" y="311" font-size="9" text-anchor="middle" fill="#202124">GND</text>
+  <text x="192" y="311" font-size="9" text-anchor="middle" fill="#202124">OUT</text>
+
+  <text x="310" y="232" font-size="14" font-weight="bold" fill="#202124">AMS1117 3.3V — LDO regulator</text>
+  <text x="310" y="254" font-size="12" fill="#202124">Lemi: <tspan font-weight="bold">3 kontakta</tspan> (IN, GND, OUT) — header ili žice direktno</text>
+  <text x="310" y="273" font-size="11" fill="#5f6368">IN ← 5 V zidni punjač · OUT → 3V3 ploče · GND zajednički</text>
+  <text x="310" y="292" font-size="11" fill="#d93025">Samo za E5 mjerenje. NIKAD USB i eksterno 3V3 istovremeno.</text>
+
+  <rect x="680" y="238" width="170" height="44" rx="6" fill="#e37400"/>
+  <text x="765" y="258" font-size="13" font-weight="bold" text-anchor="middle" fill="#ffffff">LEMI</text>
+  <text x="765" y="274" font-size="11" text-anchor="middle" fill="#ffffff">3 spoja</text>
+
+  <!-- ============ ROW 3: INA226 ============ -->
+  <rect x="30" y="326" width="840" height="124" fill="#f8f9fa" rx="6"/>
+
+  <rect x="70" y="344" width="180" height="68" rx="3" fill="#1a6ea8"/>
+  <rect x="98" y="356" width="32" height="22" rx="2" fill="#202124"/>
+  <rect x="188" y="352" width="54" height="32" rx="2" fill="#2f8bc9" stroke="#0f5a8a"/>
+  <circle cx="201" cy="368" r="7" fill="#d0d3d8"/>
+  <circle cx="229" cy="368" r="7" fill="#d0d3d8"/>
+  <text x="215" y="396" font-size="8" text-anchor="middle" fill="#ffffff">IN+   IN−</text>
+  <rect x="80" y="404" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="108" y="404" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="136" y="404" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="164" y="404" width="16" height="16" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="73" y="399" width="114" height="26" fill="none" stroke="#5f6368" stroke-width="2" stroke-dasharray="5 3" rx="3"/>
+  <text x="88" y="435" font-size="9" text-anchor="middle" fill="#202124">VCC</text>
+  <text x="116" y="435" font-size="9" text-anchor="middle" fill="#202124">GND</text>
+  <text x="144" y="435" font-size="9" text-anchor="middle" fill="#202124">SDA</text>
+  <text x="172" y="435" font-size="9" text-anchor="middle" fill="#202124">SCL</text>
+
+  <text x="310" y="360" font-size="14" font-weight="bold" fill="#202124">INA226 — I2C senzor struje i snage</text>
+  <text x="310" y="382" font-size="12" fill="#202124">Lemi: <tspan font-weight="bold">4 pina</tspan> (VCC, GND, SDA, SCL) — samo ako nisu već zalemljeni</text>
+  <text x="310" y="401" font-size="11" fill="#5f6368">IN+ / IN− idu na screw-terminal — tu se ništa ne lemi, žica se zavrne.</text>
+  <text x="310" y="420" font-size="11" fill="#5f6368">Pročitaj oznaku šanta: R100 = 0,1 Ω · R010 = 0,01 Ω.</text>
+  <text x="310" y="439" font-size="11" fill="#d93025">Bez I2C drajvera u firmware-u E5 ne radi — ostavi za kraj.</text>
+
+  <rect x="680" y="366" width="170" height="44" rx="6" fill="#5f6368"/>
+  <text x="765" y="386" font-size="13" font-weight="bold" text-anchor="middle" fill="#ffffff">LEMI AKO TREBA</text>
+  <text x="765" y="402" font-size="11" text-anchor="middle" fill="#ffffff">0 ili 4 spoja</text>
+
+  <!-- ============ ROW 4: ESP32-S3 ============ -->
+  <rect x="30" y="454" width="840" height="124" fill="#ffffff" rx="6"/>
+
+  <rect x="96" y="472" width="146" height="92" rx="4" fill="#3c4043"/>
+  <rect x="112" y="482" width="88" height="52" rx="2" fill="#b9bec4"/>
+  <text x="156" y="512" font-size="8" text-anchor="middle" fill="#3c4043">ESP32-S3</text>
+  <rect x="228" y="500" width="12" height="26" rx="2" fill="#8b9096"/>
+  <rect x="88" y="478" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="88" y="493" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="88" y="508" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="88" y="523" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="88" y="538" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="88" y="553" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="236" y="478" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="236" y="493" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="236" y="508" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="236" y="523" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="236" y="538" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="236" y="553" width="14" height="10" fill="#d8a63a" stroke="#a87b1e"/>
+  <rect x="83" y="473" width="24" height="95" fill="none" stroke="#5f6368" stroke-width="2" stroke-dasharray="5 3" rx="3"/>
+  <rect x="231" y="473" width="24" height="95" fill="none" stroke="#5f6368" stroke-width="2" stroke-dasharray="5 3" rx="3"/>
+
+  <text x="310" y="488" font-size="14" font-weight="bold" fill="#202124">ESP32-S3-WROOM-1 N32R16V</text>
+  <text x="310" y="510" font-size="12" fill="#202124">Lemi: <tspan font-weight="bold">2 reda headera</tspan> — SAMO ako ploča nema zalemljene pinove</text>
+  <text x="310" y="529" font-size="11" fill="#5f6368">Provjeri prije nego što je poneseš. Većina DevKit ploča već ima pinove.</text>
+  <text x="310" y="548" font-size="11" fill="#d93025">Zabranjeni pinovi: GPIO 35/36/37 (oktalni PSRAM), strapping 0/3/45/46.</text>
+  <text x="310" y="567" font-size="11" fill="#5f6368">Koristi se: 4 BCLK · 5 WS · 6 SD · 8 SDA · 9 SCL · 2 LED · 10 taster</text>
+
+  <rect x="680" y="494" width="170" height="44" rx="6" fill="#5f6368"/>
+  <text x="765" y="514" font-size="13" font-weight="bold" text-anchor="middle" fill="#ffffff">PROVJERI PRVO</text>
+  <text x="765" y="530" font-size="11" text-anchor="middle" fill="#ffffff">0 ili ~2×22 spoja</text>
+
+  <!-- ============ ROW 5: TASTER ============ -->
+  <rect x="30" y="582" width="840" height="124" fill="#f8f9fa" rx="6"/>
+
+  <circle cx="160" cy="628" r="32" fill="#1a4a70"/>
+  <circle cx="160" cy="626" r="26" fill="#3f86c4"/>
+  <rect x="130" y="654" width="60" height="20" rx="2" fill="#d0d3d8" stroke="#9aa0a6"/>
+  <rect x="136" y="674" width="16" height="12" fill="#c9a227" stroke="#8a6f1a"/>
+  <rect x="168" y="674" width="16" height="12" fill="#c9a227" stroke="#8a6f1a"/>
+  <text x="160" y="698" font-size="9" text-anchor="middle" fill="#202124">faston jezičci 2,8 mm</text>
+
+  <text x="310" y="616" font-size="14" font-weight="bold" fill="#202124">Taster arkadni 30 mm (plavi)</text>
+  <text x="310" y="638" font-size="12" fill="#202124">Žica se <tspan font-weight="bold">nabija</tspan> na jezičke — lemljenje nije potrebno</text>
+  <text x="310" y="657" font-size="11" fill="#5f6368">Jedan jezičak → GPIO 10, drugi → GND (interni pull-up u kodu).</text>
+  <text x="310" y="676" font-size="11" fill="#5f6368">Ako nemaš faston papučice: prikalajiši žicu na jezičak — 2 spoja, lako.</text>
+
+  <rect x="680" y="622" width="170" height="44" rx="6" fill="#188038"/>
+  <text x="765" y="642" font-size="13" font-weight="bold" text-anchor="middle" fill="#ffffff">NE LEMI</text>
+  <text x="765" y="658" font-size="11" text-anchor="middle" fill="#ffffff">0 spojeva</text>
+
+  <!-- ============ ROW 6: PASIVE ============ -->
+  <rect x="30" y="710" width="840" height="124" fill="#ffffff" rx="6"/>
+
+  <rect x="74" y="740" width="26" height="42" rx="4" fill="#1a4a70"/>
+  <rect x="74" y="740" width="8" height="42" rx="4" fill="#d0d3d8"/>
+  <line x1="82" y1="782" x2="82" y2="796" stroke="#9aa0a6" stroke-width="2"/>
+  <line x1="94" y1="782" x2="94" y2="796" stroke="#9aa0a6" stroke-width="2"/>
+  <text x="87" y="810" font-size="8" text-anchor="middle" fill="#202124">10/470 µF</text>
+
+  <rect x="120" y="748" width="26" height="24" rx="10" fill="#c98f2a"/>
+  <line x1="127" y1="772" x2="127" y2="796" stroke="#9aa0a6" stroke-width="2"/>
+  <line x1="139" y1="772" x2="139" y2="796" stroke="#9aa0a6" stroke-width="2"/>
+  <text x="133" y="810" font-size="8" text-anchor="middle" fill="#202124">470 nF</text>
+
+  <rect x="164" y="756" width="42" height="14" rx="6" fill="#e8dcc0" stroke="#9aa0a6"/>
+  <rect x="172" y="756" width="4" height="14" fill="#8a5a2b"/>
+  <rect x="180" y="756" width="4" height="14" fill="#202124"/>
+  <rect x="188" y="756" width="4" height="14" fill="#8a5a2b"/>
+  <line x1="150" y1="763" x2="164" y2="763" stroke="#9aa0a6" stroke-width="2"/>
+  <line x1="206" y1="763" x2="220" y2="763" stroke="#9aa0a6" stroke-width="2"/>
+  <text x="185" y="810" font-size="8" text-anchor="middle" fill="#d93025">330 Ω — FALI</text>
+
+  <circle cx="248" cy="758" r="12" fill="#2fbd5e" opacity="0.85"/>
+  <line x1="244" y1="770" x2="244" y2="796" stroke="#9aa0a6" stroke-width="2"/>
+  <line x1="252" y1="770" x2="252" y2="790" stroke="#9aa0a6" stroke-width="2"/>
+  <text x="248" y="810" font-size="8" text-anchor="middle" fill="#202124">LED</text>
+
+  <text x="310" y="744" font-size="14" font-weight="bold" fill="#202124">Kondenzatori · LED · otpornik · žice</text>
+  <text x="310" y="766" font-size="12" fill="#202124">Sve se <tspan font-weight="bold">ubada u MB-102</tspan> dok razvijaš — ništa se sad ne lemi</text>
+  <text x="310" y="785" font-size="11" fill="#5f6368">Faza 2 (ploča 4×6): 470 nF i 10 µF uz VDD mikrofona, LED + 330 Ω na GPIO 2.</text>
+  <text x="310" y="804" font-size="11" fill="#5f6368">Elektroliti su polarizovani — traka / kraća nožica = minus na GND.</text>
+  <text x="310" y="823" font-size="11" fill="#d93025">470 µF NE lemi fiksno — po E5 metodologiji mjeriš prvo bez njega.</text>
+
+  <rect x="680" y="750" width="170" height="44" rx="6" fill="#188038"/>
+  <text x="765" y="770" font-size="13" font-weight="bold" text-anchor="middle" fill="#ffffff">NE LEMI SAD</text>
+  <text x="765" y="786" font-size="11" text-anchor="middle" fill="#ffffff">tek faza 2</text>
+
+  <!-- ============ FOOTER ============ -->
+  <line x1="30" y1="850" x2="870" y2="850" stroke="#dadce0" stroke-width="1"/>
+  <text x="40" y="872" font-size="12" font-weight="bold" fill="#202124">Realno na posao: ~15 spojeva (2× mikrofon + AMS1117). Najgori slučaj ~60 ako i S3 i INA226 idu bez headera.</text>
+  <text x="40" y="892" font-size="11" fill="#d93025">Fali: 2× otpornik 220–330 Ω za LED — naći na poslu. Bez njega LED se NE vezuje na GPIO.</text>
+  <text x="40" y="911" font-size="11" fill="#5f6368">Koji pin gdje ide: sema-povezivanja.svg · Puna procedura i mjere opreza: lemljenje.md</text>
+  <text x="40" y="930" font-size="11" fill="#5f6368">Alat: lemilica sa podesivom temperaturom (tanki vrh), kalaj 0,5–0,8 mm, pinceta, sitna kliješta, multimetar.</text>
+</svg>
