@@ -14,16 +14,19 @@ prototipnoj ploči 4×6 za demo na odbrani.
 
 ## FAZA 1 — headeri (obavezno, bez ovoga ne možeš ništa spojiti)
 
+> **Ažurirano 05.08.2026 — provjereno na stvarnim komadima.** Ploča S3 je **bez pinova**,
+> AMS1117 je stigao **već sa 4 muška pina**, INA226 ima **8 pinova** (bez screw-terminala).
+
 | # | Komponenta | Šta se lemi | Spojeva | Kritično? |
 |---|---|---|---|---|
-| 1 | **INMP441 #1** | muški header 6 pinova (VDD, GND, SCK, WS, SD, L/R) | 6 | **DA** — bez ovoga nema živog zvuka |
-| 2 | **INMP441 #2** (rezerva) | isto, 6 pinova | 6 | tek kad #1 proradi |
-| 3 | **INA226** | header 4 pina (VCC, GND, SDA, SCL) — *ako nije već zalemljen*; IN+/IN− su obično već na screw-terminalu | 0–4 | samo za E5 |
-| 4 | **AMS1117 3.3V modul** | 3 kontakta (IN, GND, OUT) — header ili žice direktno | 3 | samo za E5 |
-| 5 | **ESP32-S3 ploča** | 2 reda headera — **samo ako ploča nije već sa zalemljenim pinovima** | 0 ili ~2×22 | provjeri prvo! |
+| 1 | **ESP32-S3 ploča** | 2 reda headera od 40-pinskih letvica — ploča je bez pinova | ~44 (2×22) | **DA** — bez toga ne ulazi u MB-102 |
+| 2 | **INMP441 #1** | 6 pinova (VDD, GND, SCK, WS, SD, L/R) — stigle 2 letvice po 3 | 6 | **DA** — bez ovoga nema živog zvuka |
+| 3 | **INMP441 #2** (rezerva) | isto, 6 pinova | 6 | tek kad #1 proradi |
+| 4 | **INA226** | letvica 8 pinova stigla uz modul (VCC, GND, VBS, ALE, SDA, SCL, IN−, IN+) | 8 | samo za E5 |
+| 5 | **AMS1117 3.3V modul** | **ništa** — 4 muška pina već zalemljena | 0 | — |
 
-**Ukupno u najgorem slučaju:** ~60 spojeva. Realno (S3 već ima headere, INA226 stiže
-zalemljena): **~19 spojeva.**
+**Ukupno: ~64 spoja.** Redoslijed na poslu: S3 prvo (veliki padovi, uhodaš lemilicu),
+pa INA226, pa mikrofoni na kraju — oni su jedini krhki.
 
 ### Kako zalemiti header pravo (trik za MB-102)
 
@@ -31,7 +34,8 @@ zalemljena): **~19 spojeva.**
 2. Nasloni modul odozgo na pinove — breadboard ga drži savršeno pod 90°.
 3. Zalemi **prvo jedan ugaoni pin**, provjeri da modul stoji ravno, pa ostale.
 
-Letvica se lomi/siječe na dužinu — 40 pinova ima dovoljno za sve (6+6+4+3 = 19 od 80).
+Letvica se lomi/siječe na dužinu. Bilans: 2× 40 = 80 pinova, S3 troši ~44 → 36 rezerve.
+Mikrofoni i INA226 su došli sa svojim letvicama, pa se 80 pinova troši samo na S3.
 
 ### ⚠️ INMP441 — ovo je jedina komponenta koju možeš uništiti
 

@@ -22,12 +22,12 @@ Naručeno po [porudzbina-elektromodul.md](porudzbina-elektromodul.md), isporuče
 
 | Stavka (SKU) | Kom | Cijena | Uloga | Lemiti? |
 |---|---|---|---|---|
-| INMP441 I2S mikrofon (A1477) | 2 | 1.200 | Živi audio ulaz + rezerva (MEMS krhak, rizik C1) | **DA** — header 6 pinova, po modulu |
-| INA226 I2C senzor struje i snage (A3627) | 1 | 300 | E5 mjerenje energije | ako header nije zalemljen (4 pina) |
+| INMP441 I2S mikrofon (A1477) | 2 | 1.200 | Živi audio ulaz + rezerva (MEMS krhak, rizik C1) | **DA** — 6 pinova po modulu (stigle 2 letvice po 3) |
+| INA226 I2C senzor struje i snage (A3627) | 1 | 300 | E5 mjerenje energije | **DA** — letvica 8 pinova, stigla nezalemljena |
 | Set 120 elektrolita 1µF–470µF, 12 vrijednosti (A642K) | 1 | 500 | Daje **10 µF** (uz mikrofon) i **470 µF** (poslije INA, rizik C7) | tek u fazi 2 (ploča 4×6) |
 | Keramika 470 nF MLCC 50 V (A2400) | 3 | 48 | HF decoupling uz VDD mikrofona (1 po miku + rezerva) | tek u fazi 2 |
-| AMS1117 3.3V LDO modul 800 mA (A1652) | 1 | 120 | Čist 3,3 V za E5 bez USB-a (rizik D2) | **DA** — 3 kontakta (IN/GND/OUT) |
-| Muška pin letvica 40 pin 2.54 mm (A1632) | 2 | 56 | Headeri za module (19 pinova od 80 iskorišteno) | to su same nožice |
+| AMS1117 3.3V LDO modul 800 mA (A1652) | 1 | 120 | Čist 3,3 V za E5 bez USB-a (rizik D2) | **NE** — stigao sa 4 muška pina zalemljena |
+| Muška pin letvica 40 pin 2.54 mm (A1632) | 2 | 56 | Headeri za **ESP32-S3** (~44 od 80 pinova) | to su same nožice |
 | Dvoslojna prototipna ploča 4×6 cm (A1938) | 1 | 120 | Finalni zalemljeni sklop za demo | **DA** — cijela faza 2 |
 | LED 5 mm crvena (A2177) | 1 | 14 | Demo — anomalija | faza 2 |
 | LED 5 mm zelena, prozirna (A3506) | 1 | 80 | Demo — normalan rad | faza 2 |
@@ -35,6 +35,14 @@ Naručeno po [porudzbina-elektromodul.md](porudzbina-elektromodul.md), isporuče
 
 Odstupanje od spiska: taster je **plavi** umjesto crvenog — funkcionalno identičan
 mikroprekidač, bez uticaja na šemu ili kod.
+
+### Provjereno na stvarnim komadima (05.08.2026)
+
+- **ESP32-S3 ploča je bez pinova** → obje 40-pinske letvice idu na nju (~44 spoja).
+- **AMS1117 ima 4 muška pina već zalemljena** → ne lemi se, ženski jumper ide direktno.
+- **INA226 ima 8 pinova** (VCC, GND, VBS, ALE, SDA, SCL, IN−, IN+) i stigla je nezalemljena
+  letvica od 8 — **nema screw-terminala**, IN+/IN− su na headeru.
+- **INMP441** je stigao sa 2 letvice po 3 pina po modulu → spajaju se u isti red.
 
 ### ⚠️ I dalje fali (nije bilo u porudžbini)
 
