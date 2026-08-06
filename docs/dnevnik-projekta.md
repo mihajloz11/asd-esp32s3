@@ -7,7 +7,7 @@
 
 ---
 
-## STANJE (zadnje ažuriranje: 04.08.2026)
+## STANJE (zadnje ažuriranje: 06.08.2026)
 
 | Oblast | Status |
 |---|---|
@@ -23,7 +23,8 @@
 | E6 on-device gamma prag | ✔ device 0.77090 vs PC 0.77064 = rel 0.03% — kalibracija radi na čipu |
 | **Hardver (INMP441, INA226, AMS1117, pasive, demo)** | ✔ **stigao 04.08.2026** — vidi docs/hardver-lista.md |
 | E5 energija | hardver na stolu; **blokira INA226 I2C drajver** (ne postoji u firmware-u) |
-| Živi zvuk | hardver na stolu; čeka lemljenje headera (docs/lemljenje.md) |
+| **Živi zvuk (INMP441 na S3)** | ✔ **06.08 — mikrofon radi**, rms 158.7 / peak 1020 / clipped 0 / dropped 0; WAV verifikovan sumom |
+| Rizik C1 (`>>14` shift) | ✔ zatvoren mjerenjem sirovog 32-bit peaka — 15.6 dB rezerve do klipovanja |
 | E6 on-device gamma kalibracija | C kod ✔ + PC test ✔; on-device test čeka |
 | 5-seed finalne tabele | alati ✔; treninzi nisu pušteni |
 | Pisanje rada | sažetak za mentora ✔ (čeka slanje); poglavlja nisu počela |
@@ -227,6 +228,55 @@ postoji u firmware-u**, pa E5 ne može ni da počne iako je senzor na stolu. Pin
 su definisani (8/9 na S3), ali nema koda za čitanje struje. To je sad jedini softverski
 blokator E5, procjena ~pola dana.
 
+### 06.08 — ŽIVI MIKROFON RADI (rizik C1 zatvoren)
+
+**Urađeno:** headeri zalemljeni (S3, oba INMP441, INA226); INMP441 #1 spojen na
+breadboard (BCLK 4, WS 5, SD 6, VDD 3V3, L/R→GND); firmware rebuildovan u živi
+mod i flešovan; napisan **mic bring-up mod** (`main/mic_test.c`, ulaz preko
+`ASD_MIC_TEST=1`) + PC alat `pc/tools/mic_capture.py`.
+
+**Mic test radi u dvije faze:** 8 s mjerač nivoa sa bar-grafom (RMS/peak/DC svakih
+250 ms — odmah se vidi reaguje li mikrofon na kucanje), pa 5 s snimak u PSRAM →
+statistika → base64 PCM preko UART-a → WAV na PC.
+
+**Rezultat (snimak u sobi, 5 s):**
+
+| veličina | vrijednost |
+|---|---|
+| rms | 158.7 (−46.3 dBFS) |
+| peak | 1020 (−30.1 dBFS) |
+| dc offset | −0.4 |
+| clipped / dropped | 0 / 0 |
+| zeros | 220 / 80 000 (prolasci kroz nulu, ne mrtva linija) |
+
+Spektar snimka: širokopojasan sa dominantnim niskim frekvencijama (95 dB u
+20–100 Hz) i padom ka 8 kHz (68 dB) — realan sobni šum, ne zaglavljena linija.
+Kucanje po mikrofonu u mjeraču nivoa daje skok rms 40 → 211 i peak 146 → 6675.
+
+**Rizik C1 (`>>14` shift) — zatvoren mjerenjem.** Dodato praćenje peaka sirovog
+32-bitnog slota prije shifta. Kroz tri snimka: sirovi peak 89.064.960 / 54.037.376
+/ 16.724.480 (27/26/24 od 31 bita) → 16-bit peak 5436 / 3298 / 1020, aritmetika se
+poklapa tačno, `clipped=0` svuda, **15.6 dB rezerve** do klipovanja na najglasnijem
+događaju. `>>14` ostaje; obrazloženje kompromisa u [problemi-i-rjesenja.md](problemi-i-rjesenja.md#p6).
+
+**Bugovi nađeni i riješeni ovog bloka** (detaljno u problemi-i-rjesenja.md):
+- **P2** — `idf.py build` je tiho zadržao eval mod jer se `if(DEFINED ENV{...})`
+  evaluira samo pri konfiguraciji. Obavezan `idf.py reconfigure` pri promjeni moda.
+- **P4** — task watchdog je upisivao svoj tekst **usred base64 toka** (dump traje
+  19 s bez ustupanja procesora) → WAV pomjeren i pokvaren. Riješeno `vTaskDelay`
+  svakih 16 linija + FNV-1a kontrolna suma.
+- **P5** — prva verzija PC skripta je snimila neispravan WAV uz blago upozorenje.
+  Sada ne piše izlaz ako provjera dužine ili sume padne.
+- **P3** — bez mikrofona živi rad daje konstantan `score=690.88586` koji izgleda
+  potpuno ispravno. Zabilježeno kao dijagnostički potpis mrtvog ulaza.
+
+**Uveden [problemi-i-rjesenja.md](problemi-i-rjesenja.md)** — baza svih problema
+(simptom → uzrok → rješenje → dokaz) i odbačenih ideja. Popunjava se uz svaki blok,
+i za probleme riješene u 5 minuta.
+
+**Sljedeće:** INA226 I2C drajver (spojiti samo VCC/GND/SDA 8/SCL 9 — struja kroz
+IN+/IN− tek poslije), pa živi ASD rad sa LED-om kad stignu otpornici.
+
 ## REZULTATI — GLAVNE TABELE (1 seed; finalno ide 5 seedova)
 
 ### hmean po mašini (baseline / najbolji tiny, MSE fp32)
@@ -289,7 +339,11 @@ blokator E5, procjena ~pola dana.
 - `results/results.csv` — svi brojevi; `results/dashboard.html` — pregled;
   live: `python tools/live_dashboard.py` → :8765
 - `docs/` — hardware, hardver-lista (inventar), lemljenje, šema povezivanja,
-  edge-adaptacija, teorija (HTML), sažetak za mentora, ovaj dnevnik
+  edge-adaptacija, teorija (HTML), sažetak za mentora, ovaj dnevnik,
+  **problemi-i-rjesenja.md** (baza bugova i slijepih ulica)
+- Mic bring-up: `set ASD_MIC_TEST=1` → `idf.py reconfigure build flash`, pa
+  `python tools/mic_capture.py --port COM4 --out ../results/mic_test.wav`
+  (⚠️ pri svakoj promjeni moda obavezan `reconfigure` — vidi problemi P2)
 - ESP-IDF: `%USERPROFILE%\esp\esp-idf` (v5.5); eval build: `set ASD_EVAL_MODE=1`
 - Eval poređenje: prepare_eval_clips.py → fatfsgen → parttool → serial capture
   → compare_eval.py
