@@ -99,6 +99,25 @@ static void mic_dump_b64(const uint8_t *data, size_t nbytes) {
     if (col) { line[col] = '\0'; printf("%s\n", line); }
 }
 
+void asd_dump_pcm_block(const int16_t *pcm, size_t n_samples, int sr) {
+    const uint8_t *bytes = (const uint8_t *)pcm;
+    const size_t nbytes = n_samples * sizeof(int16_t);
+
+    /* Kontrolna suma preko bajtova — PC strana provjerava da prenos nije
+     * pomjeren (base64 tok je osjetljiv na svaki visak/manjak znaka; vidi
+     * docs/problemi-i-rjesenja.md P4). */
+    uint32_t crc = 2166136261u;                       /* FNV-1a 32 */
+    for (size_t i = 0; i < nbytes; i++) {
+        crc ^= bytes[i];
+        crc *= 16777619u;
+    }
+
+    printf("MICWAV_BEGIN sr=%d n=%u bytes=%u fnv1a=%08lx\n",
+           sr, (unsigned)n_samples, (unsigned)nbytes, (unsigned long)crc);
+    mic_dump_b64(bytes, nbytes);
+    printf("MICWAV_END\n");
+}
+
 void mic_test_run(void) {
     static int16_t chunk[MIC_CHUNK];
     mic_stats_t st;
@@ -163,20 +182,7 @@ void mic_test_run(void) {
         ESP_LOGW(TAG, "ima klipovanja (%d uzoraka) — signal preglasan ili je shift preslab",
                  st.clipped);
 
-    /* Kontrolna suma preko bajtova — PC strana provjerava da prenos nije
-     * pomjeren (base64 tok je osjetljiv na svaki visak/manjak znaka). */
-    uint32_t crc = 2166136261u;                       /* FNV-1a 32 */
-    const uint8_t *raw_bytes = (const uint8_t *)rec;
-    for (size_t i = 0; i < MIC_N_SAMPLES * sizeof(int16_t); i++) {
-        crc ^= raw_bytes[i];
-        crc *= 16777619u;
-    }
-
-    printf("MICWAV_BEGIN sr=%d n=%d bytes=%u fnv1a=%08lx\n",
-           AUDIO_SR, MIC_N_SAMPLES,
-           (unsigned)(MIC_N_SAMPLES * sizeof(int16_t)), (unsigned long)crc);
-    mic_dump_b64(raw_bytes, MIC_N_SAMPLES * sizeof(int16_t));
-    printf("MICWAV_END\n");
+    asd_dump_pcm_block(rec, MIC_N_SAMPLES, AUDIO_SR);
 
     ESP_LOGI(TAG, "gotovo — na PC-u: python pc/tools/mic_capture.py");
     free(rec);
