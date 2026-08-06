@@ -1,0 +1,231 @@
+/* Bring-up test za INA226 — vidi ina226_test.h.
+ *
+ * Radi sa samo 4 spojene žice (VCC/GND/SDA/SCL): skenira bus, provjeri
+ * identitet čipa, konfiguriše ga i ispiše sirove registre + očitanja.
+ *
+ * VAŽNO za tumačenje: dok IN+/IN− i VBS nisu spojeni, ti pinovi vise u vazduhu.
+ * Šant napon, struja i snaga tada NISU mjerenje ničega — očekuje se šum oko
+ * nule. Ono što se ovdje stvarno provjerava je I2C komunikacija: da senzor
+ * odgovara, da su ID registri tačni, i da konfiguracija ostaje upisana.
+ */
+#include "ina226_test.h"
+#include "ina226.h"
+
+#include <stdio.h>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+#include "esp_log.h"
+#include "esp_rom_sys.h"
+
+#include "pins.h"
+
+static const char *TAG = "inatest";
+
+#define N_READINGS  10
+#define PERIOD_MS   300
+
+/* Stanje linija PRIJE nego I2C drajver preuzme pinove. Razdvaja tri slučaja:
+ *   bez pull-upa 1 / 1  -> spolja postoje pull-upovi = modul je spojen i napojen
+ *   bez pull-upa 0 / 0  -> linija visi na masi ili nema pull-upa nigdje
+ *   sa pull-upom  0     -> ta linija je kratko spojena na GND
+ * Bez ove provjere se gubi vrijeme na prekopavanje žica naslijepo. */
+static void probe_lines(void) {
+    const gpio_num_t pins[2] = {PIN_I2C_SDA, PIN_I2C_SCL};
+    const char *names[2] = {"SDA", "SCL"};
+
+    for (int pass = 0; pass < 2; pass++) {
+        for (int i = 0; i < 2; i++) {
+            gpio_config_t cfg = {
+                .pin_bit_mask = 1ULL << pins[i],
+                .mode = GPIO_MODE_INPUT,
+                .pull_up_en = pass ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE,
+                .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            };
+            gpio_config(&cfg);
+        }
+        vTaskDelay(pdMS_TO_TICKS(20));
+        ESP_LOGI(TAG, "linije %s internog pull-upa: %s(GPIO%d)=%d  %s(GPIO%d)=%d",
+                 pass ? "SA" : "BEZ",
+                 names[0], (int)pins[0], gpio_get_level(pins[0]),
+                 names[1], (int)pins[1], gpio_get_level(pins[1]));
+    }
+    /* NAPOMENA (06.08): raniji test je obarao liniju u push-pull rezimu. Ako je
+     * linija tvrdo vezana na 3V3, to je kratak spoj 3V3->GND kroz GPIO. Zato
+     * se od sada linije obaraju ISKLJUCIVO open-drain (vidi bitbang_scan) —
+     * open-drain izlaz protiv kratkog spoja na 3V3 samo ne uspije, bez struje.
+     * Zakljucak o pull-upu se izvodi iz bit-bang self-checka, ne odavde. */
+
+    /* vrati pinove u neutralno stanje da ih I2C drajver moze preuzeti */
+    for (int i = 0; i < 2; i++) gpio_reset_pin(pins[i]);
+}
+
+/* ---- Bit-bang I2C: isključuje sumnju u hardverski drajver ----------------
+ * Hardverski drajver javlja timeout na SVAKOJ adresi, što ne razlikuje "nema
+ * uređaja" od "bus ne radi". Ručno klokovanje pokazuje tačno šta se dešava:
+ * da li master uopšte može da obori linije, i da li ih iko drži.
+ */
+#define BB_DELAY_US 5                                  /* ~100 kHz */
+
+static gpio_num_t bb_sda, bb_scl;
+
+static void bb_pin_mode(gpio_num_t pin) {
+    gpio_config_t cfg = {
+        .pin_bit_mask = 1ULL << pin,
+        .mode = GPIO_MODE_INPUT_OUTPUT_OD,             /* open-drain: 1 = pušteno */
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+    };
+    gpio_config(&cfg);
+    gpio_set_level(pin, 1);
+}
+
+static inline void bb_set(gpio_num_t pin, int v) {
+    gpio_set_level(pin, v);
+    esp_rom_delay_us(BB_DELAY_US);
+}
+
+static void bb_start(void) {
+    bb_set(bb_sda, 1); bb_set(bb_scl, 1);
+    bb_set(bb_sda, 0); bb_set(bb_scl, 0);
+}
+
+static void bb_stop(void) {
+    bb_set(bb_sda, 0); bb_set(bb_scl, 1); bb_set(bb_sda, 1);
+}
+
+/* Šalje bajt, vraća stanje SDA za vrijeme ACK kloka (0 = uređaj je potvrdio). */
+static int bb_write_byte(uint8_t b) {
+    for (int i = 7; i >= 0; i--) {
+        bb_set(bb_sda, (b >> i) & 1);
+        bb_set(bb_scl, 1);
+        bb_set(bb_scl, 0);
+    }
+    bb_set(bb_sda, 1);                                 /* pusti SDA slave-u */
+    bb_set(bb_scl, 1);
+    int ack = gpio_get_level(bb_sda);
+    esp_rom_delay_us(BB_DELAY_US);
+    bb_set(bb_scl, 0);
+    return ack;
+}
+
+static int bitbang_scan(gpio_num_t sda, gpio_num_t scl) {
+    bb_sda = sda; bb_scl = scl;
+    bb_pin_mode(bb_sda);
+    bb_pin_mode(bb_scl);
+    esp_rom_delay_us(100);
+
+    /* Self-check: da li master uopste moze da obori svaku liniju? */
+    gpio_set_level(bb_sda, 0); esp_rom_delay_us(50);
+    int sda_low_ok = (gpio_get_level(bb_sda) == 0);
+    gpio_set_level(bb_sda, 1); esp_rom_delay_us(50);
+    int sda_high_ok = (gpio_get_level(bb_sda) == 1);
+
+    gpio_set_level(bb_scl, 0); esp_rom_delay_us(50);
+    int scl_low_ok = (gpio_get_level(bb_scl) == 0);
+    gpio_set_level(bb_scl, 1); esp_rom_delay_us(50);
+    int scl_high_ok = (gpio_get_level(bb_scl) == 1);
+
+    ESP_LOGI(TAG, "bit-bang self-check: SDA low=%d high=%d | SCL low=%d high=%d",
+             sda_low_ok, sda_high_ok, scl_low_ok, scl_high_ok);
+    if (!sda_low_ok || !scl_low_ok) {
+        ESP_LOGE(TAG, ">>> %s%s ostaje na 1 i kad je master obara.",
+                 sda_low_ok ? "" : "SDA ", scl_low_ok ? "" : "SCL ");
+        ESP_LOGE(TAG, ">>> Open-drain izlaz ne moze nadjacati TVRDU vezu na 3V3.");
+        ESP_LOGE(TAG, ">>> Ta linija nije na SDA/SCL senzora nego na napajanju —");
+        ESP_LOGE(TAG, ">>> provjeri da zica nije u + sini breadboarda ili u pogresnom redu.");
+        return -1;
+    }
+    if (!sda_high_ok || !scl_high_ok) {
+        ESP_LOGE(TAG, "linija ostaje na 0 kad je pustimo — neko je drzi (kratak spoj na GND)");
+        return -1;
+    }
+
+    int found = 0;
+    for (uint8_t a = 0x08; a < 0x78; a++) {
+        bb_start();
+        int ack = bb_write_byte((uint8_t)(a << 1));    /* write bit */
+        bb_stop();
+        if (ack == 0) {
+            ESP_LOGI(TAG, "  bit-bang ACK sa adrese 0x%02X", a);
+            found++;
+        }
+    }
+    ESP_LOGI(TAG, "bit-bang scan [SDA=%d SCL=%d]: %d uredjaja", (int)sda, (int)scl, found);
+
+    gpio_reset_pin(bb_sda);
+    gpio_reset_pin(bb_scl);
+    return found;
+}
+
+void ina226_test_run(void) {
+    ESP_LOGI(TAG, "=== INA226 TEST ===");
+
+    probe_lines();
+
+    /* Bit-bang ide PRVI: ako master ne moze ni da obori liniju, hardverski
+     * skener bi samo 11 s trosio na timeoutove bez nove informacije. */
+    if (bitbang_scan(PIN_I2C_SDA, PIN_I2C_SCL) < 0) {
+        ESP_LOGE(TAG, "prekidam — bus nije upotrebljiv, nema smisla skenirati");
+        return;
+    }
+
+    int found = ina226_bus_scan();
+    if (found <= 0) {
+        /* Isti obrazac (linije visoke, nema ACK-a) daju i zamijenjene SDA/SCL —
+         * provjerava se softverski, prije nego se dira ijedna zica. */
+        ESP_LOGW(TAG, "probam obrnut raspored pinova (SDA<->SCL)...");
+        int swapped = ina226_scan_on(PIN_I2C_SCL, PIN_I2C_SDA);
+        if (swapped > 0) {
+            ESP_LOGE(TAG, ">>> ZICE SU ZAMIJENJENE: SDA i SCL treba zamijeniti mjesta.");
+            ESP_LOGE(TAG, ">>> SDA modula ide na GPIO%d, SCL na GPIO%d.",
+                     PIN_I2C_SDA, PIN_I2C_SCL);
+        } else {
+            ESP_LOGE(TAG, "ni obrnuto nema odgovora — nije stvar redoslijeda SDA/SCL");
+        }
+        ESP_LOGE(TAG, "prekidam — nema uredjaja na busu");
+        return;
+    }
+
+    esp_err_t err = ina226_init(INA226_ADDR_DEFAULT);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "init nije uspio: %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "ako je scan nasao adresu razlicitu od 0x40, lemni su A0/A1 drugacije");
+        return;
+    }
+
+    /* Provjera da konfiguracija stvarno stoji u čipu (a ne da je upis "prošao"
+     * a senzor se resetovao zbog lošeg napajanja). */
+    uint16_t cfg = 0, cal = 0;
+    ina226_read_reg(0x00, &cfg);
+    ina226_read_reg(0x05, &cal);
+    ESP_LOGI(TAG, "procitano nazad: config=0x%04X cal=%u", cfg, cal);
+
+    ESP_LOGI(TAG, "--- ocitanja (IN+/IN- nisu spojeni => sant/struja su sum oko nule) ---");
+    int32_t shunt_min = INT32_MAX, shunt_max = INT32_MIN;
+
+    for (int i = 0; i < N_READINGS; i++) {
+        int32_t shunt_uv = 0, bus_mv = 0, cur_ua = 0, pwr_uw = 0;
+        esp_err_t e1 = ina226_shunt_uv(&shunt_uv);
+        esp_err_t e2 = ina226_bus_mv(&bus_mv);
+        esp_err_t e3 = ina226_current_ua(&cur_ua);
+        esp_err_t e4 = ina226_power_uw(&pwr_uw);
+
+        if (e1 || e2 || e3 || e4) {
+            ESP_LOGE(TAG, "greska pri citanju (%d/%d/%d/%d)", e1, e2, e3, e4);
+            return;
+        }
+        if (shunt_uv < shunt_min) shunt_min = shunt_uv;
+        if (shunt_uv > shunt_max) shunt_max = shunt_uv;
+
+        printf("  [%2d] sant=%8ld uV   bus=%6ld mV   struja=%8ld uA   snaga=%8ld uW\n",
+               i + 1, (long)shunt_uv, (long)bus_mv, (long)cur_ua, (long)pwr_uw);
+        vTaskDelay(pdMS_TO_TICKS(PERIOD_MS));
+    }
+
+    ESP_LOGI(TAG, "sant raspon: %ld..%ld uV (sirina %ld uV)",
+             (long)shunt_min, (long)shunt_max, (long)(shunt_max - shunt_min));
+    ESP_LOGI(TAG, "I2C lanac ispravan — senzor odgovara i drzi konfiguraciju.");
+    ESP_LOGI(TAG, "Sljedece: AMS1117 -> IN+ , IN- -> 3V3 ploce, VBS na IN- (E5).");
+}

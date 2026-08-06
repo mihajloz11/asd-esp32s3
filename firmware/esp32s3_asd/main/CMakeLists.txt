@@ -1,6 +1,6 @@
 idf_component_register(
     SRCS "app_main.c" "audio_i2s.c" "features_c.c" "calib_gamma.c" "tflm_infer.cc"
-         "eval_mode.c" "mic_test.c"
+         "eval_mode.c" "mic_test.c" "ina226.c" "ina226_test.c"
     INCLUDE_DIRS "."
     REQUIRES driver esp_timer fatfs
 )
@@ -13,4 +13,9 @@ endif()
 # Mic bring-up build:  set ASD_MIC_TEST=1  pa idf.py reconfigure build
 if(DEFINED ENV{ASD_MIC_TEST})
     target_compile_definitions(${COMPONENT_LIB} PRIVATE ASD_MIC_TEST)
+endif()
+
+# INA226 bring-up build:  set ASD_INA_TEST=1  pa idf.py reconfigure build
+if(DEFINED ENV{ASD_INA_TEST})
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE ASD_INA_TEST)
 endif()
