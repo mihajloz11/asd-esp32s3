@@ -10,6 +10,9 @@
 #ifndef ASD_MIC_TEST_H
 #define ASD_MIC_TEST_H
 
+#include <stdint.h>
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,6 +20,11 @@ extern "C" {
 /* Očekuje da su audio_i2s_init()/audio_i2s_start() već pozvani. Ne vraća se
  * prije nego što odradi snimak i dump. */
 void mic_test_run(void);
+
+/* Uokviren base64 ispis PCM bloka: MICWAV_BEGIN zaglavlje sa dužinom i
+ * FNV-1a sumom, base64 linije, MICWAV_END. Isti protokol koriste mic_test i
+ * live_capture, pa je PC parser (mic_capture.py / live_compare.py) jedan. */
+void asd_dump_pcm_block(const int16_t *pcm, size_t n_samples, int sr);
 
 #ifdef __cplusplus
 }

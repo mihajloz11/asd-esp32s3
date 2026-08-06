@@ -25,6 +25,9 @@
 | E5 energija | hardver na stolu; **blokira INA226 I2C drajver** (ne postoji u firmware-u) |
 | **Živi zvuk (INMP441 na S3)** | ✔ **06.08 — mikrofon radi**, rms 158.7 / peak 1020 / clipped 0 / dropped 0; WAV verifikovan sumom |
 | Rizik C1 (`>>14` shift) | ✔ zatvoren mjerenjem sirovog 32-bit peaka — 15.6 dB rezerve do klipovanja |
+| **PC↔uređaj na živom mikrofonu** | ✔ **06.08 — rel. razlika 7.99e-05** (ranije samo nad klipovima s flasha) |
+| Prilagođavanje praga okruženju | ✔ radi na čipu (0.779 → 62.46, bez lažnih uzbuna); ograničenje: drift okruženja naduvava prag |
+| E5 energija | **blokirano hardverski** — INA226 ne odgovara na I2C, vidi ina226-provjera.md |
 | E6 on-device gamma kalibracija | C kod ✔ + PC test ✔; on-device test čeka |
 | 5-seed finalne tabele | alati ✔; treninzi nisu pušteni |
 | Pisanje rada | sažetak za mentora ✔ (čeka slanje); poglavlja nisu počela |
@@ -276,6 +279,69 @@ i za probleme riješene u 5 minuta.
 
 **Sljedeće:** INA226 I2C drajver (spojiti samo VCC/GND/SDA 8/SCL 9 — struja kroz
 IN+/IN− tek poslije), pa živi ASD rad sa LED-om kad stignu otpornici.
+
+### 06.08 (nastavak) — ŽIVI ASD LANAC: PC↔uređaj na mikrofonu + prilagođavanje praga
+
+INA226 odložen (čeka multimetar, vidi [ina226-provjera.md](ina226-provjera.md)),
+pa je urađeno sve što zavisi samo od mikrofona.
+
+**1. Živi rad, 60 s.** Prvi put pun lanac nad stvarnim zvukom umjesto klipova
+sa flash particije:
+
+```
+score=21.45 / 21.25 / 24.66 / 24.70 / 43.97 / 43.58
+feat=663 ms  inf=1055 ms  total=10049 ms  (307 vec)  dropped=0
+```
+
+Score se mijenja iz klipa u klip (za razliku od konstante 690.88586 bez
+mikrofona), lanac stiže u realnom vremenu sa **5.8× rezerve**, nema dropova.
+
+**2. PC↔uređaj na ŽIVOM zvuku — novo (`ASD_LIVE_CAPTURE` + `tools/live_compare.py`).**
+Uređaj snimi klip, boduje ga svojim lancem, i pošalje isti snimak na PC:
+
+| | |
+|---|---|
+| PC score | 27.27804947 |
+| uređaj score | 27.27587128 |
+| **relativna razlika** | **7.99e-05** |
+| broj vektora | 307 = 307 |
+
+Razlika u odnosu na raniju verifikaciju (1.5e-04): tamo su klipovi stizali na
+uređaj kao **identični bajtovi** preko flash particije. Ovdje ulaz nastaje na
+uređaju — kroz I2S, konverziju 32→16 bita i ring buffer — pa je provjeren i
+taj dio lanca, koji do sada nikad nije bio pokriven.
+
+**3. Prilagođavanje praga okruženju (`ASD_LIVE_ADAPT`).** Fabrički prag
+(0.77863) izračunat je nad DCASE trening podacima i u stvarnoj sobi je
+besmislen — score je reda desetica, pa sve postaje "anomalija". Uređaj je
+30 × 2 s bodovao živi zvuk kao normalno stanje, fitovao gamma momentnom
+metodom i uzeo p=0.99 percentil:
+
+```
+n=30  mean=28.967  sd=11.566  min=16.182  max=48.288
+gamma fit: k=6.273  theta=4.618
+NOVI PRAG: 62.459   [fabricki 0.779]
+detekcija: 0/30 prozora oznaceno kao anomalija (bez laznih uzbuna)
+```
+
+**NALAZ ZA DISKUSIJU — okruženje nije stacionarno.** Score raste kroz cijeli
+eksperiment: kalibracioni prozori 1–18 daju 16–24, prozori 19–30 daju 30–48,
+a detekcija 41–55. Gamma fit pretpostavlja stacionarnost, pa je `sd` naduvana
+driftom i prag je ispao viši nego što bi trebalo. Posljedica: nema lažnih
+uzbuna, ali je **osjetljivost smanjena** — prava blaga anomalija bi prošla.
+
+Praktična pouka za rad: kalibracija mora trajati preko reprezentativnog perioda
+normalnog rada, ili se prag mora osvježavati klizno. Ovo je ograničenje metode,
+ne implementacije.
+
+**Otvoreno pitanje.** Da li drift dolazi iz sobe (klima, frižider, ventilator
+laptopa) ili iz uređaja (zagrijavanje, ustaljivanje DC offseta mikrofona)?
+Provjera: ponoviti kalibraciju dva puta zaredom — ako se ista putanja rasta
+ponovi identično, uzrok je u uređaju, ne u okruženju.
+
+**Novi build modovi** (svaki traži `idf.py reconfigure` pri promjeni, vidi P2):
+`ASD_MIC_TEST` · `ASD_INA_TEST` · `ASD_LIVE_CAPTURE` · `ASD_LIVE_ADAPT` ·
+`ASD_EVAL_MODE`.
 
 ## REZULTATI — GLAVNE TABELE (1 seed; finalno ide 5 seedova)
 

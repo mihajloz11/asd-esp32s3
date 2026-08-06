@@ -1,6 +1,6 @@
 idf_component_register(
     SRCS "app_main.c" "audio_i2s.c" "features_c.c" "calib_gamma.c" "tflm_infer.cc"
-         "eval_mode.c" "mic_test.c" "ina226.c" "ina226_test.c"
+         "eval_mode.c" "mic_test.c" "ina226.c" "ina226_test.c" "live_capture.c" "live_adapt.c"
     INCLUDE_DIRS "."
     REQUIRES driver esp_timer fatfs
 )
@@ -18,4 +18,14 @@ endif()
 # INA226 bring-up build:  set ASD_INA_TEST=1  pa idf.py reconfigure build
 if(DEFINED ENV{ASD_INA_TEST})
     target_compile_definitions(${COMPONENT_LIB} PRIVATE ASD_INA_TEST)
+endif()
+
+# Zivi klip + score + snimak:  set ASD_LIVE_CAPTURE=1  pa idf.py reconfigure build
+if(DEFINED ENV{ASD_LIVE_CAPTURE})
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE ASD_LIVE_CAPTURE)
+endif()
+
+# Prilagodjavanje praga okruzenju:  set ASD_LIVE_ADAPT=1  pa idf.py reconfigure build
+if(DEFINED ENV{ASD_LIVE_ADAPT})
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE ASD_LIVE_ADAPT)
 endif()

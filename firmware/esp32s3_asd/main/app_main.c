@@ -26,6 +26,8 @@
 #include "eval_mode.h"
 #include "mic_test.h"
 #include "ina226_test.h"
+#include "live_capture.h"
+#include "live_adapt.h"
 
 static const char *TAG = "asd";
 
@@ -125,6 +127,19 @@ void app_main(void) {
 
     ESP_ERROR_CHECK(audio_i2s_init());
     ESP_ERROR_CHECK(audio_i2s_start());
+
+    /* Jedan živi klip + score + snimak na PC — set ASD_LIVE_CAPTURE=1 */
+#ifdef ASD_LIVE_CAPTURE
+    live_capture_run();
+    while (1) vTaskDelay(portMAX_DELAY);
+#endif
+
+    /* Prilagođavanje praga stvarnom okruženju — set ASD_LIVE_ADAPT=1 */
+#ifdef ASD_LIVE_ADAPT
+    live_adapt_run();
+    while (1) vTaskDelay(portMAX_DELAY);
+#endif
+
     ESP_LOGI(TAG, "start — klip %d s (%d hopova), prag %.5f",
              CLIP_SEC, HOPS_PER_CLIP, (float)ASD_SCORE_THRESHOLD);
 
