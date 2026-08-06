@@ -22,6 +22,8 @@
 | [P5](#p5) | 06.08 | alat | Skript je snimio neispravan WAV bez ijedne greške | riješeno |
 | [P6](#p6) | 06.08 | I2S | Rizik C1: da li je `>>14` tačan shift za INMP441 | zatvoreno, potvrđeno |
 | [P7](#p7) | 06.08 | I2S | Upozorenje `dma frame num ... limited to 1023` | benigno, dokumentovano |
+| [P8](#p8) | 06.08 | I2C / INA226 | Senzor se ne javlja; obje linije tvrdo na 3V3 | **otvoreno — čeka provjeru žica** |
+| [P9](#p9) | 06.08 | I2C dijagnostika | Tri testa zaredom dala pogrešan zaključak | riješeno (metodološka pouka) |
 
 ---
 
@@ -245,6 +247,74 @@ Mijenjanje na 1023 bi uklonilo upozorenje ali promijenilo tajminge koji su već
 validirani u E4 mjerenjima.
 
 **Status.** Ostaje kako jeste. Zabilježeno da se ne bi ponovo istraživalo.
+
+---
+
+<a name="p8"></a>
+## P8 — INA226 se ne javlja: obje I2C linije su tvrdo vezane na 3V3
+
+**Datum:** 06.08.2026 · **Oblast:** I2C bring-up · **Status:** OTVORENO — čeka provjeru žica
+
+**Simptom.** Poslije spajanja INA226 sa 4 žice (VCC, GND, SDA→GPIO 8, SCL→GPIO 9),
+skener ne nalazi nijedan uređaj ni na jednoj od 112 adresa. Drajver za svaku
+adresu javlja `probe device timeout`, a ne NACK.
+
+**Dijagnostički put** (redom, jer je svaki korak odbacio jednu hipotezu):
+
+| # | Test | Rezultat | Zaključak |
+|---|---|---|---|
+| 1 | Nivo linija bez internog pull-upa | SDA=1, SCL=1 | *pogrešno protumačeno:* "pull-up postoji, modul napojen" |
+| 2 | Skeniranje sa zamijenjenim SDA/SCL | ništa | nije zamjena žica |
+| 3 | Obaranje linije, pa mjerenje oporavka | vraća se na 1 odmah | *pogrešno protumačeno:* "pull-up potvrđen" |
+| 4 | Kratak spoj između linija | jedna na 0, druga ostaje 1 | *pogrešno protumačeno:* "linije odvojene" |
+| 5 | **Bit-bang self-check (open-drain)** | **SDA low=0, SCL low=0** | **master ne može oboriti nijednu liniju** |
+
+**Uzrok (utvrđen).** Open-drain izlaz može samo da *spusti* liniju; protiv tvrde
+veze na 3,3 V je nemoćan. Pošto master ne uspijeva da obori ni SDA ni SCL, obje
+linije nisu na senzorovim SDA/SCL pinovima nego **na napajanju**.
+
+To retroaktivno objašnjava i sve ranije nalaze: "pull-up" iz testova 1 i 3 nije
+pull-up nego kratka veza na 3V3, a test 4 nije mogao ništa pokazati jer nijedna
+linija nije mogla biti oborena.
+
+**Zašto timeout, a ne NACK.** Master čeka da linija ode nisko u fazi potvrde;
+kako je prikovana na 3,3 V, konačni automat nikad ne završi transakciju i istekne
+vrijeme. NACK bi značio "bus radi, ali na toj adresi nema nikoga" — što bi bila
+sasvim druga dijagnoza.
+
+**Sljedeći korak.** Bisekcija: skinuti obje signalne žice sa S3 i ponoviti test.
+- self-check prolazi → S3 pinovi su ispravni, kratak spoj je na strani žica/modula
+- self-check i dalje pada → problem je na samom S3 pinu
+
+**Bezbjednosna napomena.** Ranija verzija testa je obarala linije u **push-pull**
+režimu. Na liniji vezanoj na 3V3 to je kratak spoj 3V3→GND kroz GPIO (kratko,
+strujno ograničeno na ~40 mA, bez očekivane štete). Ispravljeno: sve obaranje
+linija ide isključivo open-drain, gdje neuspjeh znači samo da linija ostane visoka.
+
+---
+
+<a name="p9"></a>
+## P9 — Tri dijagnostička testa zaredom dala pogrešan zaključak
+
+**Datum:** 06.08.2026 · **Oblast:** metodologija · **Status:** riješeno (pouka)
+
+**Šta se desilo.** U dijagnostici [P8](#p8), testovi 1, 3 i 4 su dali naizgled
+jasne odgovore — "pull-up postoji", "modul je napojen", "linije su odvojene" —
+i sva tri su bila **pogrešna**. Vodili su ka hipotezama (zamijenjene žice,
+kalajni most) koje su potrošile tri ciklusa build→flash→mjerenje.
+
+**Uzrok.** Sva tri testa su pretpostavljala da master **može** da upravlja
+linijom. Nijedan to nije prvo provjerio. Kad je ta pretpostavka pala, svi
+izvedeni zaključci su pali s njom — a da to nigdje nije bilo vidljivo, jer su
+testovi ispisivali samopouzdane poruke bez ograde.
+
+**Pouka.** Dijagnostika ide **od najniže pretpostavke naviše**: prvo "mogu li
+uopšte da upravljam pinom", pa tek onda "šta je na drugom kraju". Bit-bang
+self-check je sada prvi korak u `ina226_test.c`, prije bilo kakvog skeniranja.
+
+**Druga pouka.** Test koji ispisuje kategoričan zaključak ("PULL-UP POSTOJI")
+umjesto sirovog mjerenja aktivno šteti — čita se kao utvrđena činjenica i
+usmjerava sljedeći sat rada u pogrešnom pravcu.
 
 ---
 
