@@ -334,10 +334,21 @@ Praktična pouka za rad: kalibracija mora trajati preko reprezentativnog perioda
 normalnog rada, ili se prag mora osvježavati klizno. Ovo je ograničenje metode,
 ne implementacije.
 
-**Otvoreno pitanje.** Da li drift dolazi iz sobe (klima, frižider, ventilator
-laptopa) ili iz uređaja (zagrijavanje, ustaljivanje DC offseta mikrofona)?
-Provjera: ponoviti kalibraciju dva puta zaredom — ako se ista putanja rasta
-ponovi identično, uzrok je u uređaju, ne u okruženju.
+**Uzrok drifta — utvrđen.** Poslije hladnog reseta score kreće od **55.66** i
+ostaje ravan (~56.0 ± 0.3 kroz 17 prozora), umjesto da se opet penje od ~16.
+Da je uzrok u uređaju (zagrijavanje, ustaljivanje DC offseta), putanja rasta bi
+se ponovila. Nije se ponovila → **uzrok je akustičko okruženje**, koje je za
+vrijeme prvog eksperimenta prešlo na novi, viši i sada stabilan nivo.
+
+Najvjerovatnije objašnjenje: tokom sesije su na istom stolu vrtjeni ESP-IDF
+buildovi i TensorFlow inferenca, ventilator laptopa se zavrtio i ostao aktivan.
+Detektor je, sasvim ispravno, registrovao promjenu zvuka mašine u prostoriji.
+
+Posljedica za metodologiju: kalibracija urađena **sada**, u stacionarnom
+okruženju, dala bi mnogo uži prag (sd ~0.3 umjesto 11.57) i time daleko veću
+osjetljivost. Isti kod, ista soba, red veličine bolja kalibracija — samo zato
+što je okruženje mirno. To je najjasniji mogući argument za poglavlje o edge
+adaptaciji: **kvalitet praga zavisi od toga KADA se kalibriše, ne samo KAKO.**
 
 **Novi build modovi** (svaki traži `idf.py reconfigure` pri promjeni, vidi P2):
 `ASD_MIC_TEST` · `ASD_INA_TEST` · `ASD_LIVE_CAPTURE` · `ASD_LIVE_ADAPT` ·
