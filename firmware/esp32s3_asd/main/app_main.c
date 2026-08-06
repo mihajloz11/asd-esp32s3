@@ -24,6 +24,7 @@
 #include "calib_gamma.h"
 #include "model_data.h"
 #include "eval_mode.h"
+#include "mic_test.h"
 
 static const char *TAG = "asd";
 
@@ -84,6 +85,14 @@ void app_main(void) {
 
     gpio_config_t io = {.pin_bit_mask = 1ULL << PIN_LED, .mode = GPIO_MODE_OUTPUT};
     gpio_config(&io);
+
+    /* Mic bring-up (rizik C1): samo I2S, bez modela — set ASD_MIC_TEST=1 */
+#ifdef ASD_MIC_TEST
+    ESP_ERROR_CHECK(audio_i2s_init());
+    ESP_ERROR_CHECK(audio_i2s_start());
+    mic_test_run();
+    while (1) vTaskDelay(portMAX_DELAY);
+#endif
 
     asd_features_init();
     if (tflm_init() != 0) {

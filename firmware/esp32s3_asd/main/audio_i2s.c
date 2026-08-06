@@ -19,6 +19,7 @@ static const char *TAG = "audio";
 static i2s_chan_handle_t rx_chan;
 static RingbufHandle_t ring;
 static uint32_t dropped;
+static int32_t raw_peak;
 
 /* Capture task: I2S (32-bit slot) -> 16-bit PCM -> ring buffer u PSRAM-u.
  * Visok prioritet, pinovan na core 0 (inference ide na core 1) — rizik C4. */
@@ -32,8 +33,11 @@ static void capture_task(void *arg) {
         size_t n = nbytes / sizeof(int32_t);
         /* INMP441: 24-bit MSB u 32-bit slotu -> >>14 daje pun 16-bit opseg
          * (provjeri amplitudu na WAV testu, rizik C1) */
-        for (size_t i = 0; i < n; i++)
+        for (size_t i = 0; i < n; i++) {
+            int32_t a = raw[i] < 0 ? -raw[i] : raw[i];
+            if (a > raw_peak) raw_peak = a;
             pcm[i] = (int16_t)(raw[i] >> 14);
+        }
         if (xRingbufferSend(ring, pcm, n * sizeof(int16_t), 0) != pdTRUE)
             dropped += n;
     }
@@ -99,3 +103,6 @@ size_t audio_read(int16_t *dst, size_t n_samples) {
 }
 
 uint32_t audio_dropped_samples(void) { return dropped; }
+
+int32_t audio_raw_peak(void) { return raw_peak; }
+void    audio_raw_peak_reset(void) { raw_peak = 0; }

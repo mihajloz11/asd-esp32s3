@@ -22,4 +22,9 @@ size_t audio_read(int16_t *dst, size_t n_samples);
 /* Broj dropovanih uzoraka od starta (dijagnostika DMA overruna, rizik C4). */
 uint32_t audio_dropped_samples(void);
 
+/* Max |x| sirovog 32-bitnog I2S slota (prije shifta u 16 bita) od zadnjeg
+ * reseta — provjera da li je shift dobro odabran (rizik C1, mic_test.c). */
+int32_t audio_raw_peak(void);
+void    audio_raw_peak_reset(void);
+
 #endif
