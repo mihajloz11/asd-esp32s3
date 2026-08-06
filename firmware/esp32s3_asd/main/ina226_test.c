@@ -51,6 +51,52 @@ static void probe_lines(void) {
                  names[0], (int)pins[0], gpio_get_level(pins[0]),
                  names[1], (int)pins[1], gpio_get_level(pins[1]));
     }
+    /* Klasifikacija svake linije posebno, iz sirovih mjerenja (pouka P9:
+     * prvo brojevi, pa tek onda zakljucak). Redoslijed je bitan — obaranje se
+     * provjerava PRIJE svega ostalog, jer ako linija ne moze da se obori,
+     * sva ostala mjerenja su bezvrijedna.
+     *
+     *   obaranje != 0            -> linija je tvrdo na 3V3
+     *   pusteno(5us) == 1        -> spoljni pull-up (modul napojen i spojen)
+     *   pusteno(5ms) == 0        -> pluta: nema pull-upa nigdje na liniji
+     */
+    for (int i = 0; i < 2; i++) {
+        gpio_num_t pin = pins[i];
+        gpio_config_t od = {
+            .pin_bit_mask = 1ULL << pin,
+            .mode = GPIO_MODE_INPUT_OUTPUT_OD,       /* nikad push-pull, vidi napomenu */
+            .pull_up_en = GPIO_PULLUP_DISABLE,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        };
+        gpio_config(&od);
+
+        gpio_set_level(pin, 1);
+        esp_rom_delay_us(200);
+        int idle = gpio_get_level(pin);
+
+        gpio_set_level(pin, 0);
+        esp_rom_delay_us(200);
+        int driven = gpio_get_level(pin);
+
+        gpio_set_level(pin, 1);
+        esp_rom_delay_us(5);
+        int rel_fast = gpio_get_level(pin);
+        esp_rom_delay_us(5000);
+        int rel_slow = gpio_get_level(pin);
+
+        const char *verdict;
+        if (driven != 0)      verdict = "TVRDO NA 3V3 — linija je na napajanju, ne na senzoru";
+        else if (rel_fast)    verdict = "spoljni pull-up (modul napojen i linija stize do njega)";
+        else if (rel_slow)    verdict = "slab/spor pull-up";
+        else                  verdict = "PLUTA — nema pull-upa (nije spojeno ili modul nije napojen)";
+
+        ESP_LOGI(TAG, "%s(GPIO%d): mirno=%d obaranje=%d pusteno@5us=%d pusteno@5ms=%d",
+                 names[i], (int)pin, idle, driven, rel_fast, rel_slow);
+        ESP_LOGI(TAG, "   -> %s", verdict);
+
+        gpio_reset_pin(pin);
+    }
+
     /* NAPOMENA (06.08): raniji test je obarao liniju u push-pull rezimu. Ako je
      * linija tvrdo vezana na 3V3, to je kratak spoj 3V3->GND kroz GPIO. Zato
      * se od sada linije obaraju ISKLJUCIVO open-drain (vidi bitbang_scan) —
@@ -159,9 +205,61 @@ static int bitbang_scan(gpio_num_t sda, gpio_num_t scl) {
     return found;
 }
 
+/* Mapa svih slobodnih pinova: gdje su zice STVARNO zavrsile.
+ * Za svaki pin tri stanja:
+ *   slobodan       — interni pull-down ga obori, nista spolja ne vuce
+ *   pull-up 10k    — spolja visok, ALI ga open-drain izlaz obori => prava I2C linija
+ *   tvrdo na 3V3   — spolja visok i ne moze se oboriti => pin je na napajanju
+ * Preskacu se pinovi flesa/PSRAM-a (26-37), USB (19,20), konzole (43,44)
+ * i strapping (0,45,46). */
+static void map_all_pins(void) {
+    /* Strapping pinovi (0,45,46) su UKLJUCENI: boot je odavno gotov, a bili su
+     * ranije izostavljeni — zbog cega je skeniranje moglo promasiti zicu koja
+     * je zavrsila bas na njima. */
+    static const int cand[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
+                               21,38,39,40,41,42,45,46,47,48};
+    ESP_LOGI(TAG, "--- mapa pinova (sta je gdje stvarno spojeno) ---");
+
+    for (size_t i = 0; i < sizeof(cand)/sizeof(cand[0]); i++) {
+        gpio_num_t pin = (gpio_num_t)cand[i];
+
+        gpio_config_t pd = {
+            .pin_bit_mask = 1ULL << pin,
+            .mode = GPIO_MODE_INPUT,
+            .pull_up_en = GPIO_PULLUP_DISABLE,
+            .pull_down_en = GPIO_PULLDOWN_ENABLE,   /* ~45k na masu */
+        };
+        gpio_config(&pd);
+        esp_rom_delay_us(300);
+        int pulled_high = gpio_get_level(pin);      /* 1 => spolja vuce gore */
+
+        if (!pulled_high) { gpio_reset_pin(pin); continue; }
+
+        /* Nesto ga drzi gore — koliko jako? Open-drain izlaz obara. */
+        gpio_config_t od = {
+            .pin_bit_mask = 1ULL << pin,
+            .mode = GPIO_MODE_INPUT_OUTPUT_OD,
+            .pull_up_en = GPIO_PULLUP_DISABLE,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        };
+        gpio_config(&od);
+        gpio_set_level(pin, 0);
+        esp_rom_delay_us(300);
+        int can_pull_low = (gpio_get_level(pin) == 0);
+        gpio_set_level(pin, 1);
+
+        ESP_LOGI(TAG, "  GPIO%-2d: spolja visok, %s", (int)pin,
+                 can_pull_low ? "obara se => PULL-UP (prava I2C linija)"
+                              : "NE obara se => TVRDO NA 3V3");
+        gpio_reset_pin(pin);
+    }
+    ESP_LOGI(TAG, "--- pinovi koji se ne pojavljuju su slobodni ---");
+}
+
 void ina226_test_run(void) {
     ESP_LOGI(TAG, "=== INA226 TEST ===");
 
+    map_all_pins();
     probe_lines();
 
     /* Bit-bang ide PRVI: ako master ne moze ni da obori liniju, hardverski

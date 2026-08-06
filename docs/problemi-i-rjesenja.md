@@ -282,9 +282,35 @@ kako je prikovana na 3,3 V, konačni automat nikad ne završi transakciju i iste
 vrijeme. NACK bi značio "bus radi, ali na toj adresi nema nikoga" — što bi bila
 sasvim druga dijagnoza.
 
-**Sljedeći korak.** Bisekcija: skinuti obje signalne žice sa S3 i ponoviti test.
-- self-check prolazi → S3 pinovi su ispravni, kratak spoj je na strani žica/modula
-- self-check i dalje pada → problem je na samom S3 pinu
+**Bisekcija — mjerenja redom.**
+
+| Stanje | GPIO 8 / 9 | Zaključak |
+|---|---|---|
+| sve spojeno | tvrdo na 3V3, master ne obara | bus mrtav |
+| signalne žice skinute sa **S3** | plutaju, master ih obara, skener gotov za 30 ms (umjesto 5,6 s) | **pinovi ploče su ispravni** |
+| žice vraćene | opet tvrdo na 3V3 | kvar je na drugom kraju |
+| VCC skinut sa modula | i dalje tvrdo na 3V3 | *(mjerenje sumnjivo — vjerovatno nije skinuta prava žica)* |
+| **sve 4 žice skinute sa modula** | **slobodni** | **napon je stizao kroz modul** |
+
+**Mapa svih pinova.** Skeniranje svih slobodnih GPIO-a (interni pull-down, pa
+open-drain obaranje) dalo je: samo GPIO 8 i 9 spolja visoki, oba tvrdo; **nigdje
+nijedan pin sa 10 kΩ pull-upom**. Da SDA/SCL modula stižu do bilo kog pina, taj
+pin bi se morao pojaviti kao pull-up jer modul ima otpornike od 10 kΩ.
+*(GPIO 0 se javlja kao pull-up — to je BOOT taster na ploči, ne naša žica.
+Prvo skeniranje je propustilo strapping pinove 0/45/46; dodati su i oni su slobodni.)*
+
+**Uzrok (utvrđen eliminacijom).** SDA i SCL su na modulu nisko-omski vezani na
+VCC. Fotografija potvrđuje da su pull-upovi 10 kΩ (oznaka `103`), što ne može
+držati liniju gore protiv izlaza ploče — dakle veza je skoro nulta, a jedini
+izvor 3,3 V na modulu je VCC pin.
+
+Pinout modula sa fotke (bitno — **obrnut** od onog u `lemljenje-kratko.md`):
+`VCC · GND · SDA · SCL · ALE · UBS · IN− · IN+`. Žice: narandžasta→VCC,
+tirkizna→GND, žuta→SDA, lila→SCL.
+
+**Preostalo za potvrdu.** Otpor VCC↔SDA i VCC↔SCL na modulu: 10 kΩ = modul
+ispravan (pa je greška negdje drugdje), ~0 Ω = most preko pull-up otpornika ili
+oštećen čip.
 
 **Bezbjednosna napomena.** Ranija verzija testa je obarala linije u **push-pull**
 režimu. Na liniji vezanoj na 3V3 to je kratak spoj 3V3→GND kroz GPIO (kratko,
