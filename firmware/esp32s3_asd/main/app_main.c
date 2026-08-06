@@ -25,6 +25,7 @@
 #include "model_data.h"
 #include "eval_mode.h"
 #include "mic_test.h"
+#include "ina226_test.h"
 
 static const char *TAG = "asd";
 
@@ -85,6 +86,12 @@ void app_main(void) {
 
     gpio_config_t io = {.pin_bit_mask = 1ULL << PIN_LED, .mode = GPIO_MODE_OUTPUT};
     gpio_config(&io);
+
+    /* INA226 bring-up (E5): samo I2C, bez audia i modela — set ASD_INA_TEST=1 */
+#ifdef ASD_INA_TEST
+    ina226_test_run();
+    while (1) vTaskDelay(portMAX_DELAY);
+#endif
 
     /* Mic bring-up (rizik C1): samo I2S, bez modela — set ASD_MIC_TEST=1 */
 #ifdef ASD_MIC_TEST
