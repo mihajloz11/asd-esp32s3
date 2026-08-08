@@ -32,10 +32,12 @@ except ImportError:
     raise SystemExit("nema pyserial: ../.venv/Scripts/python.exe -m pip install pyserial")
 
 DET_RE = re.compile(
-    r"DET (\d+) score=([-\d.]+) thr=([-\d.]+) led=(\d+) anom=(\d+) total_anom=(\d+)"
+    r"DET (\d+) score=([-\d.]+) lo=([-\d.]+) hi=([-\d.]+) led=(\d+) anom=(\d+) "
+    r"total_anom=(\d+)"
 )
 CAL_RE = re.compile(r"CAL\s+(\d+)/(\d+)\s+score=([-\d.]+)")
-THR_RE = re.compile(r"ADAPTTHR .*thr=([-\d.]+) factory=([-\d.]+)")
+WAIT_RE = re.compile(r"WAIT (\d+)/(\d+) score=([-\d.]+) spread=([-\d.]+)")
+THR_RE = re.compile(r"ADAPTTHR .*thr=([-\d.]+) lo=([-\d.]+) factory=([-\d.]+)")
 
 STATE = {
     "phase": "cekam",          # cekam | kalibracija | detekcija
@@ -43,11 +45,15 @@ STATE = {
     "cal_total": 0,
     "det": [],                 # zadnjih N score-ova detekcije
     "thr": None,
+    "thr_lo": None,
     "factory": None,
     "led": 1,
     "anom_total": 0,
     "n": 0,
     "events": [],              # prelazi normal <-> anomalija
+    "wait_i": 0,
+    "wait_n": 0,
+    "wait_score": 0.0,
     "last_update": 0.0,
 }
 LOCK = threading.Lock()
@@ -78,6 +84,17 @@ def serial_reader(port: str, baud: int) -> None:
                     continue
                 line = raw.decode("utf-8", "replace").strip()
 
+                m = WAIT_RE.search(line)
+                if m:
+                    with LOCK:
+                        STATE["phase"] = "umirivanje"
+                        STATE["wait_i"] = int(m.group(1))
+                        STATE["wait_n"] = int(m.group(2))
+                        STATE["wait_score"] = float(m.group(3))
+                        STATE["last_update"] = time.time()
+                    print(line)
+                    continue
+
                 m = CAL_RE.search(line)
                 if m:
                     with LOCK:
@@ -92,7 +109,8 @@ def serial_reader(port: str, baud: int) -> None:
                 if m:
                     with LOCK:
                         STATE["thr"] = float(m.group(1))
-                        STATE["factory"] = float(m.group(2))
+                        STATE["thr_lo"] = float(m.group(2))
+                        STATE["factory"] = float(m.group(3))
                     print(line)
                     continue
 
@@ -100,15 +118,17 @@ def serial_reader(port: str, baud: int) -> None:
                 if m:
                     n = int(m.group(1))
                     score = float(m.group(2))
-                    thr = float(m.group(3))
-                    led = int(m.group(4))
-                    anom = int(m.group(5))
+                    thr_lo = float(m.group(3))
+                    thr = float(m.group(4))
+                    led = int(m.group(5))
+                    anom = int(m.group(6))
                     with LOCK:
                         STATE["phase"] = "detekcija"
                         STATE["n"] = n
                         STATE["thr"] = thr
+                        STATE["thr_lo"] = thr_lo
                         STATE["led"] = led
-                        STATE["anom_total"] = int(m.group(6))
+                        STATE["anom_total"] = int(m.group(7))
                         STATE["det"].append(score)
                         if len(STATE["det"]) > MAX_POINTS:
                             del STATE["det"][0]
@@ -185,7 +205,7 @@ h2{font-size:13px;font-family:var(--mono);letter-spacing:.1em;text-transform:upp
 
 <div class="top">
   <div class="tile"><div class="k">Score</div><div class="v" id="score">&mdash;</div></div>
-  <div class="tile"><div class="k">Prag</div><div class="v" id="thr">&mdash;</div></div>
+  <div class="tile"><div class="k">Normalan opseg</div><div class="v" id="thr">&mdash;</div></div>
   <div class="tile"><div class="k">Anomalija ukupno</div><div class="v" id="anom">&mdash;</div></div>
   <div class="tile"><div class="k">LED (GPIO 2)</div>
     <div class="led-box"><div class="led" id="led"></div><div class="led-txt" id="ledtxt">&mdash;</div></div>
@@ -223,7 +243,11 @@ function draw(s){
     ctx.beginPath();ctx.moveTo(L,y(v));ctx.lineTo(W-R,y(v));ctx.stroke();
     ctx.fillText(v.toFixed(0),L-8,y(v)+4);}
   if(s.thr){ctx.strokeStyle=css('--bad');ctx.setLineDash([7,4]);ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.moveTo(L,y(s.thr));ctx.lineTo(W-R,y(s.thr));ctx.stroke();ctx.setLineDash([]);}
+    ctx.beginPath();ctx.moveTo(L,y(s.thr));ctx.lineTo(W-R,y(s.thr));ctx.stroke();
+    if(s.thr_lo){ctx.beginPath();ctx.moveTo(L,y(s.thr_lo));ctx.lineTo(W-R,y(s.thr_lo));ctx.stroke();}
+    ctx.setLineDash([]);
+    if(s.thr_lo){ctx.fillStyle='rgba(78,196,155,.07)';
+      ctx.fillRect(L,y(s.thr),W-R-L,y(s.thr_lo)-y(s.thr));}}
   const seg=(arr,off,col)=>{if(!arr.length)return;
     ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();
     arr.forEach((v,i)=>{const px=x(i+off),py=y(v);i?ctx.lineTo(px,py):ctx.moveTo(px,py)});
@@ -235,13 +259,18 @@ async function tick(){
   try{
     const s=await (await fetch('/data')).json();
     const ph=document.getElementById('phase');
-    ph.textContent=s.phase==='detekcija'?'detekcija':s.phase==='kalibracija'
-      ?('kalibracija '+s.cal.length+'/'+(s.cal_total||30)):'cekam plocu';
+    ph.textContent=s.phase==='detekcija'?'detekcija'
+      :s.phase==='kalibracija'?('kalibracija '+s.cal.length+'/'+(s.cal_total||30))
+      :s.phase==='umirivanje'?('cekam da se soba umiri '+s.wait_i+'/'+s.wait_n)
+      :'cekam plocu';
     ph.className='badge '+(s.phase==='detekcija'?'b-det':s.phase==='kalibracija'?'b-cal':'b-wait');
     const last=s.det.length?s.det[s.det.length-1]:(s.cal.length?s.cal[s.cal.length-1]:null);
     document.getElementById('score').textContent=last!==null?last.toFixed(2):'\\u2014';
-    document.getElementById('score').style.color=(s.thr&&last>s.thr)?css('--bad'):css('--ink');
-    document.getElementById('thr').textContent=s.thr?s.thr.toFixed(2):'\\u2014';
+    const outside=s.thr&&last!==null&&(last>s.thr||(s.thr_lo&&last<s.thr_lo));
+    document.getElementById('score').style.color=outside?css('--bad'):css('--ink');
+    document.getElementById('thr').textContent=s.thr
+      ?((s.thr_lo?s.thr_lo.toFixed(1):'0')+' - '+s.thr.toFixed(1)):'\\u2014';
+    document.getElementById('thr').style.fontSize='19px';
     document.getElementById('anom').textContent=s.phase==='detekcija'?s.anom_total:'\\u2014';
     const led=document.getElementById('led');
     if(s.phase==='detekcija'){led.className='led '+(s.led?'on':'off');
