@@ -354,6 +354,40 @@ adaptaciji: **kvalitet praga zavisi od toga KADA se kalibriše, ne samo KAKO.**
 `ASD_MIC_TEST` · `ASD_INA_TEST` · `ASD_LIVE_CAPTURE` · `ASD_LIVE_ADAPT` ·
 `ASD_EVAL_MODE`.
 
+### 08.08 — DEMO RADI: detekcija anomalije na živom zvuku, dvostrani prag
+
+Test izveden samostalno dok Mihajlo nije bio u sobi: generisan zvuk
+(`results/test_zvuk.wav` — tonovi koji se mijenjaju + udarci na 0,75 s),
+pušten preko zvučnika laptopa, mjereno šta uređaj vidi.
+
+**Pun ciklus, izmjereno:**
+
+| Faza | Prozora | Score | Odluka |
+|---|---|---|---|
+| tišina | 17 | 69,0 – 76,7 | normal |
+| **test zvuk** | 23 | **45,2 – 64,8** | **ANOMALIJA (ispod)** |
+| poslije zvuka | 14 | 66,9 – 71,6 | normal |
+
+Normalan opseg **63,16 – 83,78** (kalibracija: n=30, sredina 73,07, opseg
+61,2–78,5). Prelazi zabilježeni u 16:16:30 (start zvuka) i 16:17:15 (kraj) —
+poklapaju se sa reprodukcijom u sekundu. 20 od 54 prozora označeno kao anomalija.
+
+**DVA NALAZA KOJA MIJENJAJU POSTAVKU** (detaljno: problemi-i-rjesenja.md P10, P11):
+
+1. **Score PADA kad se pusti zvuk, ne raste.** Sa 73 na 45. Greška
+   rekonstrukcije je udaljenost od naučene raspodjele, a ne mjera jačine zvuka:
+   model je treniran na mašini u pogonu, pa mu je tiha soba dalja od glasnog
+   zvuka. Jednostrani prag (`score > granica`) zato propušta pola stvarnih
+   promjena. Uvedeno **dvostrano** poređenje (1. i 99. percentil).
+
+2. **Kalibracija je tri puta naučila ventilator laptopa kao normalno stanje**,
+   jer kreće odmah po bootu — a boot se dešava tačno kad se ploča fleširala.
+   Ispis prozora redom to pokazuje: 30 → 77 za 18 s, pa plato. Riješeno
+   čekanjem da se okruženje umiri (min 120 s + zadnjih 5 prozora unutar 15 %).
+
+**Novo:** `pc/tools/live_monitor.py` — čita serijski port i služi živi grafik na
+`localhost:8770` (opseg, LED, spisak prelaza, rekonekcija).
+
 ## REZULTATI — GLAVNE TABELE (1 seed; finalno ide 5 seedova)
 
 ### hmean po mašini (baseline / najbolji tiny, MSE fp32)

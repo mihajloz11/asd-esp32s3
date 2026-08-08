@@ -24,6 +24,8 @@
 | [P7](#p7) | 06.08 | I2S | Upozorenje `dma frame num ... limited to 1023` | benigno, dokumentovano |
 | [P8](#p8) | 06.08 | I2C / INA226 | Senzor se ne javlja; obje linije tvrdo na 3V3 | **otvoreno — čeka provjeru žica** |
 | [P9](#p9) | 06.08 | I2C dijagnostika | Tri testa zaredom dala pogrešan zaključak | riješeno (metodološka pouka) |
+| [P10](#p10) | 08.08 | kalibracija | Kalibracija uči ventilator laptopa kao normalno stanje | riješeno (čekanje da se okruženje umiri) |
+| [P11](#p11) | 08.08 | detekcija | Jednostrani prag ne vidi pola stvarnih promjena | riješeno (dvostrani opseg) |
 
 ---
 
@@ -341,6 +343,85 @@ self-check je sada prvi korak u `ina226_test.c`, prije bilo kakvog skeniranja.
 **Druga pouka.** Test koji ispisuje kategoričan zaključak ("PULL-UP POSTOJI")
 umjesto sirovog mjerenja aktivno šteti — čita se kao utvrđena činjenica i
 usmjerava sljedeći sat rada u pogrešnom pravcu.
+
+---
+
+<a name="p10"></a>
+## P10 — Kalibracija uči ventilator laptopa kao „normalno stanje"
+
+**Datum:** 08.08.2026 · **Oblast:** on-device kalibracija · **Status:** riješeno
+
+**Simptom.** Tri uzastopna pokušaja demoa nisu opalila. Svaki put ista slika:
+kalibracija izmjeri sredinu 68–74 i postavi prag oko 78–105, a nekoliko minuta
+kasnije pozadina padne na 12–27 i ništa više ne može da dosegne prag.
+
+**Kako je nađen.** Ispisom kalibracionih prozora redom, umjesto samo sredine:
+
+```
+29.9  42.5  44.8  53.0  63.9  63.0  35.1  68.2  76.7  76.1 ... 77.2  76.8
+```
+
+Kalibracija **ne počinje od tišine** — penje se sa 30 na 77 u prvih 18 s i tu
+ostaje. Detekcija poslije toga pada na 12.
+
+**Uzrok.** Kalibracija je kretala odmah po bootu, a boot se dešava tačno u
+trenutku kad je ploča fleširana ili je pokrenut alat na računaru. Ventilator
+laptopa se do tada zavrtio i radi kroz cijelu kalibraciju. Uređaj tako nauči
+buku ventilatora kao normalno stanje, a ventilator se poslije minut-dva umiri.
+
+**Rješenje.** `live_adapt.c` prije kalibracije čeka da se okruženje umiri:
+najmanje 120 s **i** da se zadnjih 5 prozora razlikuju manje od 15 % relativno.
+Tek onda kreće mjerenje normalnog stanja.
+
+**Dokaz.** Prva kalibracija poslije izmjene: 30 prozora u opsegu 61,2–78,5,
+sredina 73,1 — stabilno kroz cijeli minut, bez rasta.
+
+**Pouka.** Kad se sistem kalibriše sam, mora se pitati **šta je radilo baš u tom
+trenutku**. Alat koji pokreće mjerenje je i sam izvor smetnje.
+
+---
+
+<a name="p11"></a>
+## P11 — Jednostrani prag ne vidi pola stvarnih promjena u okruženju
+
+**Datum:** 08.08.2026 · **Oblast:** detekcija · **Status:** riješeno
+
+**Simptom.** Poslije ispravne kalibracije (pozadina 69–77, prag 74,05) pušten je
+glasan test zvuk. Detekcija nije prijavila ništa — a score se **jasno promijenio**:
+
+```
+73.2  72.8  73.2  73.7  73.5  73.1   <- tisina
+56.8  50.8  48.1  50.4  52.6  60.6   <- zvuk krenuo
+```
+
+Score je **pao sa 73 na 48**, umjesto da poraste.
+
+**Uzrok.** Greška rekonstrukcije je udaljenost od naučene raspodjele, a ne mjera
+jačine zvuka. Model je treniran na zvuku mašine u pogonu, pa mu je tiha soba
+*daleka* i daje visok score. Glasan zvuk ulaz približava onome što je model
+vidio na treningu, i greška padne.
+
+Prag je bio jednostran (`score > granica` = anomalija), pa je propuštao svaku
+promjenu koja pomjera score naniže — a to je, ispostavlja se, polovina slučajeva.
+
+**Rješenje.** Dvostrani opseg: uređaj računa i donju (1. percentil) i gornju
+(99. percentil) granicu normalnog rada, a anomalija je izlazak iz opsega u bilo
+kom smjeru. Ispis razlikuje `ANOMALIJA(iznad)` od `ANOMALIJA(ispod)`.
+
+**Dokaz — pun ciklus, izmjereno 08.08:**
+
+| Faza | Score | Odluka |
+|---|---|---|
+| tišina (17 prozora) | 69,0 – 76,7 | normal |
+| test zvuk (23 prozora) | **45,2 – 64,8** | **ANOMALIJA (ispod)** |
+| poslije zvuka (14 prozora) | 66,9 – 71,6 | normal |
+
+Normalan opseg: **63,16 – 83,78**. Ukupno 20 od 54 prozora označeno kao
+anomalija, a prelazi se poklapaju sa početkom i krajem reprodukcije u sekundu.
+
+**Pouka za rad.** Pretpostavka „anomalija = veća greška" ne važi kad se model
+raspoređuje u okruženje koje se razlikuje od trening domena. Prag mora biti
+dvostran, ili se referentno stanje mora poklapati sa domenom treninga.
 
 ---
 
