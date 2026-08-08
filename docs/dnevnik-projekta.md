@@ -388,6 +388,56 @@ poklapaju se sa reprodukcijom u sekundu. 20 od 54 prozora označeno kao anomalij
 **Novo:** `pc/tools/live_monitor.py` — čita serijski port i služi živi grafik na
 `localhost:8770` (opseg, LED, spisak prelaza, rekonekcija).
 
+### 08.08 (nastavak) — NAJVAŽNIJI DEMO: pravi ventilator, normalan pa neispravan
+
+Mihajlova ideja: umjesto proizvoljnog zvuka, pustiti **snimak stvarnog
+ventilatora**, kalibrisati na normalnom dijelu, pa pustiti neispravni dio i
+vidjeti hoće li opaliti. Izvedeno sa DCASE 2026 klipovima (isti dataset na kojem
+je model treniran), preko zvučnika, mikrofon hvata kroz vazduh.
+
+**Postavka.** `results/fan_test.wav`, 390 s: 270 s normalnih klipova (train),
+60 s **označenih neispravnih** (test/anomaly, source), 60 s normalnih (test/normal).
+Jedno globalno pojačanje na cijeli snimak — relativni odnosi netaknuti. Razlika
+nivoa neispravnog i normalnog dijela: **0,05 dB**, pa reakcija ne može doći od
+promjene jačine, samo od karaktera zvuka.
+
+**Kalibracija na zvuku ventilatora:** n=30, sredina **10,16**, opseg 8,83–10,78
+→ normalan opseg **9,20 – 11,17**.
+
+Za poređenje, ista ploča na praznoj sobi daje ~73. **Model prepoznaje ventilator
+kao poznat zvuk — greška sedam puta manja nego na sobi.** To potvrđuje mehanizam:
+mala greška = ulaz liči na trening domen.
+
+**Rezultat po fazama:**
+
+| Faza | Prozora | Sredina | Max | Alarma |
+|---|---|---|---|---|
+| start (prelazni) | 6 | 14,77 | 16,1 | 6 (100 %) |
+| **normalan ventilator** | 44 | 10,42 | 11,0 | **0 (0 %)** |
+| **neispravan ventilator** | 30 | 10,56 | **11,9** | **5 (17 %)** |
+| normalan ventilator opet | 31 | 9,92 | 10,5 | **0 (0 %)** |
+| snimak stao (tišina) | 7 | 57,10 | 59,8 | 7 (100 %) |
+
+**Tri nalaza:**
+
+1. **Nula lažnih uzbuna na 75 prozora normalnog rada** (44 + 31). Prag naučen na
+   licu mjesta drži se kroz 2,5 minuta stvarnog zvuka mašine.
+
+2. **Neispravni ventilator je detektovan, ali slabo.** Score se digao sa 10,4 na
+   11,2–11,9 i prešao granicu u 5 od 30 prozora — što odgovara **jednom od šest**
+   neispravnih klipova (5 uzastopnih prozora = jedan klip od 10 s). To je u skladu
+   sa izmjerenim AUC-om za fan (0,54–0,60): suptilne anomalije su na granici
+   slučajnosti. Nije razočaranje nego potvrda da se on-device ponašanje poklapa
+   sa offline mjerenjem.
+
+3. **Zaustavljanje mašine je detektovano trenutno i nedvosmisleno.** Kad je snimak
+   stao, score je skočio sa 10 na 59 i svih 7 prozora je označeno. Gruba promjena
+   stanja je trivijalna za detekciju; fina degradacija nije.
+
+**Nerazjašnjeno.** Prvih 6 prozora detekcije (14,8–16,1) dalo je lažne alarme
+odmah poslije kalibracije, iako je svirao isti normalan zvuk. Uzrok nije utvrđen
+— provjeriti da li je prelaz kalibracija→detekcija ili granica klipova u snimku.
+
 ## REZULTATI — GLAVNE TABELE (1 seed; finalno ide 5 seedova)
 
 ### hmean po mašini (baseline / najbolji tiny, MSE fp32)
