@@ -25,7 +25,6 @@ static const char *TAG = "adapt";
 #define HOPS_PER_WIN   (AUDIO_SR * WIN_SEC / ASD_HOP)
 #define N_CALIB        30                  /* 30 x 2 s = 60 s kalibracije */
 #define CALIB_P        0.99f               /* percentil normalnog rada */
-#define N_DETECT       30                  /* 60 s detekcije poslije toga */
 
 static asd_stream_t stream;
 
@@ -93,20 +92,23 @@ void live_adapt_run(void) {
         return;
     }
 
-    ESP_LOGI(TAG, "--- detekcija sa novim pragom, %d s: sad pravi buku ---",
-             N_DETECT * WIN_SEC);
+    ESP_LOGI(TAG, "--- detekcija radi neprekidno: lupi, zvizni, pusti muziku ---");
     ESP_LOGI(TAG, "LED (GPIO%d) svijetli = normalno, gasi se = anomalija", PIN_LED);
 
-    int n_anom = 0;
-    for (int i = 0; i < N_DETECT; i++) {
+    /* Beskonačna petlja: uređaj je od ovog trenutka detektor. Svaki prozor daje
+     * jednu DET liniju koju pc/tools/live_monitor.py crta u realnom vremenu. */
+    int i = 0, n_anom = 0;
+    while (1) {
         float s = score_window();
         int anom = s > thr;
         n_anom += anom;
-        gpio_set_level(PIN_LED, !anom);
-        printf("DET %2d/%d  score=%.5f thr=%.5f  %s\n",
-               i + 1, N_DETECT, s, thr, anom ? "ANOMALIJA" : "normal");
-    }
+        i++;
 
-    ESP_LOGI(TAG, "gotovo: %d/%d prozora oznaceno kao anomalija (ocekivano ~%.0f%% "
-                  "na mirnom okruzenju)", n_anom, N_DETECT, (1.0f - CALIB_P) * 100.0f);
+        /* LED: svijetli dok je normalno, gasi se na anomaliju. Ako LED nije
+         * fizički spojen, poziv je bezopasan — pin samo mijenja nivo. */
+        gpio_set_level(PIN_LED, !anom);
+
+        printf("DET %d score=%.5f thr=%.5f led=%d anom=%d total_anom=%d %s\n",
+               i, s, thr, !anom, anom, n_anom, anom ? "ANOMALIJA" : "normal");
+    }
 }
