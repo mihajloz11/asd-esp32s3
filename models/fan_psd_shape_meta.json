@@ -1,0 +1,26 @@
+{
+  "name": "fan_psd_shape_ledoitwolf",
+  "trained_only_on": "DCASE2026 fan source/train/normal",
+  "n_normal_clips": 990,
+  "feature": {
+    "sample_rate": 16000,
+    "clip_seconds": 10,
+    "welch_n_fft": 8192,
+    "welch_hop": 4096,
+    "frequency_min_hz": 10.0,
+    "frequency_max_hz": 4000.0,
+    "bands": 96,
+    "transform": "log10 band mean power, then subtract clip scalar mean"
+  },
+  "model": {
+    "covariance": "LedoitWolf",
+    "dimension": 96,
+    "precision_matrix_float32_bytes": 36864,
+    "normalization_float32_bytes": 768,
+    "local_center_float32_bytes": 384,
+    "sha256_float32_arrays": "7bfbd3eeca1caca074562f6e01f6b374237dcea5c1d2cc097df079d68d9d15fe"
+  },
+  "benchmark_target_auc_k20": 0.8643800000000001,
+  "benchmark_target_auc_std_k20": 0.024731672001706638,
+  "note": "Target center and threshold are measured locally and are not part of this file."
+}
