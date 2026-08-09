@@ -1,0 +1,35 @@
+0-120 s  KALIBRACIJA (uredjaj slusa i uci centar):
+  section_00_target_train_normal_0008_spd_3.wav
+  section_00_target_test_normal_0025_spd_3.wav
+  section_00_target_test_normal_0044_spd_1.wav
+  section_00_target_test_normal_0024_spd_2.wav
+  section_00_target_test_normal_0031_spd_2.wav
+  section_00_target_test_normal_0027_spd_2.wav
+  section_00_target_test_normal_0016_spd_2.wav
+  section_00_target_test_normal_0028_spd_3.wav
+  section_00_target_test_normal_0003_spd_1.wav
+  section_00_target_test_normal_0006_spd_1.wav
+  section_00_target_test_normal_0015_spd_3.wav
+  section_00_target_test_normal_0033_spd_3.wav
+
+120-180 s  NORMALAN RAD, kalibracija ga NIJE cula (mjeri lazne alarme):
+  section_00_target_test_normal_0023_spd_3.wav
+  section_00_target_train_normal_0003_spd_3.wav
+  section_00_target_test_normal_0035_spd_2.wav
+  section_00_target_test_normal_0014_spd_1.wav
+  section_00_target_test_normal_0030_spd_3.wav
+  section_00_target_test_normal_0045_spd_2.wav
+
+180-300 s  ANOMALIJA (mjeri odziv):
+  section_00_target_test_anomaly_0006_spd_3.wav
+  section_00_target_test_anomaly_0041_spd_3.wav
+  section_00_target_test_anomaly_0027_spd_1.wav
+  section_00_target_test_anomaly_0004_spd_3.wav
+  section_00_target_test_anomaly_0010_spd_1.wav
+  section_00_target_test_anomaly_0022_spd_3.wav
+  section_00_target_test_anomaly_0047_spd_2.wav
+  section_00_target_test_anomaly_0037_spd_1.wav
+  section_00_target_test_anomaly_0007_spd_2.wav
+  section_00_target_test_anomaly_0005_spd_2.wav
+  section_00_target_test_anomaly_0036_spd_1.wav
+  section_00_target_test_anomaly_0019_spd_3.wav
