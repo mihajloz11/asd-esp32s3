@@ -8,6 +8,9 @@ Nepromenjivi cilj i kriterij uspjeha zapisani su u
 ventilatora, kratka lokalna kalibracija novog ventilatora i zatim potpuno
 samostalan dvostrani detektor na ESP32-S3, uz istraživački cilj AUC >= 0,80.
 
+> **Počni od [PLAN.md](PLAN.md)** — tamo je stanje, šta je dokazano a šta nije,
+> nalazi vanjske revizije i redoslijed rada. Ovaj dokument je detalj.
+
 Finalni izbor modela, rezervna alternativa i kriteriji prihvatanja na
 hardveru: [odluka-finalni-model.md](odluka-finalni-model.md).
 Otpornost na buku okoline (koraci, razgovor) i dvomikrofonski pristup:
@@ -16,7 +19,10 @@ Otpornost na buku okoline (koraci, razgovor) i dvomikrofonski pristup:
 ## Projekat
 
 Master rad: detekcija anomalija u zvuku mašina (ASD) na ESP32-S3.
-Repo `C:\Users\mihaj\Desktop\master new`, grana `master`, sve pushovano.
+Repo `C:\Users\mihaj\Desktop\master new`, grana `master`.
+Remote: `github.com/mihajloz11/master-asd-esp32s3`.
+**Provjeri `git log origin/master..HEAD` prije nego zaključiš da je sve pushovano** —
+rad od 09.08.2026 je neko vrijeme stajao lokalno.
 Dataset DCASE 2026 dev, 7 mašina, u `data/` (nije u gitu).
 
 ## Hardver

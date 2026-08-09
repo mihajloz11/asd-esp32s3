@@ -53,19 +53,51 @@ detekciji** (0,504–0,544, vidi [put-do-modela.md](put-do-modela.md) #18). To j
 druga stvar: tamo se pod-segment koristio da se anomalija **nađe**, ovdje da se
 prolazan događaj **odbaci**. Ne treba ih pomiješati.
 
+**Rizik koji se mora izmjeriti.** Kvar ne mora početi postepeno — zaglavljena
+lopatica počinje **naglo**, i baš taj prvi prozor izgleda „nestabilno". Kapija
+bi ga mogla odbaciti. Zato mjerenje mora obuhvatiti i **kašnjenje detekcije**,
+ne samo broj lažnih alarma; ako kapija odbacuje prvi prozor kvara, treba je
+vezati samo za prozore koji se **ne ponavljaju** (nestabilan pa se vrati u
+normalu), a ne za one poslije kojih stanje ostaje promijenjeno.
+
 ### 2. Robusnija agregacija po trakama
 
-**Ideja.** Score je zbir odstupanja preko svih 96 traka. Govor jako pogodi
-nekoliko traka; kvar tipično pomjera mnogo traka pomalo. Ako se prije sabiranja
-odbaci nekoliko najvećih odstupanja (trimovani zbir), govor gubi uticaj a kvar
-preživi.
+**Ideja.** Govor jako pogodi nekoliko traka; kvar tipično pomjera mnogo traka
+pomalo. Ako se doprinos najjače pogođenih traka ograniči, govor gubi uticaj a
+kvar preživi.
 
-**Cijena.** Jedno sortiranje 96 brojeva po prozoru. Zanemarljivo.
+> **Ispravka ranije verzije ovog plana (09.08.2026).** Prvo je pisalo „odbaci
+> pet najvećih odstupanja prije sabiranja". **To je matematički neispravno za
+> ovaj score.** Mahalanobisov score nije zbir po trakama nego kvadratna forma
+> `dᵀ P d` sa **punom** matricom `P` (96×96). Ne postoji „doprinos trake *i*"
+> koji bi se prosto izbacio — postoje unakrsni članovi između traka, i baš oni
+> nose signal (izmjereno: dijagonalna kovarijansa gubi 8 poena, vidi
+> [put-do-modela.md](put-do-modela.md) #6). Nalaz iz vanjske revizije, tačan.
 
-**Pažnja.** Ranije je mjereno **suprotno** — zadržavanje samo najvećih odstupanja
-(„top-k") dalo je 0,645 naspram 0,674, dakle malo lošije za detekciju. To
-posredno potkrepljuje ideju: ako najveća odstupanja nisu ono što nosi kvar, onda
-se smiju odbaciti. Ali treba izmjeriti koliko se detekcija gubi.
+**Kako se to radi ispravno** — tri varijante koje treba izmjeriti, sve zadržavaju
+punu matricu:
+
+1. **Ograničiti odstupanje prije forme.** Vinsorizovati vektor `d` po
+   koordinatama (`clip` na ±c·σ iz kalibracije), pa tek onda `dᵀ P d`. Time se
+   traka koju je govor „zabio" ograničava, a struktura matrice ostaje.
+2. **Odbaciti trake, ali dosljedno.** Izbaciti podskup traka *i iz vektora i iz
+   matrice* (uzeti podmatricu `P` nad preostalim trakama — nije isto što i
+   nuliranje koordinate). Ako se podskup bira **fiksno unaprijed** (npr. trake
+   u kojima ventilator ima malo energije), to je legitimno i može se
+   pripremiti na PC-u; ako se bira po prozoru, mijenja se raspodjela score-a
+   pa i prag.
+3. **Robusna udaljenost.** Zamijeniti kvadratnu formu njenim „blažim" oblikom
+   (npr. Huber nad izbijeljenim koordinatama `L d`, gdje je `P = LᵀL`). Tu
+   pojedina velika koordinata ne dominira, a matrica se i dalje koristi cijela.
+
+**Cijena.** Varijanta 1 je trivijalna (jedno ograničavanje po prozoru).
+Varijanta 2 traži pripremljenu podmatricu u flešu. Varijanta 3 traži izbjeljivanje
+`L d` (isto množenje kao sada) pa nelinearnost — takođe jeftino.
+
+**Pažnja.** Ranije je mjereno da zadržavanje samo najvećih odstupanja („top-k")
+daje 0,645 naspram 0,674 — dakle najveća odstupanja nisu ono što nosi kvar. To
+ide u prilog ograničavanju, ali detekciju treba ponovo izmjeriti za svaku od tri
+varijante gore.
 
 ### 3. Pravilo „N od M" umjesto N uzastopnih
 
@@ -78,7 +110,25 @@ prolazu 5 je niz pukao na 702,3 pri pragu 707,9, dakle za 6 jedinica.
 ### 4. Dva mikrofona  *(pravo rješenje, podaci već postoje)*
 
 **Ideja.** Jedan mikrofon uz mašinu, drugi okrenut prostoriji. Što **oba** čuju
-je soba; što čuje **samo bliži** je mašina. Oduzimanjem se buka poništava.
+je soba; što čuje **samo bliži** je mašina.
+
+> **Ne prosto oduzimanje.** `kanal0 − kanal1` u vremenskom domenu poništava i
+> sam ventilator, jer ga oba mikrofona čuju (izmjerena korelacija 0,873). Dva
+> mikrofona nisu „ukloni buku" nego „imaš dvije mjere pa vidi šta se razlikuje".
+> Nalaz iz vanjske revizije, tačan.
+
+**Šta zapravo treba isprobati** (redom, od najjeftinijeg):
+
+1. samo kanal 0 (sadašnje stanje) — osnova za poređenje,
+2. samo kanal 1,
+3. prosjek kanala (bolji odnos signal/šum ako je buka nekorelisana),
+4. **odnos spektara** kanal0/kanal1 po traci — buka koja dolazi izdaleka pogađa
+   oba slično pa se u odnosu poništi, dok mašina diže odnos u svojim trakama,
+5. kalibrisani rezidual: naučiti na ispravnom radu kako se kanali odnose, pa
+   mjeriti odstupanje **od tog odnosa**.
+
+Varijanta 4 je vjerovatno najbolji odnos koristi i truda i uklapa se u postojeći
+front-end (radi se nad istim 96 traka).
 
 **Zašto je ovo ozbiljno.** To je i razlog zašto je DCASE 2026 „noise-aware"
 izdanje, a **snimci su dvokanalni** — i cijela naša obrada koristi samo prvi

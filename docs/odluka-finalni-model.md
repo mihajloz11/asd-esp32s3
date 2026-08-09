@@ -1,6 +1,7 @@
 # Odluka: finalni model i rezervna alternativa
 
-**Datum:** 09.08.2026 · **Status:** odlučeno, čeka potvrdu na hardveru
+**Datum:** 09.08.2026 · **Status:** odlučeno; svi kriteriji prihvatanja na
+hardveru **prošli** (vidi tabelu niže). Ostaje test sa fizičkim ventilatorom.
 
 Dvije sesije su 09.08.2026 paralelno istraživale kako preći AUC 0,80
 ([cilj-modela.md](cilj-modela.md)). Nalazi su se ukrstili i POTVRĐUJU jedni

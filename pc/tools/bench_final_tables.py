@@ -9,9 +9,19 @@ p = 0.1), sto je mjera koliko se anomalija hvata u rezimu malo laznih alarma —
 bas ono sto je za uredjaj bitno.
 
 Poredi tri varijante, sve na TARGET domenu, isti protokol lokalne kalibracije:
-  ae_mel      stari sazetak log-mela 1280 + kovarijansa shrink 0.1 (referenca)
+  mel1280     sazetak log-mela 1280 + kovarijansa shrink 0.1 (stara referenca)
   mel256_lw   mel sazetak 256 + Ledoit-Wolf + medijana centra
   psd_shape   finalni model: Welch 8192, 96 log traka, LW, centar
+
+PAZNJA NA IMENA: nijedna od ove tri varijante NE pokrece autoenkoder. Ranije se
+prva zvala "ae_mel", sto je bilo pogresno — to je Mahalanobis nad log-mel
+sazetkom, ne AE. Rezultati autoenkodera su u results/results.csv.
+
+PAZNJA NA "SEEDOVE": --seeds NE pokrece vise treninga. Nema sta da se trenira —
+model je statisticki. Seed mijenja samo IZBOR KALIBRACIONIH KLIPOVA, pa
+prijavljena std opisuje osjetljivost na to koji klipovi udju u kalibraciju,
+NE generalizaciju na vise razlicitih ventilatora. Za ovo drugo treba vise
+fizickih primjeraka, cega u DCASE skupu nema.
 
 Upotreba (iz pc/):
     ../.venv/Scripts/python.exe tools/bench_final_tables.py
@@ -82,7 +92,7 @@ def build(machine):
     S1280 = np.stack([np.concatenate([((f - mean) / std).mean(0),
                                       ((f - mean) / std).std(0)])
                       for f in tr_f + te_f]).astype(np.float64)
-    feats["ae_mel"] = S1280
+    feats["mel1280"] = S1280
     feats["mel256_lw"] = np.stack([mel_summary_256(f) for f in tr_f + te_f])
     pz = cache / f"{machine}_periodicity.npz"
     if pz.exists():
@@ -105,7 +115,7 @@ def evaluate(F, meta, variant, k, seeds, reps):
                                            (meta["te_lab"] == 0))[0]])
     anom = n_tr + np.where((meta["te_dom"] == "target") & (meta["te_lab"] == 1))[0]
 
-    if variant == "ae_mel":
+    if variant == "mel1280":
         P = inv_cov_shrink(F[src], 0.1)
         Z = F
         use_median = False
@@ -134,7 +144,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--machines", nargs="*", default=list(MACHINES))
     ap.add_argument("--k", type=int, default=20)
-    ap.add_argument("--seeds", type=int, default=5)
+    ap.add_argument("--seeds", type=int, default=5,
+                    help="broj GRUPA kalibracionih podjela, NE broj treninga")
     ap.add_argument("--reps", type=int, default=20)
     args = ap.parse_args()
 

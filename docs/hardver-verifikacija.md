@@ -16,8 +16,14 @@ Cijeli lanac iz [cilj-modela.md](cilj-modela.md), bez računara:
    matrica 96×96 iz fleša se ne dira.
 3. **Prag** — leave-one-out: svaki kalibracioni klip se ocjenjuje centrom koji
    **ne sadrži njega samog**, prag je 90. percentil tih score-ova.
-4. **Detekcija** — neprekidno, alarm tek poslije **2 uzastopna** prozora iznad
+4. **Detekcija** — neprekidno, alarm tek poslije **3 uzastopna** prozora iznad
    praga. Centar se poslije kalibracije **ne pomjera** ([P10](problemi-i-rjesenja.md#p10)).
+
+> Prag je **jednostran** (`score > prag`). Mahalanobisova udaljenost jeste
+> osjetljiva na promjenu u oba smjera po pojedinoj traci, ali sama odluka ima
+> samo gornju granicu — nije `lo/hi` dvostruki prag kakav je imao stari AE demo.
+> Gdje god u starijim dokumentima piše „dvostrani prag", to se odnosi na AE, ne
+> na ovaj model.
 
 ## Kriteriji prihvatanja — rezultat
 
