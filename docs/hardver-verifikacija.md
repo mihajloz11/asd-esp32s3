@@ -109,17 +109,110 @@ maksimizovati.
 - Zaustavljena mašina: alarm, nedvosmisleno.
 - AUC preko zraka: **0,635**
 
-### Sva tri prolaza zajedno
+### Svi prolazi zajedno
 
-| Prolaz | Brzine | Jačina | Pravilo praga | Lažni alarmi | Uhvaćena anomalija | AUC |
+| Prolaz | Materijal | Jačina | Pravilo praga | Lažni alarmi | Uhvaćen kvar | AUC |
 |---|---|---|---|---|---|---:|
-| 1 | miješane | 42 % | p90, 2 prozora | 0 čistih (1 na šavu) | **da**, od 4. prozora | **0,716** |
-| 2 | `spd_1` | 85 % | p90, 2 prozora | više | da, ali i lažno | 0,476 |
-| 3 | `spd_1` | 45 % | sredina+3σ, 3 prozora | **0** | ne | 0,635 |
+| 1 | DCASE, miješane brzine | 42 % | p90, 2 prozora | 0 čistih (1 na šavu) | da, od 4. prozora | 0,716 |
+| 2 | DCASE, `spd_1` | 85 % | p90, 2 prozora | više | da, ali i lažno | 0,476 |
+| 3 | DCASE, `spd_1` | 45 % | sredina+3σ, 3 prozora | **0** | ne | 0,635 |
+| 4 | DCASE, jedan neprekidan tok | 45 % | sredina+3σ, 3 prozora | **0** | ne | 0,258* |
+| 5 | sintetički kvar, rastuća jačina | 45 % | sredina+3σ, 3 prozora | **0** | **da, na −12 dB** | — |
 
-Vidi se klasična ROC razmjena: niži prag u prolazu 1 hvata anomaliju ali propušta
-lažne na šavu; viši prag u prolazu 3 je potpuno miran ali propušta suptilan kvar.
-**Zaustavljena mašina se hvata u sva tri prolaza, bez izuzetka.**
+\* statistički nerazlučivo od slučajnog (p = 0,112).
+
+Prolazi 1–4 koriste **DCASE anomalije**, koje su namjerno suptilne; prolaz 5
+mjeri koliko kvar mora biti izražen. **Zaustavljena mašina se hvata u svakom
+prolazu, bez izuzetka.** Vidi se i klasična ROC razmjena: niži prag u prolazu 1
+hvata nešto ali propušta lažne na šavu, viši prag u prolazima 3–5 je potpuno
+miran (nula lažnih alarma u 17 normalnih prozora).
+
+### Prolaz 4 — jedan neprekidan snimak (najbliže stvarnoj primjeni)
+
+Dosadašnji prolazi su koristili dvije odvojene datoteke (kalibracija pa test).
+Ovaj koristi **jedan tok zvuka od 300 s**, kao da je uređaj uključen pored
+mašine koja radi i ostavljen da sluša:
+
+| Dionica | Sadržaj | Uloga |
+|---|---|---|
+| 0–120 s | ispravan rad | uređaj se sam kalibriše |
+| 120–180 s | ispravan rad, **druge klipove** | mjeri lažne alarme pošteno |
+| 180–300 s | anomalija | mjeri odziv |
+
+Provjereno programski: preklapanje kalibracionih i ocjenjivanih klipova = **0**
+([`psd_continuous_test.py`](../pc/tools/psd_continuous_test.py)).
+
+Rezultat: **0 lažnih alarma, 0 detektovanih anomalija.** Jedan normalan prozor
+je prešao prag (1104 pri pragu 1052), ali ga je pravilo od 3 uzastopna prozora
+ispravno progutalo — potvrda da izmjena praga radi. Tišina poslije kraja snimka
+je detektovana (36 131).
+
+| | medijana | opseg |
+|---|---:|---|
+| normalan rad (nevidjen u kalibraciji), 6 prozora | 526 | 396–1104 |
+| anomalija, 11 prozora | 318 | 196–686 |
+
+AUC = 0,258. **Ali to nije dokaz obrnute detekcije:** permutacioni test daje
+p = 0,112, a 95 % opseg pod čistom slučajnošću je 0,212–0,788. Sa 6 naspram 11
+prozora rezultat je statistički nerazlučiv od nasumičnog. Pošteno je reći da
+**detekcije nema**, ne da je obrnuta.
+
+*(Provjereno i odbačeno usput: anomalni klipovi nisu tiši od normalnih —
+razlika ukupnog nivoa je 0,1 dB, pa inverzija nije posljedica jačine.)*
+
+### Prolaz 5 — koliko kvar mora biti izražen (prag osjetljivosti)
+
+Dotad je stajalo otvoreno pitanje: *koliko grublji od DCASE anomalije kvar mora
+biti da bi ga uređaj čuo kroz zvučnik?* Mjereno tako što se na stvaran snimak
+ispravnog ventilatora dodaje **kontrolisan** kvar rastuće jačine — periodičan
+širokopojasni udar jednom po obrtaju (strano tijelo koje kači lopaticu), izražen
+u dB u odnosu na RMS mašine. Alat: [`psd_severity_test.py`](../pc/tools/psd_severity_test.py).
+
+| Dionica | Prozora | Alarma | Medijana score | Max |
+|---|---:|---:|---:|---:|
+| ispravan rad | 4 | 0 | 433 | 775 |
+| kvar −30 dB | 3 | 0 | 946 | 1394 |
+| kvar −24 dB | 3 | 0 | 289 | 559 |
+| kvar −18 dB | 3 | 0 | **1387** | 1498 |
+| kvar −12 dB | 3 | **3** | **4843** | 5060 |
+| zvuk isključen | 1 | 1 | 34 033 | — |
+
+Prag na uređaju: 1096.
+
+- **−12 dB: pouzdana detekcija** — sva tri prozora alarmiraju, score 4,4× prag.
+- **−18 dB: granično** — pojedinačni prozori prelaze prag (1387, 1498) i upravo
+  oni pokreću alarm u 17. prozoru, ali ne sami po sebi.
+- **−24 dB i slabije: ne** — kolebanje između klipova (289–946) nadjačava kvar.
+
+**Gdje su DCASE anomalije na toj skali.** Digitalno, istim modelom i centrom:
+
+| | score |
+|---|---:|
+| ispravan rad | 82 |
+| **stvarna DCASE anomalija** | **124** |
+| sintetički kvar −30 dB | 135 |
+| −24 dB | 559 |
+| −18 dB | 3042 |
+| −12 dB | 10 448 |
+
+DCASE anomalija odgovara otprilike kvaru **od −30 dB ili slabijem**, a preko
+zvučnika treba oko **−15 dB**. Razlika je oko **15 dB** — otud dosljedan izostanak
+detekcije u prolazima 1–4. To nije nedostatak modela nego mjera koliko su DCASE
+anomalije suptilne u odnosu na ono što ovaj akustički put propušta.
+
+### Da li kanal uništava kvar — izmjereno, ne pretpostavljeno
+
+Prije ovog zaključka provjerene su i odbačene dvije hipoteze:
+
+1. *„Front-end je slijep za udarne kvarove jer je dugoročni prosječni spektar."*
+   Odbačeno ([`check_fault_type.py`](../pc/tools/check_fault_type.py)): udarni
+   kvar je upravo onaj na koji je najosjetljiviji (135 → 22 942 kroz −30…−6 dB).
+2. *„Akustički kanal uništava kvar."* Odbačeno mjerenjem
+   ([`psd_channel_probe.py`](../pc/tools/psd_channel_probe.py)): kroz zvučnik i
+   mikrofon preživi **82,5 %** promjene po trakama, score 10 116 → 4804.
+
+Stvarni uzrok neuspjeha prvog sweep-a bila je **greška u generatoru kvara**
+([P14](problemi-i-rjesenja.md#p14)) — vidi tamo.
 
 ### Provjerena i odbačena hipoteza
 
@@ -193,13 +286,17 @@ osnovu gornje tabele, očekuje se rezultat bliži benchmark brojci nego ovom.
 | Kalibracija na **novom** ventilatoru, na licu mjesta | ✔ 100 s, mjeri se samo centar |
 | Rad **bez računara**, dvostrana detekcija, alarm | ✔ radi, LED + serijski flag |
 | Kalibracija se ne nastavlja tiho | ✔ centar zamrznut poslije kalibracije |
-| Gruba promjena (mašina stala) | ✔ detektovano u sva tri prolaza |
-| Suptilan DCASE kvar **preko zvučnika** | ✖ marginalno (AUC 0,64–0,72) |
+| Gruba promjena (mašina stala) | ✔ detektovano u svim prolazima |
+| Kvar −12 dB preko zvučnika | ✔ pouzdan alarm, 3/3 prozora |
+| Kvar −18 dB preko zvučnika | ~ granično |
+| Suptilan DCASE kvar **preko zvučnika** | ✖ ne (odgovara ≈ −30 dB) |
 | Suptilan DCASE kvar, digitalni zvuk | ✔ AUC 0,81–0,86 |
 
-Arhitektura i lanac rade tačno kako je zamišljeno. Otvoreno pitanje nije više
-„da li radi na pločici" nego „koliko kvar mora biti izražen da bi se čuo kroz
-stvarni akustički put" — a na to odgovara test sa pravim ventilatorom.
+Arhitektura i lanac rade tačno kako je zamišljeno. Pitanje „koliko kvar mora
+biti izražen" **više nije otvoreno**: preko zvučnika prag je oko −15 dB u odnosu
+na RMS mašine, a DCASE anomalije su oko −30 dB. Ostaje jedino provjeriti gdje na
+toj skali pada **stvaran fizički kvar** — a on je po svemu grublji od DCASE-a
+(zaglavljena lopatica, disbalans, strano tijelo), pa se očekuje unutar dosega.
 
 ## Popravka praga (prolaz 3)
 

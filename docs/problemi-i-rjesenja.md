@@ -480,6 +480,51 @@ ovdje nije bio.
 
 ---
 
+<a name="p14"></a>
+## P14 — Sintetički kvar je bio bas koji zvučnik ne reprodukuje
+
+**Datum:** 09.08.2026 · **Oblast:** eksperiment · **Status:** riješeno
+
+**Simptom.** Sweep jačine kvara preko zvučnika nije dao monoton odziv: −24 dB
+je jednom skočilo na 4450, a **jači** kvarovi −18 i −12 dB ostali su na 340–570,
+ispod praga. Digitalno je isti front-end davao 559 / 3042 / 10448 — uredno
+rastuće.
+
+**Prva (pogrešna) hipoteza.** „Front-end je slijep za udarne kvarove, jer je
+`psd_shape` dugoročni prosječni spektar." Provjereno alatom
+[`check_fault_type.py`](../pc/tools/check_fault_type.py) i **odbačeno** — udarni
+kvar je zapravo onaj na koji je front-end najosjetljiviji.
+
+**Druga (pogrešna) hipoteza.** „Akustički kanal uništava kvar." Provjereno
+mjerenjem [`psd_channel_probe.py`](../pc/tools/psd_channel_probe.py): kroz
+zvučnik i mikrofon preživi **82,5 %** promjene po trakama, score 10 116 → 4804.
+Kanal, dakle, nije krivac.
+
+**Stvarni uzrok — greška u mom kodu.** U `add_fault` su udarima dodavana dva
+sinusa fiksne amplitude:
+
+```python
+fault += 0.5  * np.sin(2*np.pi*ROT_HZ*t)      # 24 Hz
+fault += 0.25 * np.sin(2*np.pi*2*ROT_HZ*t)    # 48 Hz
+fault *= amp / rms(fault)                      # normalizuje CIJELI kvar
+```
+
+Sinusi nose ~95 % energije kvara, pa su poslije normalizacije udarci ostali
+zanemarljivi. Izmjereno na samom snimku: kvar je bio **+9,2 dB samo u 10–50 Hz**
+i 0,0 dB u svim ostalim opsezima. Zvučnik laptopa ispod ~150 Hz praktično ne
+reprodukuje, pa do mikrofona nije stiglo ništa.
+
+**Rješenje.** Tonska komponenta uklonjena; kvar su samo širokopojasni udarci.
+Poslije izmjene isti kvar daje +8,0 dB u 2–4 kHz i +2,5 dB u 1–2 kHz — u opsegu
+koji se reprodukuje.
+
+**Pouka.** Sintetički pobuđivač se mora **izmjeriti u spektru prije upotrebe**,
+isto kao što se snimak provjerava prije nego se pusti. I: dvije uzastopne
+hipoteze o „fizici" bile su pogrešne, a uzrok je bio jedna linija koda. Kad
+mjerenje ne prati očekivanje, prvo se provjerava artefakt, pa tek onda teorija.
+
+---
+
 ## Slijepe ulice i odbačene ideje
 
 | Ideja | Zašto je odbačena |

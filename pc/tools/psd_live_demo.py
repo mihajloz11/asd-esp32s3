@@ -115,6 +115,61 @@ def build_audio(seed: int = 0, speed: str | None = None) -> tuple[Path, Path]:
 DET_RE = re.compile(r"DET (\d+) score=([-\d.]+) lo=[-\d.]+ hi=([-\d.]+) led=\d+ "
                     r"anom=(\d+) total_anom=\d+ (\w+)")
 
+# --- neprekidan snimak: kalibracija i ocjena iz JEDNOG toka zvuka ---
+# Uredjaj potrosi ~116 s do pocetka detekcije (15,4 s cekanja + 10 x 9,98 s
+# kalibracije), pa prvih 12 klipova pokriva kalibraciju. Tek ono STO SLIJEDI
+# se ocjenjuje — normalni klipovi u 120-180 s uredjaj NIJE cuo u kalibraciji.
+CONT_CAL = 12        # 120 s: warm-up + kalibracija
+CONT_NORM = 6        # 60 s normalnog rada koji kalibracija nije vidjela
+CONT_ANOM = 12       # 120 s anomalije
+
+
+def build_continuous(seed: int, speed: str | None) -> Path:
+    OUT.mkdir(parents=True, exist_ok=True)
+    rng = np.random.default_rng(seed)
+    pat = f"*{speed}.wav" if speed else "*.wav"
+    normals = sorted(list(FAN.glob(f"train/*target_train_normal{pat}")) +
+                     list(FAN.glob(f"test/*target_test_normal{pat}")))
+    anomalies = sorted(FAN.glob(f"test/*target_test_anomaly{pat}"))
+    need = CONT_CAL + CONT_NORM
+    if len(normals) < need or len(anomalies) < CONT_ANOM:
+        raise SystemExit(f"treba {need} normalnih i {CONT_ANOM} anomalnih, "
+                         f"ima {len(normals)} i {len(anomalies)}")
+
+    idx = rng.permutation(len(normals))
+    cal = [normals[i] for i in idx[:CONT_CAL]]
+    norm = [normals[i] for i in idx[CONT_CAL:need]]
+    anom = [anomalies[i] for i in rng.permutation(len(anomalies))[:CONT_ANOM]]
+
+    def cat(paths):
+        out = []
+        for p in paths:
+            y, sr = sf.read(p, dtype="float32", always_2d=True)
+            assert sr == SR
+            out.append(y[:, 0])
+        return np.concatenate(out)
+
+    sig = np.concatenate([cat(cal), cat(norm), cat(anom)])
+    sig = sig * (0.9 / np.abs(sig).max())
+    path = OUT / "demo_continuous.wav"
+    sf.write(path, sig, SR, subtype="PCM_16")
+
+    (OUT / "demo_continuous_manifest.txt").write_text(
+        f"0-{CONT_CAL*10} s  KALIBRACIJA (uredjaj slusa i uci centar):\n" +
+        "".join(f"  {p.name}\n" for p in cal) +
+        f"\n{CONT_CAL*10}-{(CONT_CAL+CONT_NORM)*10} s  NORMALAN RAD, "
+        f"kalibracija ga NIJE cula (mjeri lazne alarme):\n" +
+        "".join(f"  {p.name}\n" for p in norm) +
+        f"\n{(CONT_CAL+CONT_NORM)*10}-{(CONT_CAL+CONT_NORM+CONT_ANOM)*10} s  "
+        f"ANOMALIJA (mjeri odziv):\n" +
+        "".join(f"  {p.name}\n" for p in anom), encoding="utf-8")
+
+    print(f"neprekidan snimak: {path.name}  {len(sig)/SR:.0f} s")
+    print(f"  0-{CONT_CAL*10} s      normalan rad — tu se uredjaj kalibrise")
+    print(f"  {CONT_CAL*10}-{(CONT_CAL+CONT_NORM)*10} s    normalan rad koji nije cuo — ne smije alarmirati")
+    print(f"  {(CONT_CAL+CONT_NORM)*10}-{(CONT_CAL+CONT_NORM+CONT_ANOM)*10} s   ANOMALIJA — mora alarmirati")
+    return path
+
 
 def main() -> None:
     global CAL_CLIPS, DET_NORMAL, DET_ANOM, DET_RECOVER

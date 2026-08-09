@@ -1,0 +1,136 @@
+    0.8s I (1111) esp_psram: SPI SRAM memory test OK
+    0.8s I (1119) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
+    0.8s I (1119) cpu_start: Pro cpu start user code
+    0.8s I (1119) cpu_start: cpu freq: 240000000 Hz
+    0.8s I (1121) app_init: Application information:
+    0.8s I (1125) app_init: Project name:     esp32s3_asd
+    0.9s I (1130) app_init: App version:      on-device-verified-29-g1c6ea37-
+    0.9s I (1136) app_init: Compile time:     Aug  9 2026 15:46:34
+    0.9s I (1141) app_init: ELF file SHA256:  4031440cb...
+    0.9s I (1145) app_init: ESP-IDF:          v5.5.5-34-g21f3b71cbbf
+    0.9s I (1151) efuse_init: Min chip rev:     v0.0
+    0.9s I (1154) efuse_init: Max chip rev:     v0.99
+    0.9s I (1159) efuse_init: Chip rev:         v0.2
+    0.9s I (1162) heap_init: Initializing. RAM available for dynamic allocation:
+    0.9s I (1169) heap_init: At 3FCCFA68 len 00019CA8 (103 KiB): RAM
+    0.9s I (1174) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+    0.9s I (1179) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+    0.9s I (1185) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+    0.9s I (1190) esp_psram: Adding pool of 16384K of PSRAM memory to heap allocator
+    0.9s W (1197) spi_flash: Octal flash chip is using but dio mode is selected, will automatically switch to Octal mode
+    0.9s I (1207) spi_flash: detected chip: mxic (opi)
+    0.9s I (1211) spi_flash: flash io: opi_str
+    0.9s I (1214) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+    0.9s I (1220) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+    1.0s I (1227) main_task: Started on CPU0
+    1.0s I (1237) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+    1.0s I (1237) main_task: Calling app_main()
+    1.0s I (1237) asd: PSRAM: 16777216 B
+    1.0s I (1247) asd: free heap: 16921839 B
+    1.0s W (1247) i2s_common: dma frame num is out of dma buffer size, limited to 1023
+    1.6s I (1927) psdlive: === SAMOSTALNI PSD DETEKTOR ===
+    1.6s I (1927) psdlive: model: 96 traka, matrica 96x96 iz flesa, naucen na 990 ispravnih ventilatora
+    1.6s I (1927) psdlive: 1) pusti ventilator koji radi NORMALNO
+    1.7s I (1927) psdlive: 2) kalibracija 10 x 10 s = 100 s - ne mijenjaj nista
+    1.7s I (1937) psdlive: 3) poslije toga izazovi kvar - uredjaj radi sam
+    1.7s WAIT 1/60 score=-16.88 spread=0.000 nivo=-16.9 dBFS cujem
+    1.7s WAIT 2/60 score=-39.03 spread=0.000 nivo=-39.0 dBFS cujem
+    1.8s WAIT 3/60 score=-57.32 spread=0.000 nivo=-57.3 dBFS cujem
+    2.1s WAIT 4/60 score=-58.18 spread=0.000 nivo=-58.2 dBFS cujem
+    2.3s WAIT 5/60 score=-56.78 spread=0.000 nivo=-56.8 dBFS cujem
+    2.6s WAIT 6/60 score=-58.33 spread=0.000 nivo=-58.3 dBFS cujem
+    2.8s WAIT 7/60 score=-58.19 spread=0.000 nivo=-58.2 dBFS cujem
+    3.1s WAIT 8/60 score=-57.12 spread=0.000 nivo=-57.1 dBFS cujem
+    3.3s WAIT 9/60 score=-58.69 spread=0.000 nivo=-58.7 dBFS cujem
+    3.6s WAIT 10/60 score=-58.88 spread=0.000 nivo=-58.9 dBFS cujem
+    3.8s WAIT 11/60 score=-57.77 spread=0.000 nivo=-57.8 dBFS cujem
+    4.1s WAIT 12/60 score=-58.53 spread=0.000 nivo=-58.5 dBFS cujem
+    4.4s WAIT 13/60 score=-56.68 spread=0.000 nivo=-56.7 dBFS cujem
+    4.6s WAIT 14/60 score=-55.40 spread=0.000 nivo=-55.4 dBFS cujem
+    4.9s WAIT 15/60 score=-58.04 spread=0.000 nivo=-58.0 dBFS cujem
+    5.1s WAIT 16/60 score=-57.42 spread=0.000 nivo=-57.4 dBFS cujem
+    5.4s WAIT 17/60 score=-57.69 spread=0.000 nivo=-57.7 dBFS cujem
+    5.6s WAIT 18/60 score=-57.15 spread=0.000 nivo=-57.2 dBFS cujem
+    5.9s WAIT 19/60 score=-56.94 spread=0.000 nivo=-56.9 dBFS cujem
+    6.1s WAIT 20/60 score=-58.29 spread=0.000 nivo=-58.3 dBFS cujem
+    6.4s WAIT 21/60 score=-57.68 spread=0.000 nivo=-57.7 dBFS cujem
+    6.7s WAIT 22/60 score=-56.88 spread=0.000 nivo=-56.9 dBFS cujem
+    6.9s WAIT 23/60 score=-58.81 spread=0.000 nivo=-58.8 dBFS cujem
+    7.2s WAIT 24/60 score=-58.46 spread=0.000 nivo=-58.5 dBFS cujem
+    7.4s WAIT 25/60 score=-57.79 spread=0.000 nivo=-57.8 dBFS cujem
+    7.7s WAIT 26/60 score=-58.39 spread=0.000 nivo=-58.4 dBFS cujem
+    7.9s WAIT 27/60 score=-57.10 spread=0.000 nivo=-57.1 dBFS cujem
+    8.2s WAIT 28/60 score=-57.46 spread=0.000 nivo=-57.5 dBFS cujem
+    8.4s WAIT 29/60 score=-58.25 spread=0.000 nivo=-58.2 dBFS cujem
+    8.7s WAIT 30/60 score=-57.53 spread=0.000 nivo=-57.5 dBFS cujem
+    9.0s WAIT 31/60 score=-58.25 spread=0.000 nivo=-58.2 dBFS cujem
+    9.2s WAIT 32/60 score=-57.89 spread=0.000 nivo=-57.9 dBFS cujem
+    9.5s WAIT 33/60 score=-56.49 spread=0.000 nivo=-56.5 dBFS cujem
+    9.7s WAIT 34/60 score=-58.03 spread=0.000 nivo=-58.0 dBFS cujem
+   10.0s WAIT 35/60 score=-57.90 spread=0.000 nivo=-57.9 dBFS cujem
+   10.2s WAIT 36/60 score=-57.59 spread=0.000 nivo=-57.6 dBFS cujem
+   10.5s WAIT 37/60 score=-57.94 spread=0.000 nivo=-57.9 dBFS cujem
+   10.8s WAIT 38/60 score=-56.80 spread=0.000 nivo=-56.8 dBFS cujem
+   11.0s WAIT 39/60 score=-56.81 spread=0.000 nivo=-56.8 dBFS cujem
+   11.3s WAIT 40/60 score=-57.28 spread=0.000 nivo=-57.3 dBFS cujem
+   11.5s WAIT 41/60 score=-57.72 spread=0.000 nivo=-57.7 dBFS cujem
+   11.8s WAIT 42/60 score=-56.15 spread=0.000 nivo=-56.2 dBFS cujem
+   12.0s WAIT 43/60 score=-57.45 spread=0.000 nivo=-57.4 dBFS cujem
+   12.3s WAIT 44/60 score=-56.88 spread=0.000 nivo=-56.9 dBFS cujem
+   12.5s WAIT 45/60 score=-56.73 spread=0.000 nivo=-56.7 dBFS cujem
+   12.8s WAIT 46/60 score=-56.65 spread=0.000 nivo=-56.6 dBFS cujem
+   13.1s WAIT 47/60 score=-55.96 spread=0.000 nivo=-56.0 dBFS cujem
+   13.3s WAIT 48/60 score=-57.01 spread=0.000 nivo=-57.0 dBFS cujem
+   13.6s WAIT 49/60 score=-57.37 spread=0.000 nivo=-57.4 dBFS cujem
+   13.8s WAIT 50/60 score=-56.04 spread=0.000 nivo=-56.0 dBFS cujem
+   14.1s WAIT 51/60 score=-57.35 spread=0.000 nivo=-57.4 dBFS cujem
+   14.3s WAIT 52/60 score=-57.03 spread=0.000 nivo=-57.0 dBFS cujem
+   14.6s WAIT 53/60 score=-57.32 spread=0.000 nivo=-57.3 dBFS cujem
+   14.8s WAIT 54/60 score=-57.83 spread=0.000 nivo=-57.8 dBFS cujem
+   15.1s WAIT 55/60 score=-57.11 spread=0.000 nivo=-57.1 dBFS cujem
+   15.4s WAIT 56/60 score=-56.58 spread=0.000 nivo=-56.6 dBFS cujem
+   15.6s WAIT 57/60 score=-57.41 spread=0.000 nivo=-57.4 dBFS cujem
+   15.9s WAIT 58/60 score=-56.61 spread=0.000 nivo=-56.6 dBFS cujem
+   16.1s WAIT 59/60 score=-57.45 spread=0.000 nivo=-57.5 dBFS cujem
+   16.4s WAIT 60/60 score=-57.41 spread=0.000 nivo=-57.4 dBFS cujem
+   16.4s I (16667) psdlive: --- KALIBRACIJA: 10 klipova po 10 s ---
+   26.4s CAL  1/10 score=0.00000 nivo=-57.1 dBFS racun=704 ms
+   36.3s CAL  2/10 score=0.00000 nivo=-57.0 dBFS racun=704 ms
+   46.3s CAL  3/10 score=0.00000 nivo=-56.9 dBFS racun=704 ms
+   56.3s CAL  4/10 score=0.00000 nivo=-57.0 dBFS racun=704 ms
+   66.3s CAL  5/10 score=0.00000 nivo=-57.1 dBFS racun=704 ms
+   76.3s CAL  6/10 score=0.00000 nivo=-57.1 dBFS racun=704 ms
+   86.3s CAL  7/10 score=0.00000 nivo=-57.6 dBFS racun=704 ms
+   96.3s CAL  8/10 score=0.00000 nivo=-57.3 dBFS racun=704 ms
+  106.2s CAL  9/10 score=0.00000 nivo=-57.5 dBFS racun=704 ms
+  116.2s CAL 10/10 score=0.00000 nivo=-57.3 dBFS racun=704 ms
+  116.2s I (116507) psdlive: --- kalibracija gotova (centar zamrznut) ---
+  116.2s I (116507) psdlive: LOO score: mean=512.30 sd=194.67 min=206.82 max=901.60
+  116.2s LOOALL 353.275 468.594 683.489 498.625 366.691 206.822 901.599 615.551 575.975 452.419
+  116.2s I (116517) psdlive: PRAG = 1096.31 (p90 dao 705.30, sredina+3sd dao 1096.31), alarm poslije 3 uzastopna prozora
+  116.3s ADAPTTHR n=10 mean=512.303894 sd=194.669434 k=0 theta=0 p=0.9000 thr=1096.312256 lo=0.000000 factory=0.000000
+  116.3s I (116537) psdlive: racun po klipu: 704 ms (rezerva 14.2x), dropped=0
+  116.3s I (116547) psdlive: --- DETEKCIJA RADI. Sada izazovi kvar. ---
+  116.3s I (116547) psdlive: LED (GPIO2) svijetli = normalno, gasi se = ALARM
+  126.2s DET 1 score=774.86377 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-57.1 dBFS racun=704 ms)
+  136.2s DET 2 score=444.13690 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-57.3 dBFS racun=704 ms)
+  146.2s DET 3 score=397.22620 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-57.3 dBFS racun=704 ms)
+  156.2s DET 4 score=421.80341 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-57.1 dBFS racun=704 ms)
+  166.1s DET 5 score=510.13760 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-55.5 dBFS racun=704 ms)
+  176.1s DET 6 score=467.95651 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-54.5 dBFS racun=704 ms)
+  186.1s DET 7 score=946.14130 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-53.5 dBFS racun=704 ms)
+  196.1s DET 8 score=1393.63354 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=1 nivo=-52.3 dBFS racun=704 ms)
+  206.1s DET 9 score=648.78937 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-56.4 dBFS racun=704 ms)
+  216.1s DET 10 score=558.99493 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-52.3 dBFS racun=704 ms)
+  226.1s DET 11 score=288.89252 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-56.8 dBFS racun=704 ms)
+  236.0s DET 12 score=227.85228 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-57.2 dBFS racun=704 ms)
+  246.0s DET 13 score=878.20148 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-55.3 dBFS racun=704 ms)
+  256.0s DET 14 score=1068.67114 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-56.5 dBFS racun=704 ms)
+  266.0s DET 15 score=1386.75720 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=1 nivo=-56.0 dBFS racun=704 ms)
+  276.0s DET 16 score=1498.12134 lo=0.00000 hi=1096.31226 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=2 nivo=-49.3 dBFS racun=704 ms)
+  286.0s DET 17 score=3560.05200 lo=0.00000 hi=1096.31226 led=0 anom=1 total_anom=1 ALARM (uzastopnih=3 nivo=-55.5 dBFS racun=704 ms)
+  295.9s DET 18 score=4843.47803 lo=0.00000 hi=1096.31226 led=0 anom=1 total_anom=2 ALARM (uzastopnih=4 nivo=-54.9 dBFS racun=704 ms)
+  305.9s DET 19 score=5060.24023 lo=0.00000 hi=1096.31226 led=0 anom=1 total_anom=3 ALARM (uzastopnih=5 nivo=-54.1 dBFS racun=704 ms)
+  315.9s DET 20 score=4831.40234 lo=0.00000 hi=1096.31226 led=0 anom=1 total_anom=4 ALARM (uzastopnih=6 nivo=-56.4 dBFS racun=704 ms)
+  325.9s DET 21 score=4774.66797 lo=0.00000 hi=1096.31226 led=0 anom=1 total_anom=5 ALARM (uzastopnih=7 nivo=-56.5 dBFS racun=704 ms)
+  335.9s DET 22 score=34033.07031 lo=0.00000 hi=1096.31226 led=0 anom=1 total_anom=6 ALARM (uzastopnih=8 nivo=-66.0 dBFS racun=704 ms)

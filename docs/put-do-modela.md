@@ -178,6 +178,27 @@ moraju se prijaviti odvojeno. Reprodukcija zvučnikom je konfaund koga u stvarno
 primjeni nema — tamo uređaj sluša mašinu direktno, bez dvostrukog prolaza kroz
 elektroakustiku.
 
+### Koliko kvar mora biti izražen — izmjereno
+
+Kontrolisanim sintetičkim kvarom rastuće jačine (širokopojasni udar jednom po
+obrtaju) izmjeren je **prag osjetljivosti cijelog lanca**:
+
+| Jačina kvara | Score digitalno | Preko zvučnika | Alarm |
+|---|---:|---:|---|
+| ispravan rad | 82 | 433 | — |
+| **DCASE anomalija** | **124** | u šumu | ne |
+| −30 dB | 135 | 946 | ne |
+| −24 dB | 559 | 289 | ne |
+| −18 dB | 3 042 | 1 387 | granično |
+| −12 dB | 10 448 | **4 843** | **da, 3/3** |
+
+DCASE anomalija odgovara kvaru od **≈ −30 dB**, a preko zvučnika je potrebno
+**≈ −15 dB**. Razlika od oko 15 dB objašnjava sve prolaze bez detekcije, i
+mjerljivo razdvaja „model ne valja" od „ovaj kvar je pretih za ovaj put zvuka".
+
+Usput su izmjerene i odbačene dvije pogrešne hipoteze (front-end slijep za
+udarne kvarove; kanal uništava kvar) — obje u [P14](problemi-i-rjesenja.md#p14).
+
 ---
 
 ## Sažetak napretka
