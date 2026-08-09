@@ -24,3 +24,8 @@ firmware/esp32s3_asd/dependencies.lock
 # OS/editor
 .vscode/
 Thumbs.db
+
+# Kes featura i medjurezultati (veliki, regenerisu se iz data/)
+results/cache/
+models/*.npz
+results/*.wav
