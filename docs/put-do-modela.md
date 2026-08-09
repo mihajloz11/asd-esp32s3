@@ -154,6 +154,58 @@ nije usko grlo, što se poklapa sa ranijim mjerenjem na mel modelu (50 s → 0,6
 
 ---
 
+## Faza 4b — generalizacija: PSD je pobjeda **za ventilator**, ne uopšte
+
+Pobjednik je do 09.08.2026 bio mjeren samo na `fan`. Poslije izdvajanja
+periodičnih featura za svih 7 mašina slika je bitno drugačija:
+
+| Mašina | psd_shape | mel256 | razlika |
+|---|---:|---:|---:|
+| **fan** | **0,864** | 0,587 | **+0,277** |
+| sliderEmu | 0,587 | 0,557 | +0,031 |
+| gearboxEmu | 0,555 | 0,584 | −0,029 |
+| valveEmu | 0,728 | 0,764 | −0,036 |
+| bearingEmu | 0,495 | 0,560 | −0,065 |
+| ToyCar | 0,446 | 0,539 | −0,092 |
+| ToyCarEmu | 0,366 | 0,489 | −0,123 |
+| **sredina** | 0,577 | 0,583 | −0,005 |
+| **harmonijska sredina** (DCASE mjera) | **0,537** | **0,573** | **−0,036** |
+
+**psd_shape pobjeđuje na 2 od 7 mašina.** Po harmonijskoj sredini — a to je
+zvanična DCASE mjera — on je **lošiji** od mel osnove.
+
+**Zašto je to fizički očekivano.** Ventilator je rotaciona mašina: potpis su
+uske harmonijske linije osnovne frekvencije vrtnje, i rezolucija od 1,95 Hz ih
+razdvaja. Ostale mašine u skupu nemaju tu strukturu — ventil je impulsivan,
+klizač je trenje, ToyCar je igračka. Tamo visoka frekvencijska rezolucija ne
+donosi ništa, a troši dimenzije i pogoršava procjenu kovarijanse.
+
+### Posljedica za sistem: front-end se bira po tipu mašine
+
+Protokol `bench_periodicity.py` bira varijantu **na source domenu, bez ijedne
+target oznake**. Taj izbor daje:
+
+| Strategija | Harmonijska sredina AUC |
+|---|---:|
+| uvijek psd_shape | 0,537 |
+| uvijek mel256 | 0,573 |
+| **izbor po mašini, samo iz source podataka** | **0,577** |
+
+Izbor po mašini je najbolji i **ne koristi target oznake**, pa je legitiman u
+first-shot postavci. Nije nepogrešiv: na `ToyCar` je izabrao `periodic` (0,429)
+iako bi `mel256` dao 0,539.
+
+**Za ovaj rad to znači:** uređaj je namijenjen ventilatorima, pa PSD ostaje
+ispravan izbor i tvrdnja „AUC 0,864" **važi za ventilator**. Tvrdnja da je PSD
+opšte poboljšanje ASD-a **ne stoji** i tako se mora i napisati.
+
+*(Napomena o poređenju: brojke za `mel256` u ovoj tabeli dolaze iz
+`bench_periodicity.py`, koji koristi svoju normalizaciju i sredinu kao centar.
+Ranije izmjerenih 0,706 za `fan` je varijanta sa medijanom centra iz
+`bench_research4.py`. Poređenja važe unutar istog alata.)*
+
+---
+
 ## Faza 5 — provjera na pločici (šta benchmark ne pokaže)
 
 Model je prenesen na ESP32-S3 i mjeren uživo ([hardver-verifikacija.md](hardver-verifikacija.md)).

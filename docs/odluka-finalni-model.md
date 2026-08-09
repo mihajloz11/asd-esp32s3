@@ -19,6 +19,20 @@ Ključno: Linija B je pokušala „poboljšati" psd_shape (medijana, ansambl) i
 izmjerila da NE treba — što znači da je jednostavan recept Linije A ujedno i
 optimalan od svega probanog.
 
+## Opseg važenja odluke (dopuna 09.08.2026)
+
+Poslije mjerenja na svih 7 mašina: **psd_shape je pobjeda za ventilator, ne
+uopšte.** Dobija +0,277 AUC na `fan`, ali gubi na 5 od 6 ostalih mašina, i po
+harmonijskoj sredini (0,537) je lošiji od mel osnove (0,573). Fizički razlog:
+uske harmonijske linije postoje kod rotacionih mašina, ne kod ventila i klizača.
+Tabela i objašnjenje: [put-do-modela.md](put-do-modela.md), faza 4b.
+
+Uređaj iz ovog rada je namijenjen **ventilatorima**, pa odluka ispod ostaje na
+snazi. Ali tvrdnja se piše precizno: *„za ventilator"*, ne *„za ASD uopšte"*.
+Ako se sistem ikad širi na drugi tip mašine, front-end se bira po tipu, i to je
+izvodljivo **bez target oznaka** (izbor na source domenu, harmonijska sredina
+0,577 — bolje od bilo kojeg fiksnog izbora).
+
 ## ODLUKA — šta ide na pločicu
 
 **Primarno: psd_shape + Ledoit-Wolf precizija + lokalni centar (sredina), k=20.**

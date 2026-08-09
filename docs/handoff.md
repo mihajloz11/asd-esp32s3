@@ -96,10 +96,17 @@ ocjenjuje, 20 ponavljanja. Mjera: AUC na novom ventilatoru.
 | autoenkoder (polazno stanje) | 0,451 |
 | finiji FFT / linearne trake | 0,501–0,643 |
 
-**Cilj 0,8 je pređen na PC benchmarku 09.08.2026.** Visokorezolucioni PSD
-otisak + Ledoit–Wolf kovarijansa + lokalni centar daje **target AUC
-0,864 ± 0,025** sa k=20 i 50 ponavljanja. Stari pristup pod istim seedovima
-daje 0,669 ± 0,031. Detalji: [istrazivanje-psd-model.md](istrazivanje-psd-model.md).
+**Cilj 0,8 je pređen na PC benchmarku 09.08.2026 — za ventilator.**
+Visokorezolucioni PSD otisak + Ledoit–Wolf kovarijansa + lokalni centar daje
+**target AUC 0,864 ± 0,025** (k=20, 50 ponavljanja; pAUC 10 % = 0,657 ± 0,062).
+Stari pristup pod istim seedovima daje 0,669 ± 0,031.
+Detalji: [istrazivanje-psd-model.md](istrazivanje-psd-model.md).
+
+**Ne generalizuje na druge tipove mašina.** Na svih 7 mašina psd_shape pobjeđuje
+samo na 2, a po harmonijskoj sredini (0,537) je lošiji od mel osnove (0,573).
+Razlog je fizički: uske harmonijske linije ima rotaciona mašina, ne ventil ili
+klizač. Uređaj je namijenjen ventilatorima, pa odluka stoji, ali se tvrdnja piše
+kao „za ventilator". Tabela: [put-do-modela.md](put-do-modela.md), faza 4b.
 
 ### Novi pobjednički pristup
 
