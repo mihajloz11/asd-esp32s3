@@ -3,6 +3,14 @@
 Sažetak za nastavak rada u novoj sesiji. Detalji: [dnevnik-projekta.md](dnevnik-projekta.md),
 [problemi-i-rjesenja.md](problemi-i-rjesenja.md), [model-poboljsanje.md](model-poboljsanje.md).
 
+Nepromenjivi cilj i kriterij uspjeha zapisani su u
+[cilj-modela.md](cilj-modela.md): opšti normalni model iz mnogo ispravnih
+ventilatora, kratka lokalna kalibracija novog ventilatora i zatim potpuno
+samostalan dvostrani detektor na ESP32-S3, uz istraživački cilj AUC >= 0,80.
+
+Finalni izbor modela, rezervna alternativa i kriteriji prihvatanja na
+hardveru: [odluka-finalni-model.md](odluka-finalni-model.md).
+
 ## Projekat
 
 Master rad: detekcija anomalija u zvuku mašina (ASD) na ESP32-S3.
@@ -76,7 +84,8 @@ ocjenjuje, 20 ponavljanja. Mjera: AUC na novom ventilatoru.
 
 | Pristup | AUC |
 |---|---|
-| **sažetak log-mela + naučena kovarijansa** | **0,674** ✔ |
+| **visokorezolucioni PSD oblik + naučena kovarijansa** | **0,864** ✔ |
+| sažetak log-mela + naučena kovarijansa | 0,674 (stari rezultat) |
 | sažetak + dijagonalna kovarijansa | 0,595 |
 | top-k odstupanja umjesto zbira | 0,645 |
 | kalibracija po radnom režimu | 0,582 |
@@ -87,9 +96,35 @@ ocjenjuje, 20 ponavljanja. Mjera: AUC na novom ventilatoru.
 | autoenkoder (polazno stanje) | 0,451 |
 | finiji FFT / linearne trake | 0,501–0,643 |
 
-**0,8 NIJE dostignuto.** Deset pristupa staje na 0,674.
+**Cilj 0,8 je pređen na PC benchmarku 09.08.2026.** Visokorezolucioni PSD
+otisak + Ledoit–Wolf kovarijansa + lokalni centar daje **target AUC
+0,864 ± 0,025** sa k=20 i 50 ponavljanja. Stari pristup pod istim seedovima
+daje 0,669 ± 0,031. Detalji: [istrazivanje-psd-model.md](istrazivanje-psd-model.md).
 
-### Pobjednički pristup
+### Novi pobjednički pristup
+
+Otisak klipa = dugoročni spektar dobijen sa FFT 8192, sažet u 96
+logaritamskih traka 10–4000 Hz i normalizovan po ukupnom nivou. Kovarijansa se
+uči sa 990 ispravnih source snimaka, a na pločici se mjeri samo centar novog
+ventilatora. Matrica 96 × 96 zauzima 36 864 B; TFLite i neuronska mreža nisu
+potrebni. PC float32 provjera daje isti AUC kao float64.
+
+Float32 model header i C front-end/score su pripremljeni. Na realnom WAV-u
+PC↔C razlika feature-a je 9,54e-07, a score-a relativno 4,37e-07.
+
+**Spojeno na pločicu 09.08.2026** — mod `ASD_PSD_LIVE`
+([psd_live.c](../firmware/esp32s3_asd/main/psd_live.c)), radi cijeli lanac:
+čekanje → kalibracija na novom ventilatoru → samostalna detekcija sa alarmom.
+Izmjereno: **704 ms po klipu od 10 s** (rezerva 14,2×), `dropped=0`,
+PC↔uređaj na **živom mikrofonu 1,70e-06** (mod `ASD_PSD_VERIFY`).
+Svi unaprijed postavljeni kriteriji prihvatanja prošli —
+[hardver-verifikacija.md](hardver-verifikacija.md), [odluka-finalni-model.md](odluka-finalni-model.md).
+
+Preko zvučnika AUC je 0,716 (ne 0,864): akustički kanal pravi rasipanje reda
+veličine većeg od signala DCASE anomalije. Zaustavljena mašina se detektuje
+bez greške. Mjerodavan test ostaje stvarni ventilator sa stvarnim kvarom.
+
+### Prethodni pobjednički pristup
 
 Otisak klipa = sredina + std po svakoj mel traci. Kovarijansa se **uči
 unaprijed** sa 990 snimaka ispravnih ventilatora (traži stotine primjera).
@@ -98,13 +133,15 @@ Score = Mahalanobis od tog centra u naučenom obliku.
 
 Za ploču je **jednostavnije od postojećeg**: nema mreže, nema TFLite, nema
 arene — matrica u flešu i jedno množenje po prozoru umjesto 1055 ms inferencije.
-Front-end (log-mel) se ne dira, već je verifikovan.
+Za ovaj prethodni pristup front-end (log-mel) se nije dirao i bio je
+verifikovan. Novi PSD pobjednik mijenja front-end, pa traži novu PC↔C provjeru.
 
 ### Zaključci
 
 - Autoenkoder je pogrešan alat: ispravan 2,53 vs neispravan 2,57, razlika 1,6 %
 - Signal je u **vezama** između mel traka, ne u pojedinačnim (dijagonalna gubi 8 poena)
-- Dužina kalibracije nije usko grlo: 50 s → 0,631, 400 s → 0,639
+- Kod novog PSD modela: 50 s kalibracije → 0,834, 200 s → 0,864,
+  400 s → 0,875; dobitak poslije 200 s je mali
 - Naučena ugradnja pada jer mreža uči da razlikuje *tipove mašina*, pa namjerno
   odbacuje varijaciju *unutar* jedne mašine — a baš ta varijacija nosi kvar
 - DCASE anomalije su namjerno suptilne; stvarni kvar (zaglavljena lopatica,
@@ -112,16 +149,19 @@ Front-end (log-mel) se ne dira, već je verifikovan.
 
 ## Šta dalje
 
-1. **Prenijeti pobjednički pristup na ploču** (jednostavnije od postojećeg)
-2. **Izmjeriti sa stvarnim ventilatorom i stvarnim kvarom** — ta brojka je za
-   primjenu mjerodavnija od benchmark broja
-3. INA226: multimetar po `ina226-provjera.md`, popraviti ili zamijeniti → E5
-4. Otpornik 220–330 Ω → LED demo
-5. 5-seed treninzi za finalne tabele; pisanje poglavlja 2 i 3
+1. **Izmjeriti sa stvarnim ventilatorom i stvarnim kvarom** — to je sada glavni
+   otvoreni posao; benchmark i „preko zraka" brojke su zatvorene
+2. INA226: multimetar po `ina226-provjera.md`, popraviti ili zamijeniti → E5
+3. Otpornik 220–330 Ω → LED demo (kod već upravlja GPIO2)
+4. 5-seed treninzi za finalne tabele; pisanje poglavlja 2 i 3
+   (materijal: [put-do-modela.md](put-do-modela.md))
+
+*(Urađeno 09.08.2026: PSD modul spojen u `ASD_PSD_LIVE`, latencija/RAM/`dropped`
+izmjereni, PC↔uređaj zatvoren na živom mikrofonu.)*
 
 ## Zamke koje su već koštale vremena
 
-Puna lista u [problemi-i-rjesenja.md](problemi-i-rjesenja.md) (P1–P11). Najskuplje:
+Puna lista u [problemi-i-rjesenja.md](problemi-i-rjesenja.md) (P1–P12). Najskuplje:
 
 - **P2** promjena build moda bez `reconfigure` — build tiho ostane u starom modu
 - **P4** task watchdog upisuje tekst usred base64 toka → pokvaren WAV

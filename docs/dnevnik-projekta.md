@@ -508,3 +508,30 @@ odmah poslije kalibracije, iako je svirao isti normalan zvuk. Uzrok nije utvrđe
 - ESP-IDF: `%USERPROFILE%\esp\esp-idf` (v5.5); eval build: `set ASD_EVAL_MODE=1`
 - Eval poređenje: prepare_eval_clips.py → fatfsgen → parttool → serial capture
   → compare_eval.py
+
+---
+
+## 09.08.2026 — Istraživački proboj: visokorezolucioni PSD prešao AUC 0,80
+
+Nakon pregleda DCASE 2026 rezultata i novih podopsežnih/statističkih ASD radova
+testiran je otisak prilagođen fizici ventilatora: Welch spektar sa FFT 8192,
+96 logaritamskih traka 10–4000 Hz, Ledoit–Wolf kovarijansa iz normalnog source
+korpusa i lokalni centar novog ventilatora.
+
+Sa k=20, 50 poštenih kalibracionih podjela i bez target anomalija u učenju ili
+izboru feature-a dobijeno je **target AUC 0,864 ± 0,025**. Stari log-mel
+kovarijansni pristup pod istim seedovima daje 0,669 ± 0,031. Rezultat ostaje
+iznad 0,80 i sa samo 5 kalibracionih klipova (0,834 ± 0,047).
+
+Float32 daje identičan AUC. Model je 96 × 96 matrica (36 864 B), 768 B source
+normalizacije i 384 B lokalnog centra. Još nisu urađeni C front-end, PC↔C test,
+on-device mjerenje ni konačna normal-only kalibracija praga. Kod je u
+`pc/tools/bench_periodicity.py`, a puna analiza u `docs/istrazivanje-psd-model.md`.
+
+U istom bloku eksportovan je normal-only float32 model iz tačno 990 source
+normalnih klipova (`models/fan_psd_shape_meta.json` + ignorisani NPZ) i generisan
+`psd_model_data.h`. Napravljen je izolovani čisti C FFT/PSD/score modul. Na
+realnom WAV-u maksimalna PC↔C razlika feature-a je 9,54e-07, a relativna razlika
+score-a 4,37e-07. Novi testovi i cijeli postojeći paket prolaze: **11/11**.
+Modul još nije dodat u CMake/`app_main`; to je namjerno odgođeno do posebnog
+build moda i mjerenja RAM-a/latencije, da se postojeći živi demo ne pokvari.

@@ -1,5 +1,9 @@
 # Poboljšanje modela — šta je probano i šta je ispalo
 
+Konačni sistemski cilj, pravilo poštenog mjerenja i cilj AUC >= 0,80 definisani
+su u [cilj-modela.md](cilj-modela.md). Taj cilj ima prednost nad pojedinačnim
+eksperimentom ili trenutno najboljim rezultatom.
+
 > Polazno stanje: autoenkoder daje AUC 0,45–0,60 na ventilatoru, što je blizu
 > pogađanja i neupotrebljivo. Ovaj dokument bilježi **svaki** pokušaj da se to
 > popravi, uključujući one koji nisu uspjeli, sa izmjerenim brojevima.
@@ -25,17 +29,33 @@ Skript: [`pc/tools/bench_adapt.py`](../pc/tools/bench_adapt.py) i srodni.
 
 | # | Pristup | AUC | Odluka |
 |---|---|---|---|
-| 1 | **Sažetak log-mela + naučena kovarijansa** | **0,674** | ✔ najbolje |
-| 2 | Sažetak + dijagonalna kovarijansa | 0,595 | veze između traka nose signal |
-| 3 | Klasifikator brzina ventilatora | 0,530 | premalo klasa, uči napamet |
-| 4 | Naučena ugradnja preko svih 7 mašina | 0,495 | uči da ignoriše ono što treba |
-| 5 | Autoenkoder (polazno stanje) | 0,451 | referenca |
+| 1 | **Visokorezolucioni PSD oblik + naučena kovarijansa** | **0,864** | ✔ novi pobjednik, cilj 0,80 pređen |
+| 2 | Sažetak log-mela + naučena kovarijansa | 0,674 | stari pobjednik |
+| 3 | Sažetak + dijagonalna kovarijansa | 0,595 | veze između traka nose signal |
+| 4 | Klasifikator brzina ventilatora | 0,530 | premalo klasa, uči napamet |
+| 5 | Naučena ugradnja preko svih 7 mašina | 0,495 | uči da ignoriše ono što treba |
+| 6 | Autoenkoder (polazno stanje) | 0,451 | referenca |
 
-**Napredak: 0,451 → 0,674, dvadeset dva poena.**
+**Napredak: 0,451 → 0,864, više od četrdeset AUC poena.** Detalji i ograničenja
+novog mjerenja su u [istrazivanje-psd-model.md](istrazivanje-psd-model.md).
 
 ---
 
-## Šta je pobijedilo i zašto
+## Novi pobjednik: visokorezolucioni PSD otisak
+
+Ventilator je periodična mašina, pa se kvar bolje pokazao u uskim harmonijskim
+linijama nego u širokim mel trakama. Novi otisak koristi FFT 8192, 96 traka od
+10 do 4000 Hz, Ledoit–Wolf kovarijansu naučenu samo iz normalnih source klipova
+i lokalno izmjeren centar novog ventilatora.
+
+Sa k=20 i 50 ponavljanja: **target AUC 0,864 ± 0,025**. Stari 1280-dimenzioni
+pristup pod istim seedovima daje 0,669 ± 0,031. Float32 ne mijenja AUC, a cijela
+matrica zauzima 36 864 B. Prijenos u firmware i stvarno mjerenje na pločici još
+nisu završeni.
+
+---
+
+## Prethodni pobjednik i zašto je bio bolji od autoenkodera
 
 Od svakog klipa se računa **otisak**: sredina i standardna devijacija po svakoj
 od 128 mel traka, ukupno 256 brojeva po klipu (odnosno 1280 nad postojećim
@@ -73,7 +93,7 @@ nemoguća — kao čovjek visok 150 cm i težak 120 kg.
 | Bogatiji sažetak (percentili, dinamika) | 0,578 | više dimenzija, lošija procjena kovarijanse |
 | Kalibracija po radnom režimu (k-means) | 0,582 | mali dobitak, ne mijenja sliku |
 | Najjača odstupanja umjesto zbira | 0,645 | kvar nije lokalizovan u par traka |
-| Finiji FFT (4096) i linearne trake | 0,501–0,643 | postojeći front-end je već bolji |
+| Finiji FFT (4096) i linearne trake | 0,501–0,643 | ta konkretna rezolucija/agregacija nije bila dovoljna; kasniji FFT 8192 PSD jeste |
 | Naučena ugradnja preko svih mašina | 0,495 | vidi dolje |
 
 ### Zašto je naučena ugradnja pala
@@ -91,27 +111,28 @@ pristup je dao 0,495.)*
 
 ---
 
-## Šta ovo znači za ploču
+## Šta novi PSD model znači za ploču
 
-Pobjednički pristup je **jednostavniji od postojećeg**, ne složeniji:
+Novi pobjednički pristup je **jednostavniji od autoenkodera**, ali traži novi
+visokorezolucioni spektralni front-end:
 
-| | Autoenkoder (sad) | Kovarijansa (predlog) |
+| | Autoenkoder (sad) | PSD + kovarijansa (predlog) |
 |---|---|---|
-| Model u flešu | 428 KB binarke, TFLM arena 7960 B | matrica + centar |
-| Račun po prozoru | 1055 ms inferencije | jedno množenje vektora matricom |
+| Model u flešu | 428 KB binarke, TFLM arena 7960 B | 96 × 96 matrica 36 864 B + centar |
+| Račun po klipu | 1055 ms inferencije poslije log-mela | 38 FFT-ova 8192 + 9216 množenja za score |
 | Zavisnosti | TFLite Micro, esp-nn | ništa, čist C |
-| Kalibracija na licu mjesta | samo prag | centar (256 brojeva) + prag |
+| Kalibracija na licu mjesta | samo prag | centar (96 brojeva) + prag |
 
-Front-end se **ne dira** — log-mel već postoji i verifikovan je na 7,99e-05
-protiv PC-a.
+Front-end se **mijenja**. Postojeća log-mel verifikacija 7,99e-05 ne dokazuje
+ispravnost PSD toka; moraju se napraviti novi test-vektori i nova PC↔C provjera.
 
 ---
 
-## Iskrena granica
+## Iskrena trenutna granica
 
-**0,8 nije dostignuto.** Deset različitih pristupa staje na 0,674, i to nije
-stvar podešavanja nego granice onoga što se dâ izvući iz ovog front-enda na
-ovom skupu.
+**Cilj 0,8 je dostignut na PC benchmarku: 0,864 ± 0,025.** Nije još dostignut
+cilj potpuno gotovog samostalnog uređaja, jer PSD front-end nije prenesen na
+pločicu i normal-only prag još ima previše lažnih alarma bez vremenske potvrde.
 
 Bitan kontekst: DCASE anomalije su **namjerno suptilne**, to je istraživački
 izazov. Na živoj ploči, kad je mašina stala, score je skočio sa 10 na 59 i
@@ -123,9 +144,8 @@ DCASE anomalija i treba ga izmjeriti direktno, sa pravim ventilatorom.
 
 ## Šta dalje
 
-1. Prenijeti pobjednički pristup na ploču (jednostavnije nego postojeće stanje)
+1. Prenijeti PSD pristup na ploču i ponoviti PC↔C, latenciju i `dropped=0`
 2. Izmjeriti sa **stvarnim ventilatorom i stvarnim kvarom** — ta brojka je za
    primjenu mjerodavnija od benchmark broja
-3. Ako je za rad potreban veći benchmark broj, preostaje ozbiljan istraživački
-   posao: kontrastivno učenje sa augmentacijama, ArcFace margine, ansambli.
-   Bez garancije, i van obima onoga što je dosad probano.
+3. Završiti normal-only prag i vremensku potvrdu alarma; AUC sam ne određuje
+   dobar radni prag.

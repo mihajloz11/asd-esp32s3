@@ -11,6 +11,9 @@ models/*.keras
 models/*.tflite
 results/*.npy
 results/features/
+# Demo zvuk se pravi iz DCASE skupa (psd_live_demo.py); manifest sa spiskom
+# klipova IDE u git, sami WAV-ovi ne.
+results/demo_audio/*.wav
 
 # Rezultati koji IDU u git: results/*.csv, results/*.png, models/*.json
 

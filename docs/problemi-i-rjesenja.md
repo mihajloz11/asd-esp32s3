@@ -26,6 +26,7 @@
 | [P9](#p9) | 06.08 | I2C dijagnostika | Tri testa zaredom dala pogrešan zaključak | riješeno (metodološka pouka) |
 | [P10](#p10) | 08.08 | kalibracija | Kalibracija uči ventilator laptopa kao normalno stanje | riješeno (čekanje da se okruženje umiri) |
 | [P11](#p11) | 08.08 | detekcija | Jednostrani prag ne vidi pola stvarnih promjena | riješeno (dvostrani opseg) |
+| [P12](#p12) | 09.08 | PC alati | Windows kodna stranica ruši BHS Unicode statusni ispis | riješeno (ASCII status) |
 
 ---
 
@@ -422,6 +423,60 @@ anomalija, a prelazi se poklapaju sa početkom i krajem reprodukcije u sekundu.
 **Pouka za rad.** Pretpostavka „anomalija = veća greška" ne važi kad se model
 raspoređuje u okruženje koje se razlikuje od trening domena. Prag mora biti
 dvostran, ili se referentno stanje mora poklapati sa domenom treninga.
+
+---
+
+<a name="p12"></a>
+## P12 — Windows konzola zaustavila eksperiment na BHS Unicode ispisu
+
+**Datum:** 09.08.2026 · **Oblast:** PC alati · **Status:** riješeno
+
+**Simptom.** `bench_periodicity.py` se zaustavio prije izdvajanja prvog feature-a
+sa `UnicodeEncodeError: 'charmap' codec can't encode character '\u010d'`.
+
+**Uzrok.** Aktivna Windows konzola koristila je kodnu stranicu koja ne može
+kodirati slovo `č` iz statusnog ispisa. Podaci, WAV fajlovi i računanje nisu bili
+problem; pad se desio u prvom `print()` pozivu.
+
+**Rješenje.** Statusni ispis alata koristi ASCII tekst. UTF-8 ostaje eksplicitno
+naveden za JSON rezultate i dokumentaciju.
+
+**Dokaz.** Skript poslije izmjene prolazi `py_compile` i kreće u izdvajanje
+periodičnih feature-a iz cijelog skupa.
+
+**Pouka.** Batch eksperimenti na Windowsu ne smiju zavisiti od aktivne konzolne
+kodne stranice. Statusni izlaz treba biti ASCII ili proces mora eksplicitno
+postaviti UTF-8 prije prvog ispisa.
+
+---
+
+<a name="p13"></a>
+## P13 — Spojeni DCASE klipovi prave lažnu anomaliju na šavu
+
+**Datum:** 09.08.2026 · **Oblast:** živi demo · **Status:** riješeno
+
+**Simptom.** U prvom akustičkom demou uređaj je prijavio veliko odstupanje
+(score 3881 pri pragu 1887) usred dionice koja je trebalo da bude **normalan**
+rad. Isto se vidjelo i u kalibraciji: rasipanje LOO score-ova bilo je 53 %
+relativno (sredina 1132, sd 599), mnogo veće nego na PC-u.
+
+**Uzrok.** Demo zvuk je napravljen nadovezivanjem DCASE klipova od po 10 s, a
+ti klipovi nisu iz istog radnog režima — ime nosi atribut `spd_1`, `spd_2` ili
+`spd_3`. Na šavu dva klipa različite brzine zvuk **stvarno** naglo promijeni
+karakter. Detektor je to ispravno prijavio; greška je bila u montaži, ne u
+modelu. Uz to prozori uređaja (9,98 s + režija) ne padaju na granice klipova,
+pa svaki šav upadne usred nekog prozora.
+
+**Rješenje.** `psd_live_demo.py --speed spd_1` bira klipove jedne brzine za
+kalibraciju i za normalnu dionicu. To odgovara i stvarnoj primjeni: ventilator
+u ustaljenom režimu.
+
+**Dokaz.** Vidi [hardver-verifikacija.md](hardver-verifikacija.md), poređenje
+prolaza 1 (miješane brzine) i prolaza 2 (jedna brzina).
+
+**Pouka.** Sintetički demo materijal mora biti provjeren isto kao i kod. Kad
+uređaj prijavi anomaliju, prvo pitanje je da li je zvuk stvarno bio normalan —
+ovdje nije bio.
 
 ---
 

@@ -28,6 +28,8 @@
 #include "ina226_test.h"
 #include "live_capture.h"
 #include "live_adapt.h"
+#include "psd_live.h"
+#include "psd_verify.h"
 
 static const char *TAG = "asd";
 
@@ -100,6 +102,20 @@ void app_main(void) {
     ESP_ERROR_CHECK(audio_i2s_init());
     ESP_ERROR_CHECK(audio_i2s_start());
     mic_test_run();
+    while (1) vTaskDelay(portMAX_DELAY);
+#endif
+
+    /* Samostalni PSD detektor (finalni model) — set ASD_PSD_LIVE=1.
+     * Stoji PRIJE tflm_init jer ovaj tok ne koristi neuronsku mrezu: nema
+     * TFLM arene ni modela u RAM-u, samo matrica 96x96 iz fleša. */
+#if defined(ASD_PSD_LIVE) || defined(ASD_PSD_VERIFY)
+    ESP_ERROR_CHECK(audio_i2s_init());
+    ESP_ERROR_CHECK(audio_i2s_start());
+#ifdef ASD_PSD_VERIFY
+    psd_verify_run();
+#else
+    psd_live_run();
+#endif
     while (1) vTaskDelay(portMAX_DELAY);
 #endif
 
