@@ -10,6 +10,8 @@ samostalan dvostrani detektor na ESP32-S3, uz istraživački cilj AUC >= 0,80.
 
 Finalni izbor modela, rezervna alternativa i kriteriji prihvatanja na
 hardveru: [odluka-finalni-model.md](odluka-finalni-model.md).
+Otpornost na buku okoline (koraci, razgovor) i dvomikrofonski pristup:
+[plan-otpornost-na-buku.md](plan-otpornost-na-buku.md).
 
 ## Projekat
 

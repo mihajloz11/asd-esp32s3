@@ -1,5 +1,11 @@
 # Future work — ideje idu OVDJE, ne u kod (pravilo E4 iz plana)
 
+> Otpornost na buku okoline (koraci, razgovor) ima **svoj plan** sa izmjerenim
+> polazištem i eksperimentom koji odlučuje šta vrijedi ugraditi:
+> [docs/plan-otpornost-na-buku.md](docs/plan-otpornost-na-buku.md).
+> Tamo je i nalaz da su DCASE 2026 snimci **dvokanalni**, a da obrada koristi
+> samo prvi kanal — pa se dvomikrofonski pristup može isprobati bez novog hardvera.
+
 - [ ] QAT ako PTQ degradira >5 p.p. na nekoj mašini (fallback A3)
 - [ ] Depthwise-conv AE na log-mel slici (OutlierNets stil, <10 KB)
 - [ ] Dvokanalni noise-aware pristup (DCASE 2026 blizu/daleko parovi)
