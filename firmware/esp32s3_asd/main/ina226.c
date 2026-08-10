@@ -63,11 +63,12 @@ static esp_err_t write_reg(uint8_t reg, uint16_t val) {
     return i2c_master_transmit(dev, tx, sizeof(tx), 200);
 }
 
-int ina226_bus_scan(void) {
+int ina226_bus_scan(uint8_t *first_address) {
     if (bus_up() != ESP_OK) {
         ESP_LOGE(TAG, "ne mogu da podignem I2C bus");
         return -1;
     }
+    if (first_address) *first_address = 0;
     int found = 0;
     ESP_LOGI(TAG, "skeniram I2C bus (SDA=%d SCL=%d)...", PIN_I2C_SDA, PIN_I2C_SCL);
     /* Drajver loguje gresku za svaku neuspjelu adresu — 112 linija smeca po
@@ -75,6 +76,7 @@ int ina226_bus_scan(void) {
     esp_log_level_set("i2c.master", ESP_LOG_NONE);
     for (uint8_t a = 0x08; a < 0x78; a++) {
         if (i2c_master_probe(bus, a, 50) == ESP_OK) {
+            if (!found && first_address) *first_address = a;
             ESP_LOGI(TAG, "  nadjen uredjaj na 0x%02X", a);
             found++;
         }

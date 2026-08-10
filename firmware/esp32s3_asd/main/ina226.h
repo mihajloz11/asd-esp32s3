@@ -42,9 +42,9 @@ esp_err_t ina226_bus_mv(int32_t *out);
 esp_err_t ina226_current_ua(int32_t *out);
 esp_err_t ina226_power_uw(int32_t *out);
 
-/* Skenira I2C bus i ispisuje nađene adrese. Vraća broj nađenih uređaja.
- * Poziva se prije ina226_init() — sam podiže bus ako već nije podignut. */
-int ina226_bus_scan(void);
+/* Skenira I2C bus i ispisuje nađene adrese. Ako first_address nije NULL,
+ * upisuje prvu adresu ili 0 kada nema uređaja. Vraća broj nađenih uređaja. */
+int ina226_bus_scan(uint8_t *first_address);
 
 /* Dijagnostika: skenira na proizvoljnom paru pinova (odvojen I2C port), pa
  * briše bus. Služi da se zamijenjene SDA/SCL utvrde bez prekopavanja žica. */
