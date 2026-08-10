@@ -337,7 +337,7 @@ umjerena jačina zvuka bitni za mirnu kalibraciju.
 
 1. **Test sa stvarnim ventilatorom i fizičkim kvarom** — glavni otvoreni posao.
 2. Duža kalibracija (k=20 → 200 s) na uređaju, ako se traži još mirniji prag.
-3. LED (fali otpornik 220–330 Ω) i INA226 (u kvaru) — vidi handoff.
+3. LED (fali otpornik 220–330 Ω) i INA226 E5 strujni put — vidi handoff.
 
 ## Kako ponoviti
 

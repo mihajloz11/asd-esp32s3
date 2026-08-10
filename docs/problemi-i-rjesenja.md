@@ -22,7 +22,7 @@
 | [P5](#p5) | 06.08 | alat | Skript je snimio neispravan WAV bez ijedne greške | riješeno |
 | [P6](#p6) | 06.08 | I2S | Rizik C1: da li je `>>14` tačan shift za INMP441 | zatvoreno, potvrđeno |
 | [P7](#p7) | 06.08 | I2S | Upozorenje `dma frame num ... limited to 1023` | benigno, dokumentovano |
-| [P8](#p8) | 06.08 | I2C / INA226 | Senzor se ne javlja; obje linije tvrdo na 3V3 | **otvoreno — čeka provjeru žica** |
+| [P8](#p8) | 06.08 | I2C / INA226 | Senzor se ne javlja; obje linije tvrdo na 3V3 | riješeno (pogrešno spojen GND) |
 | [P9](#p9) | 06.08 | I2C dijagnostika | Tri testa zaredom dala pogrešan zaključak | riješeno (metodološka pouka) |
 | [P10](#p10) | 08.08 | kalibracija | Kalibracija uči ventilator laptopa kao normalno stanje | riješeno (čekanje da se okruženje umiri) |
 | [P11](#p11) | 08.08 | detekcija | Jednostrani prag ne vidi pola stvarnih promjena | riješeno (dvostrani opseg) |
@@ -256,7 +256,14 @@ validirani u E4 mjerenjima.
 <a name="p8"></a>
 ## P8 — INA226 se ne javlja: obje I2C linije su tvrdo vezane na 3V3
 
-**Datum:** 06.08.2026 · **Oblast:** I2C bring-up · **Status:** OTVORENO — čeka provjeru žica
+**Datum:** 06.08.2026 · **Oblast:** I2C bring-up · **Status:** RIJEŠENO 10.08.2026
+
+**Konačni uzrok.** GND modula bio je pogrešno spojen na strani ESP32-S3, pa su
+SDA i SCL ostajali na 3,3 V i izgledali kao da su kratko spojeni na VCC.
+Izolacioni testovi sa svakom žicom posebno pokazali su da GPIO8/9, jumperi i
+sam modul rade; kvar se pojavljivao tek dodavanjem pogrešne GND veze. Poslije
+ispravke senzor odgovara na adresi `0x44`, vraća ID `0x5449`/`0x2260`, prihvata
+config `0x4527` i kalibraciju `1024`.
 
 **Simptom.** Poslije spajanja INA226 sa 4 žice (VCC, GND, SDA→GPIO 8, SCL→GPIO 9),
 skener ne nalazi nijedan uređaj ni na jednoj od 112 adresa. Drajver za svaku

@@ -32,7 +32,7 @@ stvaran kvar i stvarnu buku**.
 
 - Ponašanje uz **fizički ventilator** (dosad se puštao snimak preko zvučnika).
 - Lažni alarmi na **duže vrijeme** (najduži test je bio ~6 minuta).
-- **Potrošnja** (E5) — INA226 u kvaru.
+- **Potrošnja** (E5) — INA226 I2C je potvrđen; strujni put još nije spojen.
 - Da model radi za bilo šta osim ventilatora (izmjereno da **ne** radi).
 
 ---
@@ -138,9 +138,9 @@ kraju dvokanalno, jer DIRAM je već na 86 %.
 
 ### D. Fizički uređaj i mjerenja koja fale
 
-1. INA226: multimetar po [ina226-provjera.md](ina226-provjera.md) → popravka ili
-   zamjena (~300 din) → **E5 potrošnja**. Bez toga je Pareto analiza iz plana
-   rada nepotpuna (tri od četiri ose).
+1. INA226: I2C i registri su potvrđeni → spojiti IN+/IN− i VBS prema
+   [šemi povezivanja](sema-povezivanja.md) → izmjeriti **E5 potrošnju**.
+   Bez toga je Pareto analiza iz plana rada nepotpuna (tri od četiri ose).
 2. Otpornik 220–330 Ω → LED (kod već upravlja GPIO2).
 3. Perfboard umjesto jumper žica, rasterećenje kablova, fotografija i šema.
 

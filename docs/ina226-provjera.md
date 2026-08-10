@@ -1,11 +1,14 @@
 # INA226 — šta provjeriti (lista za multimetar)
 
-> Stanje 06.08.2026: senzor se ne javlja na I2C busu. Softverskom dijagnostikom
-> utvrđeno da su **SDA i SCL na modulu nisko-omski vezani na VCC**. Puni lanac
-> dokaza: [problemi-i-rjesenja.md → P8](problemi-i-rjesenja.md#p8).
+> **Riješeno 10.08.2026:** GND je bio pogrešno spojen na strani ESP32-S3, zbog
+> čega su SDA i SCL ostajali na 3,3 V. Modul nije bio pokvaren.
 >
-> Ostalo je samo da se izmjeri **je li to kalajni most ili mrtav čip**.
-> Sve ostalo je isključeno — pinovi ploče su ispravni, žice su u pravim pinovima.
+> Poslije ispravke GND veze potvrđeno je: SDA/SCL se normalno obaraju, INA226
+> odgovara na **0x44**, ID registri su `0x5449`/`0x2260`, a konfiguracija
+> `0x4527` i kalibracija `1024` ostaju upisane. Sa nepovezanim IN+/IN− izmjeren
+> je očekivani šum šanta od −10 do −7 µV.
+>
+> Postupak ispod ostaje kao dijagnostička procedura za buduće probleme.
 
 ---
 

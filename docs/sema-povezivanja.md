@@ -41,7 +41,7 @@ napajanjem** ploče. Dvije veze: mjerna (shunt) + I2C (očitavanje).
 | **VCC** | 3V3 (S3) | napajanje logike samog senzora |
 | **GND** | GND (zajednička masa sa izvorom i S3!) | |
 | **SDA** | **GPIO 8** | I2C (moduli imaju pull-up otpornike na sebi) |
-| **SCL** | **GPIO 9** | I2C, adresa default 0x40 (A0=A1=GND) |
+| **SCL** | **GPIO 9** | I2C, ovaj modul je potvrđen na adresi `0x44` |
 | **IN+** | + izvora 3.3 V | izvor: lab. napajanje / baterija + regulator |
 | **IN−** | **3V3 pin ploče S3** | + **≥470 µF elektrolit** između IN− i GND (rizik C7 — brownout) |
 

@@ -31,14 +31,13 @@ Dataset DCASE 2026 dev, 7 mašina, u `data/` (nije u gitu).
 |---|---|
 | ESP32-S3-DEV-KIT-NXRX (N32R16V, 32 MB fleš, 16 MB PSRAM) | radi, COM4 |
 | INMP441: BCLK→GPIO4, WS→GPIO5, SD→GPIO6, VDD→3V3, L/R→GND | **radi** |
-| INA226 (SDA→GPIO8, SCL→GPIO9) | **KVAR** — SDA i SCL nisko-omski na VCC |
+| INA226 (SDA→GPIO8, SCL→GPIO9) | **radi** — adresa `0x44`, ID i registri potvrđeni |
 | LED | nije spojena, fali otpornik 220–330 Ω |
 | AMS1117, kondenzatori, ploča 4×6 | faza 2 |
 
-INA226 blokira eksperiment E5 (energija). Utvrđeno eliminacijom: pinovi ploče
-ispravni, žice na pravim pinovima, nisu zamijenjene ni kratko spojene,
-pull-upovi 10 kΩ ispravni, a kad se sve žice skinu sa modula pinovi propadnu u
-slobodno stanje. Lista za multimetar: [ina226-provjera.md](ina226-provjera.md).
+INA226 I2C lanac je potvrđen 10.08.2026. Uzrok ranijeg kvara bio je pogrešno
+spojen GND, ne modul. Preostaje E5 povezivanje strujnog puta preko IN+/IN− i
+VBS prema [šemi povezivanja](sema-povezivanja.md).
 
 ## Firmware — build modovi
 
