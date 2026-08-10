@@ -174,7 +174,6 @@ valveEmu_tiny64_s0,valveEmu,tiny64,0,mahala,int8,93096,0.6078,0.6476,0.5321,0.59
 valveEmu_tiny32_s0,valveEmu,tiny32,0,mahala,int8,44840,0.5686,0.6394,0.5216,0.5725
 valveEmu_tiny16_s0,valveEmu,tiny16,0,mahala,int8,22100,0.5324,0.6184,0.5189,0.5533
 valveEmu_tiny32b4_s0,valveEmu,tiny32b4,0,mahala,int8,44564,0.5872,0.6694,0.5274,0.589
-fan_tiny16_s1,fan,tiny16,1,mse,fp32,22100,0.5954,0.4652,0.5126,0.519
 fan_baseline_s1,fan,baseline,1,mse,fp32,269992,0.6478,0.4592,0.5416,0.5388
 fan_baseline_s1,fan,baseline,1,mse,fp32_tflite,269992,0.6478,0.4592,0.5416,0.5388
 fan_baseline_s1,fan,baseline,1,mse,int8,269992,0.6508,0.4562,0.5411,0.5379
