@@ -1,0 +1,23 @@
+{
+  "schema_version": "asd-quality-policy-v1.0.0",
+  "locked_utc": "2026-08-09T00:00:00+02:00",
+  "scope": "sensor and calibration quality only; not an anomaly threshold",
+  "target_anomalies_used": false,
+  "policy": {
+    "level_floor_dbfs": -60.0,
+    "level_floor_origin": "pre-existing psd_live.c engineering gate",
+    "clip_level_pcm16": 32000,
+    "clip_level_origin": "pre-existing mic_test.c engineering gate",
+    "max_clip_fraction": 0.001,
+    "max_zero_fraction": 0.999,
+    "max_stuck_fraction": 0.999,
+    "require_exact_read": true,
+    "max_dropped_delta": 0,
+    "require_finite_metrics_and_features": true
+  },
+  "pending_normal_only_gates": {
+    "tonalness": "instrumented only; no accept/reject threshold",
+    "loo_spread": "instrumented only; no accept/reject threshold"
+  },
+  "change_rule": "Any threshold change requires a new schema version and evidence from source-normal or target-normal data only before target-anomaly evaluation."
+}
