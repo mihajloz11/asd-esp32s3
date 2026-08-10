@@ -1,0 +1,98 @@
+2026-08-09T20:38:06.883+00:00	1.140	I (1101) esp_psram: SPI SRAM memory test OK
+2026-08-09T20:38:06.893+00:00	1.156	I (1110) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
+2026-08-09T20:38:06.894+00:00	1.156	I (1110) cpu_start: Pro cpu start user code
+2026-08-09T20:38:06.896+00:00	1.156	I (1110) cpu_start: cpu freq: 240000000 Hz
+2026-08-09T20:38:06.898+00:00	1.156	I (1112) app_init: Application information:
+2026-08-09T20:38:06.903+00:00	1.172	I (1116) app_init: Project name:     esp32s3_asd
+2026-08-09T20:38:06.909+00:00	1.172	I (1120) app_init: App version:      on-device-verified-29-g1c6ea37-
+2026-08-09T20:38:06.914+00:00	1.172	I (1126) app_init: Compile time:     Aug  9 2026 15:46:34
+2026-08-09T20:38:06.918+00:00	1.187	I (1132) app_init: ELF file SHA256:  4031440cb...
+2026-08-09T20:38:06.953+00:00	1.218	I (1136) app_init: ESP-IDF:          v5.5.5-34-g21f3b71cbbf
+2026-08-09T20:38:06.955+00:00	1.218	I (1141) efuse_init: Min chip rev:     v0.0
+2026-08-09T20:38:06.956+00:00	1.218	I (1145) efuse_init: Max chip rev:     v0.99 
+2026-08-09T20:38:06.958+00:00	1.218	I (1149) efuse_init: Chip rev:         v0.2
+2026-08-09T20:38:06.961+00:00	1.218	I (1153) heap_init: Initializing. RAM available for dynamic allocation:
+2026-08-09T20:38:06.963+00:00	1.218	I (1160) heap_init: At 3FCCFA68 len 00019CA8 (103 KiB): RAM
+2026-08-09T20:38:06.964+00:00	1.218	I (1165) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+2026-08-09T20:38:06.965+00:00	1.234	I (1170) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+2026-08-09T20:38:06.967+00:00	1.234	I (1175) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+2026-08-09T20:38:06.971+00:00	1.234	I (1181) esp_psram: Adding pool of 16384K of PSRAM memory to heap allocator
+2026-08-09T20:38:06.981+00:00	1.250	W (1188) spi_flash: Octal flash chip is using but dio mode is selected, will automatically switch to Octal mode
+2026-08-09T20:38:06.983+00:00	1.250	I (1197) spi_flash: detected chip: mxic (opi)
+2026-08-09T20:38:06.986+00:00	1.250	I (1201) spi_flash: flash io: opi_str
+2026-08-09T20:38:06.993+00:00	1.250	I (1205) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+2026-08-09T20:38:07.000+00:00	1.265	I (1211) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+2026-08-09T20:38:07.003+00:00	1.265	I (1218) main_task: Started on CPU0
+2026-08-09T20:38:07.011+00:00	1.265	I (1218) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+2026-08-09T20:38:07.014+00:00	1.281	I (1228) main_task: Calling app_main()
+2026-08-09T20:38:07.017+00:00	1.281	I (1228) asd: PSRAM: 16777216 B
+2026-08-09T20:38:07.020+00:00	1.281	I (1238) asd: free heap: 16921839 B
+2026-08-09T20:38:07.028+00:00	1.297	W (1238) i2s_common: dma frame num is out of dma buffer size, limited to 1023
+2026-08-09T20:38:07.696+00:00	1.953	I (1918) psdlive: === SAMOSTALNI PSD DETEKTOR ===
+2026-08-09T20:38:07.698+00:00	1.953	I (1918) psdlive: model: 96 traka, matrica 96x96 iz flesa, naucen na 990 ispravnih ventilatora
+2026-08-09T20:38:07.703+00:00	1.968	I (1918) psdlive: 1) pusti ventilator koji radi NORMALNO
+2026-08-09T20:38:07.709+00:00	1.968	I (1918) psdlive: 2) kalibracija 10 x 10 s = 100 s - ne mijenjaj nista
+2026-08-09T20:38:07.715+00:00	1.984	I (1928) psdlive: 3) poslije toga izazovi kvar - uredjaj radi sam
+2026-08-09T20:38:07.720+00:00	1.984	WAIT 1/60 score=-16.92 spread=0.000 nivo=-16.9 dBFS cujem
+2026-08-09T20:38:07.725+00:00	1.984	WAIT 2/60 score=-38.85 spread=0.000 nivo=-38.9 dBFS cujem
+2026-08-09T20:38:07.863+00:00	2.125	WAIT 3/60 score=-63.23 spread=0.000 nivo=-63.2 dBFS tiho
+2026-08-09T20:38:08.118+00:00	2.375	WAIT 4/60 score=-63.85 spread=0.000 nivo=-63.8 dBFS tiho
+2026-08-09T20:38:08.375+00:00	2.640	WAIT 5/60 score=-63.51 spread=0.000 nivo=-63.5 dBFS tiho
+2026-08-09T20:38:08.630+00:00	2.890	WAIT 6/60 score=-64.83 spread=0.000 nivo=-64.8 dBFS tiho
+2026-08-09T20:38:08.886+00:00	3.140	WAIT 7/60 score=-60.75 spread=0.000 nivo=-60.8 dBFS tiho
+2026-08-09T20:38:09.141+00:00	3.406	WAIT 8/60 score=-59.22 spread=0.000 nivo=-59.2 dBFS cujem
+2026-08-09T20:38:09.398+00:00	3.656	WAIT 9/60 score=-62.10 spread=0.000 nivo=-62.1 dBFS tiho
+2026-08-09T20:38:09.653+00:00	3.922	WAIT 10/60 score=-59.86 spread=0.000 nivo=-59.9 dBFS cujem
+2026-08-09T20:38:09.909+00:00	4.172	WAIT 11/60 score=-64.18 spread=0.000 nivo=-64.2 dBFS tiho
+2026-08-09T20:38:10.165+00:00	4.422	WAIT 12/60 score=-61.62 spread=0.000 nivo=-61.6 dBFS tiho
+2026-08-09T20:38:10.421+00:00	4.687	WAIT 13/60 score=-64.79 spread=0.000 nivo=-64.8 dBFS tiho
+2026-08-09T20:38:10.677+00:00	4.937	WAIT 14/60 score=-64.25 spread=0.000 nivo=-64.3 dBFS tiho
+2026-08-09T20:38:10.931+00:00	5.187	WAIT 15/60 score=-64.05 spread=0.000 nivo=-64.1 dBFS tiho
+2026-08-09T20:38:11.188+00:00	5.453	WAIT 16/60 score=-64.97 spread=0.000 nivo=-65.0 dBFS tiho
+2026-08-09T20:38:11.443+00:00	5.703	WAIT 17/60 score=-64.29 spread=0.000 nivo=-64.3 dBFS tiho
+2026-08-09T20:38:11.700+00:00	5.968	WAIT 18/60 score=-64.93 spread=0.000 nivo=-64.9 dBFS tiho
+2026-08-09T20:38:11.955+00:00	6.218	WAIT 19/60 score=-65.19 spread=0.000 nivo=-65.2 dBFS tiho
+2026-08-09T20:38:12.211+00:00	6.468	WAIT 20/60 score=-64.47 spread=0.000 nivo=-64.5 dBFS tiho
+2026-08-09T20:38:12.466+00:00	6.734	WAIT 21/60 score=-66.41 spread=0.000 nivo=-66.4 dBFS tiho
+2026-08-09T20:38:12.721+00:00	6.984	WAIT 22/60 score=-65.39 spread=0.000 nivo=-65.4 dBFS tiho
+2026-08-09T20:38:12.978+00:00	7.234	WAIT 23/60 score=-65.01 spread=0.000 nivo=-65.0 dBFS tiho
+2026-08-09T20:38:13.234+00:00	7.500	WAIT 24/60 score=-65.28 spread=0.000 nivo=-65.3 dBFS tiho
+2026-08-09T20:38:13.490+00:00	7.750	WAIT 25/60 score=-63.32 spread=0.000 nivo=-63.3 dBFS tiho
+2026-08-09T20:38:13.745+00:00	8.000	WAIT 26/60 score=-64.00 spread=0.000 nivo=-64.0 dBFS tiho
+2026-08-09T20:38:14.001+00:00	8.265	WAIT 27/60 score=-66.22 spread=0.000 nivo=-66.2 dBFS tiho
+2026-08-09T20:38:14.257+00:00	8.515	WAIT 28/60 score=-64.97 spread=0.000 nivo=-65.0 dBFS tiho
+2026-08-09T20:38:14.512+00:00	8.781	WAIT 29/60 score=-65.01 spread=0.000 nivo=-65.0 dBFS tiho
+2026-08-09T20:38:14.768+00:00	9.031	WAIT 30/60 score=-67.22 spread=0.000 nivo=-67.2 dBFS tiho
+2026-08-09T20:38:15.024+00:00	9.281	WAIT 31/60 score=-66.99 spread=0.000 nivo=-67.0 dBFS tiho
+2026-08-09T20:38:15.280+00:00	9.547	WAIT 32/60 score=-66.64 spread=0.000 nivo=-66.6 dBFS tiho
+2026-08-09T20:38:15.535+00:00	9.797	WAIT 33/60 score=-67.60 spread=0.000 nivo=-67.6 dBFS tiho
+2026-08-09T20:38:15.792+00:00	10.047	WAIT 34/60 score=-65.90 spread=0.000 nivo=-65.9 dBFS tiho
+2026-08-09T20:38:16.047+00:00	10.312	WAIT 35/60 score=-66.91 spread=0.000 nivo=-66.9 dBFS tiho
+2026-08-09T20:38:16.302+00:00	10.562	WAIT 36/60 score=-61.21 spread=0.000 nivo=-61.2 dBFS tiho
+2026-08-09T20:38:16.559+00:00	10.828	WAIT 37/60 score=-59.11 spread=0.000 nivo=-59.1 dBFS cujem
+2026-08-09T20:38:16.814+00:00	11.078	WAIT 38/60 score=-60.08 spread=0.000 nivo=-60.1 dBFS tiho
+2026-08-09T20:38:17.069+00:00	11.328	WAIT 39/60 score=-59.29 spread=0.000 nivo=-59.3 dBFS cujem
+2026-08-09T20:38:17.326+00:00	11.593	WAIT 40/60 score=-60.94 spread=0.000 nivo=-60.9 dBFS tiho
+2026-08-09T20:38:17.582+00:00	11.843	WAIT 41/60 score=-62.19 spread=0.000 nivo=-62.2 dBFS tiho
+2026-08-09T20:38:17.837+00:00	12.093	WAIT 42/60 score=-62.15 spread=0.000 nivo=-62.2 dBFS tiho
+2026-08-09T20:38:18.092+00:00	12.359	WAIT 43/60 score=-63.21 spread=0.000 nivo=-63.2 dBFS tiho
+2026-08-09T20:38:18.349+00:00	12.609	WAIT 44/60 score=-64.63 spread=0.000 nivo=-64.6 dBFS tiho
+2026-08-09T20:38:18.604+00:00	12.859	WAIT 45/60 score=-64.61 spread=0.000 nivo=-64.6 dBFS tiho
+2026-08-09T20:38:18.859+00:00	13.125	WAIT 46/60 score=-64.02 spread=0.000 nivo=-64.0 dBFS tiho
+2026-08-09T20:38:19.117+00:00	13.375	WAIT 47/60 score=-64.76 spread=0.000 nivo=-64.8 dBFS tiho
+2026-08-09T20:38:19.372+00:00	13.640	WAIT 48/60 score=-64.24 spread=0.000 nivo=-64.2 dBFS tiho
+2026-08-09T20:38:19.627+00:00	13.890	WAIT 49/60 score=-64.05 spread=0.000 nivo=-64.1 dBFS tiho
+2026-08-09T20:38:19.883+00:00	14.140	WAIT 50/60 score=-64.08 spread=0.000 nivo=-64.1 dBFS tiho
+2026-08-09T20:38:20.139+00:00	14.406	WAIT 51/60 score=-64.75 spread=0.000 nivo=-64.8 dBFS tiho
+2026-08-09T20:38:20.394+00:00	14.656	WAIT 52/60 score=-65.12 spread=0.000 nivo=-65.1 dBFS tiho
+2026-08-09T20:38:20.650+00:00	14.906	WAIT 53/60 score=-63.97 spread=0.000 nivo=-64.0 dBFS tiho
+2026-08-09T20:38:20.906+00:00	15.172	WAIT 54/60 score=-65.97 spread=0.000 nivo=-66.0 dBFS tiho
+2026-08-09T20:38:21.162+00:00	15.422	WAIT 55/60 score=-63.53 spread=0.000 nivo=-63.5 dBFS tiho
+2026-08-09T20:38:21.417+00:00	15.672	WAIT 56/60 score=-63.38 spread=0.000 nivo=-63.4 dBFS tiho
+2026-08-09T20:38:21.673+00:00	15.937	WAIT 57/60 score=-62.60 spread=0.000 nivo=-62.6 dBFS tiho
+2026-08-09T20:38:21.929+00:00	16.187	WAIT 58/60 score=-64.06 spread=0.000 nivo=-64.1 dBFS tiho
+2026-08-09T20:38:22.185+00:00	16.453	WAIT 59/60 score=-61.75 spread=0.000 nivo=-61.7 dBFS tiho
+2026-08-09T20:38:22.441+00:00	16.703	WAIT 60/60 score=-63.59 spread=0.000 nivo=-63.6 dBFS tiho
+2026-08-09T20:38:22.449+00:00	16.703	W (16658) psdlive: mikrofon vecinu vremena nije cuo nista (6/60 iznad -60 dBFS) — kalibrisem svejedno, ali provjeri da ventilator radi
+2026-08-09T20:38:22.463+00:00	16.718	I (16668) psdlive: --- KALIBRACIJA: 10 klipova po 10 s ---
+2026-08-09T20:38:32.434+00:00	26.703	CAL  1/10 score=0.00000 nivo=-61.0 dBFS racun=704 ms
