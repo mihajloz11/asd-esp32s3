@@ -1,0 +1,42 @@
+{
+  "status": "ready",
+  "checked_utc": "2026-08-09T20:35:46.746+00:00",
+  "serial_port_count": 2,
+  "ports": [
+    {
+      "device": "COM3",
+      "description": "USB Serial Device (COM3)",
+      "hwid": "USB VID:PID=303A:1001 SER=90:E5:B1:D8:1C:C4 LOCATION=1-2.1:x.0",
+      "vid": 12346,
+      "pid": 4097,
+      "serial_number": "90:E5:B1:D8:1C:C4",
+      "manufacturer": "Microsoft",
+      "product": null
+    },
+    {
+      "device": "COM4",
+      "description": "USB-Enhanced-SERIAL CH343 (COM4)",
+      "hwid": "USB VID:PID=1A86:55D3 SER=5B14079593 LOCATION=1-2.2",
+      "vid": 6790,
+      "pid": 21971,
+      "serial_number": "5B14079593",
+      "manufacturer": "wch.cn",
+      "product": null
+    }
+  ],
+  "firmware_build_ready": {
+    "psd_live_build_flag_confirmed": true,
+    "build_bin": "firmware\\esp32s3_asd\\build\\esp32s3_asd.bin",
+    "build_bin_sha256": "4fc63519851c67d9a3c9950587d4d61c2327cad0c187f800bd4e0d5a3bc57798",
+    "build_bin_bytes": 291536,
+    "build_bin_mtime_utc": "2026-08-09T17:41:49.286384+00:00",
+    "project_description": {
+      "project_name": "esp32s3_asd",
+      "project_version": "on-device-verified-31-g9178ad6",
+      "idf_path": "C:/Users/mihaj/esp/esp-idf",
+      "git_revision": "v5.5.5-34-g21f3b71cbbf",
+      "target": "esp32s3"
+    }
+  },
+  "next_action": "izaberi tacan COM port i pokreni run"
+}

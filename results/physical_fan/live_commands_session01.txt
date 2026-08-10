@@ -1,0 +1,1 @@
+stop restartovan prije DET radi punih 30 minuta baselinea

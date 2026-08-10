@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "app_main.c" "audio_i2s.c" "features_c.c" "calib_gamma.c" "tflm_infer.cc"
+    SRCS "app_main.c" "audio_i2s.c" "audio_quality_state.c" "features_c.c" "calib_gamma.c" "tflm_infer.cc"
          "eval_mode.c" "mic_test.c" "ina226.c" "ina226_test.c" "live_capture.c" "live_adapt.c"
          "psd_features_c.c" "psd_live.c" "psd_verify.c"
     INCLUDE_DIRS "."

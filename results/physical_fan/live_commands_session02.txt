@@ -1,0 +1,1 @@
+stop prekinuto_u_CAL: mikrofon 54_od_60 WAIT prozora ispod -60_dBFS

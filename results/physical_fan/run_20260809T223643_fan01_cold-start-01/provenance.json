@@ -1,0 +1,111 @@
+{
+  "protocol_version": "physical-fan-v1.0.0",
+  "created_utc": "2026-08-09T20:36:43.997+00:00",
+  "command": [
+    ".\\pc\\tools\\physical_fan_experiment.py",
+    "run",
+    "--port",
+    "COM3",
+    "--fan-id",
+    "fan01",
+    "--session-id",
+    "cold-start-01",
+    "--distance-cm",
+    "15",
+    "--angle-deg",
+    "0",
+    "--room",
+    "radna-soba",
+    "--fan-speed-or-voltage",
+    "nominal",
+    "--ambient",
+    "quiet",
+    "--notes",
+    "Prvi fizicki run; fan normalan/stabilan prije reseta; udaljenost 15 cm prema zakljucanom protokolu, potvrditi u laboratorijskom dnevniku.",
+    "--ready",
+    "--non-interactive",
+    "--command-file",
+    ".\\results\\physical_fan\\live_commands_session01.txt",
+    "--max-seconds",
+    "1800"
+  ],
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "git": {
+    "head": "7cd08ee9dd1403a05cf398f0b2fd1a98f07a57d5",
+    "status_porcelain": " M results/results.csv\n M results/results_stats.csv\n?? docs/analiza-stanja-i-sljedeci-koraci-2026-08-09.md\n?? docs/kanonska-evaluacija.md\n?? docs/protokol-fizicki-ventilator.md\n?? pc/tests/test_canonical_evaluation.py\n?? pc/tests/test_physical_fan_experiment.py\n?? pc/tools/evaluate_canonical.py\n?? pc/tools/physical_fan_experiment.py\n?? results/canonical_evaluation/\n?? results/physical_fan/",
+    "diff_sha256": "747a4a0249b7ce7acfd13a0730fde90da34de6973602d0c770400a6fb1a47c56"
+  },
+  "serial_ports_seen": [
+    {
+      "device": "COM3",
+      "description": "USB Serial Device (COM3)",
+      "hwid": "USB VID:PID=303A:1001 SER=90:E5:B1:D8:1C:C4 LOCATION=1-2.1:x.0",
+      "vid": 12346,
+      "pid": 4097,
+      "serial_number": "90:E5:B1:D8:1C:C4",
+      "manufacturer": "Microsoft",
+      "product": null
+    },
+    {
+      "device": "COM4",
+      "description": "USB-Enhanced-SERIAL CH343 (COM4)",
+      "hwid": "USB VID:PID=1A86:55D3 SER=5B14079593 LOCATION=1-2.2",
+      "vid": 6790,
+      "pid": 21971,
+      "serial_number": "5B14079593",
+      "manufacturer": "wch.cn",
+      "product": null
+    }
+  ],
+  "requested_port": "COM3",
+  "baud": 115200,
+  "firmware": {
+    "psd_live_build_flag_confirmed": true,
+    "build_bin": "firmware\\esp32s3_asd\\build\\esp32s3_asd.bin",
+    "build_bin_sha256": "4fc63519851c67d9a3c9950587d4d61c2327cad0c187f800bd4e0d5a3bc57798",
+    "build_bin_bytes": 291536,
+    "build_bin_mtime_utc": "2026-08-09T17:41:49.286384+00:00",
+    "project_description": {
+      "project_name": "esp32s3_asd",
+      "project_version": "on-device-verified-31-g9178ad6",
+      "idf_path": "C:/Users/mihaj/esp/esp-idf",
+      "git_revision": "v5.5.5-34-g21f3b71cbbf",
+      "target": "esp32s3"
+    }
+  },
+  "source_sha256": {
+    "pc/tools/physical_fan_experiment.py": "c8148f0035f98f180ccd4614f70340a7783b500d60acb6475e86e2639e6b9b92",
+    "firmware/esp32s3_asd/main/app_main.c": "a6a5a3a053c44bd0d1e2581f45ddad3864cd43fb4e64d29ee8f35a68674d14df",
+    "firmware/esp32s3_asd/main/psd_live.c": "19571a04f8b34717906efc9d9afd45dfd4771587aca7af4b55763fd0585063d4",
+    "firmware/esp32s3_asd/main/psd_features_c.c": "1c48697928116cedb954011622875026d2974c72401d75efd7d3251be0922cd7",
+    "firmware/esp32s3_asd/main/psd_model_data.h": "0c5e6b638a60e64914e119f508d717d9f315f9c0ed47b2d4f521c1c530a3d5ad"
+  },
+  "status": "invalid_no_physical_fan",
+  "posthoc_correction": {
+    "recorded_utc": "2026-08-09T20:42:26.2145164Z",
+    "source": "user_confirmation",
+    "physical_fan_present": false,
+    "note": "Fan ID, distance and normal-running claims were placeholder assumptions. No physical fan was available; this run is board/microphone preflight only."
+  },
+  "metadata": {
+    "fan_id": "fan01",
+    "session_id": "cold-start-01",
+    "port": "COM3",
+    "baud": 115200,
+    "distance_cm": 15.0,
+    "angle_deg": 0.0,
+    "room": "radna-soba",
+    "fan_speed_or_voltage": "nominal",
+    "ambient": "quiet",
+    "operator_notes": "Prvi fizicki run; fan normalan/stabilan prije reseta; udaljenost 15 cm prema zakljucanom protokolu, potvrditi u laboratorijskom dnevniku.",
+    "external_wav": null,
+    "external_wav_sha256_at_start": null,
+    "external_wav_sha256_at_end": null
+  },
+  "run_dir": "C:\\Users\\mihaj\\Desktop\\master new\\results\\physical_fan\\run_20260809T223643_fan01_cold-start-01",
+  "finished_utc": "2026-08-09T20:37:49.879+00:00",
+  "threshold": null,
+  "det_window_count": 0,
+  "alarm_window_count": 0,
+  "max_dropped": null
+}
