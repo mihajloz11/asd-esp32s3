@@ -13,6 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
+#include "driver/i2c_master.h"
 #include "esp_timer.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
@@ -35,8 +36,50 @@ static const char *TAG = "asd";
 
 #define CLIP_SEC   10
 #define HOPS_PER_CLIP (AUDIO_SR * CLIP_SEC / ASD_HOP)   /* 312 */
+#define INA226_I2C_ADDRESS_MIN 0x40
+#define INA226_I2C_ADDRESS_MAX 0x4F
+#define I2C_PROBE_TIMEOUT_MS 100
 
 static asd_stream_t stream;
+
+static void probe_ina226(void) {
+    i2c_master_bus_config_t bus_config = {
+        .i2c_port = -1,
+        .sda_io_num = PIN_I2C_SDA,
+        .scl_io_num = PIN_I2C_SCL,
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .glitch_ignore_cnt = 7,
+        .flags.enable_internal_pullup = true,
+    };
+    i2c_master_bus_handle_t bus_handle;
+    esp_err_t err = i2c_new_master_bus(&bus_config, &bus_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "INA226 I2C init nije uspio: %s", esp_err_to_name(err));
+        return;
+    }
+
+    ESP_LOGI(TAG, "I2C idle: SDA=%d SCL=%d",
+             gpio_get_level(PIN_I2C_SDA), gpio_get_level(PIN_I2C_SCL));
+    int found_address = -1;
+    for (uint16_t address = INA226_I2C_ADDRESS_MIN;
+         address <= INA226_I2C_ADDRESS_MAX; address++) {
+        err = i2c_master_probe(bus_handle, address, I2C_PROBE_TIMEOUT_MS);
+        if (err == ESP_OK) {
+            found_address = address;
+            break;
+        }
+    }
+    ESP_LOGI(TAG, "I2C poslije probe: SDA=%d SCL=%d",
+             gpio_get_level(PIN_I2C_SDA), gpio_get_level(PIN_I2C_SCL));
+    if (found_address >= 0) {
+        ESP_LOGI(TAG, "INA226 OK na 0x%02X (SDA GPIO %d, SCL GPIO %d)",
+                 found_address, PIN_I2C_SDA, PIN_I2C_SCL);
+    } else {
+        ESP_LOGE(TAG, "INA226 nije pronadjen na adresama 0x%02X-0x%02X",
+                 INA226_I2C_ADDRESS_MIN, INA226_I2C_ADDRESS_MAX);
+    }
+    ESP_ERROR_CHECK(i2c_del_master_bus(bus_handle));
+}
 
 static void process_clip(void) {
     static int16_t pcm[ASD_HOP];
@@ -96,6 +139,8 @@ void app_main(void) {
     ina226_test_run();
     while (1) vTaskDelay(portMAX_DELAY);
 #endif
+
+    probe_ina226();
 
     /* Mic bring-up (rizik C1): samo I2S, bez modela — set ASD_MIC_TEST=1 */
 #ifdef ASD_MIC_TEST

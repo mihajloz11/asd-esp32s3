@@ -269,7 +269,8 @@ void ina226_test_run(void) {
         return;
     }
 
-    int found = ina226_bus_scan();
+    uint8_t found_address = 0;
+    int found = ina226_bus_scan(&found_address);
     if (found <= 0) {
         /* Isti obrazac (linije visoke, nema ACK-a) daju i zamijenjene SDA/SCL —
          * provjerava se softverski, prije nego se dira ijedna zica. */
@@ -286,10 +287,10 @@ void ina226_test_run(void) {
         return;
     }
 
-    esp_err_t err = ina226_init(INA226_ADDR_DEFAULT);
+    esp_err_t err = ina226_init(found_address);
     if (err != ESP_OK) {
-        ESP_LOGE(TAG, "init nije uspio: %s", esp_err_to_name(err));
-        ESP_LOGE(TAG, "ako je scan nasao adresu razlicitu od 0x40, lemni su A0/A1 drugacije");
+        ESP_LOGE(TAG, "init na 0x%02X nije uspio: %s",
+                 found_address, esp_err_to_name(err));
         return;
     }
 
