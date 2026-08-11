@@ -1,0 +1,236 @@
+# capture COM7 @ 115200 8N1
+[  205.938] ESP-ROM:esp32s3-20210327
+[  205.939] Build:Mar 27 2021
+[  205.939] rst:0x1 (POWERON),boot:0x8 (SPI_FAST_FLASH_BOOT)
+[  205.939] SPIWP:0xee
+[  205.939] Octal Flash Mode Enabled
+[  205.939] For OPI Flash, Use Default Flash Boot Mode
+[  205.939] mode:SLOW_RD, clock div:1
+[  205.939] load:0x3fce2820,len:0x14f0
+[  205.940] load:0x403c8700,len:0xd24
+[  205.940] load:0x403cb700,len:0x2eec
+[  205.940] entry 0x403c8924
+[  205.940] I (29) boot: ESP-IDF v5.5.5-48479-g21f3b71cbb 2nd stage bootloader
+[  205.940] I (29) boot: compile time Aug  6 2026 14:37:26
+[  205.944] I (29) boot: Multicore bootloader
+[  205.944] I (31) boot: chip revision: v0.2
+[  205.944] I (34) boot: efuse block revision: v1.3
+[  205.945] I (37) boot.esp32s3: Boot SPI Speed : 80MHz
+[  205.945] I (41) boot.esp32s3: SPI Mode       : SLOW READ
+[  205.945] I (45) boot.esp32s3: SPI Flash Size : 32MB
+[  205.945] I (49) boot: Enabling RNG early entropy source...
+[  205.945] I (54) boot: Partition Table:
+[  205.945] I (56) boot: ## Label            Usage          Type ST Offset   Length
+[  205.945] I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+[  205.945] I (69) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+[  205.945] I (76) boot:  2 factory          factory app      00 00 00010000 00400000
+[  205.945] I (82) boot:  3 storage          Unknown data     01 81 00410000 01400000
+[  205.945] I (89) boot: End of partition table
+[  205.945] I (92) esp_image: segment 0: paddr=00010020 vaddr=3c020020 size=0cb18h ( 51992) map
+[  205.945] I (112) esp_image: segment 1: paddr=0001cb40 vaddr=3fc94700 size=034c4h ( 13508) load
+[  205.945] I (116) esp_image: segment 2: paddr=0002000c vaddr=40374000 size=1000ch ( 65548) load
+[  205.945] I (135) esp_image: segment 3: paddr=00030020 vaddr=42000020 size=1dd28h (122152) map
+[  205.945] I (165) esp_image: segment 4: paddr=0004dd50 vaddr=4038400c size=0061ch (  1564) load
+[  205.945] I (165) esp_image: segment 5: paddr=0004e374 vaddr=50000000 size=00020h (    32) load
+[  205.945] I (175) boot: Loaded app from partition at offset 0x10000
+[  205.945] I (175) boot: Disabling RNG early entropy source...
+[  205.945] I (190) octal_psram: vendor id    : 0x0d (AP)
+[  205.945] I (190) octal_psram: dev id       : 0x03 (generation 4)
+[  205.945] I (191) octal_psram: density      : 0x05 (128 Mbit)
+[  205.945] I (193) octal_psram: good-die     : 0x01 (Pass)
+[  205.946] I (197) octal_psram: Latency      : 0x01 (Fixed)
+[  205.946] I (201) octal_psram: VCC          : 0x00 (1.8V)
+[  205.946] I (206) octal_psram: SRF          : 0x01 (Fast Refresh)
+[  205.946] I (210) octal_psram: BurstType    : 0x01 (Hybrid Wrap)
+[  205.946] I (215) octal_psram: BurstLen     : 0x01 (32 Byte)
+[  205.946] I (220) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
+[  205.946] I (225) octal_psram: DriveStrength: 0x00 (1/1)
+[  205.946] I (229) MSPI Timing: Enter psram timing tuning
+[  205.946] I (234) esp_psram: Found 16MB PSRAM device
+[  205.946] I (237) esp_psram: Speed: 80MHz
+[  205.946] I (240) cpu_start: Multicore app
+[  207.133] I (1095) esp_psram: SPI SRAM memory test OK
+[  207.133] I (1103) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
+[  207.133] I (1104) cpu_start: Pro cpu start user code
+[  207.133] I (1104) cpu_start: cpu freq: 240000000 Hz
+[  207.134] I (1106) app_init: Application information:
+[  207.134] I (1110) app_init: Project name:     esp32s3_asd
+[  207.134] I (1114) app_init: App version:      on-device-verified-37-gc5a8678-
+[  207.134] I (1120) app_init: Compile time:     Aug 10 2026 15:52:19
+[  207.134] I (1125) app_init: ELF file SHA256:  6b810aa0b...
+[  207.135] I (1130) app_init: ESP-IDF:          v5.5.5-48479-g21f3b71cbb
+[  207.135] I (1135) efuse_init: Min chip rev:     v0.0
+[  207.135] I (1139) efuse_init: Max chip rev:     v0.99 
+[  207.135] I (1143) efuse_init: Chip rev:         v0.2
+[  207.135] I (1147) heap_init: Initializing. RAM available for dynamic allocation:
+[  207.135] I (1154) heap_init: At 3FC98590 len 00051180 (324 KiB): RAM
+[  207.136] I (1159) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+[  207.136] I (1164) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+[  207.136] I (1169) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+[  207.136] I (1175) esp_psram: Adding pool of 16384K of PSRAM memory to heap allocator
+[  207.136] W (1182) spi_flash: Octal flash chip is using but dio mode is selected, will automatically switch to Octal mode
+[  207.136] I (1191) spi_flash: detected chip: mxic (opi)
+[  207.136] I (1195) spi_flash: flash io: opi_str
+[  207.136] I (1199) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+[  207.136] I (1205) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+[  207.136] I (1212) main_task: Started on CPU0
+[  207.136] I (1222) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+[  207.136] I (1222) main_task: Calling app_main()
+[  207.136] I (1222) asd: PSRAM: 16777216 B
+[  207.136] I (1232) asd: free heap: 17147499 B
+[  207.136] I (1232) inatest: === INA226 TEST ===
+[  207.136] I (1252) inatest: --- mapa pinova (sta je gdje stvarno spojeno) ---
+[  207.136] I (1252) inatest:   GPIO0 : spolja visok, obara se => PULL-UP (prava I2C linija)
+[  207.136] I (1252) inatest:   GPIO8 : spolja visok, obara se => PULL-UP (prava I2C linija)
+[  207.136] I (1262) inatest:   GPIO9 : spolja visok, obara se => PULL-UP (prava I2C linija)
+[  207.136] I (1272) inatest: --- pinovi koji se ne pojavljuju su slobodni ---
+[  207.136] I (1292) inatest: linije BEZ internog pull-upa: SDA(GPIO8)=1  SCL(GPIO9)=1
+[  207.136] I (1312) inatest: linije SA internog pull-upa: SDA(GPIO8)=1  SCL(GPIO9)=1
+[  207.136] I (1312) inatest: SDA(GPIO8): mirno=1 obaranje=0 pusteno@5us=1 pusteno@5ms=1
+[  207.136] I (1312) inatest:    -> spoljni pull-up (modul napojen i linija stize do njega)
+[  207.136] I (1322) inatest: SCL(GPIO9): mirno=1 obaranje=0 pusteno@5us=1 pusteno@5ms=1
+[  207.136] I (1322) inatest:    -> spoljni pull-up (modul napojen i linija stize do njega)
+[  207.136] I (1332) inatest: bit-bang self-check: SDA low=1 high=1 | SCL low=1 high=1
+[  207.136] I (1352) inatest:   bit-bang ACK sa adrese 0x44
+[  207.136] I (1362) inatest: bit-bang scan [SDA=8 SCL=9]: 1 uredjaja
+[  207.136] I (1362) ina226: skeniram I2C bus (SDA=8 SCL=9)...
+[  207.136] I (1362) ina226:   nadjen uredjaj na 0x44
+[  207.136] I (1372) ina226: manuf=0x5449 die=0x2260
+[  207.136] I (1422) ina226: konfigurisan: config=0x4527 cal=1024 (LSB struje 50 uA, sant 0,1 ohm)
+[  207.136] I (1422) inatest: procitano nazad: config=0x4527 cal=1024
+[  207.136] I (1422) inatest: --- ocitanja strujnog puta ---
+[  207.136]   [ 1] sant=    3482 uV   bus=  3423 mV   struja=   34850 uA   snaga=  118750 uW
+[  207.426]   [ 2] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  207.719]   [ 3] sant=    3472 uV   bus=  3425 mV   struja=   34750 uA   snaga=  118750 uW
+[  208.032]   [ 4] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  208.325]   [ 5] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  208.622]   [ 6] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  208.931]   [ 7] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  209.227]   [ 8] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  209.523]   [ 9] sant=    3472 uV   bus=  3425 mV   struja=   34750 uA   snaga=  118750 uW
+[  209.833]   [10] sant=    3472 uV   bus=  3425 mV   struja=   34750 uA   snaga=  118750 uW
+[  210.141] I (4432) inatest: sant raspon: 3470..3482 uV (sirina 12 uV)
+[  210.141] I (4432) inatest: I2C lanac ispravan — senzor odgovara i drzi konfiguraciju.
+[  210.141] I (4442) inatest: rezultat je sacuvan u flash; iskljuci izvor pa ponovo prikljuci USB
+[  394.391] E BOD: Brownout detector was triggered
+[  394.391] 
+[  394.391] 
+[  394.391] ESP-ROM:esp32s3-20210327
+[  394.392] Build:Mar 27 2021
+[  394.392] rst:0x3 (RTC_SW_SYS_RST),boot:0x8 (SPI_FAST_FLASH_BOOT)
+[  394.392] Saved PC:0x4037649c
+[  394.392] SPIWP:0xee
+[  394.392] Octal Flash Mode Enabled
+[  394.392] For OPI Flash, Use Default Flash Boot Mode
+[  394.392] mode:SLOW_RD, clock div:1
+[  394.392] load:0x3fce2820,len:0x14f0
+[  394.392] load:0x403c8700,len:0xd24
+[  394.392] load:0x403cb700,len:0x2eec
+[  749.673] en�ESP-ROM:esp32s3-20210327
+[  749.673] Build:Mar 27 2021
+[  749.673] rst:0x1 (POWERON),boot:0x8 (SPI_FAST_FLASH_BOOT)
+[  749.674] SPIWP:0xee
+[  749.674] Octal Flash Mode Enabled
+[  749.674] For OPI Flash, Use Default Flash Boot Mode
+[  749.674] mode:SLOW_RD, clock div:1
+[  749.674] load:0x3fce2820,len:0x14f0
+[  749.674] load:0x403c8700,len:0xd24
+[  749.674] load:0x403cb700,len:0x2eec
+[  749.674] entry 0x403c8924
+[  749.674] I (29) boot: ESP-IDF v5.5.5-48479-g21f3b71cbb 2nd stage bootloader
+[  749.674] I (29) boot: compile time Aug  6 2026 14:37:26
+[  749.674] I (29) boot: Multicore bootloader
+[  749.674] I (31) boot: chip revision: v0.2
+[  749.674] I (34) boot: efuse block revision: v1.3
+[  749.674] I (37) boot.esp32s3: Boot SPI Speed : 80MHz
+[  749.674] I (41) boot.esp32s3: SPI Mode       : SLOW READ
+[  749.674] I (45) boot.esp32s3: SPI Flash Size : 32MB
+[  749.674] I (49) boot: Enabling RNG early entropy source...
+[  749.674] I (54) boot: Partition Table:
+[  749.674] I (56) boot: ## Label            Usage          Type ST Offset   Length
+[  749.674] I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+[  749.674] I (69) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+[  749.674] I (76) boot:  2 factory          factory app      00 00 00010000 00400000
+[  749.674] I (82) boot:  3 storage          Unknown data     01 81 00410000 01400000
+[  749.674] I (89) boot: End of partition table
+[  749.674] I (92) esp_image: segment 0: paddr=00010020 vaddr=3c020020 size=0cb18h ( 51992) map
+[  749.674] I (112) esp_image: segment 1: paddr=0001cb40 vaddr=3fc94700 size=034c4h ( 13508) load
+[  749.674] I (116) esp_image: segment 2: paddr=0002000c vaddr=40374000 size=1000ch ( 65548) load
+[  749.674] I (135) esp_image: segment 3: paddr=00030020 vaddr=42000020 size=1dd28h (122152) map
+[  749.674] I (165) esp_image: segment 4: paddr=0004dd50 vaddr=4038400c size=0061ch (  1564) load
+[  749.674] I (165) esp_image: segment 5: paddr=0004e374 vaddr=50000000 size=00020h (    32) load
+[  749.674] I (175) boot: Loaded app from partition at offset 0x10000
+[  749.674] I (175) boot: Disabling RNG early entropy source...
+[  749.674] I (190) octal_psram: vendor id    : 0x0d (AP)
+[  749.674] I (190) octal_psram: dev id       : 0x03 (generation 4)
+[  749.674] I (191) octal_psram: density      : 0x05 (128 Mbit)
+[  749.674] I (193) octal_psram: good-die     : 0x01 (Pass)
+[  749.674] I (197) octal_psram: Latency      : 0x01 (Fixed)
+[  749.674] I (201) octal_psram: VCC          : 0x00 (1.8V)
+[  749.674] I (206) octal_psram: SRF          : 0x01 (Fast Refresh)
+[  749.674] I (210) octal_psram: BurstType    : 0x01 (Hybrid Wrap)
+[  749.674] I (215) octal_psram: BurstLen     : 0x01 (32 Byte)
+[  749.674] I (220) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
+[  749.674] I (225) octal_psram: DriveStrength: 0x00 (1/1)
+[  749.674] I (229) MSPI Timing: Enter psram timing tuning
+[  749.674] I (234) esp_psram: Found 16MB PSRAM device
+[  749.674] I (237) esp_psram: Speed: 80MHz
+[  749.674] I (240) cpu_start: Multicore app
+[  750.754] I (1095) esp_psram: SPI SRAM memory test OK
+[  750.754] I (1103) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
+[  750.754] I (1104) cpu_start: Pro cpu start user code
+[  750.754] I (1104) cpu_start: cpu freq: 240000000 Hz
+[  750.754] I (1106) app_init: Application information:
+[  750.754] I (1110) app_init: Project name:     esp32s3_asd
+[  750.754] I (1114) app_init: App version:      on-device-verified-37-gc5a8678-
+[  750.754] I (1120) app_init: Compile time:     Aug 10 2026 15:52:19
+[  750.754] I (1125) app_init: ELF file SHA256:  6b810aa0b...
+[  750.754] I (1130) app_init: ESP-IDF:          v5.5.5-48479-g21f3b71cbb
+[  750.754] I (1135) efuse_init: Min chip rev:     v0.0
+[  750.754] I (1139) efuse_init: Max chip rev:     v0.99 
+[  750.754] I (1143) efuse_init: Chip rev:         v0.2
+[  750.754] I (1147) heap_init: Initializing. RAM available for dynamic allocation:
+[  750.754] I (1154) heap_init: At 3FC98590 len 00051180 (324 KiB): RAM
+[  750.754] I (1159) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+[  750.754] I (1164) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+[  750.754] I (1169) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+[  750.754] I (1175) esp_psram: Adding pool of 16384K of PSRAM memory to heap allocator
+[  750.754] W (1182) spi_flash: Octal flash chip is using but dio mode is selected, will automatically switch to Octal mode
+[  750.754] I (1191) spi_flash: detected chip: mxic (opi)
+[  750.754] I (1195) spi_flash: flash io: opi_str
+[  750.754] I (1199) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+[  750.754] I (1205) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+[  750.754] I (1212) main_task: Started on CPU0
+[  750.754] I (1222) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+[  750.754] I (1222) main_task: Calling app_main()
+[  750.754] I (1222) asd: PSRAM: 16777216 B
+[  750.754] I (1232) asd: free heap: 17147499 B
+[  750.755] I (1232) inatest: === INA226 TEST ===
+[  750.755] I (1242) inatest: === SACUVANI INA226 E5 IZVJESTAJ ===
+[  750.755] I (1242) inatest: status=USPJESNO  greska=0  adresa=0x44  config=0x4527  cal=1024
+[  750.755]   [ 1] sant=    3482 uV   bus=  3423 mV   struja=   34850 uA   snaga=  118750 uW
+[  750.755]   [ 2] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  750.755]   [ 3] sant=    3472 uV   bus=  3425 mV   struja=   34750 uA   snaga=  118750 uW
+[  750.755]   [ 4] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  750.755]   [ 5] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  750.755]   [ 6] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  750.755]   [ 7] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  750.755]   [ 8] sant=    3470 uV   bus=  3425 mV   struja=   34700 uA   snaga=  118750 uW
+[  750.755]   [ 9] sant=    3472 uV   bus=  3425 mV   struja=   34750 uA   snaga=  118750 uW
+[  750.755]   [10] sant=    3472 uV   bus=  3425 mV   struja=   34750 uA   snaga=  118750 uW
+[  750.755] I (1322) inatest: === KRAJ SACUVANOG IZVJESTAJA ===
+[  750.755] I (1322) inatest: Rezultat se nece prepisati novim mjerenjem.
+[ 1353.934] E BOD: Brownout detector was triggered
+[ 1353.934] 
+[ 1353.934] 
+[ 1353.934] ESP-ROM:esp32s3-20210327
+[ 1353.934] Build:Mar 27 2021
+[ 1353.934] rst:0x3 (RTC_SW_SYS_RST),boot:0x8 (SPI_FAST_FLASH_BOOT)
+[ 1353.934] Saved PC:0x4037649c
+[ 1353.934] SPIWP:0xee
+[ 1353.934] Octal Flash Mode Enabled
+[ 1353.935] For OPI Flash, Use Default Flash Boot Mode
+[ 1353.935] mode:SLOW_RD, clock div:1
+[ 1353.935] load:0x3fce2820,len:0x14f0
+[ 1353.935] load:0x403c8700,len:0xd24
+[ 1353.935] load:0x403cb700,len:0x2eec
