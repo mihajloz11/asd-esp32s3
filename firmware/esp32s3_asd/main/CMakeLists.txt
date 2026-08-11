@@ -3,7 +3,7 @@ idf_component_register(
          "eval_mode.c" "mic_test.c" "ina226.c" "ina226_test.c" "live_capture.c" "live_adapt.c"
          "psd_features_c.c" "psd_live.c" "psd_verify.c"
     INCLUDE_DIRS "."
-    REQUIRES driver esp_timer fatfs
+    REQUIRES driver esp_timer fatfs nvs_flash
 )
 
 # Eval build bez tastera:  set ASD_EVAL_MODE=1  pa idf.py build
