@@ -87,6 +87,9 @@ static void process_clip(void) {
     static float vec[ASD_INPUT_DIM];
 
     int64_t t_feat = 0, t_inf = 0;
+    uint64_t abs_sum = 0;
+    int32_t audio_peak = 0;
+    uint32_t zero_samples = 0;
     float score_sum = 0.0f;
     int n_vec = 0;
 
@@ -95,8 +98,14 @@ static void process_clip(void) {
 
     for (int h = 0; h < HOPS_PER_CLIP; h++) {
         audio_read(pcm, ASD_HOP);
-        for (int i = 0; i < ASD_HOP; i++)
+        for (int i = 0; i < ASD_HOP; i++) {
+            int32_t sample = pcm[i];
+            int32_t magnitude = sample < 0 ? -sample : sample;
+            abs_sum += (uint32_t)magnitude;
+            if (magnitude > audio_peak) audio_peak = magnitude;
+            if (sample == 0) zero_samples++;
             hop_f32[i] = (float)pcm[i] / 32768.0f;
+        }
 
         int64_t a = esp_timer_get_time();
         int new_frame = asd_stream_push_hop(&stream, hop_f32);
@@ -116,11 +125,15 @@ static void process_clip(void) {
     int anomaly = score > ASD_SCORE_THRESHOLD;
     gpio_set_level(PIN_LED, !anomaly);
 
+    const uint32_t sample_count = HOPS_PER_CLIP * ASD_HOP;
+    float mean_abs = (float)abs_sum / (float)sample_count;
+    float zero_pct = 100.0f * (float)zero_samples / (float)sample_count;
     ESP_LOGI(TAG, "score=%.5f thr=%.5f %s | feat=%lld ms inf=%lld ms total=%lld ms "
-             "(%d vec) dropped=%lu",
+             "(%d vec) dropped=%lu | audio peak=%ld mean_abs=%.1f zero=%.1f%%",
              score, (float)ASD_SCORE_THRESHOLD, anomaly ? "ANOMALIJA" : "normal",
              t_feat / 1000, t_inf / 1000, t_total / 1000,
-             n_vec, (unsigned long)audio_dropped_samples());
+             n_vec, (unsigned long)audio_dropped_samples(),
+             (long)audio_peak, mean_abs, zero_pct);
 }
 
 void app_main(void) {
