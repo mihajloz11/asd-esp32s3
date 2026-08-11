@@ -7,7 +7,7 @@
 
 ---
 
-## STANJE (zadnje ažuriranje: 06.08.2026)
+## STANJE (zadnje ažuriranje: 11.08.2026)
 
 | Oblast | Status |
 |---|---|
@@ -22,12 +22,12 @@
 | Puna on-device AUC | ✔ 60 klipova na S3: AUC 0.596, score-ovi vs PC max 2.2e-04 |
 | E6 on-device gamma prag | ✔ device 0.77090 vs PC 0.77064 = rel 0.03% — kalibracija radi na čipu |
 | **Hardver (INMP441, INA226, AMS1117, pasive, demo)** | ✔ **stigao 04.08.2026** — vidi docs/hardver-lista.md |
-| E5 energija | hardver na stolu; **blokira INA226 I2C drajver** (ne postoji u firmware-u) |
+| E5 energija — strujni lanac | ✔ **11.08 — INA226 na 0x44, 34,73 mA, potvrđeno nezavisno**; e5-mjerenje-01-rezultat.md |
 | **Živi zvuk (INMP441 na S3)** | ✔ **06.08 — mikrofon radi**, rms 158.7 / peak 1020 / clipped 0 / dropped 0; WAV verifikovan sumom |
 | Rizik C1 (`>>14` shift) | ✔ zatvoren mjerenjem sirovog 32-bit peaka — 15.6 dB rezerve do klipovanja |
 | **PC↔uređaj na živom mikrofonu** | ✔ **06.08 — rel. razlika 7.99e-05** (ranije samo nad klipovima s flasha) |
 | Prilagođavanje praga okruženju | ✔ radi na čipu (0.779 → 62.46, bez lažnih uzbuna); ograničenje: drift okruženja naduvava prag |
-| E5 energija | **blokirano hardverski** — INA226 ne odgovara na I2C, vidi ina226-provjera.md |
+| E5 energija — naponski kanal | ✘ VBUS čita 3,425 V umjesto ~3,22 V; ~2 Ω u napojnoj grani — sumnja na masu/kontakte |
 | E6 on-device gamma kalibracija | C kod ✔ + PC test ✔; on-device test čeka |
 | 5-seed finalne tabele | alati ✔; treninzi nisu pušteni |
 | Pisanje rada | sažetak za mentora ✔ (čeka slanje); poglavlja nisu počela |
@@ -535,3 +535,46 @@ realnom WAV-u maksimalna PC↔C razlika feature-a je 9,54e-07, a relativna razli
 score-a 4,37e-07. Novi testovi i cijeli postojeći paket prolaze: **11/11**.
 Modul još nije dodat u CMake/`app_main`; to je namjerno odgođeno do posebnog
 build moda i mjerenja RAM-a/latencije, da se postojeći živi demo ne pokvari.
+
+---
+
+## 11.08.2026 — E5: prvo mjerenje potrošnje na eksternom napajanju
+
+**Urađeno:** ESP32-S3 napojen sa laboratorijskog izvora (3,30 V, limit 0,30 A)
+kroz INA226 i šant `R100`, sa **iskopčanim USB-om ploče** da napajanje ne
+zaobiđe mjerenje. Test se prati uživo preko odvojenog CH340 USB-UART adaptera
+na `COM7` (samo `adapter RX ← ESP32 TX`, zajednički GND, `VCC` adaptera
+nespojen), jer konzola ide na UART0 na 115200.
+
+Firmware `ASD_INA_TEST` dobio je jednokratni armirani režim sa NVS izvještajem
+(`ARMED → RUNNING → READY`): mjeri se samo pri prvom potpunom uključenju,
+uzorci stoje u RAM-u, a upis u flash ide tek poslije posljednjeg uzorka da ne
+uđe u mjerenu potrošnju.
+
+**Rezultat:** senzor odgovara na **0x44** (ne 0x40 — zato je dinamičko traženje
+adrese bilo neophodno), `manuf=0x5449`/`die=0x2260`, konfiguracija `0x4527` i
+`cal=1024` ostaju upisane. Deset uzoraka: šant 3471,8 µV, struja **34,73 mA**,
+raspon šanta samo **12 µV**. Puni ciklus dokazan — izvor ugašen, pa ponovo
+upaljen, i firmware ispisuje sačuvani izvještaj sa identičnim vrijednostima.
+
+**Dva nalaza koja treba riješiti:**
+
+1. **Naponski kanal odstupa.** INA226 čita 3,425 V, multimetar na potrošaču
+   ~3,22 V, izvor 3,29 V. Senzor je iza šanta i ne može čitati više od izvora.
+   Radna hipoteza: INA-in i ESP-ov GND ne diraju masenu šinu u istoj tački, pa
+   povratna struja podiže ESP-ovu masu iznad INA-ine. Presedan postoji —
+   10.08. je već nađen pogrešno spojen GND (`ina226-provjera.md`).
+2. **~2 Ω serijskog otpora u napojnoj grani** (66 mV pada na kontaktima pri
+   34,73 mA). Skalira sa strujom, pa bi na 60–80 mA svako E5 stanje bilo
+   izmjereno na drugom naponu.
+
+**Zaključak:** strujni lanac — ono zbog čega INA226 i postoji u projektu — je
+dokazan i dovoljno precizan za razlikovanje E5 stanja. Naponski kanal nije
+upotrebljiv dok se ne otkloni uzrok. Prije ponavljanja: kratke zalemljene žice
+umjesto breadboard razvoda i zvjezdasta masa.
+
+Privremena procjena potrošnje u mirovanju: `3,22 V × 34,73 mA ≈ 112 mW`.
+
+Puni izvještaj sa planom sljedećih eksperimenata (A–F) je u
+`docs/e5-mjerenje-01-rezultat.md`, sirovi log u
+`results/e5_mjerenje_01_uart.log`.

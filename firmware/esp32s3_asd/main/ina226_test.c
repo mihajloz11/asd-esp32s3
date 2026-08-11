@@ -18,6 +18,9 @@
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_rom_sys.h"
+#include "esp_system.h"
+#include "nvs.h"
+#include "nvs_flash.h"
 
 #include "pins.h"
 
@@ -25,6 +28,152 @@ static const char *TAG = "inatest";
 
 #define N_READINGS  10
 #define PERIOD_MS   300
+#define REPORT_MAGIC 0x4535494EU
+#define REPORT_VERSION 2
+#define REPORT_NAMESPACE "ina_e5"
+#define REPORT_KEY "report"
+
+typedef enum {
+    REPORT_ARMED = 1,
+    REPORT_RUNNING,
+    REPORT_READY,
+} report_state_t;
+
+typedef enum {
+    TEST_NOT_RUN = 0,
+    TEST_OK,
+    TEST_BUS_UNUSABLE,
+    TEST_NO_DEVICE,
+    TEST_INIT_FAILED,
+    TEST_READ_FAILED,
+} test_status_t;
+
+typedef struct {
+    uint32_t magic;
+    uint16_t version;
+    uint8_t state;
+    uint8_t status;
+    int32_t error;
+    uint8_t address;
+    uint8_t reading_count;
+    uint16_t config;
+    uint16_t calibration;
+    int32_t shunt_uv[N_READINGS];
+    int32_t bus_mv[N_READINGS];
+    int32_t current_ua[N_READINGS];
+    int32_t power_uw[N_READINGS];
+} ina226_report_t;
+
+static const char *test_status_name(uint8_t status) {
+    switch (status) {
+        case TEST_OK: return "USPJESNO";
+        case TEST_BUS_UNUSABLE: return "I2C BUS NIJE UPOTREBLJIV";
+        case TEST_NO_DEVICE: return "INA226 NIJE PRONADJEN";
+        case TEST_INIT_FAILED: return "INA226 INIT NIJE USPIO";
+        case TEST_READ_FAILED: return "GRESKA PRI CITANJU";
+        default: return "TEST NIJE ZAVRSEN";
+    }
+}
+
+static esp_err_t report_write(const ina226_report_t *report) {
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open(REPORT_NAMESPACE, NVS_READWRITE, &handle);
+    if (err != ESP_OK) return err;
+
+    err = nvs_set_blob(handle, REPORT_KEY, report, sizeof(*report));
+    if (err == ESP_OK) err = nvs_commit(handle);
+    nvs_close(handle);
+    return err;
+}
+
+static bool report_read(ina226_report_t *report) {
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open(REPORT_NAMESPACE, NVS_READONLY, &handle);
+    if (err != ESP_OK) return false;
+
+    size_t size = sizeof(*report);
+    err = nvs_get_blob(handle, REPORT_KEY, report, &size);
+    nvs_close(handle);
+    return err == ESP_OK && size == sizeof(*report) &&
+           report->magic == REPORT_MAGIC && report->version == REPORT_VERSION;
+}
+
+static void report_print(const ina226_report_t *report) {
+    ESP_LOGI(TAG, "=== SACUVANI INA226 E5 IZVJESTAJ ===");
+    ESP_LOGI(TAG, "status=%s  greska=%ld  adresa=0x%02X  config=0x%04X  cal=%u",
+             test_status_name(report->status), (long)report->error, report->address,
+             report->config, report->calibration);
+    for (uint8_t i = 0; i < report->reading_count; i++) {
+        printf("  [%2u] sant=%8ld uV   bus=%6ld mV   struja=%8ld uA   snaga=%8ld uW\n",
+               (unsigned)(i + 1), (long)report->shunt_uv[i], (long)report->bus_mv[i],
+               (long)report->current_ua[i], (long)report->power_uw[i]);
+    }
+    ESP_LOGI(TAG, "=== KRAJ SACUVANOG IZVJESTAJA ===");
+}
+
+static bool report_prepare(ina226_report_t *report) {
+    esp_err_t err = nvs_flash_init();
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "NVS init nije uspio: %s", esp_err_to_name(err));
+        return false;
+    }
+
+    if (!report_read(report)) {
+        *report = (ina226_report_t){
+            .magic = REPORT_MAGIC,
+            .version = REPORT_VERSION,
+            .state = REPORT_ARMED,
+            .status = TEST_NOT_RUN,
+        };
+        err = report_write(report);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "ne mogu armirati test: %s", esp_err_to_name(err));
+            return false;
+        }
+        ESP_LOGI(TAG, "TEST JE ARMIRAN. Sada iskopcaj USB, spoji semu i ukljuci 3,30 V.");
+        return false;
+    }
+
+    if (report->state != REPORT_ARMED) {
+        if (report->state == REPORT_READY) {
+            report_print(report);
+        } else {
+            ESP_LOGE(TAG, "prethodni test je prekinut prije cuvanja rezultata");
+        }
+        ESP_LOGI(TAG, "Rezultat se nece prepisati novim mjerenjem.");
+        return false;
+    }
+
+    if (esp_reset_reason() != ESP_RST_POWERON) {
+        ESP_LOGI(TAG, "test je armiran i ceka potpuno gasenje pa eksterno napajanje");
+        return false;
+    }
+
+    *report = (ina226_report_t){
+        .magic = REPORT_MAGIC,
+        .version = REPORT_VERSION,
+        .state = REPORT_RUNNING,
+        .status = TEST_NOT_RUN,
+    };
+    err = report_write(report);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "ne mogu oznaciti pocetak testa: %s", esp_err_to_name(err));
+        return false;
+    }
+    return true;
+}
+
+static void report_finish(ina226_report_t *report, test_status_t status, esp_err_t error) {
+    report->state = REPORT_READY;
+    report->status = status;
+    report->error = error;
+    esp_err_t err = report_write(report);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "rezultat NIJE sacuvan: %s", esp_err_to_name(err));
+        return;
+    }
+    ESP_LOGI(TAG, "rezultat je sacuvan u flash; iskljuci izvor pa ponovo prikljuci USB");
+}
 
 /* Stanje linija PRIJE nego I2C drajver preuzme pinove. Razdvaja tri slučaja:
  *   bez pull-upa 1 / 1  -> spolja postoje pull-upovi = modul je spojen i napojen
@@ -259,6 +408,9 @@ static void map_all_pins(void) {
 void ina226_test_run(void) {
     ESP_LOGI(TAG, "=== INA226 TEST ===");
 
+    ina226_report_t report;
+    if (!report_prepare(&report)) return;
+
     map_all_pins();
     probe_lines();
 
@@ -266,6 +418,7 @@ void ina226_test_run(void) {
      * skener bi samo 11 s trosio na timeoutove bez nove informacije. */
     if (bitbang_scan(PIN_I2C_SDA, PIN_I2C_SCL) < 0) {
         ESP_LOGE(TAG, "prekidam — bus nije upotrebljiv, nema smisla skenirati");
+        report_finish(&report, TEST_BUS_UNUSABLE, ESP_FAIL);
         return;
     }
 
@@ -284,13 +437,17 @@ void ina226_test_run(void) {
             ESP_LOGE(TAG, "ni obrnuto nema odgovora — nije stvar redoslijeda SDA/SCL");
         }
         ESP_LOGE(TAG, "prekidam — nema uredjaja na busu");
+        report_finish(&report, TEST_NO_DEVICE, ESP_ERR_NOT_FOUND);
         return;
     }
+
+    report.address = found_address;
 
     esp_err_t err = ina226_init(found_address);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "init na 0x%02X nije uspio: %s",
                  found_address, esp_err_to_name(err));
+        report_finish(&report, TEST_INIT_FAILED, err);
         return;
     }
 
@@ -299,9 +456,11 @@ void ina226_test_run(void) {
     uint16_t cfg = 0, cal = 0;
     ina226_read_reg(0x00, &cfg);
     ina226_read_reg(0x05, &cal);
+    report.config = cfg;
+    report.calibration = cal;
     ESP_LOGI(TAG, "procitano nazad: config=0x%04X cal=%u", cfg, cal);
 
-    ESP_LOGI(TAG, "--- ocitanja (IN+/IN- nisu spojeni => sant/struja su sum oko nule) ---");
+    ESP_LOGI(TAG, "--- ocitanja strujnog puta ---");
     int32_t shunt_min = INT32_MAX, shunt_max = INT32_MIN;
 
     for (int i = 0; i < N_READINGS; i++) {
@@ -313,8 +472,14 @@ void ina226_test_run(void) {
 
         if (e1 || e2 || e3 || e4) {
             ESP_LOGE(TAG, "greska pri citanju (%d/%d/%d/%d)", e1, e2, e3, e4);
+            report_finish(&report, TEST_READ_FAILED, e1 ? e1 : e2 ? e2 : e3 ? e3 : e4);
             return;
         }
+        report.shunt_uv[i] = shunt_uv;
+        report.bus_mv[i] = bus_mv;
+        report.current_ua[i] = cur_ua;
+        report.power_uw[i] = pwr_uw;
+        report.reading_count++;
         if (shunt_uv < shunt_min) shunt_min = shunt_uv;
         if (shunt_uv > shunt_max) shunt_max = shunt_uv;
 
@@ -326,5 +491,5 @@ void ina226_test_run(void) {
     ESP_LOGI(TAG, "sant raspon: %ld..%ld uV (sirina %ld uV)",
              (long)shunt_min, (long)shunt_max, (long)(shunt_max - shunt_min));
     ESP_LOGI(TAG, "I2C lanac ispravan — senzor odgovara i drzi konfiguraciju.");
-    ESP_LOGI(TAG, "Sljedece: AMS1117 -> IN+ , IN- -> 3V3 ploce, VBS na IN- (E5).");
+    report_finish(&report, TEST_OK, ESP_OK);
 }

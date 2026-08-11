@@ -1,4 +1,6 @@
 /* Bring-up mod za INA226 (E5): I2C scan + provjera identiteta + očitanja.
+ * Prvi boot armira test; sljedeći boot mjeri i čuva rezultat u NVS-u; naredni
+ * boot ispisuje sačuvani rezultat bez prepisivanja.
  *
  * Ulazak u mod: build sa -DASD_INA_TEST (set ASD_INA_TEST=1, pa
  * idf.py reconfigure build flash). Ne dira audio ni model.
