@@ -17,6 +17,22 @@ from tools.bench_periodicity import periodic_features  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 FW_MAIN = ROOT / "firmware" / "esp32s3_asd" / "main"
+FAN_DIR = ROOT / "data" / "dcase2026_dev" / "fan"
+
+
+def fan_clips_or_skip(split: str = "train"):
+    """DCASE skup je gitignoreovan, pa ga na CI runneru nema.
+
+    `data.list_clips` baca FileNotFoundError kad direktorijum ne postoji, dakle
+    PRIJE nego sto se stigne do provjere `if not clips`. Zato se postojanje
+    provjerava ovdje, prije poziva -- inace test pada umjesto da se preskoci.
+    """
+    if not (FAN_DIR / split).is_dir():
+        pytest.skip("fan dataset nije raspakovan")
+    clips = data.list_clips(FAN_DIR, split)
+    if not clips:
+        pytest.skip("fan dataset nije raspakovan")
+    return clips
 
 
 @pytest.fixture(scope="module")
@@ -39,9 +55,7 @@ def clib(tmp_path_factory):
 
 
 def test_psd_real_wav_pc_vs_c(clib):
-    clips = data.list_clips(ROOT / "data" / "dcase2026_dev" / "fan", "train")
-    if not clips:
-        pytest.skip("fan dataset nije raspakovan")
+    clips = fan_clips_or_skip()
     path = clips[0].path
     y, sr = sf.read(path, dtype="float32", always_2d=True)
     assert sr == 16000
@@ -60,9 +74,7 @@ def test_psd_real_wav_pc_vs_c(clib):
 def test_psd_stream_matches_batch(clib):
     """Zivi rad koristi streaming (FFT po hopu, bez bafera od 10 s). Mora dati
     isti rezultat kao batch, inace verifikacija PC<->C ne vazi za firmware."""
-    clips = data.list_clips(ROOT / "data" / "dcase2026_dev" / "fan", "train")
-    if not clips:
-        pytest.skip("fan dataset nije raspakovan")
+    clips = fan_clips_or_skip()
     y, sr = sf.read(clips[0].path, dtype="float32", always_2d=True)
     assert sr == 16000
     y = np.ascontiguousarray(y[:, 0])
@@ -89,6 +101,9 @@ def test_psd_stream_matches_batch(clib):
 def test_psd_score_pc_vs_c(clib):
     model_path = ROOT / "models" / "fan_psd_shape.npz"
     if not model_path.exists():
+        # Generator cita DCASE skup; bez njega nema sta da se generise.
+        if not (FAN_DIR / "train").is_dir():
+            pytest.skip("fan dataset nije raspakovan")
         subprocess.run([sys.executable, str(ROOT / "pc" / "tools" /
                                             "gen_psd_model_header.py")], check=True)
     model = np.load(model_path)
