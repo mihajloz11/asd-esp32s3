@@ -1,4 +1,8 @@
-/* Vidi live_adapt.h. */
+/* LEGACY MOD (ASD_LIVE_ADAPT) — prethodi Fazi 1 i NIJE finalni tok.
+ * Sadrzi "warn and continue" koji je u finalnom putu (psd_live.c) zabranjen.
+ * Cuva se jer su na njemu radjena mjerenja od 08.08.2026; ne uzimati za uzor
+ * i ne uvoziti u novi kod.
+ * Vidi live_adapt.h. */
 #include "live_adapt.h"
 
 #include <math.h>

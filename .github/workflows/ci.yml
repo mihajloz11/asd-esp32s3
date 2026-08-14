@@ -1,0 +1,100 @@
+name: PC testovi i C parity
+
+# Faza 8. Ono što se ovdje vrti su isključivo provjere koje NE traže ni pločicu
+# ni DCASE audio: host testovi, C parity preko gcc-a, i provjera da su
+# zaključane politike saglasne sa firmverom. Sve što traži hardver ili podatke
+# ostaje ručno i eksplicitno označeno u dnevniku — CI ne smije stvoriti utisak
+# da je fizički lanac provjeren.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instaliraj zavisnosti
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy scipy scikit-learn soundfile pytest
+
+      - name: gcc je dostupan (C parity testovi ga traže)
+        run: gcc --version
+
+      - name: Host testovi i C parity
+        run: python -m pytest pc/tests -q
+
+  schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instaliraj zavisnosti
+        run: pip install numpy scipy scikit-learn soundfile
+
+      - name: Verzije protokola i politika su saglasne
+        run: python pc/tools/check_schema_consistency.py
+
+  antipatterns:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zabranjeni obrasci se ne vraćaju u firmware
+        run: |
+          set -e
+          fail=0
+          # Obim je NAMJERNO finalni put (ASD_PSD_LIVE i njegovi moduli), ne
+          # cijeli firmware. `live_adapt.c` i `live_capture.c` su stariji demo
+          # modovi iz vremena prije Faze 1; oni sadrže "warn and continue" i to
+          # je poznato. Nisu obrisani jer su korišćeni u ranijim mjerenjima, ali
+          # se u finalni tok ne uvoze i ne smiju biti uzor.
+          FINAL="firmware/esp32s3_asd/main/psd_live.c \
+                 firmware/esp32s3_asd/main/audio_quality_state.c \
+                 firmware/esp32s3_asd/main/asd_events.c \
+                 firmware/esp32s3_asd/main/asd_operator.c \
+                 firmware/esp32s3_asd/main/asd_temporal.c \
+                 firmware/esp32s3_asd/main/audio_i2s.c"
+          # "warn and continue": upozori pa svejedno nastavi kalibraciju
+          if grep -n "kalibrisem svejedno\|kalibrišem svejedno" $FINAL ; then
+            echo "::error::vraćen 'warn and continue' obrazac u finalnom putu"; fail=1
+          fi
+          # automatsko pomjeranje centra bi naučilo kvar kao normalu (P10)
+          if grep -rnE "center\[[a-z]+\] *(\+=|=) .*(feature|live)" firmware/esp32s3_asd/main/psd_live.c ; then
+            echo "::error::centar se pomjera u toku detekcije"; fail=1
+          fi
+          # prag izveden iz target anomalija
+          if grep -rn "target_anomal" pc/config/*.json | grep -v "target_anomalies_used\": false" ; then
+            echo "::error::politika tvrdi da koristi target anomalije"; fail=1
+          fi
+          exit $fail
+
+      # Obim je kod, ne Markdown: u .md fajlovima su dva razmaka na kraju reda
+      # namjeran prelom, pa bi provjera nad njima bila šum, ne signal.
+      - name: Trailing whitespace i markeri konflikta u kodu
+        run: |
+          set -e
+          fail=0
+          if grep -rnE " +$" --include="*.c" --include="*.h" --include="*.py" \
+               firmware/esp32s3_asd/main pc/asd pc/tools pc/tests ; then
+            echo "::error::trailing whitespace u kodu"; fail=1
+          fi
+          if grep -rnE "^(<<<<<<< |=======$|>>>>>>> )" \
+               --include="*.c" --include="*.h" --include="*.py" --include="*.md" \
+               firmware pc docs ; then
+            echo "::error::nerazriješen marker konflikta"; fail=1
+          fi
+          exit $fail
