@@ -39,3 +39,5 @@ Thumbs.db
 results/cache/
 models/*.npz
 results/*.wav
+.venv-ci/
+.venv-bare/
