@@ -41,3 +41,5 @@ models/*.npz
 results/*.wav
 .venv-ci/
 .venv-bare/
+radovi/telfor2026/sablon/*.pdf
+radovi/telfor2026/primjeri/*.pdf
