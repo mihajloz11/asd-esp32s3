@@ -14,7 +14,10 @@
 extern "C" {
 #endif
 
-#define ASD_QUALITY_PROTOCOL "asd-quality-v1.2.0"
+/* v1.3.0 (13.08.2026): `EVENT` nosi i semantiku Faze 2 — `event`, `capability`
+ * i `level`; dodani su zapisi `SESSION` i `BUTTON` za operaterski tok. Polja
+ * `QUALITY`, `STATE` i `DET` su nepromijenjena. */
+#define ASD_QUALITY_PROTOCOL "asd-quality-v1.3.0"
 
 typedef enum {
     ASD_QUALITY_OK = 0,

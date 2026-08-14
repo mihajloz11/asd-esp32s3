@@ -1,0 +1,170 @@
+{
+  "schema_version": "asd-presence-policy-v1.0.0",
+  "derived_utc": "2026-08-11T21:25:07+00:00",
+  "scope": "machine-presence gate for Faza 2 event semantics; not an anomaly threshold and not a fault diagnosis",
+  "target_anomalies_used": false,
+  "derivation": {
+    "data": "DCASE 2026 dev fan, target normal (train+test) and source normal control",
+    "window_samples": 4096,
+    "rule": "present <=> rms_dbfs >= calibrated_mean_dbfs - absent_margin_db, sustained for min_consecutive_windows",
+    "margin_rule": "max(6 * sd_of_n_consec_window_runs, abs(worst_observed_normal_run_dip) + 3 dB), rounded up to whole dB",
+    "per_clip_level_excluded": "DCASE clips are level-normalised: sd across 60 target normal clips is 0.02 dB. That is a dataset artefact, not physical variation, so cross-clip level contributes nothing to the margin. Only within-clip window variation is used.",
+    "decision_statistic": "lowest mean over n_consec consecutive windows, because the device requires n_consec consecutive windows below the gate; single-window tails (source control: -8.3 to +13.0 dB) are averaged out by the run.",
+    "limitation": "Derived from recordings, not from a physical fan. Must be re-derived once a physical fan is available."
+  },
+  "policy": {
+    "absent_margin_db": 11.0,
+    "min_consecutive_windows": 3,
+    "min_consecutive_origin": "isti N_CONSEC kao anomaly odluka u psd_live.c; trajna promjena, ne pojedinacni prozor"
+  },
+  "measured": {
+    "per_speed": {
+      "spd_1": {
+        "per_clip": {
+          "n": 21,
+          "mean": -24.291034675994077,
+          "sd": 0.017843722324343968,
+          "min": -24.318899780064406,
+          "max": -24.260532460769237,
+          "p01": -24.31879533873562,
+          "p99": -24.26069751128742
+        },
+        "within_clip": {
+          "n": 819,
+          "mean": -0.052552398706596046,
+          "sd": 0.6715749926469504,
+          "min": -2.503320662550493,
+          "max": 1.8698165861778762,
+          "p01": -1.6762673658527767,
+          "p99": 1.5107510361059393
+        },
+        "consec_runs": {
+          "n": 777,
+          "mean": -0.05741505149667776,
+          "sd": 0.32925196053702943,
+          "min": -1.3435169073300544,
+          "max": 0.832143603091545,
+          "p01": -0.848294909155506,
+          "p99": 0.6977720010187276
+        }
+      },
+      "spd_2": {
+        "per_clip": {
+          "n": 20,
+          "mean": -24.278008807737887,
+          "sd": 0.010758562171901258,
+          "min": -24.289230426036088,
+          "max": -24.24963396279495,
+          "p01": -24.28918676289957,
+          "p99": -24.25136586078983
+        },
+        "within_clip": {
+          "n": 780,
+          "mean": -0.14351150589056577,
+          "sd": 0.9374699585054238,
+          "min": -3.4815071874207604,
+          "max": 12.012344183854752,
+          "p01": -2.902642595053854,
+          "p99": 1.4595548721317353
+        },
+        "consec_runs": {
+          "n": 740,
+          "mean": -0.15933391972357647,
+          "sd": 0.5881784922077663,
+          "min": -3.1577185318377574,
+          "max": 3.2127547523907607,
+          "p01": -2.5433581352662755,
+          "p99": 0.6568868143034766
+        }
+      },
+      "spd_3": {
+        "per_clip": {
+          "n": 19,
+          "mean": -24.266739195938385,
+          "sd": 0.024045990528148462,
+          "min": -24.338732285455748,
+          "max": -24.230848122010794,
+          "p01": -24.33382796401581,
+          "p99": -24.233683071306576
+        },
+        "within_clip": {
+          "n": 741,
+          "mean": -0.05098174897047301,
+          "sd": 0.6715922588278763,
+          "min": -2.2901923598999474,
+          "max": 1.7469030551710496,
+          "p01": -1.6285054895493105,
+          "p99": 1.3286728671147303
+        },
+        "consec_runs": {
+          "n": 703,
+          "mean": -0.05330685415615837,
+          "sd": 0.321730655174048,
+          "min": -1.2586482280487794,
+          "max": 0.801754044136859,
+          "p01": -0.8263407579517505,
+          "p99": 0.6528891330398972
+        }
+      }
+    },
+    "all_speeds": {
+      "per_clip": {
+        "n": 60,
+        "mean": -24.27899915122438,
+        "sd": 0.020540286630016422,
+        "min": -24.338732285455748,
+        "max": -24.230848122010794,
+        "p01": -24.327031107274856,
+        "p99": -24.240140455813634
+      },
+      "within_clip": {
+        "n": 2340,
+        "mean": -0.08237472868481367,
+        "sd": 0.7713592538253872,
+        "min": -3.4815071874207604,
+        "max": 12.012344183854752,
+        "p01": -2.1026650726097436,
+        "p99": 1.4329647006739643
+      },
+      "consec_runs": {
+        "n": 2220,
+        "mean": -0.09008707841447954,
+        "sd": 0.4339039317328856,
+        "min": -3.1577185318377574,
+        "max": 3.2127547523907607,
+        "p01": -2.1601764532638024,
+        "p99": 0.6734005362350887
+      }
+    },
+    "source_control": {
+      "per_clip": {
+        "n": 200,
+        "mean": -24.25897348194551,
+        "sd": 0.11853009078686867,
+        "min": -24.608116823180296,
+        "max": -23.90449707511836,
+        "p01": -24.572692548585643,
+        "p99": -23.93496209100123
+      },
+      "within_clip": {
+        "n": 7800,
+        "mean": -0.09523236178316977,
+        "sd": 0.9090920370939928,
+        "min": -8.324366343354338,
+        "max": 13.003090021066118,
+        "p01": -2.1301718411007,
+        "p99": 1.5258510980023543
+      },
+      "consec_runs": {
+        "n": 7400,
+        "mean": -0.09327703929480848,
+        "sd": 0.6455251667995553,
+        "min": -7.895217983858406,
+        "max": 8.580910386279779,
+        "p01": -1.196713086706046,
+        "p99": 0.7918450617271013
+      }
+    }
+  },
+  "change_rule": "Any change requires a new schema version and evidence from normal-only data before any target-anomaly evaluation."
+}
