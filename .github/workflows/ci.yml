@@ -5,6 +5,12 @@ name: PC testovi i C parity
 # zaključane politike saglasne sa firmverom. Sve što traži hardver ili podatke
 # ostaje ručno i eksplicitno označeno u dnevniku — CI ne smije stvoriti utisak
 # da je fizički lanac provjeren.
+#
+# RUNNER JE WINDOWS, NAMJERNO. Cijeli razvoj ide na Windowsu (ESP-IDF, PowerShell,
+# .venv), pa CI mora vrtjeti isto što i mašina na kojoj se radi. C parity testovi
+# grade `.dll` na win32 i `.so` drugdje; da CI vrti Linux, provjeravao bi put
+# koji se u ovom projektu nikad ne koristi, a propuštao bi onaj koji se koristi
+# svaki dan.
 
 on:
   push:
@@ -14,46 +20,62 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
+      # Spisak je u fajlu i provjeren u čistom venvu, ne prepisan napamet:
+      # prvi prolaz CI-ja je pao na `tqdm`, a druga provjera je otkrila i
+      # `librosa` i `pyserial`. Puni requirements.txt se NE koristi jer povlači
+      # TensorFlow (~600 MB) koji nijedan host test ne uvozi.
       - name: Instaliraj zavisnosti
         run: |
           python -m pip install --upgrade pip
-          pip install numpy scipy scikit-learn soundfile pytest
+          pip install -r pc/requirements-ci.txt
 
-      - name: gcc je dostupan (C parity testovi ga traže)
-        run: gcc --version
+      # C parity testovi kompajliraju module preko ctypes, pa gcc mora biti u
+      # PATH-u. Windows runner ima MinGW-w64, ali ne uvijek na PATH-u.
+      - name: Obezbijedi gcc (MinGW-w64)
+        shell: pwsh
+        run: |
+          if (-not (Get-Command gcc -ErrorAction SilentlyContinue)) {
+            Write-Host "gcc nije na PATH-u; instaliram MinGW-w64"
+            choco install mingw --no-progress -y
+            $bin = "C:\ProgramData\mingw64\mingw64\bin"
+            if (Test-Path $bin) { $bin | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8 }
+          }
+          gcc --version
 
       - name: Host testovi i C parity
         run: python -m pytest pc/tests -q
 
   schema:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
-      - name: Instaliraj zavisnosti
-        run: pip install numpy scipy scikit-learn soundfile
-
+      # Namjerno bez pip install: check_schema_consistency.py koristi samo
+      # standardnu biblioteku, pa bi svaka zavisnost ovdje bila suvišna.
       - name: Verzije protokola i politika su saglasne
         run: python pc/tools/check_schema_consistency.py
 
   antipatterns:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
+      # `shell: bash` je Git Bash, koji je na Windows runneru uvijek prisutan.
+      # Bez toga bi default bio pwsh i grep ne bi postojao.
       - name: Zabranjeni obrasci se ne vraćaju u firmware
+        shell: bash
         run: |
           set -e
           fail=0
@@ -73,11 +95,12 @@ jobs:
             echo "::error::vraćen 'warn and continue' obrazac u finalnom putu"; fail=1
           fi
           # automatsko pomjeranje centra bi naučilo kvar kao normalu (P10)
-          if grep -rnE "center\[[a-z]+\] *(\+=|=) .*(feature|live)" firmware/esp32s3_asd/main/psd_live.c ; then
+          if grep -nE "center\[[a-z]+\] *(\+=|=) .*(feature|live)" \
+               firmware/esp32s3_asd/main/psd_live.c ; then
             echo "::error::centar se pomjera u toku detekcije"; fail=1
           fi
           # prag izveden iz target anomalija
-          if grep -rn "target_anomal" pc/config/*.json | grep -v "target_anomalies_used\": false" ; then
+          if grep -n "target_anomal" pc/config/*.json | grep -v 'target_anomalies_used": false' ; then
             echo "::error::politika tvrdi da koristi target anomalije"; fail=1
           fi
           exit $fail
@@ -85,6 +108,7 @@ jobs:
       # Obim je kod, ne Markdown: u .md fajlovima su dva razmaka na kraju reda
       # namjeran prelom, pa bi provjera nad njima bila šum, ne signal.
       - name: Trailing whitespace i markeri konflikta u kodu
+        shell: bash
         run: |
           set -e
           fail=0
