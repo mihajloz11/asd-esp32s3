@@ -37,8 +37,8 @@ from typing import Any, Iterable
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = ROOT / "results" / "physical_fan"
 FIRMWARE_DIR = ROOT / "firmware" / "esp32s3_asd"
-PROTOCOL_VERSION = "physical-fan-v1.5.0"
-QUALITY_PROTOCOL_VERSION = "asd-quality-v1.2.0"
+PROTOCOL_VERSION = "physical-fan-v1.6.0"
+QUALITY_PROTOCOL_VERSION = "asd-quality-v1.3.0"
 
 RELEVANT_FILES = (
     ROOT / "pc" / "tools" / "physical_fan_experiment.py",
@@ -46,18 +46,32 @@ RELEVANT_FILES = (
     FIRMWARE_DIR / "main" / "psd_live.c",
     FIRMWARE_DIR / "main" / "audio_quality_state.c",
     FIRMWARE_DIR / "main" / "audio_quality_state.h",
+    FIRMWARE_DIR / "main" / "asd_events.c",
+    FIRMWARE_DIR / "main" / "asd_events.h",
+    FIRMWARE_DIR / "main" / "asd_operator.c",
+    FIRMWARE_DIR / "main" / "asd_operator.h",
     FIRMWARE_DIR / "main" / "psd_features_c.c",
     FIRMWARE_DIR / "main" / "psd_model_data.h",
     ROOT / "pc" / "config" / "asd_quality_policy_v1.json",
+    ROOT / "pc" / "config" / "asd_presence_policy_v1.json",
 )
 
 QUALITY_POLICY_RECORD = json.loads(
     (ROOT / "pc" / "config" / "asd_quality_policy_v1.json").read_text(encoding="utf-8")
 )
 QUALITY_POLICY = QUALITY_POLICY_RECORD["policy"]
+PRESENCE_POLICY_RECORD = json.loads(
+    (ROOT / "pc" / "config" / "asd_presence_policy_v1.json").read_text(encoding="utf-8")
+)
+PRESENCE_POLICY = PRESENCE_POLICY_RECORD["policy"]
+TEMPORAL_POLICY_RECORD = json.loads(
+    (ROOT / "pc" / "config" / "asd_temporal_policy_v1.json").read_text(encoding="utf-8")
+)
+TEMPORAL_POLICY = TEMPORAL_POLICY_RECORD["policy"]
 
 ASCII_RECORD_RE = re.compile(
-    r"\b(?P<kind>QUALITY|STATE|EVENT)(?:\s+(?P<body>.*))?$"
+    r"\b(?P<kind>QUALITY|STATE|EVENT|PRESENCE|TEMPORAL|SESSION|BUTTON)"
+    r"(?:\s+(?P<body>.*))?$"
 )
 KEY_VALUE_RE = re.compile(r"(?P<key>[A-Za-z_][A-Za-z0-9_]*)=(?P<value>\S+)")
 
@@ -72,8 +86,34 @@ STATE_FIELDS = [
 ]
 FIRMWARE_EVENT_FIELDS = [
     "host_utc", "elapsed_s", "protocol", "type", "state", "phase", "reason",
+    "event", "capability", "level",
+]
+OPERATOR_FIELDS = [
+    "host_utc", "elapsed_s", "protocol", "kind", "action", "source", "reason",
+    "discards_calibration", "event", "mode", "command", "discards",
 ]
 PARSE_ERROR_FIELDS = ["host_utc", "elapsed_s", "record_kind", "reason", "raw_line"]
+
+# Rjecnik Faze 2. Firmware event/capability/level moraju doci iz zakljucane
+# taksonomije; nepoznat token je greska protokola, ne nepoznato polje.
+FIRMWARE_EVENTS = {
+    "NONE", "FAN_STOPPED", "SPEED_CHANGED", "MECHANICAL_ANOMALY",
+    "AMBIENT_NOISE", "SENSOR_FAULT", "UNKNOWN_CHANGE",
+}
+# Dogadjaji koje uredjaj SMIJE emitovati danas. Ostali su rezervisani i njihova
+# pojava u toku znaci da je kapabilitetni gate probijen.
+EMITTABLE_EVENTS = {"NONE", "FAN_STOPPED", "SENSOR_FAULT", "UNKNOWN_CHANGE"}
+FIRMWARE_CAPABILITIES = {
+    "AVAILABLE", "NEEDS_F0", "NEEDS_DUAL_CHANNEL", "NEEDS_TRANSIENT",
+}
+FIRMWARE_LEVELS = {
+    "SENSOR_HEALTH", "MACHINE_PRESENCE", "OPERATING_REGIME", "DEVIATION",
+}
+SESSION_ACTIONS = {"STARTED", "ENDED", "ABORTED"}
+SESSION_SOURCES = {"BUTTON", "AUTOSTART", "FIRMWARE"}
+BUTTON_EVENTS = {"NONE", "SHORT", "LONG"}
+BUTTON_MODES = {"IDLE", "LEARNING", "READY", "ALARM", "FAULT"}
+BUTTON_COMMANDS = {"NONE", "START_LEARNING", "ABORT"}
 
 EXPECTED_QUALITY_COUNTS = {"WAIT": 60, "CAL": 10, "CAL_SUMMARY": 1}
 WAIT_EXPECTED_SAMPLES = 4096
@@ -95,6 +135,10 @@ QUALITY_REJECT_RESULTS = {
     "SHORT_READ", "NONFINITE", "STUCK_SIGNAL", "LOW_LEVEL_OBSERVATION",
     "INSUFFICIENT_LEVEL", "CLIPPING", "DROPPED_SAMPLES", "INVALID_ARGUMENT",
 }
+# Razlozi zaustavljanja toka koje uvodi Faza 2. Nisu kvar kvaliteta signala
+# nego zakljucak hijerarhije, pa se drze odvojeno od QUALITY_REJECT_RESULTS.
+PRESENCE_STOP_REASONS = {"FAN_STOPPED", "PRESENCE_LOST"}
+FLOW_STOP_REASONS = QUALITY_REJECT_RESULTS | PRESENCE_STOP_REASONS
 
 DET_RE = re.compile(
     r"^DET\s+(?P<window>\d+)\s+"
@@ -249,6 +293,73 @@ def _parse_strict_key_values(
     return dict(pairs), None
 
 
+def _vocabulary_error(kind: str, parsed: dict[str, Any]) -> str | None:
+    """Tokeni iz zakljucanih rjecnika Faze 2 i operaterskog toka.
+
+    Nepoznat token nije nepoznato polje nego probijen ugovor: taksonomija je
+    zakljucana upravo zato da se serijski ugovor ne mijenja u hodu.
+    """
+    if kind == "EVENT":
+        if parsed["event"] not in FIRMWARE_EVENTS:
+            return f"unknown_event_token:{parsed['event']}"
+        if parsed["capability"] not in FIRMWARE_CAPABILITIES:
+            return f"unknown_capability_token:{parsed['capability']}"
+        if parsed["level"] not in FIRMWARE_LEVELS:
+            return f"unknown_level_token:{parsed['level']}"
+        # Kapabilitetni gate: rezervisan dogadjaj se ne smije pojaviti u toku,
+        # niti smije stici oznacen kao AVAILABLE.
+        if parsed["event"] not in EMITTABLE_EVENTS:
+            return f"reserved_event_emitted:{parsed['event']}"
+        if parsed["capability"] != "AVAILABLE":
+            return f"emitted_event_not_available:{parsed['event']}"
+    elif kind == "SESSION":
+        if parsed["action"] not in SESSION_ACTIONS:
+            return f"unknown_session_action:{parsed['action']}"
+        if parsed["source"] not in SESSION_SOURCES:
+            return f"unknown_session_source:{parsed['source']}"
+        if parsed["discards_calibration"] not in (0, 1):
+            return "invalid_session_discards_calibration"
+    elif kind == "BUTTON":
+        if parsed["event"] not in BUTTON_EVENTS:
+            return f"unknown_button_event:{parsed['event']}"
+        if parsed["mode"] not in BUTTON_MODES:
+            return f"unknown_button_mode:{parsed['mode']}"
+        if parsed["command"] not in BUTTON_COMMANDS:
+            return f"unknown_button_command:{parsed['command']}"
+        if parsed["discards"] not in (0, 1):
+            return "invalid_button_discards"
+        # Pravilo koje firmware nosi u kodu, provjereno i sa host strane:
+        # kratak pritisak nikad ne odbacuje naucen centar.
+        if parsed["event"] == "SHORT" and parsed["discards"] == 1:
+            return "short_press_discarded_calibration"
+    elif kind == "TEMPORAL":
+        if parsed["policy"] != TEMPORAL_POLICY_RECORD["schema_version"]:
+            return f"temporal_policy_schema_mismatch:{parsed['policy']}"
+        for field, expected in (
+            ("min_consecutive", TEMPORAL_POLICY["min_consecutive"]),
+            ("ewma_alpha", TEMPORAL_POLICY["ewma_alpha"]),
+            ("enter_scale", TEMPORAL_POLICY["enter_scale"]),
+            ("exit_scale", TEMPORAL_POLICY["exit_scale"]),
+            ("fast_scale", TEMPORAL_POLICY["fast_scale"]),
+        ):
+            if not math.isclose(float(parsed[field]), float(expected), abs_tol=1e-6):
+                return f"temporal_policy_off_config:{field}"
+        if parsed["exit_scale"] > parsed["enter_scale"]:
+            return "temporal_exit_above_enter"
+    elif kind == "PRESENCE":
+        for field in ("level_mean_dbfs", "margin_db", "gate_dbfs"):
+            if not math.isfinite(parsed[field]):
+                return f"nonfinite_field:PRESENCE:{field}"
+        if parsed["margin_db"] <= 0.0:
+            return "nonpositive_presence_margin"
+        if parsed["min_consecutive"] < 1:
+            return "invalid_presence_min_consecutive"
+        expected_gate = parsed["level_mean_dbfs"] - parsed["margin_db"]
+        if not math.isclose(parsed["gate_dbfs"], expected_gate, abs_tol=1e-4):
+            return "presence_gate_inconsistent"
+    return None
+
+
 def parse_serial_line(line: str) -> dict[str, Any] | None:
     """Parse one firmware status line without depending on ESP-IDF log prefix."""
     ascii_record = ASCII_RECORD_RE.search(line)
@@ -274,11 +385,13 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
         integer_fields = {
             "index", "total", "samples", "expected", "peak", "clipped",
             "zeros", "stuck", "dropped_delta", "metrics_valid", "feature_valid",
-            "tonalness_valid",
+            "tonalness_valid", "min_consecutive", "discards_calibration",
+            "discards",
         }
         float_fields = {
             "rms_dbfs", "dc", "tonalness_proxy", "loo_mean", "loo_sd",
-            "loo_cv", "loo_range",
+            "loo_cv", "loo_range", "level_mean_dbfs", "margin_db", "gate_dbfs",
+            "ewma_alpha", "enter_scale", "exit_scale", "fast_scale",
         }
         parsed: dict[str, Any] = {"kind": kind, "protocol": values.pop("protocol")}
         try:
@@ -322,8 +435,20 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
                 }
         elif kind == "STATE":
             required = {"protocol", "from_state", "to_state", "reason"}
+        elif kind == "PRESENCE":
+            required = {"protocol", "level_mean_dbfs", "margin_db", "gate_dbfs",
+                        "min_consecutive"}
+        elif kind == "TEMPORAL":
+            required = {"protocol", "policy", "min_consecutive", "ewma_alpha",
+                        "enter_scale", "exit_scale", "fast_scale"}
+        elif kind == "SESSION":
+            required = {"protocol", "action", "source", "reason",
+                        "discards_calibration"}
+        elif kind == "BUTTON":
+            required = {"protocol", "event", "mode", "command", "discards"}
         else:
-            required = {"protocol", "type", "state", "phase", "reason"}
+            required = {"protocol", "type", "state", "phase", "reason",
+                        "event", "capability", "level"}
         missing = sorted(required - parsed.keys())
         if missing:
             return {
@@ -346,6 +471,12 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
                 and -SCORE_NEGATIVE_TOL <= parsed["tonalness_proxy"] < 0.0
             ):
                 parsed["tonalness_proxy"] = 0.0
+        vocabulary_error = _vocabulary_error(kind, parsed)
+        if vocabulary_error:
+            return {
+                "kind": "PARSE_ERROR", "record_kind": kind,
+                "reason": vocabulary_error, "raw_line": line,
+            }
         return parsed
 
     match = DET_RE.fullmatch(line.strip())
@@ -468,6 +599,20 @@ def new_firmware_protocol_state() -> dict[str, Any]:
         "last_total_alarm": 0,
         "last_consecutive": 0,
         "det_threshold": None,
+        # Faza 2: host nezavisno ponavlja odluku o prisustvu i odstupanju iz
+        # gate-a objavljenog u PRESENCE zapisu, umjesto da vjeruje firmveru.
+        "presence_seen": False,
+        "presence_gate_dbfs": None,
+        "presence_min_consecutive": None,
+        "temporal_seen": False,
+        "temporal_min_consecutive": None,
+        "temporal_enter_scale": None,
+        "temporal_exit_scale": None,
+        "absent_run": 0,
+        "deviation_run": 0,
+        "anomaly_active": False,
+        "session_started": False,
+        "sessions": 0,
         "terminal": False,
         "drain_required": False,
         "terminal_state_seen": False,
@@ -489,6 +634,8 @@ def firmware_protocol_ready(state: dict[str, Any]) -> bool:
         and state["calibration_accepted_state"]
         and state["calibration_accepted_event"]
         and state["adapt_seen"]
+        and state["presence_seen"]
+        and state["temporal_seen"]
         and all(counts[phase] == expected for phase, expected in EXPECTED_QUALITY_COUNTS.items())
         and state["expected_state_transition"] is None
         and state["pending_state_event"] is None
@@ -546,6 +693,10 @@ def _invalidate(
 
 
 def _expected_terminal_state(reason: str, phase: str) -> str:
+    # Faza 2: kad gate prisustva trajno padne, tok se zaustavlja u NO_MACHINE.
+    # Nije kvar senzora nego izostanak masine, pa se i ne mapira u SENSOR_ERROR.
+    if reason in {"FAN_STOPPED", "PRESENCE_LOST"}:
+        return "NO_MACHINE"
     if reason in {"LOW_LEVEL_OBSERVATION", "INSUFFICIENT_LEVEL"}:
         return "NO_MACHINE"
     if reason == "CLIPPING":
@@ -713,9 +864,37 @@ def _det_semantic_error(state: dict[str, Any], record: dict[str, Any]) -> str | 
         return f"DET_ADAPTTHR_mismatch:adapt={state['adapt_threshold']}:det={threshold}"
     if state["det_threshold"] is not None and threshold != state["det_threshold"]:
         return f"DET_threshold_changed:{state['det_threshold']}->{threshold}"
-    over = float(record["score"]) > threshold
-    expected_consecutive = state["last_consecutive"] + 1 if over else 0
-    expected_alarm = int(expected_consecutive >= N_CONSECUTIVE_ALARM)
+    if state["presence_gate_dbfs"] is None:
+        return "DET_before_PRESENCE"
+
+    # Hijerarhija Faze 2, ponovljena ovdje nezavisno od firmvera: prisustvo
+    # masine gusi ocjenu odstupanja. Kad nivo padne ispod gate-a, brojac
+    # odstupanja se resetuje i stanje se DRZI, umjesto da se emituje anomalija
+    # koja ne postoji (score skoci kad masina utihne — izmjereno 08.08: 10 -> 59).
+    present = float(record["level_dbfs"]) >= state["presence_gate_dbfs"]
+    min_consecutive = state["presence_min_consecutive"] or N_CONSECUTIVE_ALARM
+
+    # Faza 4: histereza. Iz alarma se izlazi tek ISPOD nizeg praga, pa score
+    # koji visi oko praga ne pali i gasi alarm iz prozora u prozor.
+    enter = threshold * (state["temporal_enter_scale"] or 1.0)
+    leave = threshold * (state["temporal_exit_scale"] or 1.0)
+    temporal_n = state["temporal_min_consecutive"] or min_consecutive
+    over = float(record["score"]) > enter
+
+    if present:
+        if state["anomaly_active"]:
+            expected_anomaly = float(record["score"]) > leave
+            expected_consecutive = 0 if not expected_anomaly else state["deviation_run"]
+        else:
+            expected_consecutive = state["deviation_run"] + 1 if over else 0
+            expected_anomaly = expected_consecutive >= temporal_n
+    else:
+        expected_consecutive = 0
+        # Odstupanje se ne ocjenjuje: prethodno stanje se zadrzava dok gate
+        # prisustva ne odluci trajno.
+        expected_anomaly = state["anomaly_active"]
+
+    expected_alarm = int(expected_anomaly)
     expected_total = state["last_total_alarm"] + expected_alarm
     expected_led = 1 - expected_alarm
     expected_verdict = "ALARM" if expected_alarm else ("iznad praga" if over else "normal")
@@ -781,6 +960,13 @@ def transition_firmware_protocol(
             else "invalid_firmware_telemetry"
         )
         state["invalid_reason"] = reason
+        return state
+
+    # `BUTTON` pise UI task, asinhrono u odnosu na mjerni tok, pa smije pasti
+    # bilo gdje — i izmedju DET QUALITY zapisa i njegovog DET reda. Operaterski
+    # zapis ne smije prekinuti lanac telemetrije, jer bi pritisak tastera u
+    # pogresnoj milisekundi ponistio inace ispravan prolaz.
+    if kind == "BUTTON":
         return state
 
     pending_terminal_state = bool(
@@ -889,6 +1075,67 @@ def transition_firmware_protocol(
             return _invalidate(state, "invalid_firmware_telemetry", "ADAPTTHR_below_mean_plus_3sd")
         state["adapt_seen"] = True
         state["adapt_threshold"] = float(record["threshold"])
+    elif kind == "TEMPORAL":
+        if state["temporal_seen"]:
+            return _invalidate(state, "invalid_firmware_telemetry", "duplicate_TEMPORAL")
+        if not state["adapt_seen"]:
+            return _invalidate(
+                state, "invalid_missing_telemetry", "TEMPORAL_before_ADAPTTHR")
+        if state["calibration_accepted_state"] or state["calibration_accepted_event"]:
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "TEMPORAL_after_calibration_acceptance")
+        state["temporal_seen"] = True
+        state["temporal_min_consecutive"] = int(record["min_consecutive"])
+        state["temporal_enter_scale"] = float(record["enter_scale"])
+        state["temporal_exit_scale"] = float(record["exit_scale"])
+    elif kind == "PRESENCE":
+        # Gate prisustva mora stici tacno jednom, poslije praga i prije nego
+        # sto kalibracija bude prihvacena — isti razlog kao za ADAPTTHR: da
+        # nijedan DET prozor ne bude ocijenjen gate-om koji host nije vidio.
+        if state["presence_seen"]:
+            return _invalidate(state, "invalid_firmware_telemetry", "duplicate_PRESENCE")
+        if not state["adapt_seen"]:
+            return _invalidate(
+                state, "invalid_missing_telemetry", "PRESENCE_before_ADAPTTHR",
+            )
+        if state["calibration_accepted_state"] or state["calibration_accepted_event"]:
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "PRESENCE_after_calibration_acceptance",
+            )
+        if record["level_mean_dbfs"] > 0.0:
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "positive_PRESENCE_level",
+            )
+        if not math.isclose(record["margin_db"], PRESENCE_POLICY["absent_margin_db"],
+                            abs_tol=1e-4):
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "PRESENCE_margin_off_policy",
+            )
+        if record["min_consecutive"] != PRESENCE_POLICY["min_consecutive_windows"]:
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "PRESENCE_min_consecutive_off_policy",
+            )
+        state["presence_seen"] = True
+        state["presence_gate_dbfs"] = float(record["gate_dbfs"])
+        state["presence_min_consecutive"] = int(record["min_consecutive"])
+    elif kind == "SESSION":
+        action = str(record["action"])
+        if action == "STARTED":
+            if state["session_started"]:
+                return _invalidate(
+                    state, "invalid_firmware_telemetry", "SESSION_STARTED_twice",
+                )
+            state["session_started"] = True
+            state["sessions"] += 1
+        elif action in {"ENDED", "ABORTED"} and not state["session_started"]:
+            return _invalidate(
+                state, "invalid_firmware_telemetry", f"SESSION_{action}_without_START",
+            )
+        else:
+            state["session_started"] = False
     elif kind == "STATE":
         from_state = str(record["from_state"])
         to_state = str(record["to_state"])
@@ -953,6 +1200,14 @@ def transition_firmware_protocol(
             }
             return state
 
+        # Nenajavljen PRESENCE_LOST: firmware tvrdi da masine nema, a host je iz
+        # nivoa u DET zapisima izveo da gate prisustva nije pao. To nije
+        # dozvoljen kraj toka nego neslaganje sa telemetrijom.
+        if to_state == "NO_MACHINE" and reason == "PRESENCE_LOST":
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "spurious_PRESENCE_LOST",
+            )
+
         normal_transition_event: dict[str, str] | None = None
         if from_state == "CALIBRATED_NORMAL" and to_state == "ANOMALY" and reason == "THRESHOLD_PERSISTENCE":
             normal_transition_event = {
@@ -970,7 +1225,7 @@ def transition_firmware_protocol(
             )
 
         if to_state == "NO_MACHINE" or to_state in TERMINAL_FIRMWARE_STATES:
-            if reason not in QUALITY_REJECT_RESULTS:
+            if reason not in FLOW_STOP_REASONS:
                 return _invalidate(state, "invalid_firmware_telemetry", "terminal_STATE_reason_unknown")
             phase = state["drain_expected_phase"] or _inferred_terminal_phase(state)
             expected_terminal = _expected_terminal_state(reason, phase)
@@ -1010,7 +1265,7 @@ def transition_firmware_protocol(
                 state["calibration_accepted_event"] = True
             return state
         if event_payload["type"] == "FLOW_STOPPED":
-            if event_payload["reason"] not in QUALITY_REJECT_RESULTS:
+            if event_payload["reason"] not in FLOW_STOP_REASONS:
                 return _invalidate(state, "invalid_firmware_telemetry", "FLOW_STOPPED_reason_unknown")
             if event_payload["phase"] not in {"WAIT", "CAL", "DET"}:
                 return _invalidate(state, "invalid_firmware_telemetry", "FLOW_STOPPED_phase_unknown")
@@ -1048,7 +1303,32 @@ def transition_firmware_protocol(
             state["last_consecutive"] = record["consecutive"]
             if state["det_threshold"] is None:
                 state["det_threshold"] = float(record["threshold"])
-            if state["last_state"] == "CALIBRATED_NORMAL" and record["alarm"] == 1:
+
+            # Brojaci hijerarhije Faze 2, vodjeni nezavisno od firmvera.
+            present = float(record["level_dbfs"]) >= state["presence_gate_dbfs"]
+            min_consecutive = state["presence_min_consecutive"] or N_CONSECUTIVE_ALARM
+            if present:
+                state["absent_run"] = 0
+                state["deviation_run"] = record["consecutive"]
+            else:
+                state["absent_run"] += 1
+                state["deviation_run"] = 0
+            state["anomaly_active"] = record["alarm"] == 1
+
+            if not present and state["absent_run"] >= min_consecutive:
+                # Gate prisustva je trajno pao: masine nema. Ovo NIJE anomalija
+                # i ne smije se emitovati kao takva, bez obzira sto score skoci.
+                state["expected_state_transition"] = {
+                    "state": {
+                        "from_state": str(state["last_state"]),
+                        "to_state": "NO_MACHINE", "reason": "PRESENCE_LOST",
+                    },
+                    "event": {
+                        "type": "PRESENCE_LOST", "state": "NO_MACHINE",
+                        "phase": "DET", "reason": "PRESENCE_LOST",
+                    },
+                }
+            elif state["last_state"] == "CALIBRATED_NORMAL" and record["alarm"] == 1:
                 state["expected_state_transition"] = {
                     "state": {
                         "from_state": "CALIBRATED_NORMAL", "to_state": "ANOMALY",
@@ -1346,7 +1626,8 @@ def run_experiment(args: argparse.Namespace) -> int:
     events: list[dict[str, Any]] = []
     detections: list[dict[str, Any]] = []
     max_dropped: int | None = None
-    telemetry_counts = {"QUALITY": 0, "STATE": 0, "EVENT": 0}
+    telemetry_counts = {"QUALITY": 0, "STATE": 0, "EVENT": 0,
+                        "PRESENCE": 0, "SESSION": 0, "BUTTON": 0}
     last_firmware_state: str | None = None
     protocol_state = new_firmware_protocol_state()
     drain_started: float | None = None
@@ -1391,6 +1672,12 @@ def run_experiment(args: argparse.Namespace) -> int:
                 "w", encoding="utf-8", newline="",
             ),
         )
+        # Operaterski tok ide u ODVOJEN zapis, kao i do sada operatorova
+        # condition: sesije i pritisci tastera se nikad ne mijesaju sa
+        # firmverskim zakljuckom.
+        operator_handle = stack.enter_context(
+            (run_dir / "firmware_operator.csv").open("w", encoding="utf-8", newline=""),
+        )
     except Exception as exc:
         stack.close()
         failure = stack.close_error or exc
@@ -1406,12 +1693,14 @@ def run_experiment(args: argparse.Namespace) -> int:
             firmware_event_handle, fieldnames=FIRMWARE_EVENT_FIELDS,
         )
         parse_error_writer = csv.DictWriter(parse_error_handle, fieldnames=PARSE_ERROR_FIELDS)
+        operator_writer = csv.DictWriter(operator_handle, fieldnames=OPERATOR_FIELDS)
         event_writer.writeheader()
         det_writer.writeheader()
         quality_writer.writeheader()
         state_writer.writeheader()
         firmware_event_writer.writeheader()
         parse_error_writer.writeheader()
+        operator_writer.writeheader()
 
         ser: Any | None = None
         commands: queue.Queue[str] = queue.Queue()
@@ -1596,6 +1885,18 @@ def run_experiment(args: argparse.Namespace) -> int:
                     }
                     firmware_event_writer.writerow(row)
                     firmware_event_handle.flush()
+                elif parsed and parsed["kind"] in ("SESSION", "BUTTON", "PRESENCE"):
+                    protocol_state = transition_firmware_protocol(protocol_state, parsed)
+                    telemetry_counts[parsed["kind"]] += 1
+                    if parsed["kind"] != "PRESENCE":
+                        operator_writer.writerow({
+                            "host_utc": host_utc,
+                            "elapsed_s": elapsed,
+                            **{key: parsed[key] for key in OPERATOR_FIELDS
+                               if key in parsed},
+                            "kind": parsed["kind"],
+                        })
+                        operator_handle.flush()
                 elif parsed and parsed["kind"] == "PARSE_ERROR":
                     protocol_state = transition_firmware_protocol(protocol_state, parsed)
                     parse_error_writer.writerow({

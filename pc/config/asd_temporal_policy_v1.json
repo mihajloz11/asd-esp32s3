@@ -1,0 +1,285 @@
+{
+  "schema_version": "asd-temporal-policy-v1.0.0",
+  "derived_utc": "2026-08-13T22:18:45+00:00",
+  "scope": "temporal decision rule for the deviation level; not a fault diagnosis",
+  "target_anomalies_used": false,
+  "derivation": {
+    "data": "DCASE 2026 dev fan, normal clips only (source train/test, target train/test)",
+    "feature": "psd_shape, identical to canonical-evaluation-v1.1.0",
+    "threshold_rule": "max(p90 LOO, mean + 3 sd LOO), identical to psd_live.c",
+    "window_seconds": 10.0,
+    "n_splits": 40,
+    "split_seed": 20260814,
+    "short_disturbance": "synthetic +3 and +6 sd score bump over 1 or 2 windows; a property probe of the rule, NOT a claim about a real fault",
+    "sustained_change": "synthetic +3.0 sd score shift held to the end of the stream",
+    "stream_composition": "held-out normal clips of the SAME machine only; clips of a different physical fan are scored separately as a domain-shift measure and never counted as false alarms",
+    "selection_criterion": "lowest false-alarm episodes on the normal stream; among rules within 1.5x of the best, lowest response to a one-window disturbance; ties broken by latency",
+    "rejected_criterion": {
+      "criterion": "zero false alarms AND zero response to 1-2 window disturbances AND no missed sustained shift",
+      "outcome": "no rule satisfied it",
+      "why": [
+        "a one-window disturbance adjacent to a window already above the threshold can complete a run of three; no consecutive-window rule can exclude that",
+        "the mean + 3 sd LOO threshold is high enough in some splits that a 3 sd shift never reaches it, so 'missed shift' measures the threshold, not the rule"
+      ]
+    }
+  },
+  "strict_criterion_survivors": [],
+  "candidates": [
+    {
+      "rule": "baseline_3_consecutive",
+      "config": "n=3",
+      "params": {
+        "name": "baseline_3_consecutive",
+        "min_consecutive": 3,
+        "ewma_alpha": 0.0,
+        "enter_scale": 1.0,
+        "exit_scale": 1.0,
+        "cusum_k": 0.0,
+        "cusum_h": 0.0,
+        "fast_scale": 0.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 0,
+      "false_alarms_per_hour": 0.0,
+      "foreign_machine_episodes_per_hour": 11.16,
+      "short_spike_1_window_alarm_rate": 0.004166666666666667,
+      "short_spike_2_window_alarm_rate": 0.0625,
+      "sustained_shift_median_latency_windows": 3.0,
+      "sustained_shift_missed_splits": 10
+    },
+    {
+      "rule": "consecutive_2",
+      "config": "n=2",
+      "params": {
+        "name": "consecutive_2",
+        "min_consecutive": 2,
+        "ewma_alpha": 0.0,
+        "enter_scale": 1.0,
+        "exit_scale": 1.0,
+        "cusum_k": 0.0,
+        "cusum_h": 0.0,
+        "fast_scale": 0.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 2,
+      "false_alarms_per_hour": 0.36,
+      "foreign_machine_episodes_per_hour": 12.06,
+      "short_spike_1_window_alarm_rate": 0.05416666666666667,
+      "short_spike_2_window_alarm_rate": 0.7333333333333333,
+      "sustained_shift_median_latency_windows": 2.0,
+      "sustained_shift_missed_splits": 10
+    },
+    {
+      "rule": "consecutive_4",
+      "config": "n=4",
+      "params": {
+        "name": "consecutive_4",
+        "min_consecutive": 4,
+        "ewma_alpha": 0.0,
+        "enter_scale": 1.0,
+        "exit_scale": 1.0,
+        "cusum_k": 0.0,
+        "cusum_h": 0.0,
+        "fast_scale": 0.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 0,
+      "false_alarms_per_hour": 0.0,
+      "foreign_machine_episodes_per_hour": 10.98,
+      "short_spike_1_window_alarm_rate": 0.0,
+      "short_spike_2_window_alarm_rate": 0.008333333333333333,
+      "sustained_shift_median_latency_windows": 4.0,
+      "sustained_shift_missed_splits": 10
+    },
+    {
+      "rule": "ewma_0.4_n2",
+      "config": "n=2 ewma=0.4",
+      "params": {
+        "name": "ewma_0.4_n2",
+        "min_consecutive": 2,
+        "ewma_alpha": 0.4,
+        "enter_scale": 1.0,
+        "exit_scale": 1.0,
+        "cusum_k": 0.0,
+        "cusum_h": 0.0,
+        "fast_scale": 0.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 30,
+      "false_alarms_per_hour": 5.4,
+      "foreign_machine_episodes_per_hour": 6.48,
+      "short_spike_1_window_alarm_rate": 0.625,
+      "short_spike_2_window_alarm_rate": 0.5625,
+      "sustained_shift_median_latency_windows": 2.0,
+      "sustained_shift_missed_splits": 10
+    },
+    {
+      "rule": "ewma_0.4_n3",
+      "config": "n=3 ewma=0.4",
+      "params": {
+        "name": "ewma_0.4_n3",
+        "min_consecutive": 3,
+        "ewma_alpha": 0.4,
+        "enter_scale": 1.0,
+        "exit_scale": 1.0,
+        "cusum_k": 0.0,
+        "cusum_h": 0.0,
+        "fast_scale": 0.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 30,
+      "false_alarms_per_hour": 5.4,
+      "foreign_machine_episodes_per_hour": 6.48,
+      "short_spike_1_window_alarm_rate": 0.5916666666666667,
+      "short_spike_2_window_alarm_rate": 0.5708333333333333,
+      "sustained_shift_median_latency_windows": 3.0,
+      "sustained_shift_missed_splits": 10
+    },
+    {
+      "rule": "ewma_0.25_n3",
+      "config": "n=3 ewma=0.25",
+      "params": {
+        "name": "ewma_0.25_n3",
+        "min_consecutive": 3,
+        "ewma_alpha": 0.25,
+        "enter_scale": 1.0,
+        "exit_scale": 1.0,
+        "cusum_k": 0.0,
+        "cusum_h": 0.0,
+        "fast_scale": 0.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 30,
+      "false_alarms_per_hour": 5.4,
+      "foreign_machine_episodes_per_hour": 5.4,
+      "short_spike_1_window_alarm_rate": 0.5375,
+      "short_spike_2_window_alarm_rate": 0.5375,
+      "sustained_shift_median_latency_windows": 3.0,
+      "sustained_shift_missed_splits": 10
+    },
+    {
+      "rule": "hysteresis_1.0_0.7_n3",
+      "config": "n=3 hist=1/0.7",
+      "params": {
+        "name": "hysteresis_1.0_0.7_n3",
+        "min_consecutive": 3,
+        "ewma_alpha": 0.0,
+        "enter_scale": 1.0,
+        "exit_scale": 0.7,
+        "cusum_k": 0.0,
+        "cusum_h": 0.0,
+        "fast_scale": 0.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 0,
+      "false_alarms_per_hour": 0.0,
+      "foreign_machine_episodes_per_hour": 5.4,
+      "short_spike_1_window_alarm_rate": 0.0,
+      "short_spike_2_window_alarm_rate": 0.0875,
+      "sustained_shift_median_latency_windows": 3.0,
+      "sustained_shift_missed_splits": 10
+    },
+    {
+      "rule": "ewma_0.4_n3_hyst_0.7",
+      "config": "n=3 ewma=0.4 hist=1/0.7",
+      "params": {
+        "name": "ewma_0.4_n3_hyst_0.7",
+        "min_consecutive": 3,
+        "ewma_alpha": 0.4,
+        "enter_scale": 1.0,
+        "exit_scale": 0.7,
+        "cusum_k": 0.0,
+        "cusum_h": 0.0,
+        "fast_scale": 0.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 30,
+      "false_alarms_per_hour": 5.4,
+      "foreign_machine_episodes_per_hour": 5.4,
+      "short_spike_1_window_alarm_rate": 0.44583333333333336,
+      "short_spike_2_window_alarm_rate": 0.5,
+      "sustained_shift_median_latency_windows": 3.0,
+      "sustained_shift_missed_splits": 10
+    },
+    {
+      "rule": "cusum_k0.5_h2",
+      "config": "n=3 cusum k=0.5 h=2",
+      "params": {
+        "name": "cusum_k0.5_h2",
+        "min_consecutive": 3,
+        "ewma_alpha": 0.0,
+        "enter_scale": 1.0,
+        "exit_scale": 1.0,
+        "cusum_k": 0.5,
+        "cusum_h": 2.0,
+        "fast_scale": 0.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 30,
+      "false_alarms_per_hour": 5.4,
+      "foreign_machine_episodes_per_hour": 11.16,
+      "short_spike_1_window_alarm_rate": 0.7208333333333333,
+      "short_spike_2_window_alarm_rate": 0.675,
+      "sustained_shift_median_latency_windows": 1.0,
+      "sustained_shift_missed_splits": 10
+    },
+    {
+      "rule": "cusum_k1.0_h3",
+      "config": "n=3 cusum k=1 h=3",
+      "params": {
+        "name": "cusum_k1.0_h3",
+        "min_consecutive": 3,
+        "ewma_alpha": 0.0,
+        "enter_scale": 1.0,
+        "exit_scale": 1.0,
+        "cusum_k": 1.0,
+        "cusum_h": 3.0,
+        "fast_scale": 0.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 30,
+      "false_alarms_per_hour": 5.4,
+      "foreign_machine_episodes_per_hour": 11.16,
+      "short_spike_1_window_alarm_rate": 0.43333333333333335,
+      "short_spike_2_window_alarm_rate": 0.6875,
+      "sustained_shift_median_latency_windows": 2.0,
+      "sustained_shift_missed_splits": 10
+    },
+    {
+      "rule": "ewma_0.4_n3_hyst_0.7_fast5",
+      "config": "n=3 ewma=0.4 hist=1/0.7 fast=5",
+      "params": {
+        "name": "ewma_0.4_n3_hyst_0.7_fast5",
+        "min_consecutive": 3,
+        "ewma_alpha": 0.4,
+        "enter_scale": 1.0,
+        "exit_scale": 0.7,
+        "cusum_k": 0.0,
+        "cusum_h": 0.0,
+        "fast_scale": 5.0
+      },
+      "normal_windows": 2000,
+      "false_alarm_episodes": 30,
+      "false_alarms_per_hour": 5.4,
+      "foreign_machine_episodes_per_hour": 5.4,
+      "short_spike_1_window_alarm_rate": 0.4583333333333333,
+      "short_spike_2_window_alarm_rate": 0.48333333333333334,
+      "sustained_shift_median_latency_windows": 3.0,
+      "sustained_shift_missed_splits": 10
+    }
+  ],
+  "policy": {
+    "rule": "hysteresis_1.0_0.7_n3",
+    "min_consecutive": 3,
+    "ewma_alpha": 0.0,
+    "enter_scale": 1.0,
+    "exit_scale": 0.7,
+    "cusum_k": 0.0,
+    "cusum_h": 0.0,
+    "fast_scale": 0.0,
+    "measured_false_alarms_per_hour": 0.0,
+    "measured_sustained_latency_windows": 3.0
+  },
+  "limitation": "Derived from recordings, not from a physical fan. The short-disturbance and sustained-change probes are synthetic score shifts, so they measure the rule's temporal behaviour, not acoustic detectability.",
+  "change_rule": "Any change requires a new schema version and normal-only evidence before any target-anomaly evaluation."
+}

@@ -16,10 +16,28 @@ static const char *TAG = "audio";
 #define DMA_DESC_NUM   4
 #define READ_CHUNK     1024   /* uzoraka po i2s_channel_read pozivu */
 
+/* INMP441 i I2S se sliježu poslije uključenja. Izmjereno na pločici 11.08.2026,
+ * prva tri bloka od 256 ms daju rms -4,1 / -18,0 / -35,4 dBFS uz dc
+ * -6410 / -7378 / -1011 i peak 29968 / 17047 / 2325, dok je ustaljeno stanje
+ * rms ~-46 dBFS uz dc ~-0,4 (mjereno 06.08.2026). Amplituda tranzijenta se
+ * mijenja od reseta do reseta, pa se ne može tolerisati pragom.
+ *
+ * Tranzijent nije zvuk i odbacuje se jednokratno NA IZVORU, prije nego uđe u
+ * ring buffer, u `raw_peak` ili u ocjenu kvaliteta. Dva razloga:
+ *   1. fail-closed gate iz Faze 1 ocjenjuje i prvi WAIT blok, pa je prolaz
+ *      padao na `CLIPPING` u tri od četiri reseta;
+ *   2. `raw_peak` je dokaz kojim je zatvoren rizik C1 (rezerva do klipovanja) —
+ *      tranzijent od 29968 bi tu rezervu prikazao lažno malom.
+ *
+ * Ovo nije `warn and continue` i ne popušta ni jedan gate: mjerni prozor počinje
+ * kad se senzor ustali, a svaki blok koji uđe u lanac se i dalje ocjenjuje. */
+#define SETTLE_SAMPLES (AUDIO_SR)   /* 1,0 s */
+
 static i2s_chan_handle_t rx_chan;
 static RingbufHandle_t ring;
 static uint32_t dropped;
 static int32_t raw_peak;
+static size_t settle_remaining = SETTLE_SAMPLES;
 
 /* Capture task: I2S (32-bit slot) -> 16-bit PCM -> ring buffer u PSRAM-u.
  * Visok prioritet, pinovan na core 0 (inference ide na core 1) — rizik C4. */
@@ -31,15 +49,26 @@ static void capture_task(void *arg) {
         if (i2s_channel_read(rx_chan, raw, sizeof(raw), &nbytes, portMAX_DELAY) != ESP_OK)
             continue;
         size_t n = nbytes / sizeof(int32_t);
+
+        /* Preskoči period slijeganja; poslednji preskočeni blok je obično
+         * djelimičan, pa se ostatak istog bloka normalno obrađuje. */
+        size_t off = 0;
+        if (settle_remaining) {
+            off = n < settle_remaining ? n : settle_remaining;
+            settle_remaining -= off;
+            if (off == n) continue;
+        }
+
         /* INMP441: 24-bit MSB u 32-bit slotu -> >>14 daje pun 16-bit opseg
          * (provjeri amplitudu na WAV testu, rizik C1) */
-        for (size_t i = 0; i < n; i++) {
+        for (size_t i = off; i < n; i++) {
             int32_t a = raw[i] < 0 ? -raw[i] : raw[i];
             if (a > raw_peak) raw_peak = a;
-            pcm[i] = (int16_t)(raw[i] >> 14);
+            pcm[i - off] = (int16_t)(raw[i] >> 14);
         }
-        if (xRingbufferSend(ring, pcm, n * sizeof(int16_t), 0) != pdTRUE)
-            dropped += n;
+        size_t out = n - off;
+        if (xRingbufferSend(ring, pcm, out * sizeof(int16_t), 0) != pdTRUE)
+            dropped += out;
     }
 }
 

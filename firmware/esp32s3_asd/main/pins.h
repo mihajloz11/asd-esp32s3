@@ -12,8 +12,14 @@
  * | INMP441 SD    |  6   |  33   | data in (L/R pin mikrofona->GND) |
  * | INA226 SDA    |  8   |  21   | I2C                              |
  * | INA226 SCL    |  9   |  22   | I2C                              |
- * | LED status    |  2   |   2   | svijetli=normal, gasi=anomalija  |
- * | Taster (demo) | 10   |  27   | izbor izvora: mic/flash klipovi  |
+ * | LED status    |  2   |   2   | zelena: obrazac po fazi rada     |
+ * | LED alarm     | 11   |  14   | crvena: svijetli samo u alarmu   |
+ * | Taster (demo) | 10   |  27   | pokrece ucenje (asd_operator.c)  |
+ *
+ * Dvije LED su namjerno redundantne. Zelena nosi cijelu informaciju kroz pet
+ * obrazaca (vidi asd_operator.h), ali "ugasena zelena" i "uredjaj mrtav" se ne
+ * razlikuju na fotografiji ni na video snimku demoa. Crvena to razrjesava.
+ * Ako je zalemljena samo zelena, ponasanje je nepromijenjeno i potpuno.
  */
 #ifndef ASD_PINS_H
 #define ASD_PINS_H
@@ -27,6 +33,7 @@
 #define PIN_I2C_SDA   8
 #define PIN_I2C_SCL   9
 #define PIN_LED       2
+#define PIN_LED_ALARM 11
 #define PIN_BUTTON    10
 #elif CONFIG_IDF_TARGET_ESP32
 #define PIN_I2S_BCLK  26
@@ -35,6 +42,7 @@
 #define PIN_I2C_SDA   21
 #define PIN_I2C_SCL   22
 #define PIN_LED       2
+#define PIN_LED_ALARM 14
 #define PIN_BUTTON    27
 #else
 #error "nepodrzan target — dodaj pin-mapu"
