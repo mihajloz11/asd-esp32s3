@@ -1,0 +1,142 @@
+{
+  "protocol": "advanced-evaluation-v1.0.0",
+  "generated_utc": "2026-08-13T22:33:34+00:00",
+  "scope": "developmental only; canonical-evaluation-v1.1.0 is untouched",
+  "warning": "Historical model-selection bias applies. These numbers are not an independent final validation and must not be reported as one.",
+  "n_splits": 20,
+  "split_seed": 20260814,
+  "candidates_declared_before_running": [
+    "psd_shape",
+    "psd_order",
+    "psd_regime",
+    "psd_logratio",
+    "psd_coherence",
+    "psd_masked",
+    "transient",
+    "psd_plus_transient"
+  ],
+  "faza3_f0_normal_only": {
+    "source_f0_median_hz": 34.0,
+    "source_confidence_median": 3.102861624050151,
+    "target_f0_median_hz": 34.0,
+    "target_confidence_median": 3.2569885374197165,
+    "per_speed": {
+      "spd_1": {
+        "n": 330,
+        "median_hz": 34.0,
+        "sd_hz": 2.9429644824400416
+      },
+      "spd_2": {
+        "n": 330,
+        "median_hz": 34.0,
+        "sd_hz": 0.9546897437843628
+      },
+      "spd_3": {
+        "n": 330,
+        "median_hz": 34.0,
+        "sd_hz": 4.078865830674804
+      }
+    },
+    "speeds_separable_from_normal_only": false,
+    "harmonic_structure_control": {
+      "spd_1": {
+        "n": 40,
+        "peak_hz": [
+          68.359375,
+          76.171875,
+          78.125,
+          93.75,
+          99.609375,
+          101.5625
+        ],
+        "max_prominence_decades": 2.1096002969495293
+      },
+      "spd_2": {
+        "n": 40,
+        "peak_hz": [
+          68.359375,
+          76.171875,
+          78.125,
+          93.75,
+          99.609375,
+          101.5625
+        ],
+        "max_prominence_decades": 2.090178848807026
+      },
+      "spd_3": {
+        "n": 40,
+        "peak_hz": [
+          68.359375,
+          76.171875,
+          78.125,
+          95.703125,
+          99.609375,
+          101.5625
+        ],
+        "max_prominence_decades": 2.0612779315027754
+      },
+      "fft_bin_hz": 1.953125,
+      "peaks_identical_across_speeds": true,
+      "comparison": "peaks match within one FFT bin (1.95 Hz)"
+    }
+  },
+  "results": {
+    "psd_shape": {
+      "auc_mean": 0.8555999999999999,
+      "auc_sd": 0.023966977281250964,
+      "pauc_mean": 0.6392631578947369,
+      "pauc_sd": 0.044496692895881144,
+      "n_splits": 20
+    },
+    "psd_order": {
+      "auc_mean": 0.6388400000000001,
+      "auc_sd": 0.04674730366555915,
+      "pauc_mean": 0.5170526315789473,
+      "pauc_sd": 0.017706752550159386,
+      "n_splits": 20
+    },
+    "psd_regime": {
+      "auc_mean": 0.8555999999999999,
+      "auc_sd": 0.023966977281250964,
+      "pauc_mean": 0.6392631578947369,
+      "pauc_sd": 0.044496692895881144,
+      "n_splits": 20
+    },
+    "psd_logratio": {
+      "auc_mean": 0.7184600000000001,
+      "auc_sd": 0.03468469979688452,
+      "pauc_mean": 0.5848421052631579,
+      "pauc_sd": 0.03373417347192303,
+      "n_splits": 20
+    },
+    "psd_coherence": {
+      "auc_mean": 0.7505600000000001,
+      "auc_sd": 0.039755331717896664,
+      "pauc_mean": 0.5773684210526315,
+      "pauc_sd": 0.036958462871706864,
+      "n_splits": 20
+    },
+    "psd_masked": {
+      "auc_mean": 0.45004,
+      "auc_sd": 0.06454194295185109,
+      "pauc_mean": 0.488421052631579,
+      "pauc_sd": 0.006028556237168993,
+      "n_splits": 20
+    },
+    "transient": {
+      "auc_mean": 0.56466,
+      "auc_sd": 0.026662115444953,
+      "pauc_mean": 0.5062105263157896,
+      "pauc_sd": 0.012374130820926667,
+      "n_splits": 20
+    },
+    "psd_plus_transient": {
+      "auc_mean": 0.8567599999999999,
+      "auc_sd": 0.02576537211064493,
+      "pauc_mean": 0.6432631578947369,
+      "pauc_sd": 0.04706322734812236,
+      "n_splits": 20
+    }
+  },
+  "baseline_auc": 0.8555999999999999
+}
