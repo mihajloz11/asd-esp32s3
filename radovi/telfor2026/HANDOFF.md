@@ -58,13 +58,16 @@ I. UVOD                  (rimski brojevi, velika slova)
 II. ...
 ```
 
-## 3. Odluke koje treba potvrditi prije kucanja
+## 3. Odluke — potvrđene 14.08.2026
 
-| # | Pitanje | Prijedlog | Zašto |
+| # | Pitanje | Odluka | Zašto |
 |---|---|---|---|
 | 1 | **Jezik** | **engleski** | TELFOR prima oba, ali u IEEE Xplore idu engleski radovi; korisno i za CV i inostrane prijave |
-| 2 | **Koautori** | Mihajlo + mentor | Ime mentora nije poznato — **treba ga unijeti** |
-| 3 | Kategorija | studentski rad | provjeriti da li se prijavljuje kao studentski (može nositi nagradu) |
+| 2 | **Autori** | **Mihajlo Živković, Ivan Mezei** | tim redoslijedom; afilijacija za oba: University of Novi Sad, Faculty of Technical Sciences |
+| 3 | Kategorija | studentski rad | provjeriti da li se prijavljuje kao studentski (može nositi nagradu) — **jedino još otvoreno** |
+
+Rad se piše na engleskom, dakle `Abstract —` / `Keywords —`, ne `Sadržaj —` /
+`Ključne reči —`.
 
 ## 4. Predložena struktura rada (4 strane)
 
@@ -169,7 +172,8 @@ Rad mora imati jasno označena mjesta za ono što još nije urađeno
 3. **Slika postavke.** Fotografija zalemljene ploče sa tasterom i LED —
    nema je dok se ne zalemi.
 4. **Copyright broj** na dnu prve strane — uzima se iz registracionog sistema.
-5. **Ime mentora** kao koautor.
+5. **E-mail adresa i tačan naziv katedre za Ivana Mezeija** u autorskom bloku —
+   ime je potvrđeno, kontakt podaci nisu.
 
 ## 7. Reference — provjerene, ne izmišljene
 
@@ -195,7 +199,7 @@ uporediti sa originalima — DOI/stranice nisu potvrđeni za sve.
 
 ## 8. Prvi korak u novom četu
 
-1. Potvrditi jezik (prijedlog: engleski) i ime mentora.
+1. ~~Potvrditi jezik i ime mentora.~~ Riješeno — vidi sekciju 3.
 2. Napraviti `radovi/telfor2026/telfor2026_asd_esp32s3.docx` iz zvaničnog
    šablona (`python-docx`, otvoriti šablon → obrisati tijelo → puniti stilovima
    šablona, da se formatiranje ne rekonstruiše ručno).
