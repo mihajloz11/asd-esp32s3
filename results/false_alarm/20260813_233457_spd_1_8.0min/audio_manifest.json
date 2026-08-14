@@ -1,0 +1,32 @@
+{
+  "speed": "spd_1",
+  "gain": 3.482252836227417,
+  "cal_seconds": 130.0,
+  "det_loop_seconds": 80.0,
+  "cal_clips": [
+    "section_00_target_test_normal_0003_spd_1.wav",
+    "section_00_target_test_normal_0005_spd_1.wav",
+    "section_00_target_test_normal_0006_spd_1.wav",
+    "section_00_target_test_normal_0011_spd_1.wav",
+    "section_00_target_test_normal_0013_spd_1.wav",
+    "section_00_target_test_normal_0014_spd_1.wav",
+    "section_00_target_test_normal_0018_spd_1.wav",
+    "section_00_target_test_normal_0019_spd_1.wav",
+    "section_00_target_test_normal_0020_spd_1.wav",
+    "section_00_target_test_normal_0021_spd_1.wav",
+    "section_00_target_test_normal_0029_spd_1.wav",
+    "section_00_target_test_normal_0037_spd_1.wav",
+    "section_00_target_test_normal_0043_spd_1.wav"
+  ],
+  "det_clips": [
+    "section_00_target_test_normal_0044_spd_1.wav",
+    "section_00_target_test_normal_0046_spd_1.wav",
+    "section_00_target_test_normal_0047_spd_1.wav",
+    "section_00_target_test_normal_0049_spd_1.wav",
+    "section_00_target_train_normal_0002_spd_1.wav",
+    "section_00_target_train_normal_0005_spd_1.wav",
+    "section_00_target_train_normal_0006_spd_1.wav",
+    "section_00_target_train_normal_0007_spd_1.wav"
+  ],
+  "overlap": []
+}
