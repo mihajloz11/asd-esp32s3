@@ -1,0 +1,28 @@
+{
+  "packages": {
+    "torch": null,
+    "torchaudio": null,
+    "transformers": null,
+    "timm": null,
+    "tensorflow": "2.19.1",
+    "onnxruntime": null,
+    "librosa": "0.11.0",
+    "numpy": "2.0.2",
+    "scipy": "1.17.1",
+    "sklearn": "1.9.0"
+  },
+  "disk": {
+    "free_gb": 194.1,
+    "total_gb": 475.9
+  },
+  "caches": {
+    "huggingface": {
+      "exists": false,
+      "size_mb": 0.0
+    },
+    "torch_hub": {
+      "exists": false,
+      "size_mb": 0.0
+    }
+  }
+}
