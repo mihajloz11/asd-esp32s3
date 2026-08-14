@@ -77,14 +77,14 @@ def test_parse_phases_threshold_and_dropped() -> None:
 
 def test_parse_quality_state_event_v1_telemetry() -> None:
     quality = physical.parse_serial_line(
-        "I psdlive: QUALITY protocol=asd-quality-v1.2.0 phase=CAL index=2 total=10 "
+        "I psdlive: QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=2 total=10 "
         "result=OK metrics_valid=1 samples=159744 expected=159744 "
         "rms_dbfs=-31.250 dc=2.5 peak=4100 "
         "clipped=0 zeros=3 stuck=7 dropped_delta=0 feature_valid=1 tonalness_proxy=1.125 "
         "tonalness_valid=1 tonal_gate=pending_normal_only"
     )
     assert quality == {
-        "kind": "QUALITY", "protocol": "asd-quality-v1.2.0", "phase": "CAL",
+        "kind": "QUALITY", "protocol": "asd-quality-v1.3.0", "phase": "CAL",
         "index": 2, "total": 10, "result": "OK", "samples": 159744,
         "metrics_valid": 1, "feature_valid": 1,
         "expected": 159744, "rms_dbfs": -31.25, "dc": 2.5, "peak": 4100,
@@ -93,25 +93,27 @@ def test_parse_quality_state_event_v1_telemetry() -> None:
         "tonal_gate": "pending_normal_only",
     }
     assert physical.parse_serial_line(
-        "STATE protocol=asd-quality-v1.2.0 from=NO_MACHINE "
+        "STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE "
         "to=CALIBRATION_REJECTED reason=CLIPPING"
     ) == {
-        "kind": "STATE", "protocol": "asd-quality-v1.2.0",
+        "kind": "STATE", "protocol": "asd-quality-v1.3.0",
         "from_state": "NO_MACHINE", "to_state": "CALIBRATION_REJECTED",
         "reason": "CLIPPING",
     }
     assert physical.parse_serial_line(
-        "EVENT protocol=asd-quality-v1.2.0 type=FLOW_STOPPED "
-        "state=SENSOR_ERROR phase=CAL reason=DROPPED_SAMPLES"
+        "EVENT protocol=asd-quality-v1.3.0 type=FLOW_STOPPED "
+        "state=SENSOR_ERROR phase=CAL reason=DROPPED_SAMPLES "
+        "event=SENSOR_FAULT capability=AVAILABLE level=SENSOR_HEALTH"
     ) == {
-        "kind": "EVENT", "protocol": "asd-quality-v1.2.0",
+        "kind": "EVENT", "protocol": "asd-quality-v1.3.0",
         "type": "FLOW_STOPPED", "state": "SENSOR_ERROR", "phase": "CAL",
-        "reason": "DROPPED_SAMPLES",
+        "reason": "DROPPED_SAMPLES", "event": "SENSOR_FAULT",
+        "capability": "AVAILABLE", "level": "SENSOR_HEALTH",
     }
 
 
 def test_quality_protocol_is_strict_and_operator_truth_is_separate() -> None:
-    assert physical.PROTOCOL_VERSION == "physical-fan-v1.5.0"
+    assert physical.PROTOCOL_VERSION == "physical-fan-v1.6.0"
     mismatch = physical.parse_serial_line(
         "STATE protocol=asd-quality-v0 from=NO_MACHINE to=ANOMALY reason=x"
     )
@@ -129,7 +131,7 @@ def test_quality_protocol_is_strict_and_operator_truth_is_separate() -> None:
 
 def test_malformed_v1_telemetry_is_audited_not_raised() -> None:
     malformed = physical.parse_serial_line(
-        "QUALITY protocol=asd-quality-v1.2.0 phase=CAL index=x total=10 "
+        "QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=x total=10 "
         "result=OK samples=10 expected=10 rms_dbfs=-30 dc=0 peak=1 feature_valid=1 "
         "clipped=0 zeros=0 stuck=0 dropped_delta=0 tonalness_proxy=1 "
         "tonal_gate=pending_normal_only"
@@ -137,7 +139,7 @@ def test_malformed_v1_telemetry_is_audited_not_raised() -> None:
     assert malformed["kind"] == "PARSE_ERROR"
     assert malformed["reason"] == "malformed_numeric_field"
     truncated = physical.parse_serial_line(
-        "STATE protocol=asd-quality-v1.2.0 from=NO_MACHINE to="
+        "STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to="
     )
     assert truncated["kind"] == "PARSE_ERROR"
     assert truncated["reason"] == "malformed_key_value_token"
@@ -148,7 +150,7 @@ def test_malformed_v1_telemetry_is_audited_not_raised() -> None:
 
 def test_duplicate_keys_and_nonfinite_adapt_are_audited() -> None:
     duplicate = physical.parse_serial_line(
-        "QUALITY protocol=asd-quality-v1.2.0 phase=WAIT phase=WAIT"
+        "QUALITY protocol=asd-quality-v1.3.0 phase=WAIT phase=WAIT"
     )
     assert duplicate["kind"] == "PARSE_ERROR"
     assert duplicate["reason"] == "duplicate_key:phase"
@@ -194,6 +196,29 @@ def _adapt(*, threshold: float = 1.6) -> dict:
     }
 
 
+def _presence(*, level_mean_dbfs: float = -30.0) -> dict:
+    margin = physical.PRESENCE_POLICY["absent_margin_db"]
+    return {
+        "kind": "PRESENCE", "protocol": physical.QUALITY_PROTOCOL_VERSION,
+        "level_mean_dbfs": level_mean_dbfs, "margin_db": margin,
+        "gate_dbfs": level_mean_dbfs - margin,
+        "min_consecutive": physical.PRESENCE_POLICY["min_consecutive_windows"],
+    }
+
+
+def _temporal() -> dict:
+    policy = physical.TEMPORAL_POLICY
+    return {
+        "kind": "TEMPORAL", "protocol": physical.QUALITY_PROTOCOL_VERSION,
+        "policy": physical.TEMPORAL_POLICY_RECORD["schema_version"],
+        "min_consecutive": policy["min_consecutive"],
+        "ewma_alpha": policy["ewma_alpha"],
+        "enter_scale": policy["enter_scale"],
+        "exit_scale": policy["exit_scale"],
+        "fast_scale": policy["fast_scale"],
+    }
+
+
 def _ready_protocol_state() -> dict:
     state = physical.new_firmware_protocol_state()
     state = physical.transition_firmware_protocol(state, {
@@ -204,6 +229,8 @@ def _ready_protocol_state() -> dict:
         for index in range(1, count + 1):
             state = physical.transition_firmware_protocol(state, _quality(phase, index))
     state = physical.transition_firmware_protocol(state, _adapt())
+    state = physical.transition_firmware_protocol(state, _presence())
+    state = physical.transition_firmware_protocol(state, _temporal())
     state = physical.transition_firmware_protocol(state, {
         "kind": "STATE", "from_state": "NO_MACHINE",
         "to_state": "CALIBRATED_NORMAL", "reason": "CALIBRATION_ACCEPTED",
@@ -227,7 +254,7 @@ def _handshake_state() -> dict:
 
 def test_literal_firmware_quality_replay_wait_and_reject_contract() -> None:
     wait_line = (
-        "QUALITY protocol=asd-quality-v1.2.0 phase=WAIT index=1 total=60 "
+        "QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=1 total=60 "
         "result=LOW_LEVEL_OBSERVATION metrics_valid=1 feature_valid=0 samples=4096 expected=4096 "
         "rms_dbfs=-70.000 dc=123.000 peak=200 clipped=0 zeros=0 stuck=0 "
         "dropped_delta=0 tonalness_valid=0 tonalness_proxy=0.000000 "
@@ -244,7 +271,7 @@ def test_literal_firmware_quality_replay_wait_and_reject_contract() -> None:
     for index in range(1, 61):
         state = physical.transition_firmware_protocol(state, _quality("WAIT", index))
     reject_line = (
-        "QUALITY protocol=asd-quality-v1.2.0 phase=CAL index=1 total=10 "
+        "QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=1 total=10 "
         "result=CLIPPING metrics_valid=1 feature_valid=0 samples=159744 expected=159744 "
         "rms_dbfs=-10.000 dc=0.000 peak=32768 clipped=160 zeros=0 stuck=0 "
         "dropped_delta=0 tonalness_valid=0 tonalness_proxy=0.000000 "
@@ -260,7 +287,7 @@ def test_literal_firmware_quality_replay_wait_and_reject_contract() -> None:
 
 def test_literal_pcm_valid_feature_nonfinite_is_a_firmware_reject() -> None:
     line = (
-        "QUALITY protocol=asd-quality-v1.2.0 phase=DET index=1 total=0 "
+        "QUALITY protocol=asd-quality-v1.3.0 phase=DET index=1 total=0 "
         "result=NONFINITE metrics_valid=1 samples=159744 expected=159744 "
         "rms_dbfs=-30.000 dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 "
         "dropped_delta=0 feature_valid=0 tonalness_valid=0 "
@@ -301,7 +328,8 @@ def test_protocol_mismatch_and_terminal_state_invalidate_host_result() -> None:
     ready = _ready_protocol_state()
     terminal = physical.transition_firmware_protocol(ready, {
         "kind": "EVENT", "type": "FLOW_STOPPED", "state": "SENSOR_ERROR",
-        "phase": "DET", "reason": "DROPPED_SAMPLES",
+        "phase": "DET", "reason": "DROPPED_SAMPLES", "event": "SENSOR_FAULT",
+        "capability": "AVAILABLE", "level": "SENSOR_HEALTH",
     })
     assert terminal["terminal"] is True
     assert terminal["invalid_status"] == "invalid_firmware_terminal"
@@ -456,10 +484,14 @@ def test_literal_full_v12_trace_with_roundtrip_det_and_anomaly_pair() -> None:
         "loo_gate=pending_normal_only",
         "ADAPTTHR n=10 mean=1.000000 sd=0.200000 k=0 theta=0 p=0.9000 "
         "thr=1.60000002 lo=0.000000 factory=0.000000",
+        f"PRESENCE protocol={q} level_mean_dbfs=-30 margin_db=11 "
+        "gate_dbfs=-41 min_consecutive=3",
+        f"TEMPORAL protocol={q} policy=asd-temporal-policy-v1.0.0 "
+        "min_consecutive=3 ewma_alpha=0 enter_scale=1 exit_scale=0.7 fast_scale=0",
         f"STATE protocol={q} from=NO_MACHINE to=CALIBRATED_NORMAL "
         "reason=CALIBRATION_ACCEPTED",
         f"EVENT protocol={q} type=CALIBRATION_ACCEPTED state=CALIBRATED_NORMAL "
-        "phase=CAL reason=QUALITY_OK",
+        "phase=CAL reason=QUALITY_OK event=NONE capability=AVAILABLE level=DEVIATION",
     ])
     for window in (1, 2, 3):
         lines.append(
@@ -480,7 +512,8 @@ def test_literal_full_v12_trace_with_roundtrip_det_and_anomaly_pair() -> None:
         f"STATE protocol={q} from=CALIBRATED_NORMAL to=ANOMALY "
         "reason=THRESHOLD_PERSISTENCE",
         f"EVENT protocol={q} type=ANOMALY_ENTERED state=ANOMALY phase=DET "
-        "reason=THRESHOLD_PERSISTENCE",
+        "reason=THRESHOLD_PERSISTENCE event=UNKNOWN_CHANGE capability=AVAILABLE "
+        "level=DEVIATION",
     ])
 
     state = physical.new_firmware_protocol_state()
@@ -687,7 +720,7 @@ def test_tiny_negative_contract_clamps_but_material_negative_rejects() -> None:
     assert invalid["invalid_reason"] == "negative_DET_score:-0.002"
 
     summary = physical.parse_serial_line(
-        "QUALITY protocol=asd-quality-v1.2.0 phase=CAL_SUMMARY result=OBSERVED "
+        "QUALITY protocol=asd-quality-v1.3.0 phase=CAL_SUMMARY result=OBSERVED "
         "loo_mean=-0.0005 loo_sd=0 loo_cv=0 loo_range=0 "
         "loo_gate=pending_normal_only"
     )
@@ -1000,12 +1033,13 @@ def test_serial_close_failure_is_finalized_before_it_is_raised(
         def __init__(self, *args, **kwargs):
             self.timeout = 1
             self.lines = [
-                b"STATE protocol=asd-quality-v1.2.0 from=NO_MACHINE "
+                b"STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE "
                 b"to=NO_MACHINE reason=BOOT_FAIL_CLOSED\n",
-                b"STATE protocol=asd-quality-v1.2.0 from=NO_MACHINE "
+                b"STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE "
                 b"to=NO_MACHINE reason=INSUFFICIENT_LEVEL\n",
-                b"EVENT protocol=asd-quality-v1.2.0 type=FLOW_STOPPED "
-                b"state=NO_MACHINE phase=WAIT reason=INSUFFICIENT_LEVEL\n",
+                b"EVENT protocol=asd-quality-v1.3.0 type=FLOW_STOPPED "
+                b"state=NO_MACHINE phase=WAIT reason=INSUFFICIENT_LEVEL "
+                b"event=NONE capability=AVAILABLE level=MACHINE_PRESENCE\n",
             ]
 
         def readline(self):
@@ -1063,12 +1097,13 @@ def test_stop_drains_buffered_terminal_telemetry_and_bad_condition_does_not_cras
     import serial
 
     lines = [
-        "STATE protocol=asd-quality-v1.2.0 from=NO_MACHINE to=NO_MACHINE "
+        "STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=NO_MACHINE "
         "reason=BOOT_FAIL_CLOSED\n",
-        "STATE protocol=asd-quality-v1.2.0 from=NO_MACHINE to=NO_MACHINE "
+        "STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=NO_MACHINE "
         "reason=INSUFFICIENT_LEVEL\n",
-        "EVENT protocol=asd-quality-v1.2.0 type=FLOW_STOPPED state=NO_MACHINE "
-        "phase=WAIT reason=INSUFFICIENT_LEVEL\n",
+        "EVENT protocol=asd-quality-v1.3.0 type=FLOW_STOPPED state=NO_MACHINE "
+        "phase=WAIT reason=INSUFFICIENT_LEVEL "
+        "event=NONE capability=AVAILABLE level=MACHINE_PRESENCE\n",
     ]
 
     class FakeSerial:
@@ -1136,3 +1171,195 @@ def test_summary_never_calls_zero_det_run_valid() -> None:
         status="completed_by_operator", events=[], detections=[], max_dropped=None,
     )
     assert "Validan fizički rezultat: **NE**" in summary
+
+
+# --- Faza 2 u zivom toku: prisustvo, semantika dogadjaja, operaterski zapisi ---
+
+def test_presence_record_is_required_before_any_det() -> None:
+    """Bez objavljenog gate-a host ne moze nezavisno ponoviti odluku Faze 2."""
+    state = physical.new_firmware_protocol_state()
+    state = physical.transition_firmware_protocol(state, {
+        "kind": "STATE", "from_state": "NO_MACHINE", "to_state": "NO_MACHINE",
+        "reason": "BOOT_FAIL_CLOSED",
+    })
+    for phase, count in physical.EXPECTED_QUALITY_COUNTS.items():
+        for index in range(1, count + 1):
+            state = physical.transition_firmware_protocol(state, _quality(phase, index))
+    state = physical.transition_firmware_protocol(state, _adapt())
+    assert not physical.firmware_protocol_ready(state)
+    assert state["presence_seen"] is False
+
+
+def test_presence_must_follow_adapt_and_precede_acceptance() -> None:
+    early = physical.transition_firmware_protocol(_handshake_state(), _presence())
+    assert early["invalid_reason"] == "PRESENCE_before_ADAPTTHR"
+
+    twice = physical.transition_firmware_protocol(_ready_protocol_state(), _presence())
+    assert twice["invalid_reason"] == "duplicate_PRESENCE"
+
+    # Gate poslije prihvacene kalibracije: nedostizno u praksi jer prihvatanje
+    # trazi PRESENCE, ali se cuva kao odbrana u dubinu i zato se provjerava.
+    replayed = {**_ready_protocol_state(), "presence_seen": False}
+    out = physical.transition_firmware_protocol(replayed, _presence())
+    assert out["invalid_reason"] == "PRESENCE_after_calibration_acceptance"
+
+
+def test_presence_margin_must_match_the_locked_policy() -> None:
+    state = _handshake_state()
+    for phase, count in physical.EXPECTED_QUALITY_COUNTS.items():
+        for index in range(1, count + 1):
+            state = physical.transition_firmware_protocol(state, _quality(phase, index))
+    state = physical.transition_firmware_protocol(state, _adapt())
+    tampered = dict(_presence())
+    tampered["margin_db"] = 3.0
+    tampered["gate_dbfs"] = tampered["level_mean_dbfs"] - 3.0
+    out = physical.transition_firmware_protocol(state, tampered)
+    assert out["invalid_reason"] == "PRESENCE_margin_off_policy"
+
+
+def test_presence_gate_arithmetic_is_checked_at_parse_time() -> None:
+    bad = physical.parse_serial_line(
+        "PRESENCE protocol=asd-quality-v1.3.0 level_mean_dbfs=-30 margin_db=11 "
+        "gate_dbfs=-35 min_consecutive=3"
+    )
+    assert bad["kind"] == "PARSE_ERROR"
+    assert bad["reason"] == "presence_gate_inconsistent"
+
+
+def test_level_below_gate_suppresses_deviation_instead_of_alarming() -> None:
+    """Kad masina utihne score skoci (08.08: 10 -> 59). Brojac odstupanja se
+    resetuje, a stanje se drzi -- anomalija koja ne postoji se ne emituje."""
+    state = _ready_protocol_state()          # gate = -41 dBFS
+    state = physical.transition_firmware_protocol(state, _quality("DET", 1))
+    quiet = _det(window=1, score=3.0, threshold=1.6, led=1, alarm=0,
+                 total_alarm=0, consecutive=0, verdict="iznad praga")
+    quiet["level_dbfs"] = -55.0
+    state = physical.transition_firmware_protocol(state, quiet)
+    assert state["invalid_status"] is None
+    assert state["deviation_run"] == 0
+    assert state["absent_run"] == 1
+    assert state["expected_state_transition"] is None
+
+
+def test_sustained_absence_requires_the_presence_lost_pair() -> None:
+    state = _ready_protocol_state()
+    for window in (1, 2, 3):
+        state = physical.transition_firmware_protocol(state, _quality("DET", window))
+        row = _det(window=window, score=0.5, threshold=1.6, led=1, alarm=0,
+                   total_alarm=0, consecutive=0, verdict="normal")
+        row["level_dbfs"] = -55.0
+        state = physical.transition_firmware_protocol(state, row)
+        assert state["invalid_status"] is None
+    assert state["absent_run"] == 3
+    expected = state["expected_state_transition"]
+    assert expected["state"] == {
+        "from_state": "CALIBRATED_NORMAL", "to_state": "NO_MACHINE",
+        "reason": "PRESENCE_LOST",
+    }
+    assert expected["event"]["type"] == "PRESENCE_LOST"
+
+
+def test_presence_lost_without_a_level_drop_is_rejected() -> None:
+    """Firmware ne smije tvrditi da masine nema ako nivo to ne pokazuje."""
+    state = physical.transition_firmware_protocol(_ready_protocol_state(), {
+        "kind": "STATE", "from_state": "CALIBRATED_NORMAL",
+        "to_state": "NO_MACHINE", "reason": "PRESENCE_LOST",
+    })
+    assert state["invalid_reason"] == "spurious_PRESENCE_LOST"
+
+
+def test_reserved_event_cannot_appear_on_the_wire() -> None:
+    """Kapabilitetni gate: MECHANICAL_ANOMALY trazi Fazu 6 i ne smije se emitovati."""
+    parsed = physical.parse_serial_line(
+        "EVENT protocol=asd-quality-v1.3.0 type=ANOMALY_ENTERED state=ANOMALY "
+        "phase=DET reason=THRESHOLD_PERSISTENCE event=MECHANICAL_ANOMALY "
+        "capability=NEEDS_TRANSIENT level=DEVIATION"
+    )
+    assert parsed["kind"] == "PARSE_ERROR"
+    assert parsed["reason"] == "reserved_event_emitted:MECHANICAL_ANOMALY"
+
+
+def test_reserved_event_relabelled_as_available_is_still_rejected() -> None:
+    parsed = physical.parse_serial_line(
+        "EVENT protocol=asd-quality-v1.3.0 type=ANOMALY_ENTERED state=ANOMALY "
+        "phase=DET reason=THRESHOLD_PERSISTENCE event=SPEED_CHANGED "
+        "capability=AVAILABLE level=DEVIATION"
+    )
+    assert parsed["kind"] == "PARSE_ERROR"
+    assert parsed["reason"] == "reserved_event_emitted:SPEED_CHANGED"
+
+
+def test_event_without_faza2_fields_is_a_protocol_error() -> None:
+    parsed = physical.parse_serial_line(
+        "EVENT protocol=asd-quality-v1.3.0 type=FLOW_STOPPED state=NO_MACHINE "
+        "phase=WAIT reason=INSUFFICIENT_LEVEL"
+    )
+    assert parsed["kind"] == "PARSE_ERROR"
+    assert parsed["reason"].startswith("missing_fields:")
+
+
+def test_button_record_never_breaks_the_det_pair() -> None:
+    """BUTTON pise zaseban UI task; pritisak u pogresnoj milisekundi ne smije
+    ponistiti inace ispravan prolaz."""
+    state = _ready_protocol_state()
+    state = physical.transition_firmware_protocol(state, _quality("DET", 1))
+    assert state["pending_det_quality"] == 1
+    button = physical.parse_serial_line(
+        "BUTTON protocol=asd-quality-v1.3.0 event=LONG mode=READY "
+        "command=START_LEARNING discards=1"
+    )
+    assert button["kind"] == "BUTTON"
+    state = physical.transition_firmware_protocol(state, button)
+    assert state["invalid_status"] is None
+    assert state["pending_det_quality"] == 1
+    state = physical.transition_firmware_protocol(state, _det(window=1, threshold=1.6))
+    assert state["invalid_status"] is None
+
+
+def test_short_press_claiming_a_discard_is_a_protocol_error() -> None:
+    parsed = physical.parse_serial_line(
+        "BUTTON protocol=asd-quality-v1.3.0 event=SHORT mode=READY "
+        "command=START_LEARNING discards=1"
+    )
+    assert parsed["kind"] == "PARSE_ERROR"
+    assert parsed["reason"] == "short_press_discarded_calibration"
+
+
+def test_session_records_must_be_paired() -> None:
+    started = physical.parse_serial_line(
+        "SESSION protocol=asd-quality-v1.3.0 action=STARTED source=AUTOSTART "
+        "reason=BOOT_GRACE_EXPIRED discards_calibration=0"
+    )
+    assert started["kind"] == "SESSION"
+    state = physical.transition_firmware_protocol(
+        physical.new_firmware_protocol_state(), started)
+    assert state["session_started"] is True and state["sessions"] == 1
+    assert physical.transition_firmware_protocol(
+        state, started)["invalid_reason"] == "SESSION_STARTED_twice"
+
+    orphan = physical.parse_serial_line(
+        "SESSION protocol=asd-quality-v1.3.0 action=ENDED source=FIRMWARE "
+        "reason=NO_MACHINE discards_calibration=0"
+    )
+    out = physical.transition_firmware_protocol(
+        physical.new_firmware_protocol_state(), orphan)
+    assert out["invalid_reason"] == "SESSION_ENDED_without_START"
+
+
+def test_unknown_operator_tokens_are_protocol_errors() -> None:
+    cases = [
+        ("SESSION protocol=asd-quality-v1.3.0 action=RESUMED source=BUTTON "
+         "reason=X discards_calibration=0", "unknown_session_action:RESUMED"),
+        ("SESSION protocol=asd-quality-v1.3.0 action=STARTED source=TIMER "
+         "reason=X discards_calibration=0", "unknown_session_source:TIMER"),
+        ("BUTTON protocol=asd-quality-v1.3.0 event=DOUBLE mode=IDLE "
+         "command=NONE discards=0", "unknown_button_event:DOUBLE"),
+        ("BUTTON protocol=asd-quality-v1.3.0 event=LONG mode=SLEEPING "
+         "command=NONE discards=0", "unknown_button_mode:SLEEPING"),
+        ("BUTTON protocol=asd-quality-v1.3.0 event=LONG mode=IDLE "
+         "command=RECALIBRATE discards=0", "unknown_button_command:RECALIBRATE"),
+    ]
+    for line, expected in cases:
+        parsed = physical.parse_serial_line(line)
+        assert parsed["kind"] == "PARSE_ERROR", line
+        assert parsed["reason"] == expected
