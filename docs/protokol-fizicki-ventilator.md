@@ -1,10 +1,24 @@
 # Zaključani protokol stvarnog fizičkog ventilatora
 
-**Verzija:** `physical-fan-v1.5.0`  
-**Datum zaključavanja:** 09.08.2026.  
-**Firmware:** fail-closed `ASD_PSD_LIVE` iz Faze 1; build je provjeren bez
-pločice, ali prije narednog fizičkog runa mora se jednom flešovati taj novi
-bin. U ovom koraku nije bilo flashovanja.
+**Verzija:** `physical-fan-v1.6.0`
+**Datum zaključavanja:** 09.08.2026, bumpovano 14.08.2026.
+**Firmware:** fail-closed `ASD_PSD_LIVE`, serijski protokol `asd-quality-v1.3.0`,
+flešovan i provjeren na pločici 14.08.2026.
+
+> **Izmjene u v1.6.0** (detaljno: [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md),
+> blokovi B–D):
+>
+> - **Operater pokreće učenje tasterom.** Prva sesija poslije uključenja krene
+>   sama poslije 10 s; svaka sljedeća traži pritisak. Lampica javlja kada je
+>   učenje gotovo — puni tok demoa je u [PREOSTALO.md](PREOSTALO.md).
+> - `EVENT` nosi `event`, `capability` i `level` (semantika Faze 2).
+> - Novi zapisi `PRESENCE`, `TEMPORAL`, `SESSION`, `BUTTON`. Prva dva
+>   objavljuju politike kojima host **nezavisno ponavlja** odluku uređaja.
+> - Alarm se gasi tek ispod **0,7× praga** (histereza iz Faze 4).
+> - Zaustavljanje ventilatora daje `PRESENCE_LOST` → `NO_MACHINE`, ne anomaliju.
+>
+> **Prije prolaza pročitati [P17](problemi-i-rjesenja.md#p17)** — prag se između
+> kalibracija razlikuje i do 16× i to direktno utiče na osjetljivost demoa.
 
 Ovaj protokol je za prvi stvarni test u kojem INMP441 sluša ventilator direktno.
 Reprodukcija DCASE WAV-a preko zvučnika nije fizički fan eksperiment. Bezbjedno
@@ -46,7 +60,7 @@ je dokaz stanja hardvera, ali nije eksperimentalni run.
 ## 2. Fail-closed kalibracioni ugovor
 
 Firmware emituje ASCII zapise `QUALITY`, `STATE` i `EVENT` sa protokolom
-`asd-quality-v1.2.0`. Prije ulaska u kalibraciju i za svaki kalibracioni klip
+`asd-quality-v1.3.0`. Prije ulaska u kalibraciju i za svaki kalibracioni klip
 provjeravaju se broj vraćenih uzoraka, konačne numeričke vrijednosti, stuck/zero signal,
 nivo, clipping i `dropped_delta`. Nevalidan rezultat zaustavlja tok; ne postoji
 više put „upozori i nastavi“.

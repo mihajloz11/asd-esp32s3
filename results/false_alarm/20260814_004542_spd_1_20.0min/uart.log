@@ -1,0 +1,411 @@
+[    2.958] I (1117) esp_psram: SPI SRAM memory test OK
+[    2.958] I (1125) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
+[    2.958] I (1126) cpu_start: Pro cpu start user code
+[    2.959] I (1126) cpu_start: cpu freq: 240000000 Hz
+[    2.959] I (1128) app_init: Application information:
+[    2.959] I (1132) app_init: Project name:     esp32s3_asd
+[    2.959] I (1136) app_init: App version:      on-device-verified-39-gc8833ad-
+[    2.959] I (1142) app_init: Compile time:     Aug 11 2026 23:31:12
+[    2.959] I (1147) app_init: ELF file SHA256:  8adbe819d...
+[    2.959] I (1152) app_init: ESP-IDF:          v5.5.5-34-g21f3b71cbbf
+[    2.959] I (1157) efuse_init: Min chip rev:     v0.0
+[    2.959] I (1161) efuse_init: Max chip rev:     v0.99 
+[    2.993] I (1165) efuse_init: Chip rev:         v0.2
+[    2.993] I (1169) heap_init: Initializing. RAM available for dynamic allocation:
+[    2.993] I (1175) heap_init: At 3FCCFED0 len 00019840 (102 KiB): RAM
+[    2.993] I (1181) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+[    2.993] I (1186) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+[    2.993] I (1191) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+[    2.993] I (1197) esp_psram: Adding pool of 16384K of PSRAM memory to heap allocator
+[    2.993] W (1204) spi_flash: Octal flash chip is using but dio mode is selected, will automatically switch to Octal mode
+[    2.993] I (1213) spi_flash: detected chip: mxic (opi)
+[    2.993] I (1217) spi_flash: flash io: opi_str
+[    2.993] I (1221) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+[    2.993] I (1227) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+[    2.993] I (1234) main_task: Started on CPU0
+[    2.993] I (1244) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+[    2.993] I (1244) main_task: Calling app_main()
+[    2.993] I (1244) asd: PSRAM: 16777216 B
+[    2.993] I (1254) asd: free heap: 16920711 B
+[    2.993] I (1254) asd: I2C idle: SDA=1 SCL=1
+[    2.993] I (1264) asd: I2C poslije probe: SDA=1 SCL=1
+[    2.993] E (1264) asd: INA226 nije pronadjen na adresama 0x40-0x4F
+[    2.993] W (1264) i2s_common: dma frame num is out of dma buffer size, limited to 1023
+[    3.657] I (1944) psdlive: === SAMOSTALNI PSD DETEKTOR ===
+[    3.657] I (1944) psdlive: model: 96 traka, matrica 96x96 iz flesa, naucen na 990 ispravnih ventilatora
+[    3.657] I (1944) psdlive: 1) pusti ventilator koji radi NORMALNO
+[    3.657] I (1944) psdlive: 2) pritisni taster -> ucenje 10 x 10 s = 100 s, lampica treperi
+[    3.657] I (1954) psdlive: 3) lampica stalno svijetli = naucio; tek tada izazovi kvar
+[    3.657] I (1964) psdlive: pritisni taster (GPIO10) da pocne ucenje; bez pritiska krece samo za 10 s
+[   14.296] SESSION protocol=asd-quality-v1.3.0 action=STARTED source=AUTOSTART reason=BOOT_GRACE_EXPIRED discards_calibration=0
+[   14.296] STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=1 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.096 dc=-0.363 peak=753 clipped=0 zeros=5 stuck=17 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 1/60 score=-46.10 spread=0.000 nivo=-46.1 dBFS cujem
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=2 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-44.974 dc=-0.399 peak=644 clipped=0 zeros=8 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 2/60 score=-44.97 spread=0.000 nivo=-45.0 dBFS cujem
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=3 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.130 dc=-1.586 peak=492 clipped=0 zeros=12 stuck=13 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 3/60 score=-47.13 spread=0.000 nivo=-47.1 dBFS cujem
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=4 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.873 dc=1.800 peak=586 clipped=0 zeros=14 stuck=10 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 4/60 score=-45.87 spread=0.000 nivo=-45.9 dBFS cujem
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=5 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.154 dc=-0.536 peak=701 clipped=0 zeros=9 stuck=10 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 5/60 score=-45.15 spread=0.000 nivo=-45.2 dBFS cujem
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=6 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.488 dc=-0.629 peak=634 clipped=0 zeros=9 stuck=15 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 6/60 score=-46.49 spread=0.000 nivo=-46.5 dBFS cujem
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=7 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.013 dc=-1.437 peak=730 clipped=0 zeros=10 stuck=12 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 7/60 score=-45.01 spread=0.000 nivo=-45.0 dBFS cujem
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=8 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.496 dc=0.807 peak=781 clipped=0 zeros=6 stuck=12 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 8/60 score=-45.50 spread=0.000 nivo=-45.5 dBFS cujem
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=9 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.918 dc=-1.435 peak=625 clipped=0 zeros=9 stuck=11 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 9/60 score=-45.92 spread=0.000 nivo=-45.9 dBFS cujem
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=10 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-43.226 dc=0.514 peak=1043 clipped=0 zeros=8 stuck=12 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 10/60 score=-43.23 spread=0.000 nivo=-43.2 dBFS cujem
+[   14.296] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=11 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.845 dc=-2.627 peak=656 clipped=0 zeros=9 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   14.296] WAIT 11/60 score=-45.85 spread=0.000 nivo=-45.8 dBFS cujem
+[   17.364] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=12 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.648 dc=1.025 peak=698 clipped=0 zeros=6 stuck=20 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 12/60 score=-45.65 spread=0.000 nivo=-45.6 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=13 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.479 dc=-0.620 peak=652 clipped=0 zeros=16 stuck=5 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 13/60 score=-45.48 spread=0.000 nivo=-45.5 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=14 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.424 dc=1.283 peak=666 clipped=0 zeros=15 stuck=13 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 14/60 score=-46.42 spread=0.000 nivo=-46.4 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=15 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-44.242 dc=-1.955 peak=827 clipped=0 zeros=14 stuck=18 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 15/60 score=-44.24 spread=0.000 nivo=-44.2 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=16 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.410 dc=0.903 peak=691 clipped=0 zeros=9 stuck=14 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 16/60 score=-45.41 spread=0.000 nivo=-45.4 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=17 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.289 dc=0.732 peak=603 clipped=0 zeros=13 stuck=11 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 17/60 score=-46.29 spread=0.000 nivo=-46.3 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=18 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.917 dc=-1.893 peak=677 clipped=0 zeros=11 stuck=12 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 18/60 score=-45.92 spread=0.000 nivo=-45.9 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=19 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-44.646 dc=-1.421 peak=775 clipped=0 zeros=9 stuck=16 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 19/60 score=-44.65 spread=0.000 nivo=-44.6 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=20 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.559 dc=-1.860 peak=843 clipped=0 zeros=13 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 20/60 score=-46.56 spread=0.000 nivo=-46.6 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=21 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.672 dc=0.179 peak=762 clipped=0 zeros=11 stuck=10 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 21/60 score=-45.67 spread=0.000 nivo=-45.7 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=22 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.135 dc=-2.099 peak=662 clipped=0 zeros=6 stuck=14 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 22/60 score=-45.13 spread=0.000 nivo=-45.1 dBFS cujem
+[   17.365] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=23 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.624 dc=1.560 peak=656 clipped=0 zeros=10 stuck=17 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   17.365] WAIT 23/60 score=-46.62 spread=0.000 nivo=-46.6 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=24 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.482 dc=-0.608 peak=846 clipped=0 zeros=5 stuck=17 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 24/60 score=-45.48 spread=0.000 nivo=-45.5 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=25 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.273 dc=0.130 peak=623 clipped=0 zeros=9 stuck=15 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 25/60 score=-46.27 spread=0.000 nivo=-46.3 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=26 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.843 dc=-0.916 peak=647 clipped=0 zeros=11 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 26/60 score=-45.84 spread=0.000 nivo=-45.8 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=27 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.672 dc=-0.335 peak=700 clipped=0 zeros=10 stuck=13 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 27/60 score=-45.67 spread=0.000 nivo=-45.7 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=28 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.066 dc=-1.023 peak=557 clipped=0 zeros=14 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 28/60 score=-46.07 spread=0.000 nivo=-46.1 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=29 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.666 dc=-0.739 peak=733 clipped=0 zeros=9 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 29/60 score=-45.67 spread=0.000 nivo=-45.7 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=30 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.768 dc=0.947 peak=642 clipped=0 zeros=8 stuck=17 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 30/60 score=-45.77 spread=0.000 nivo=-45.8 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=31 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.750 dc=-2.078 peak=570 clipped=0 zeros=11 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 31/60 score=-46.75 spread=0.000 nivo=-46.7 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=32 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.122 dc=0.990 peak=653 clipped=0 zeros=7 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 32/60 score=-46.12 spread=0.000 nivo=-46.1 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=33 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.644 dc=-0.921 peak=707 clipped=0 zeros=7 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 33/60 score=-45.64 spread=0.000 nivo=-45.6 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=34 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.853 dc=-1.220 peak=599 clipped=0 zeros=14 stuck=12 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 34/60 score=-46.85 spread=0.000 nivo=-46.9 dBFS cujem
+[   20.434] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=35 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.548 dc=1.324 peak=676 clipped=0 zeros=10 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   20.434] WAIT 35/60 score=-45.55 spread=0.000 nivo=-45.5 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=36 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-44.936 dc=-1.722 peak=781 clipped=0 zeros=7 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 36/60 score=-44.94 spread=0.000 nivo=-44.9 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=37 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.286 dc=-0.409 peak=574 clipped=0 zeros=3 stuck=11 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 37/60 score=-47.29 spread=0.000 nivo=-47.3 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=38 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.344 dc=0.196 peak=789 clipped=0 zeros=6 stuck=10 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 38/60 score=-45.34 spread=0.000 nivo=-45.3 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=39 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.631 dc=-0.207 peak=579 clipped=0 zeros=5 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 39/60 score=-46.63 spread=0.000 nivo=-46.6 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=40 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.925 dc=-0.194 peak=588 clipped=0 zeros=12 stuck=13 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 40/60 score=-46.92 spread=0.000 nivo=-46.9 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=41 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.436 dc=-1.185 peak=582 clipped=0 zeros=15 stuck=11 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 41/60 score=-46.44 spread=0.000 nivo=-46.4 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=42 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-44.683 dc=-1.160 peak=768 clipped=0 zeros=5 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 42/60 score=-44.68 spread=0.000 nivo=-44.7 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=43 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.057 dc=-1.812 peak=657 clipped=0 zeros=12 stuck=15 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 43/60 score=-47.06 spread=0.000 nivo=-47.1 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=44 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.803 dc=-0.175 peak=685 clipped=0 zeros=11 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 44/60 score=-45.80 spread=0.000 nivo=-45.8 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=45 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.975 dc=-0.573 peak=649 clipped=0 zeros=9 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 45/60 score=-45.97 spread=0.000 nivo=-46.0 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=46 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.830 dc=2.735 peak=508 clipped=0 zeros=11 stuck=16 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 46/60 score=-47.83 spread=0.000 nivo=-47.8 dBFS cujem
+[   23.503] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=47 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-44.974 dc=-2.031 peak=677 clipped=0 zeros=12 stuck=14 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   23.503] WAIT 47/60 score=-44.97 spread=0.000 nivo=-45.0 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=48 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.336 dc=1.143 peak=706 clipped=0 zeros=12 stuck=11 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 48/60 score=-47.34 spread=0.000 nivo=-47.3 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=49 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.438 dc=-0.959 peak=823 clipped=0 zeros=11 stuck=11 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 49/60 score=-45.44 spread=0.000 nivo=-45.4 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=50 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.284 dc=0.146 peak=667 clipped=0 zeros=9 stuck=17 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 50/60 score=-46.28 spread=0.000 nivo=-46.3 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=51 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.588 dc=0.443 peak=471 clipped=0 zeros=10 stuck=11 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 51/60 score=-47.59 spread=0.000 nivo=-47.6 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=52 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.214 dc=-1.204 peak=625 clipped=0 zeros=8 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 52/60 score=-47.21 spread=0.000 nivo=-47.2 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=53 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.050 dc=-1.572 peak=681 clipped=0 zeros=11 stuck=11 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 53/60 score=-46.05 spread=0.000 nivo=-46.1 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=54 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.832 dc=-0.034 peak=471 clipped=0 zeros=6 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 54/60 score=-47.83 spread=0.000 nivo=-47.8 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=55 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.487 dc=-0.552 peak=923 clipped=0 zeros=13 stuck=16 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 55/60 score=-45.49 spread=0.000 nivo=-45.5 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=56 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.903 dc=-0.816 peak=765 clipped=0 zeros=5 stuck=16 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 56/60 score=-45.90 spread=0.000 nivo=-45.9 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=57 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.090 dc=-0.528 peak=620 clipped=0 zeros=14 stuck=15 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 57/60 score=-47.09 spread=0.000 nivo=-47.1 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=58 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.734 dc=0.057 peak=755 clipped=0 zeros=8 stuck=16 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 58/60 score=-45.73 spread=0.000 nivo=-45.7 dBFS cujem
+[   26.572] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=59 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.344 dc=-0.650 peak=615 clipped=0 zeros=9 stuck=12 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   26.572] WAIT 59/60 score=-46.34 spread=0.000 nivo=-46.3 dBFS cujem
+[   27.091] QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=60 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.310 dc=0.465 peak=560 clipped=0 zeros=7 stuck=12 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+[   27.091] WAIT 60/60 score=-47.31 spread=0.000 nivo=-47.3 dBFS cujem
+[   27.091] I (25404) psdlive: --- KALIBRACIJA: 10 klipova po 10 s ---
+[   37.086] QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=1 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.103 dc=-0.465 peak=980 clipped=0 zeros=429 stuck=507 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.523951 tonal_gate=pending_normal_only
+[   37.086] CAL  1/10 score=0.00000 nivo=-46.1 dBFS racun=705 ms
+[   47.059] QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=2 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-45.800 dc=-0.434 peak=978 clipped=0 zeros=394 stuck=482 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.632874 tonal_gate=pending_normal_only
+[   47.059] CAL  2/10 score=0.00000 nivo=-45.8 dBFS racun=705 ms
+[   57.032] QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=3 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.062 dc=-0.417 peak=908 clipped=0 zeros=424 stuck=476 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.503626 tonal_gate=pending_normal_only
+[   57.032] CAL  3/10 score=0.00000 nivo=-46.1 dBFS racun=705 ms
+[   67.006] QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=4 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-45.964 dc=-0.422 peak=902 clipped=0 zeros=394 stuck=494 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.595607 tonal_gate=pending_normal_only
+[   67.006] CAL  4/10 score=0.00000 nivo=-46.0 dBFS racun=705 ms
+[   77.047] QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=5 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-45.986 dc=-0.430 peak=867 clipped=0 zeros=386 stuck=432 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.708957 tonal_gate=pending_normal_only
+[   77.047] CAL  5/10 score=0.00000 nivo=-46.0 dBFS racun=705 ms
+[   87.018] QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=6 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.167 dc=-0.419 peak=842 clipped=0 zeros=393 stuck=463 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.637325 tonal_gate=pending_normal_only
+[   87.018] CAL  6/10 score=0.00000 nivo=-46.2 dBFS racun=705 ms
+[   97.004] QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=7 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.066 dc=-0.403 peak=918 clipped=0 zeros=402 stuck=524 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.619108 tonal_gate=pending_normal_only
+[   97.004] CAL  7/10 score=0.00000 nivo=-46.1 dBFS racun=705 ms
+[  106.967] QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=8 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.249 dc=-0.416 peak=898 clipped=0 zeros=439 stuck=447 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.534183 tonal_gate=pending_normal_only
+[  106.967] CAL  8/10 score=0.00000 nivo=-46.2 dBFS racun=705 ms
+[  116.943] QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=9 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.112 dc=-0.485 peak=806 clipped=0 zeros=411 stuck=458 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.550075 tonal_gate=pending_normal_only
+[  116.943] CAL  9/10 score=0.00000 nivo=-46.1 dBFS racun=705 ms
+[  127.055] QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=10 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.156 dc=-0.367 peak=927 clipped=0 zeros=419 stuck=493 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.566655 tonal_gate=pending_normal_only
+[  127.055] CAL 10/10 score=0.00000 nivo=-46.2 dBFS racun=705 ms
+[  127.055] QUALITY protocol=asd-quality-v1.3.0 phase=CAL_SUMMARY result=OBSERVED loo_mean=394.800964 loo_sd=231.056137 loo_cv=0.585247 loo_range=845.465454 loo_gate=pending_normal_only
+[  127.055] I (125244) psdlive: --- kalibracija gotova (centar zamrznut) ---
+[  127.055] I (125254) psdlive: LOO score: mean=394.80 sd=231.06 min=138.94 max=984.40
+[  127.055] I (125264) psdlive: referentni nivo masine: -46.07 dBFS (gate prisustva -57.07 dBFS)
+[  127.055] LOOALL 271.478 345.298 482.040 291.810 400.602 256.788 138.939 984.405 466.883 309.766
+[  127.055] I (125274) psdlive: PRAG = 1087.97 (p90 dao 532.28, sredina+3sd dao 1087.97), alarm poslije 3 uzastopna prozora, gasi se ispod 761.58
+[  127.055] ADAPTTHR n=10 mean=394.800964 sd=231.056137 k=0 theta=0 p=0.9000 thr=1087.96936 lo=0.000000 factory=0.000000
+[  127.055] I (125294) psdlive: racun po klipu: 705 ms (rezerva 14.2x), dropped=122880
+[  127.055] PRESENCE protocol=asd-quality-v1.3.0 level_mean_dbfs=-46.0664177 margin_db=11 gate_dbfs=-57.0664177 min_consecutive=3
+[  127.055] TEMPORAL protocol=asd-quality-v1.3.0 policy=asd-temporal-policy-v1.0.0 min_consecutive=3 ewma_alpha=0 enter_scale=1 exit_scale=0.699999988 fast_scale=0
+[  127.055] STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=CALIBRATED_NORMAL reason=CALIBRATION_ACCEPTED
+[  127.055] EVENT protocol=asd-quality-v1.3.0 type=CALIBRATION_ACCEPTED state=CALIBRATED_NORMAL phase=CAL reason=QUALITY_OK event=NONE capability=AVAILABLE level=DEVIATION
+[  127.055] I (125354) psdlive: LAMPICA STALNO SVIJETLI = ucenje gotovo, nadzirem
+[  127.055] I (125354) psdlive: --- DETEKCIJA RADI. Sada izazovi kvar. ---
+[  127.055] I (125364) psdlive: LED (GPIO2): svijetli = normalno, gasi se = ALARM
+[  136.964] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=1 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-45.979 dc=-0.438 peak=1056 clipped=0 zeros=488 stuck=575 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.518893 tonal_gate=pending_normal_only
+[  136.964] DET 1 score=396.833466 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.0 dBFS racun=705 ms)
+[  146.932] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=2 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.239 dc=-0.419 peak=787 clipped=0 zeros=415 stuck=491 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.539566 tonal_gate=pending_normal_only
+[  146.932] DET 2 score=526.517883 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.2 dBFS racun=705 ms)
+[  156.914] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=3 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-45.996 dc=-0.486 peak=1075 clipped=0 zeros=381 stuck=449 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.529966 tonal_gate=pending_normal_only
+[  156.914] DET 3 score=439.663635 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.0 dBFS racun=705 ms)
+[  166.893] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=4 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.063 dc=-0.372 peak=879 clipped=0 zeros=349 stuck=420 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.610317 tonal_gate=pending_normal_only
+[  166.893] DET 4 score=325.67514 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.1 dBFS racun=705 ms)
+[  176.868] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=5 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.259 dc=-0.521 peak=862 clipped=0 zeros=448 stuck=502 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.550303 tonal_gate=pending_normal_only
+[  176.868] DET 5 score=253.624054 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  186.829] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=6 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.229 dc=-0.477 peak=899 clipped=0 zeros=413 stuck=470 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.511851 tonal_gate=pending_normal_only
+[  186.829] DET 6 score=1200.16467 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=1 nivo=-46.2 dBFS racun=705 ms)
+[  196.815] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=7 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.215 dc=-0.410 peak=942 clipped=0 zeros=401 stuck=495 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.540749 tonal_gate=pending_normal_only
+[  196.815] DET 7 score=468.078033 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.2 dBFS racun=705 ms)
+[  206.855] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=8 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.180 dc=-0.471 peak=1000 clipped=0 zeros=397 stuck=484 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.496976 tonal_gate=pending_normal_only
+[  206.855] DET 8 score=468.506317 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.2 dBFS racun=705 ms)
+[  216.829] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=9 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.364 dc=-0.504 peak=934 clipped=0 zeros=431 stuck=505 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.591161 tonal_gate=pending_normal_only
+[  216.829] DET 9 score=352.387268 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  226.789] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=10 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.145 dc=-0.475 peak=1203 clipped=0 zeros=412 stuck=461 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.693450 tonal_gate=pending_normal_only
+[  226.789] DET 10 score=509.484894 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.1 dBFS racun=705 ms)
+[  236.774] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=11 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.157 dc=-0.516 peak=907 clipped=0 zeros=430 stuck=465 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.659255 tonal_gate=pending_normal_only
+[  236.774] DET 11 score=380.024475 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.2 dBFS racun=705 ms)
+[  246.743] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=12 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.327 dc=-0.417 peak=832 clipped=0 zeros=424 stuck=477 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.611798 tonal_gate=pending_normal_only
+[  246.743] DET 12 score=350.802734 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  256.725] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=13 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.351 dc=-0.497 peak=765 clipped=0 zeros=430 stuck=487 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.582901 tonal_gate=pending_normal_only
+[  256.725] DET 13 score=387.240417 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  266.756] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=14 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.240 dc=-0.484 peak=906 clipped=0 zeros=418 stuck=454 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.657680 tonal_gate=pending_normal_only
+[  266.756] DET 14 score=363.107025 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.2 dBFS racun=705 ms)
+[  276.731] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=15 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.274 dc=-0.497 peak=1018 clipped=0 zeros=446 stuck=469 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.625757 tonal_gate=pending_normal_only
+[  276.731] DET 15 score=305.515076 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  286.713] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=16 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.427 dc=-0.493 peak=871 clipped=0 zeros=458 stuck=477 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.566456 tonal_gate=pending_normal_only
+[  286.713] DET 16 score=357.979218 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  296.678] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=17 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.196 dc=-0.500 peak=913 clipped=0 zeros=426 stuck=482 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.653438 tonal_gate=pending_normal_only
+[  296.678] DET 17 score=387.948944 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.2 dBFS racun=705 ms)
+[  306.648] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=18 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.175 dc=-0.463 peak=898 clipped=0 zeros=427 stuck=493 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.561998 tonal_gate=pending_normal_only
+[  306.648] DET 18 score=1110.23572 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=1 nivo=-46.2 dBFS racun=705 ms)
+[  316.630] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=19 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.353 dc=-0.504 peak=864 clipped=0 zeros=441 stuck=480 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.428023 tonal_gate=pending_normal_only
+[  316.630] DET 19 score=2672.96167 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=2 nivo=-46.4 dBFS racun=705 ms)
+[  326.604] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=20 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.400 dc=-0.494 peak=807 clipped=0 zeros=442 stuck=480 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.548786 tonal_gate=pending_normal_only
+[  326.604] DET 20 score=578.761902 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  336.643] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=21 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.286 dc=-0.461 peak=937 clipped=0 zeros=399 stuck=491 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.619925 tonal_gate=pending_normal_only
+[  336.643] DET 21 score=386.954071 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  346.613] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=22 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.317 dc=-0.512 peak=981 clipped=0 zeros=432 stuck=486 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.587543 tonal_gate=pending_normal_only
+[  346.613] DET 22 score=374.933197 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  356.590] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=23 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.455 dc=-0.496 peak=929 clipped=0 zeros=395 stuck=501 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.568680 tonal_gate=pending_normal_only
+[  356.590] DET 23 score=180.837799 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.5 dBFS racun=705 ms)
+[  366.557] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=24 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.231 dc=-0.507 peak=1189 clipped=0 zeros=395 stuck=460 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.619377 tonal_gate=pending_normal_only
+[  366.557] DET 24 score=660.7099 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.2 dBFS racun=705 ms)
+[  376.540] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=25 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.215 dc=-0.465 peak=877 clipped=0 zeros=434 stuck=470 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.612125 tonal_gate=pending_normal_only
+[  376.540] DET 25 score=295.96933 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.2 dBFS racun=705 ms)
+[  386.510] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=26 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.399 dc=-0.482 peak=756 clipped=0 zeros=430 stuck=503 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.589471 tonal_gate=pending_normal_only
+[  386.510] DET 26 score=180.042328 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  396.545] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=27 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.406 dc=-0.522 peak=831 clipped=0 zeros=414 stuck=461 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.586548 tonal_gate=pending_normal_only
+[  396.545] DET 27 score=251.208786 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  406.532] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=28 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.279 dc=-0.486 peak=914 clipped=0 zeros=426 stuck=471 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.623030 tonal_gate=pending_normal_only
+[  406.532] DET 28 score=533.213257 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  416.493] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=29 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.296 dc=-0.501 peak=933 clipped=0 zeros=413 stuck=442 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.571303 tonal_gate=pending_normal_only
+[  416.493] DET 29 score=1174.88477 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=1 nivo=-46.3 dBFS racun=705 ms)
+[  426.466] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=30 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.441 dc=-0.489 peak=925 clipped=0 zeros=413 stuck=475 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.468317 tonal_gate=pending_normal_only
+[  426.466] DET 30 score=963.343018 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  436.448] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=31 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.252 dc=-0.487 peak=1162 clipped=0 zeros=446 stuck=512 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.616692 tonal_gate=pending_normal_only
+[  436.448] DET 31 score=755.167542 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  446.422] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=32 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.262 dc=-0.490 peak=913 clipped=0 zeros=448 stuck=459 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.644504 tonal_gate=pending_normal_only
+[  446.422] DET 32 score=391.533478 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  456.389] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=33 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.393 dc=-0.524 peak=799 clipped=0 zeros=407 stuck=495 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.585586 tonal_gate=pending_normal_only
+[  456.389] DET 33 score=331.188263 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  466.442] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=34 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.393 dc=-0.460 peak=726 clipped=0 zeros=436 stuck=468 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.590097 tonal_gate=pending_normal_only
+[  466.442] DET 34 score=416.598969 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  476.401] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=35 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.312 dc=-0.538 peak=958 clipped=0 zeros=444 stuck=495 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.590950 tonal_gate=pending_normal_only
+[  476.401] DET 35 score=285.178589 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  486.388] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=36 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.321 dc=-0.462 peak=996 clipped=0 zeros=419 stuck=468 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.523214 tonal_gate=pending_normal_only
+[  486.388] DET 36 score=805.536621 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  496.349] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=37 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.429 dc=-0.483 peak=865 clipped=0 zeros=413 stuck=479 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.576248 tonal_gate=pending_normal_only
+[  496.349] DET 37 score=387.497467 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  506.324] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=38 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.265 dc=-0.545 peak=965 clipped=0 zeros=422 stuck=512 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.675562 tonal_gate=pending_normal_only
+[  506.324] DET 38 score=407.021393 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  516.299] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=39 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.252 dc=-0.459 peak=913 clipped=0 zeros=460 stuck=476 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.627656 tonal_gate=pending_normal_only
+[  516.299] DET 39 score=448.213196 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  526.275] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=40 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.395 dc=-0.545 peak=855 clipped=0 zeros=404 stuck=484 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.578797 tonal_gate=pending_normal_only
+[  526.275] DET 40 score=354.143616 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  536.321] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=41 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.415 dc=-0.444 peak=801 clipped=0 zeros=448 stuck=490 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.559996 tonal_gate=pending_normal_only
+[  536.321] DET 41 score=226.26944 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  546.299] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=42 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.264 dc=-0.474 peak=957 clipped=0 zeros=430 stuck=484 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.599227 tonal_gate=pending_normal_only
+[  546.299] DET 42 score=215.632004 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  556.266] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=43 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.319 dc=-0.507 peak=911 clipped=0 zeros=419 stuck=513 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.512448 tonal_gate=pending_normal_only
+[  556.266] DET 43 score=585.453796 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  566.238] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=44 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.379 dc=-0.452 peak=818 clipped=0 zeros=392 stuck=469 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.448939 tonal_gate=pending_normal_only
+[  566.238] DET 44 score=964.686584 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  576.212] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=45 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.247 dc=-0.545 peak=1113 clipped=0 zeros=451 stuck=472 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.527756 tonal_gate=pending_normal_only
+[  576.212] DET 45 score=1190.40845 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=1 nivo=-46.2 dBFS racun=705 ms)
+[  586.186] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=46 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.270 dc=-0.478 peak=861 clipped=0 zeros=384 stuck=454 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.565912 tonal_gate=pending_normal_only
+[  586.186] DET 46 score=258.357117 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  596.233] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=47 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.391 dc=-0.518 peak=810 clipped=0 zeros=426 stuck=512 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.571885 tonal_gate=pending_normal_only
+[  596.233] DET 47 score=277.34552 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  606.205] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=48 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.377 dc=-0.463 peak=816 clipped=0 zeros=459 stuck=475 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.561086 tonal_gate=pending_normal_only
+[  606.205] DET 48 score=200.272598 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  616.180] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=49 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.285 dc=-0.468 peak=935 clipped=0 zeros=397 stuck=467 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.567297 tonal_gate=pending_normal_only
+[  616.180] DET 49 score=188.926575 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  626.154] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=50 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.354 dc=-0.500 peak=989 clipped=0 zeros=413 stuck=509 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.560601 tonal_gate=pending_normal_only
+[  626.154] DET 50 score=198.765091 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  636.130] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=51 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.394 dc=-0.491 peak=909 clipped=0 zeros=419 stuck=493 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.493527 tonal_gate=pending_normal_only
+[  636.130] DET 51 score=1288.22534 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=1 nivo=-46.4 dBFS racun=705 ms)
+[  646.097] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=52 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.256 dc=-0.488 peak=1192 clipped=0 zeros=391 stuck=503 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.602349 tonal_gate=pending_normal_only
+[  646.097] DET 52 score=987.198669 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  656.081] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=53 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.283 dc=-0.507 peak=926 clipped=0 zeros=398 stuck=445 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.606045 tonal_gate=pending_normal_only
+[  656.081] DET 53 score=338.512085 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  666.115] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=54 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.386 dc=-0.483 peak=821 clipped=0 zeros=389 stuck=474 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.562278 tonal_gate=pending_normal_only
+[  666.115] DET 54 score=258.25528 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  676.082] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=55 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.411 dc=-0.533 peak=724 clipped=0 zeros=476 stuck=459 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.542861 tonal_gate=pending_normal_only
+[  676.082] DET 55 score=264.586578 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  686.065] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=56 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.291 dc=-0.463 peak=950 clipped=0 zeros=444 stuck=512 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.610746 tonal_gate=pending_normal_only
+[  686.065] DET 56 score=219.189941 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  696.029] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=57 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.344 dc=-0.494 peak=980 clipped=0 zeros=436 stuck=472 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.581745 tonal_gate=pending_normal_only
+[  696.029] DET 57 score=365.980774 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  706.009] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=58 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.404 dc=-0.486 peak=869 clipped=0 zeros=430 stuck=533 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.574588 tonal_gate=pending_normal_only
+[  706.009] DET 58 score=208.669403 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  715.989] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=59 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.297 dc=-0.497 peak=1059 clipped=0 zeros=432 stuck=456 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.669674 tonal_gate=pending_normal_only
+[  715.989] DET 59 score=393.662445 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  726.016] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=60 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.269 dc=-0.513 peak=851 clipped=0 zeros=415 stuck=432 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.644845 tonal_gate=pending_normal_only
+[  726.016] DET 60 score=328.099457 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  735.995] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=61 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.393 dc=-0.429 peak=791 clipped=0 zeros=429 stuck=485 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.604096 tonal_gate=pending_normal_only
+[  735.995] DET 61 score=283.9375 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  745.971] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=62 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.424 dc=-0.556 peak=825 clipped=0 zeros=383 stuck=471 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.584015 tonal_gate=pending_normal_only
+[  745.971] DET 62 score=211.37944 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  755.944] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=63 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.295 dc=-0.458 peak=919 clipped=0 zeros=428 stuck=481 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.596145 tonal_gate=pending_normal_only
+[  755.944] DET 63 score=311.624878 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  765.912] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=64 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.355 dc=-0.431 peak=931 clipped=0 zeros=421 stuck=487 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.599482 tonal_gate=pending_normal_only
+[  765.912] DET 64 score=292.604004 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  775.887] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=65 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.401 dc=-0.545 peak=884 clipped=0 zeros=415 stuck=513 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.551031 tonal_gate=pending_normal_only
+[  775.887] DET 65 score=256.973999 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  785.874] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=66 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.312 dc=-0.520 peak=1065 clipped=0 zeros=411 stuck=473 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.619617 tonal_gate=pending_normal_only
+[  785.874] DET 66 score=250.31366 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  795.909] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=67 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.266 dc=-0.476 peak=948 clipped=0 zeros=412 stuck=442 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.550035 tonal_gate=pending_normal_only
+[  795.909] DET 67 score=474.243927 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  805.872] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=68 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.378 dc=-0.460 peak=836 clipped=0 zeros=390 stuck=486 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.471094 tonal_gate=pending_normal_only
+[  805.872] DET 68 score=615.346802 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  815.852] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=69 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.404 dc=-0.504 peak=813 clipped=0 zeros=414 stuck=488 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.519695 tonal_gate=pending_normal_only
+[  815.852] DET 69 score=236.953888 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  825.827] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=70 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.281 dc=-0.515 peak=957 clipped=0 zeros=414 stuck=440 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.574714 tonal_gate=pending_normal_only
+[  825.827] DET 70 score=217.297073 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  835.808] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=71 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.346 dc=-0.458 peak=913 clipped=0 zeros=385 stuck=487 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.560844 tonal_gate=pending_normal_only
+[  835.808] DET 71 score=255.971954 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  845.773] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=72 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.417 dc=-0.524 peak=869 clipped=0 zeros=407 stuck=467 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.559000 tonal_gate=pending_normal_only
+[  845.773] DET 72 score=160.362579 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  855.817] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=73 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.281 dc=-0.479 peak=1153 clipped=0 zeros=415 stuck=460 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.644829 tonal_gate=pending_normal_only
+[  855.817] DET 73 score=271.286194 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  865.791] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=74 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.307 dc=-0.484 peak=870 clipped=0 zeros=420 stuck=461 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.610731 tonal_gate=pending_normal_only
+[  865.791] DET 74 score=265.965942 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  875.766] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=75 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.365 dc=-0.470 peak=791 clipped=0 zeros=425 stuck=494 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.597162 tonal_gate=pending_normal_only
+[  875.766] DET 75 score=257.312286 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  885.737] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=76 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.402 dc=-0.486 peak=817 clipped=0 zeros=429 stuck=524 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.557657 tonal_gate=pending_normal_only
+[  885.737] DET 76 score=209.780807 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  895.713] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=77 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.319 dc=-0.531 peak=905 clipped=0 zeros=414 stuck=465 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.615727 tonal_gate=pending_normal_only
+[  895.713] DET 77 score=267.621124 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  905.691] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=78 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.322 dc=-0.514 peak=973 clipped=0 zeros=427 stuck=486 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.609294 tonal_gate=pending_normal_only
+[  905.691] DET 78 score=414.558289 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  915.652] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=79 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.405 dc=-0.471 peak=874 clipped=0 zeros=409 stuck=501 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.575897 tonal_gate=pending_normal_only
+[  915.652] DET 79 score=555.36554 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  925.698] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=80 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.264 dc=-0.435 peak=1084 clipped=0 zeros=426 stuck=482 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.672365 tonal_gate=pending_normal_only
+[  925.698] DET 80 score=288.786591 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  935.677] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=81 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.320 dc=-0.530 peak=930 clipped=0 zeros=415 stuck=498 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.646901 tonal_gate=pending_normal_only
+[  935.677] DET 81 score=543.106506 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  945.648] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=82 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.352 dc=-0.499 peak=833 clipped=0 zeros=463 stuck=478 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.602142 tonal_gate=pending_normal_only
+[  945.648] DET 82 score=409.502319 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  955.627] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=83 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.394 dc=-0.531 peak=777 clipped=0 zeros=426 stuck=456 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.579735 tonal_gate=pending_normal_only
+[  955.627] DET 83 score=359.514435 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  965.598] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=84 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.298 dc=-0.439 peak=965 clipped=0 zeros=406 stuck=513 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.619340 tonal_gate=pending_normal_only
+[  965.598] DET 84 score=342.19519 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  975.575] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=85 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.330 dc=-0.500 peak=913 clipped=0 zeros=413 stuck=478 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.635338 tonal_gate=pending_normal_only
+[  975.575] DET 85 score=381.300232 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[  985.600] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=86 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.394 dc=-0.486 peak=868 clipped=0 zeros=427 stuck=489 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.596551 tonal_gate=pending_normal_only
+[  985.600] DET 86 score=707.710022 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[  995.590] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=87 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.304 dc=-0.512 peak=1180 clipped=0 zeros=440 stuck=487 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.700940 tonal_gate=pending_normal_only
+[  995.590] DET 87 score=382.547974 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1005.563] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=88 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.331 dc=-0.513 peak=891 clipped=0 zeros=418 stuck=458 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.673038 tonal_gate=pending_normal_only
+[ 1005.563] DET 88 score=513.109192 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1015.533] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=89 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.351 dc=-0.484 peak=800 clipped=0 zeros=416 stuck=471 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.623983 tonal_gate=pending_normal_only
+[ 1015.533] DET 89 score=411.146942 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[ 1025.511] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=90 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.399 dc=-0.428 peak=790 clipped=0 zeros=415 stuck=524 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.581333 tonal_gate=pending_normal_only
+[ 1025.511] DET 90 score=279.34726 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[ 1035.486] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=91 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.300 dc=-0.518 peak=921 clipped=0 zeros=405 stuck=501 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.629803 tonal_gate=pending_normal_only
+[ 1035.486] DET 91 score=364.698334 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1045.459] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=92 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.339 dc=-0.476 peak=997 clipped=0 zeros=457 stuck=451 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.641788 tonal_gate=pending_normal_only
+[ 1045.459] DET 92 score=292.271088 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1055.498] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=93 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.407 dc=-0.535 peak=850 clipped=0 zeros=400 stuck=487 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.574003 tonal_gate=pending_normal_only
+[ 1055.498] DET 93 score=335.996918 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[ 1065.464] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=94 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.301 dc=-0.476 peak=1025 clipped=0 zeros=426 stuck=496 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.669140 tonal_gate=pending_normal_only
+[ 1065.464] DET 94 score=288.023773 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1075.440] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=95 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.338 dc=-0.514 peak=859 clipped=0 zeros=404 stuck=464 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.639613 tonal_gate=pending_normal_only
+[ 1075.440] DET 95 score=432.724182 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1085.419] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=96 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.373 dc=-0.422 peak=796 clipped=0 zeros=429 stuck=494 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.603742 tonal_gate=pending_normal_only
+[ 1085.419] DET 96 score=290.4422 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[ 1095.381] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=97 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.404 dc=-0.533 peak=830 clipped=0 zeros=458 stuck=457 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.610066 tonal_gate=pending_normal_only
+[ 1095.381] DET 97 score=271.016357 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[ 1105.357] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=98 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.304 dc=-0.484 peak=908 clipped=0 zeros=429 stuck=519 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.606026 tonal_gate=pending_normal_only
+[ 1105.357] DET 98 score=198.225494 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1115.341] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=99 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.374 dc=-0.562 peak=957 clipped=0 zeros=413 stuck=514 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.618173 tonal_gate=pending_normal_only
+[ 1115.341] DET 99 score=256.009521 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[ 1125.376] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=100 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.390 dc=-0.432 peak=850 clipped=0 zeros=433 stuck=514 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.558754 tonal_gate=pending_normal_only
+[ 1125.376] DET 100 score=131.748932 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[ 1135.353] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=101 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.318 dc=-0.496 peak=994 clipped=0 zeros=388 stuck=495 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.684938 tonal_gate=pending_normal_only
+[ 1135.353] DET 101 score=284.85437 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1145.331] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=102 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.344 dc=-0.537 peak=907 clipped=0 zeros=437 stuck=437 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.598598 tonal_gate=pending_normal_only
+[ 1145.331] DET 102 score=253.801956 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1155.303] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=103 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.348 dc=-0.481 peak=845 clipped=0 zeros=416 stuck=450 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.594584 tonal_gate=pending_normal_only
+[ 1155.303] DET 103 score=204.039185 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1165.271] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=104 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.407 dc=-0.471 peak=818 clipped=0 zeros=414 stuck=461 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.571715 tonal_gate=pending_normal_only
+[ 1165.271] DET 104 score=264.887177 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[ 1175.252] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=105 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.279 dc=-0.459 peak=958 clipped=0 zeros=405 stuck=471 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.636316 tonal_gate=pending_normal_only
+[ 1175.252] DET 105 score=340.230377 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.3 dBFS racun=705 ms)
+[ 1185.281] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=106 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.381 dc=-0.480 peak=965 clipped=0 zeros=393 stuck=509 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.622463 tonal_gate=pending_normal_only
+[ 1185.281] DET 106 score=222.769226 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)
+[ 1195.266] QUALITY protocol=asd-quality-v1.3.0 phase=DET index=107 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.385 dc=-0.520 peak=915 clipped=0 zeros=424 stuck=528 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=2.565755 tonal_gate=pending_normal_only
+[ 1195.266] DET 107 score=344.934692 lo=0 hi=1087.96936 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-46.4 dBFS racun=705 ms)

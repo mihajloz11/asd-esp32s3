@@ -3,6 +3,31 @@
 Nenadgledana detekcija anomalija zvuka mašina (DCASE 2026 Task 2) na ESP32-S3-WROOM-1
 N32R16V. Plan i metodologija: [plan-master-rada.md](plan-master-rada.md).
 
+## Gdje je projekat sada (14.08.2026)
+
+Uređaj radi samostalno: operater pritisne taster, uređaj ~115 s uči normalan rad
+jednog ventilatora, lampica pređe u stalno svjetlo, i od tada nadzire. Alarm
+traži **tri uzastopna prozora** trajne promjene (~30 s), pa kratka buka, govor i
+zalupljena vrata ne pale alarm.
+
+| | |
+|---|---|
+| Serijski protokol | `asd-quality-v1.3.0` · parser `physical-fan-v1.6.0` |
+| Model | `psd_shape`, 96 traka log-PSD, Mahalanobis, AUC 0,856 (razvojno) |
+| PC testovi | **271 passed**, uključujući PC↔C parity |
+| Na uređaju provjereno | kalibracija, DET faza, fail-closed odbijanja, `dropped=0` |
+| **Ostalo** | **šema · ventilator · demo** → [docs/PREOSTALO.md](docs/PREOSTALO.md) |
+
+Šta je urađeno i izmjereno, hronološki:
+[docs/DNEVNIK-NEXT-LEVEL.md](docs/DNEVNIK-NEXT-LEVEL.md).
+Putanja modela sa svim pokušajima i negativnim rezultatima:
+[docs/put-do-modela.md](docs/put-do-modela.md).
+Problemi i zamke (P1–P19): [docs/problemi-i-rjesenja.md](docs/problemi-i-rjesenja.md).
+
+> **Granica tvrdnje.** Nijedan rezultat u repozitorijumu nije mjeren na fizičkom
+> ventilatoru. Sve što piše „živo" je snimak pušten preko zvučnika i tako je i
+> označeno.
+
 ## Struktura
 
 ```
@@ -61,6 +86,11 @@ idf.py set-target esp32s3   # glavna platforma (N32R16V)
 # ili: idf.py set-target esp32   # DevKit V1 — E4 kontrola (bez PIE/PSRAM)
 idf.py build flash monitor
 ```
+
+Modovi builda se biraju env varijablom prije `idf.py reconfigure build`:
+`ASD_PSD_LIVE` (samostalni detektor — ovo je finalni mod), `ASD_MIC_TEST`
+(bring-up mikrofona), `ASD_INA_TEST` (potrošnja), `ASD_PSD_VERIFY` (PC↔uređaj
+parity front-enda).
 
 Per-target pinovi i sdkconfig se biraju automatski (`main/pins.h`,
 `sdkconfig.defaults.<target>`). Zabranjeni pinovi: S3 GPIO 35/36/37 (oktalni

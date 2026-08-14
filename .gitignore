@@ -14,6 +14,13 @@ results/features/
 # Demo zvuk se pravi iz DCASE skupa (psd_live_demo.py); manifest sa spiskom
 # klipova IDE u git, sami WAV-ovi ne.
 results/demo_audio/*.wav
+# Isto za dugu probu laznih alarma (false_alarm_test.py): manifest, CSV i
+# izvjestaj IDU u git, generisani WAV-ovi ne.
+results/false_alarm/audio/*.wav
+# Feature kesevi advanced evaluatora (evaluate_advanced.py,
+# derive_temporal_policy.py) — regenerisu se iz DCASE skupa za par minuta.
+# advanced_results.json i faza7_inventory.json IDU u git, kesevi ne.
+results/advanced/*.npz
 
 # Rezultati koji IDU u git: results/*.csv, results/*.png, models/*.json
 

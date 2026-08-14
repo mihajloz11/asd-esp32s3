@@ -253,6 +253,110 @@ udarne kvarove; kanal uništava kvar) — obje u [P14](problemi-i-rjesenja.md#p1
 
 ---
 
+## Faza 6 — šest unaprijed navedenih alternativa, sve slabije
+
+**Datum:** 14.08.2026 · **Alat:** [`evaluate_advanced.py`](../pc/tools/evaluate_advanced.py) ·
+**Protokol:** `advanced-evaluation-v1.0.0`, odvojen namespace, kanonski v1.1.0 nije diran
+
+Do ove faze je svaki korak bio pokušaj da se nađe **bolji** feature, i svaki je
+bio motivisan onim što je prethodni propustio. Ova faza je prvi put pokušala
+suprotno: uzeti šest pravaca koje je plan naveo **unaprijed**, izmjeriti ih sve
+odjednom pod istim splitovima, i objaviti rezultat kakav god bio.
+
+Kandidati su bili u kodu prije nego što je ijedan anomalan klip otvoren, i lista
+se nije mijenjala prema rezultatu.
+
+| kandidat | ideja | AUC | vs `psd_shape` |
+|---|---|---:|---:|
+| `psd_shape` | dosadašnji, 96 traka log-PSD | **0,8556 ± 0,0240** | — |
+| `psd_order` | PSD u jedinicama reda (f/f0) | 0,6388 | **−0,2168** |
+| `psd_regime` | zaseban centar po radnom režimu | 0,8556 | 0,0000 |
+| `psd_logratio` | log odnos near/far kanala | 0,7185 | −0,1371 |
+| `psd_coherence` | koherencija near↔far po traci | 0,7506 | −0,1050 |
+| `psd_masked` | far-izvedena maska buke nad near | 0,4500 | **−0,4056** |
+| `transient` | spectral flux, crest, kurtosis | 0,5647 | −0,2909 |
+| `psd_plus_transient` | spori PSD + brzi put | 0,8568 | +0,0012 |
+
+**Nijedan ne pobjeđuje.** Jedini pozitivan pomak, +0,0012, je dvadeset puta
+manji od sopstvenog rasipanja po splitu (0,024), pa nije poboljšanje nego šum.
+
+### Zašto je svaki pao — mehanizam, ne broj
+
+**Order-warp i režimi (`psd_order`, `psd_regime`).** Cijela ideja stoji na tome
+da `spd_1/2/3` znače različitu obrtnu brzinu. Estimator f0 je dao **34,0 Hz za
+sve tri**. Prvi refleks je bio da je estimator pokvaren — harmonijska suma po
+prirodi vuče ka niskim f0 — pa je urađena kontrola nezavisna od njega: gdje su
+tonalni vrhovi iznad spektralne pozadine, po brzini.
+
+| brzina | vrhovi |
+|---|---|
+| `spd_1` | 68,4 · 76,2 · 78,1 · 93,8 · 99,6 · 101,6 Hz |
+| `spd_2` | 68,4 · 76,2 · 78,1 · 93,8 · 99,6 · 101,6 Hz |
+| `spd_3` | 68,4 · 76,2 · 78,1 · 95,7 · 99,6 · 101,6 Hz |
+
+Poklapaju se unutar jednog FFT bina. **Brzine se u ovom skupu ne razlikuju po
+obrtnoj frekvenciji nego po širokopojasnom nivou.** Estimator je bio ispravan;
+68,4 Hz je drugi harmonik od 34,2 Hz. Order-warp je zato samo preskalirao osu i
+izgubio rezoluciju traka, a režimsko grupisanje se degenerisalo u jednu grupu —
+otud tačno 0,0000 razlike.
+
+**Dual-channel (`psd_logratio`, `psd_coherence`, `psd_masked`).** Svi su slabiji
+od near kanala samog. `psd_masked` je pao **ispod slučajnog pogađanja** (0,45), i
+razlog je poučan: maska potiskuje trake u kojima je far uporediv sa near, a
+ventilator je glasan u **oba** kanala. Maska je time potiskivala baš signal.
+Ovo je treći put da neka varijanta near−far pada — prvi je bilo prosto
+oduzimanje ([PLAN-NEXT-LEVEL.md](PLAN-NEXT-LEVEL.md), sekcija 2.4).
+
+**Tranzijentni put (`transient`).** Sam po sebi 0,565. Anomalije ovog
+ventilatora su tonalne i širokopojasne, a spectral flux i crest mjere udarnost.
+Feature mjeri nešto što u ovim podacima ne postoji.
+
+### Šta je ova faza zaista dala
+
+Ne bolji model. Dvije druge stvari:
+
+1. **Potvrdu da su kapabilitetni gate-ovi u firmveru bili ispravni.**
+   `asd_events.c` je odbijao da tvrdi `SPEED_CHANGED`, `AMBIENT_NOISE` i
+   `MECHANICAL_ANOMALY` jer dokaza nije bilo. Ova faza je dokaze potražila po
+   svim trima linijama i nije ih našla. Gate je sada potvrđen mjerenjem, ne
+   samo oprezom.
+2. **Preusmjeravanje na pravo usko grlo.** Kad šest alternativa ne pomjeri
+   feature, a prag se između dvije kalibracije razlikuje 16×
+   ([P17](problemi-i-rjesenja.md#p17)), onda dalje ulaganje u feature nema
+   smisla. Sljedeći korak je prag, ne model.
+
+---
+
+## Faza 7 — vremenska odluka: standardna tehnika nije prikladna tehnika
+
+**Datum:** 14.08.2026 · **Alat:** [`derive_temporal_policy.py`](../pc/tools/derive_temporal_policy.py)
+
+Ovo nije faza o featureu nego o tome **kako se od niza score-ova pravi alarm**.
+Do sada je pravilo bilo „tri uzastopna prozora iznad praga", uvedeno kao razumna
+pretpostavka i nikad izmjereno.
+
+Očekivanje je bilo da će EWMA i CUSUM biti nadogradnja. Izmjereno je suprotno:
+
+| pravilo | lažnih/h | reakcija na pobudu od 1 prozora |
+|---|---:|---:|
+| 3 uzastopna | 0,00 | 0,004 |
+| EWMA(0,4) + 3 uzastopna | 5,40 | 0,592 |
+| CUSUM k=0,5 h=2 | 5,40 | 0,721 |
+| **histereza 1,0/0,7 + 3 uzastopna** | **0,00** | **0,000** |
+
+**Mehanizam.** EWMA i CUSUM po konstrukciji prenose informaciju kroz vrijeme.
+Jedan glasan prozor — vrata, govor, udarac — kod EWMA ostaje u statistici
+nekoliko prozora i sam dopuni niz od tri; kod CUSUM-a se akumulira. Obje
+tehnike su napravljene da uhvate **mali trajni** pomjeraj u šumu, a ovdje je
+zadatak obrnut: odbaciti **veliku kratku** pobudu. Puno detalja:
+[P18](problemi-i-rjesenja.md#p18).
+
+Usvojena je histereza, koja ne unosi memoriju o veličini pobude, a prepolovljuje
+alarmne epizode kad se akustika pomjeri (11,16 → 5,40 epizoda na sat na
+klipovima drugog fizičkog ventilatora).
+
+---
+
 ## Sažetak napretka
 
 | Faza | Najbolji AUC | Šta je bila prava prepreka |
@@ -262,8 +366,19 @@ udarne kvarove; kanal uništava kvar) — obje u [P14](problemi-i-rjesenja.md#p1
 | 3. Scoring backend | 0,716 | uslovljenost kovarijanse (riješeno), pa plato |
 | 4. **Front-end** | **0,864** | **rezolucija po frekvenciji** |
 | 5. Pločica, preko zvučnika | 0,716 | akustički kanal, ne model |
+| 6. Šest alternativa | 0,857 | **nijedna ne pobjeđuje — prepreka nije feature** |
+| 7. Vremenska odluka | — | pravilo alarma, ne feature; histereza usvojena |
 
 **Napredak: 0,451 → 0,864** (benchmark), uz potvrđen rad na uređaju.
+
+**Gdje je potraga za featureom stala i zašto.** Faza 6 je prvi put mjerila više
+unaprijed navedenih pravaca odjednom, pod istim splitovima, i nijedan nije
+nadmašio `psd_shape`. Istovremeno je na uređaju izmjereno da se prag između
+dvije kalibracije razlikuje **16×** ([P17](problemi-i-rjesenja.md#p17)), a Faza 7
+je sa druge strane pokazala da u 10 od 40 splitova pomjeraj od 3 sd ne dosegne
+prag — za svako vremensko pravilo podjednako. Zaključak koji ove tri mjere
+zajedno daju: **usko grlo više nije feature nego prag.** To je i sljedeći
+pravac, i on je otvoren, ne riješen.
 
 ---
 
@@ -286,6 +401,18 @@ udarne kvarove; kanal uništava kvar) — obje u [P14](problemi-i-rjesenja.md#p1
    mreže nije.
 6. **Ansambl nije besplatan.** Rang-ansambl slabijeg i jačeg featura je u svakom
    mjerenju pogoršao jačeg.
+7. **Standardna tehnika nije ista stvar kao prikladna tehnika.** EWMA i CUSUM su
+   udžbenički alat za detekciju pomjeraja i oba su ovdje pogoršala sistem, jer je
+   zadatak bio obrnut od onog za koji su pravljeni.
+8. **Kad rezultat iznenadi, prvo se provjerava mjerenje.** f0 od 34 Hz za sve
+   tri brzine je izgledalo kao pokvaren estimator; kontrola nezavisna od
+   estimatora je pokazala da je nalaz tačan. Isti obrazac kao
+   [P9](problemi-i-rjesenja.md#p9), [P14](problemi-i-rjesenja.md#p14) i
+   [P16](problemi-i-rjesenja.md#p16) — tri puta je artefakt mjerenja bio kriv,
+   jednom nije, i samo provjera razlikuje ta dva slučaja.
+9. **Negativan rezultat zatvara pravac samo ako je mjeren.** Šest alternativa iz
+   Faze 6 nisu odbačene mišljenjem nego brojkom, i svaka ima zapisan mehanizam
+   zbog kojeg je pala. Bez toga bi se za pola godine vratile kao „nova ideja".
 
 ---
 
@@ -298,6 +425,7 @@ udarne kvarove; kanal uništava kvar) — obje u [P14](problemi-i-rjesenja.md#p1
 | PSD model, detaljno | [istrazivanje-psd-model.md](istrazivanje-psd-model.md) |
 | Runde nad scoring backendom | [istrazivanje-preko-0674.md](istrazivanje-preko-0674.md) |
 | Rane faze 1–2 | [model-poboljsanje.md](model-poboljsanje.md) |
-| Problemi i zamke (P1–P13) | [problemi-i-rjesenja.md](problemi-i-rjesenja.md) |
+| Problemi i zamke (P1–P18) | [problemi-i-rjesenja.md](problemi-i-rjesenja.md) |
+| Faze 6–7, sirovi rezultati | `results/advanced/advanced_results.json`, `pc/config/asd_temporal_policy_v1.json` |
 | Eksperimenti | `pc/tools/bench_periodicity.py`, `bench_research*.py`, `bench_adapt.py`, `bench_blend.py` |
 | Rezultati | `results/periodicity_*.json`, `results/research*.json` |
