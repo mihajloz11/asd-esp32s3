@@ -191,9 +191,9 @@ kalibracije i ocjene iste sesije.
 3. Potvrditi da je novi fail-closed build flešovan, pa pokrenuti capture alat.
    Alat resetuje već fleširanu pločicu, ali sam ništa ne flešuje i ne pušta zvuk
    preko zvučnika.
-4. Tokom oko 15 s `WAIT` i 100 s `CAL` ništa ne mijenjati. Firmware koristi
-   `N_CAL=10`; test od 200 s zahtijeva unaprijed zaključanu posebnu firmware
-   varijantu i ne smije se lažno prijaviti kao da je urađen ovim buildom.
+4. Tokom oko 15 s `WAIT` i 100 s `CAL` ništa ne mijenjati. Finalni firmware
+   koristi `N_CAL=10`, dakle ukupno oko 115 s do završetka učenja. `k=20`
+   ostaje referentni PC benchmark i nije dio ovog fizičkog protokola.
 5. Prije prvog prozora koji smije u metrike eksplicitno unijeti
    `condition normal_baseline ...`. Poruka `DETEKCIJA RADI` nikada sama ne
    postavlja operatorovu istinu. Zatim držati isti režim najmanje 30–60 min.

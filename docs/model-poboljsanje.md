@@ -23,6 +23,10 @@ Da poređenje bude pošteno, kod svih pokušaja isto:
 
 Skript: [`pc/tools/bench_adapt.py`](../pc/tools/bench_adapt.py) i srodni.
 
+Ovo je protokol istorijskog PC poređenja. Finalna implementacija koristi
+`k=10` (~115 s zajedno sa `WAIT` fazom), dok `k=20` ostaje referentna analiza
+osjetljivosti.
+
 ---
 
 ## Rezultati, poređani po uspjehu
@@ -113,26 +117,30 @@ pristup je dao 0,495.)*
 
 ## Šta novi PSD model znači za ploču
 
-Novi pobjednički pristup je **jednostavniji od autoenkodera**, ali traži novi
-visokorezolucioni spektralni front-end:
+Finalni pobjednički pristup je **jednostavniji od istorijskog autoenkodera**;
+zahtijevao je novi visokorezolucioni spektralni front-end koji je u međuvremenu
+implementiran i provjeren:
 
-| | Autoenkoder (sad) | PSD + kovarijansa (predlog) |
+| | Istorijski AE/TFLM put | Finalni PSD + Mahalanobis put |
 |---|---|---|
 | Model u flešu | 428 KB binarke, TFLM arena 7960 B | 96 × 96 matrica 36 864 B + centar |
 | Račun po klipu | 1055 ms inferencije poslije log-mela | 38 FFT-ova 8192 + 9216 množenja za score |
 | Zavisnosti | TFLite Micro, esp-nn | ništa, čist C |
 | Kalibracija na licu mjesta | samo prag | centar (96 brojeva) + prag |
 
-Front-end se **mijenja**. Postojeća log-mel verifikacija 7,99e-05 ne dokazuje
-ispravnost PSD toka; moraju se napraviti novi test-vektori i nova PC↔C provjera.
+Front-end se **promijenio**. Za PSD tok su napravljeni posebni test-vektori i
+PC↔C provjera; finalni `ASD_PSD_LIVE` koristi ovaj put bez TFLM-a.
 
 ---
 
 ## Iskrena trenutna granica
 
-**Cilj 0,8 je dostignut na PC benchmarku: 0,864 ± 0,025.** Nije još dostignut
-cilj potpuno gotovog samostalnog uređaja, jer PSD front-end nije prenesen na
-pločicu i normal-only prag još ima previše lažnih alarma bez vremenske potvrde.
+**Cilj 0,8 je dostignut na PC benchmarku: 0,864 ± 0,025 za referentni
+`k=20`.** PSD front-end, Mahalanobis score, lokalni centar i vremenska potvrda
+`n=3` preneseni su na pločicu. Finalna implementacija koristi `k=10` (100 s
+mjerenja, oko 115 s sa `WAIT` fazom); njen razvojni rezultat je AUC 0,856 ±
+0,024 na 20 podjela. Stabilnost praga i ponašanje na fizičkom ventilatoru
+ostaju otvoreni i ne mogu se dokazati speaker testom.
 
 Bitan kontekst: DCASE anomalije su **namjerno suptilne**, to je istraživački
 izazov. Na živoj ploči, kad je mašina stala, score je skočio sa 10 na 59 i
@@ -144,8 +152,9 @@ DCASE anomalija i treba ga izmjeriti direktno, sa pravim ventilatorom.
 
 ## Šta dalje
 
-1. Prenijeti PSD pristup na ploču i ponoviti PC↔C, latenciju i `dropped=0`
-2. Izmjeriti sa **stvarnim ventilatorom i stvarnim kvarom** — ta brojka je za
-   primjenu mjerodavnija od benchmark broja
-3. Završiti normal-only prag i vremensku potvrdu alarma; AUC sam ne određuje
-   dobar radni prag.
+1. Izmjeriti sa **stvarnim ventilatorom i bezbjedno izazvanim promjenama** —
+   ta brojka je za primjenu mjerodavnija od benchmark broja.
+2. Na fizičkim normalnim sesijama provjeriti stabilnost normal-only praga i
+   po potrebi unaprijed zaključati robustniju formulu. Temporalna potvrda
+   `n=3` već je implementirana.
+3. Završiti kompletno povezivanje i E5 mjerenje potrošnje.

@@ -1,6 +1,11 @@
 # Master rad — Detekcija anomalija zvuka mašina na ESP32-S3
 ## Kompletan plan: literatura, dataset, metode, implementacija, hardver, eksperimenti, timeline
 
+> ISTORIJSKI POČETNI PLAN (jul 2026) — ZAMIJENJEN. Ovaj fajl čuva prvobitni
+> AE/TFLM smjer i planirane eksperimente, ali nije izvor trenutnog stanja.
+> Finalni smjer je psd_shape + Mahalanobis, implementacija koristi k=10, a
+> aktuelni preostali fizički koraci su u PREOSTALO.md.
+
 **Radni naslov:** *Nenadgledana detekcija anomalija zvuka mašina na resursno ograničenim uređajima: kvantizacija, optimizacija i evaluacija na platformi ESP32-S3*
 
 **Engleski (za prijavu/publikaciju):** *Unsupervised Anomalous Sound Detection for Machine Condition Monitoring on Resource-Constrained Devices: Quantization, Optimization and Evaluation on ESP32-S3*

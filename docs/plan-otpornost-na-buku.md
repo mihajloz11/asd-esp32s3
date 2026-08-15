@@ -4,15 +4,18 @@
 > razgovor, zalupljena vrata, saobraćaj) od **trajne promjene na mašini** koja
 > je stvarna anomalija. Prvo je smetnja, drugo je alarm.
 >
-> Status: dio je već ugrađen i izmjeren, ostalo je predlog sa procjenom koristi.
-> Ništa iz odjeljka „Predlozi" još **nije** implementirano ni izmjereno.
+> Status: temporalna politika je zaključana na **sintetičkim score-pobudama**,
+> a dual-channel kandidati su ispitani i nisu usvojeni. Kontrolisani akustički
+> testovi govora, koraka i vrata nisu izvedeni i ostaju dio fizičkog protokola.
+> Ostali odjeljci su istorijski prijedlozi, ne tvrdnje o završenoj validaciji.
 
 ## Šta već postoji i koliko vrijedi (izmjereno)
 
 ### Pravilo od N uzastopnih prozora
 
 Alarm se javlja tek kad **3 uzastopna prozora** od po 10 s pređu prag, dakle
-odstupanje mora trajati **30 s**. Ljudski zvuci traju sekundama; kvar ne prolazi.
+score mora ostati iznad praga oko **30 s**. To samo po sebi ne dokazuje kako
+stvarni ljudski zvuk, vrata ili druga smetnja utiču na feature i score.
 
 Izmjereno u živim prolazima ([hardver-verifikacija.md](hardver-verifikacija.md)):
 
@@ -21,7 +24,8 @@ Izmjereno u živim prolazima ([hardver-verifikacija.md](hardver-verifikacija.md)
 | 2 uzastopna prozora (prolaz 2) | spoljni zvuk dao score 42 021 i 70 590 → **lažni alarmi** |
 | 3 uzastopna prozora (prolazi 3–5) | prozor sa 1104 pri pragu 1052 **progutan**, 0 lažnih alarma u 17 normalnih prozora |
 
-Zaključak: pravilo radi i najjeftinija je odbrana koju imamo.
+Zaključak: pravilo odbacuje izolovan score-prozor i najjeftinija je odbrana
+koju imamo. Akustička otpornost se potvrđuje tek kontrolisanim fizičkim testom.
 
 ### Usrednjavanje unutar prozora
 

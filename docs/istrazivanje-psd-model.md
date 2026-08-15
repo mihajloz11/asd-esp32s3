@@ -1,8 +1,9 @@
 # Istraživanje modela: visokorezolucioni PSD otisak ventilatora
 
-**Datum:** 09.08.2026  
-**Status:** PC eksperiment, model header i izolovani C modul potvrđeni;
-spajanje u živi firmware i mjerenje na pločici još nisu urađeni
+**Datum eksperimenta:** 09.08.2026
+**Status ažuriran 14.08.2026:** PC eksperiment, model header, C modul, živi
+firmware i mjerenje na pločici su potvrđeni. Finalni firmware koristi `k=10`;
+`k=20` u tabelama ispod ostaje jači referentni PC benchmark.
 
 ## Rezultat
 
@@ -79,10 +80,11 @@ Paralelna runda je nezavisno spojila ovaj PSD otisak sa još šest serija
 scoring eksperimenata i potvrdila da je PSD sam jači od ansambla sa slabijim
 mel score-om: [istrazivanje-preko-0674.md](istrazivanje-preko-0674.md).
 
-## Staje li na ESP32-S3
+## Istorijska procjena za ESP32-S3 i naknadna potvrda
 
-Da, po memoriji i broju operacija, ali vrijeme još treba izmjeriti stvarnim C
-kodom na pločici.
+Na dan prvog PC eksperimenta procjena po memoriji i broju operacija pokazivala
+je da model staje na ESP32-S3, ali vrijeme, RAM i kontinuitet audio-toka tada
+još nisu bili izmjereni stvarnim C kodom na pločici.
 
 | Stavka | Float32 trošak |
 |---|---:|
@@ -94,9 +96,12 @@ kodom na pločici.
 Float32 i float64 su u PC provjeri dali identičan AUC 0,86438. Novi front-end
 traži 38 preklapajućih FFT-ova dužine 8192 po klipu. Izolovani čisti C modul je
 napravljen i na realnom DCASE WAV-u daje maksimalnu PC↔C razliku 9,54e-07;
-Mahalanobis score se relativno razlikuje 4,37e-07. Gruba procjena pokazuje da je
-tok realan za S3 sa 16 MB PSRAM-a, ali ta tvrdnja nije zatvorena dok se na
-uređaju ne izmjere vrijeme, RAM i `dropped=0`.
+Mahalanobis score se relativno razlikuje 4,37e-07.
+
+Taj istorijski implementacijski rizik je kasnije zatvoren: `ASD_PSD_LIVE`
+build, live tok preko mikrofona, vrijeme oko 704 ms po klipu, RAM i
+`dropped=0` potvrđeni su na ESP32-S3 u speaker/microphone postavci. To nije
+potvrda rada uz fizički ventilator; taj eksperiment ostaje otvoren.
 
 ## AUC nije isto što i gotov alarmni prag
 
@@ -108,10 +113,11 @@ score-ova dobijeno je približno:
 - lažni alarmi 12,7 %,
 - F1 0,727.
 
-To još nije dovoljno miran samostalni alarm. Prag, robusna kalibracija score-a i
-pravilo „alarm tek nakon 2–3 uzastopna anomalna prozora” moraju se posebno
-provjeriti. Kontinuirano automatsko pomjeranje centra nije dozvoljeno, jer bi
-moglo naučiti kvar kao normalu.
+Sam prag nije dovoljan za miran samostalni alarm. Implementirano je zaključano
+pravilo: alarm tek nakon tačno 3 uzastopna prozora, uz izlaznu histerezu 0,7.
+Stabilnost praga kroz fizičke sesije još treba provjeriti. Kontinuirano
+automatsko pomjeranje centra nije dozvoljeno jer bi moglo naučiti kvar kao
+normalu.
 
 ## Granice tvrdnje
 
@@ -124,12 +130,10 @@ moglo naučiti kvar kao normalu.
 
 ## Sljedeći tehnički koraci
 
-1. Spojiti izolovani C PSD modul u poseban firmware build mod, bez uklanjanja
-   postojećeg demoa.
-2. Izmjeriti vrijeme, RAM i `dropped=0` na ESP32-S3.
-3. Ugraditi lokalno računanje centra i normal-only praga, bez TFLM-a.
-4. Dodati vremensku potvrdu alarma i LED/serijski flag.
-5. Snimiti više stvarnih ispravnih ventilatora i odvojene stvarne kvarove.
+Prva četiri prvobitna koraka su završena: PSD live mod, mjerenje vremena/RAM-a,
+lokalni centar i prag te temporalna potvrda sa LED/serijskim statusom postoje.
+Preostaje snimiti više stvarnih normalnih ventilatora i bezbjedno izazvanih
+promjena, uz kompletno spojen hardver.
 
 Artefakti pripremljeni 09.08.2026:
 

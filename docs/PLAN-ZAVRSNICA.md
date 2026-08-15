@@ -41,7 +41,7 @@ se ocjenjuje po tome šta stvarno može dokazati, a ne po tome što je u planu.
 | **A** | Puni živi lanac na uređaju: `WAIT → CAL → DET` | Najveći blok `BLOCKED_HARDWARE` iz Faze 1; mikrofon je tu sada | ✅ `PASS` — prva prihvaćena kalibracija i puna DET faza na uređaju |
 | **B** | Faza 2 uvezana u `psd_live.c`, protokol bump | Gate prisustva sprječava lažnu anomaliju pri gašenju ventilatora | ✅ `PASS` — `asd-quality-v1.3.0`, parser `physical-fan-v1.6.0` |
 | **C** | Taster za start učenja + LED signalizacija | Eksplicitan zahtjev; bez njega nema demoa | ✅ logika `PASS` (43 testa), hardver nije zalemljen |
-| **D** | Faza 4: vremenska odluka | Jezgro zahtjeva „ignoriši govor i kratku buku" | ✅ `PASS` — histereza usvojena, **EWMA i CUSUM odbačeni mjerenjem** |
+| **D** | Faza 4: vremenska odluka | Jezgro zahtjeva da 1–2 izolovana score-prozora ne pokrenu alarm | ✅ `PASS` na sintetičkim score-pobudama — histereza usvojena, **EWMA i CUSUM odbačeni mjerenjem**; stvarne akustičke smetnje nisu ovim testirane |
 | **E** | Faza 3: f0 / režim / order-normalized PSD | Otključava `SPEED_CHANGED` | ⛔ **negativan** — brzine se ne razlikuju po f0 |
 | **F** | Faza 6: brzi tranzijentni put | Otključava `MECHANICAL_ANOMALY` | ⛔ **negativan** — +0,0012 AUC, unutar šuma |
 | **G** | Faza 5: dual-channel near/far | **Mora prije finalne šeme** | ⛔ **negativan** — **šema ostaje sa jednim mikrofonom** |
@@ -93,7 +93,8 @@ napisan — traži se izmjerena vrijednost ili prošao test.
 - parametri zaključani **samo** na normalnim podacima, prije bilo kakvog
   gledanja u anomalije;
 - prijavljena latencija alarma i vrijeme oporavka;
-- izmjereno odbijanje kratke pobude (govor, udarac, prolazna buka);
+- izmjereno odbijanje sintetičke score-pobude od 1–2 prozora; govor, udarac
+  i prolazna akustička buka ostaju za fizički protokol;
 - PC referenca i C implementacija se numerički poklapaju.
 
 ### E, F, G — istraživačke faze

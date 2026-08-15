@@ -109,6 +109,12 @@ Visokorezolucioni PSD otisak + Ledoit–Wolf kovarijansa + lokalni centar daje
 Stari pristup pod istim seedovima daje 0,669 ± 0,031.
 Detalji: [istrazivanje-psd-model.md](istrazivanje-psd-model.md).
 
+> **Naknadno ažuriranje 14.08.2026. — finalni implementacijski izbor je `k=10`,
+> ne `k=20`.** To je 10 validnih prozora, 100 s mjerenja i oko 115 s zajedno
+> sa `WAIT` fazom. Razvojna evaluacija te konfiguracije daje 0,856 ± 0,024 na
+> 20 podjela; `k=20` ostaje referentni jači PC rezultat i ne opisuje trenutni
+> firmware.
+
 **Ne generalizuje na druge tipove mašina.** Na svih 7 mašina psd_shape pobjeđuje
 samo na 2, a po harmonijskoj sredini (0,537) je lošiji od mel osnove (0,573).
 Razlog je fizički: uske harmonijske linije ima rotaciona mašina, ne ventil ili
@@ -148,7 +154,10 @@ Score = Mahalanobis od tog centra u naučenom obliku.
 Za ploču je **jednostavnije od postojećeg**: nema mreže, nema TFLite, nema
 arene — matrica u flešu i jedno množenje po prozoru umjesto 1055 ms inferencije.
 Za ovaj prethodni pristup front-end (log-mel) se nije dirao i bio je
-verifikovan. Novi PSD pobjednik mijenja front-end, pa traži novu PC↔C provjeru.
+verifikovan. U vrijeme ovog zapisa novi PSD pobjednik je mijenjao front-end i
+zato je tražio novu PC↔C provjeru. Ta potreba je naknadno zatvorena posebnim
+PSD test-vektorima, PC↔C parity testom i on-device speaker/microphone prolazom;
+fizički ventilator time nije testiran.
 
 ### Zaključci
 

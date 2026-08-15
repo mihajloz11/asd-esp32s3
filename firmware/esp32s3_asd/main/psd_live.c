@@ -5,7 +5,6 @@
 #include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -48,16 +47,9 @@ static const char *TAG = "psdlive";
 #define CAL_K_SIGMA    3.0f
 #define SCORE_NEGATIVE_TOL 1.0e-3f
 
-/* Operaterski tok. Prva sesija poslije uključenja smije da krene sama, da
- * automatizovani PC alati ne zavise od fizičkog tastera. Svaka SLJEDEĆA sesija
- * traži taster: automatsko ponovno učenje bi bilo tačno ono što P10 zabranjuje,
- * jer bi uređaj mogao sam naučiti kvar kao normalu. */
+/* Ucenje uvijek pokrece operater. Time uredjaj ne moze sam zapoceti
+ * kalibraciju prije nego sto su ventilator i mikrofon spremni. */
 #define UI_TICK_MS            20
-/* 10 s je izabrano tako da PC alatima ostane dovoljno kalibracionog zvuka:
- * `false_alarm_test.py` ima samo 21 target normalan klip po brzini, pa svaka
- * sekunda cekanja oduzima od kalibracionog snimka. Za operatera grace nije
- * bitan — pritisak tastera pokrece ucenje odmah. */
-#define START_GRACE_MS     10000
 
 static float cal_feat[N_CAL][DIM];
 static float center[DIM];
@@ -203,21 +195,14 @@ static asd_ui_command_t take_command(void) {
     return (asd_ui_command_t)atomic_exchange(&ui_command, ASD_UI_CMD_NONE);
 }
 
-/* Čeka na taster. `grace_ms > 0` dozvoljava samostalan start poslije isteka —
- * koristi se SAMO za prvu sesiju poslije uključenja. Vraća izvor starta. */
-static const char *wait_for_start(asd_state_t state, uint32_t grace_ms) {
+/* Ceka eksplicitnu operaterovu komandu; nema vremenskog autostarta. */
+static void wait_for_start(asd_state_t state) {
     ui_stage = ASD_STAGE_IDLE;
     ui_state = state;
     take_command();                       /* odbaci komandu zaostalu iz ranije */
-    uint32_t t0 = now_ms();
-    if (grace_ms)
-        ESP_LOGI(TAG, "pritisni taster (GPIO%d) da pocne ucenje; bez pritiska "
-                 "krece samo za %lu s", PIN_BUTTON, (unsigned long)(grace_ms / 1000));
-    else
-        ESP_LOGI(TAG, "pritisni taster (GPIO%d) da pocne novo ucenje", PIN_BUTTON);
+    ESP_LOGI(TAG, "pritisni taster (GPIO%d) da pocne ucenje", PIN_BUTTON);
     for (;;) {
-        if (take_command() == ASD_UI_CMD_START_LEARNING) return "BUTTON";
-        if (grace_ms && now_ms() - t0 >= grace_ms) return "AUTOSTART";
+        if (take_command() == ASD_UI_CMD_START_LEARNING) return;
         vTaskDelay(pdMS_TO_TICKS(UI_TICK_MS));
     }
 }
@@ -597,38 +582,38 @@ void psd_live_run(void) {
                     now_ms());
     /* 4 KB steka: task zove `printf` sa vise `%s` argumenata pri svakom
      * pritisku, a newlib formatiranje na Xtensi ume da potrosi preko 2 KB. */
-    xTaskCreatePinnedToCore(ui_task, "asd_ui", 4096, NULL, 4, NULL, 0);
+    BaseType_t ui_task_result =
+        xTaskCreatePinnedToCore(ui_task, "asd_ui", 4096, NULL, 4, NULL, 0);
+    if (ui_task_result != pdPASS) {
+        /* Bez UI taska taster se ne cita. Posto vise nema autostarta, nastavak
+         * bi ostavio prividno ziv detektor koji nikad ne moze poceti ucenje.
+         * Isti ESP_ERROR_CHECK put kao za I2S init/start u app_main.c zavrsava
+         * tok fail-closed; zakljucana panic politika zatim restartuje uredjaj. */
+        ESP_LOGE(TAG, "UI task nije pokrenut; taster nije dostupan, restartujem");
+        ESP_ERROR_CHECK(ESP_ERR_NO_MEM);
+    }
 
     ESP_LOGI(TAG, "=== SAMOSTALNI PSD DETEKTOR ===");
     /* Statusni ispis je namjerno ASCII (pouka P12): serijski tok cita PC alat
      * cija konzolna kodna stranica ne mora podrzavati nasa slova. */
     ESP_LOGI(TAG, "model: %d traka, matrica %dx%d iz flesa, naucen na 990 "
-             "ispravnih ventilatora", DIM, DIM, DIM);
+             "normalnih snimaka ventilatora", DIM, DIM, DIM);
     ESP_LOGI(TAG, "1) pusti ventilator koji radi NORMALNO");
     ESP_LOGI(TAG, "2) pritisni taster -> ucenje %d x 10 s = %d s, lampica treperi",
              N_CAL, N_CAL * 10);
     ESP_LOGI(TAG, "3) lampica stalno svijetli = naucio; tek tada izazovi kvar");
 
     asd_state_t state = ASD_STATE_NO_MACHINE;
-    uint32_t grace_ms = START_GRACE_MS;
     for (;;) {
-        const char *source;
         if (relearn_requested) {
             /* Operater je dugim pritiskom tokom nadzora već tražio novo učenje;
              * ne vraća se u čekanje, jer bi tražio drugi pritisak za istu
              * namjeru. */
             relearn_requested = 0;
-            source = "BUTTON";
         } else {
-            source = wait_for_start(state, grace_ms);
+            wait_for_start(state);
         }
-        /* Samostalan start vrijedi samo jednom, poslije uključenja. Svaka
-         * sljedeća sesija traži operatera, jer bi automatsko ponovno učenje
-         * moglo naučiti kvar kao normalu (P10). */
-        grace_ms = 0;
-        emit_session("STARTED", source,
-                     strcmp(source, "AUTOSTART") == 0 ? "BOOT_GRACE_EXPIRED"
-                                                      : "OPERATOR_REQUEST",
+        emit_session("STARTED", "BUTTON", "OPERATOR_REQUEST",
                      state == ASD_STATE_CALIBRATED_NORMAL ||
                      state == ASD_STATE_ANOMALY);
         state = run_session();

@@ -110,7 +110,7 @@ FIRMWARE_LEVELS = {
     "SENSOR_HEALTH", "MACHINE_PRESENCE", "OPERATING_REGIME", "DEVIATION",
 }
 SESSION_ACTIONS = {"STARTED", "ENDED", "ABORTED"}
-SESSION_SOURCES = {"BUTTON", "AUTOSTART", "FIRMWARE"}
+SESSION_SOURCES = {"BUTTON", "FIRMWARE"}
 BUTTON_EVENTS = {"NONE", "SHORT", "LONG"}
 BUTTON_MODES = {"IDLE", "LEARNING", "READY", "ALARM", "FAULT"}
 BUTTON_COMMANDS = {"NONE", "START_LEARNING", "ABORT"}
@@ -1627,7 +1627,8 @@ def run_experiment(args: argparse.Namespace) -> int:
     detections: list[dict[str, Any]] = []
     max_dropped: int | None = None
     telemetry_counts = {"QUALITY": 0, "STATE": 0, "EVENT": 0,
-                        "PRESENCE": 0, "SESSION": 0, "BUTTON": 0}
+                        "PRESENCE": 0, "TEMPORAL": 0,
+                        "SESSION": 0, "BUTTON": 0}
     last_firmware_state: str | None = None
     protocol_state = new_firmware_protocol_state()
     drain_started: float | None = None
@@ -1885,10 +1886,12 @@ def run_experiment(args: argparse.Namespace) -> int:
                     }
                     firmware_event_writer.writerow(row)
                     firmware_event_handle.flush()
-                elif parsed and parsed["kind"] in ("SESSION", "BUTTON", "PRESENCE"):
+                elif parsed and parsed["kind"] in (
+                    "SESSION", "BUTTON", "PRESENCE", "TEMPORAL",
+                ):
                     protocol_state = transition_firmware_protocol(protocol_state, parsed)
                     telemetry_counts[parsed["kind"]] += 1
-                    if parsed["kind"] != "PRESENCE":
+                    if parsed["kind"] in ("SESSION", "BUTTON"):
                         operator_writer.writerow({
                             "host_utc": host_utc,
                             "elapsed_s": elapsed,

@@ -5,16 +5,21 @@ N32R16V. Plan i metodologija: [plan-master-rada.md](plan-master-rada.md).
 
 ## Gdje je projekat sada (14.08.2026)
 
-Uređaj radi samostalno: operater pritisne taster, uređaj ~115 s uči normalan rad
-jednog ventilatora, lampica pređe u stalno svjetlo, i od tada nadzire. Alarm
-traži **tri uzastopna prozora** trajne promjene (~30 s), pa kratka buka, govor i
-zalupljena vrata ne pale alarm.
+Finalni firmware je projektovan i implementiran za samostalan rad. Predviđeni
+tok je: operater pritisne taster, uređaj koristi konfiguraciju `k=10` (oko 15 s
+`WAIT` + 10 validnih prozora po 10 s, ukupno oko 115 s) da nauči normalan rad,
+a lampica zatim pokaže da je nadzor aktivan. Logika tastera i LED signalizacije
+pokrivena je host testovima; fizički sastavljen interfejs sa zalemljenim tasterom
+i LED diodama još nije potvrđen na kompletnom hardveru. Alarm traži **tri
+uzastopna prozora** iznad praga (~30 s). Sintetički temporalni test potvrđuje da
+jedan ili dva izolovana score-prozora ne pale alarm; govor, zalupljena vrata i
+druge stvarne akustičke smetnje ostaju dio budućeg fizičkog protokola.
 
 | | |
 |---|---|
 | Serijski protokol | `asd-quality-v1.3.0` · parser `physical-fan-v1.6.0` |
-| Model | `psd_shape`, 96 traka log-PSD, Mahalanobis, AUC 0,856 (razvojno) |
-| PC testovi | **271 passed**, uključujući PC↔C parity |
+| Model | `psd_shape`, 96 traka log-PSD, Mahalanobis; finalni `k=10`: AUC 0,856 (razvojno, 20 podjela); referentni PC `k=20`: AUC 0,867 (kanonski, 100 podjela) |
+| PC testovi | **274 passed**, uključujući PC↔C parity |
 | Na uređaju provjereno | kalibracija, DET faza, fail-closed odbijanja, `dropped=0` |
 | **Ostalo** | **šema · ventilator · demo** → [docs/PREOSTALO.md](docs/PREOSTALO.md) |
 
@@ -36,9 +41,9 @@ pc/                 Python pipeline (trening, evaluacija, kvantizacija)
   tools/            generatori C headera + test vektora za uređaj
   tests/            PC↔C unit testovi (featuri, gamma kalibracija)
   run_sweep.ps1     E1+E2+E3 za jednu mašinu (svi modeli + int8)
-firmware/esp32s3_asd/   ESP-IDF v5.x projekat (I2S, DSP front-end, TFLM, kalibracija)
+firmware/esp32s3_asd/   ESP-IDF v5.x projekat (finalni PSD/Mahalanobis; istorijski TFLM modovi)
 data/               DCASE 2026 dev dataset (gitignored)
-models/             .keras / .tflite / meta.json (gitignored osim meta)
+models/             PSD .npz/meta + istorijski .keras/.tflite artefakti
 results/            results.csv + logovi + keš featura
 ```
 
@@ -94,10 +99,12 @@ parity front-enda).
 
 Per-target pinovi i sdkconfig se biraju automatski (`main/pins.h`,
 `sdkconfig.defaults.<target>`). Zabranjeni pinovi: S3 GPIO 35/36/37 (oktalni
-PSRAM), ESP32 GPIO 6–11 (flash). Firmware koristi **streaming** featuring
-(hop-po-hop, <25 KB RAM — bit-identičan batch putu, testirano) pa isti kod radi
-na obje ploče. Detalji: [docs/edge-adaptacija.md](docs/edge-adaptacija.md),
-inventar i nabavka: [docs/hardware.md](docs/hardware.md).
+PSRAM), ESP32 GPIO 6–11 (flash). Firmware koristi **streaming** obradu hop-po-hop
+i time izbjegava baferovanje približno 640 KB velikog punog float ulaznog
+prozora. Finalni ESP32-S3 build report pokazuje oko 293 kB zauzetog i 342 kB
+slobodnog DIRAM-a; ne tvrdi se da cijeli finalni PSD feature put koristi manje
+od 25 kB. Detalji: [docs/edge-adaptacija.md](docs/edge-adaptacija.md), inventar
+i nabavka: [docs/hardware.md](docs/hardware.md).
 
 ## Ključne odluke (odstupanja od librosa/baseline — za pogl. 5 rada)
 

@@ -106,11 +106,14 @@ Tok demoa, onako kako ga operater vidi:
 
 1. Pusti ventilator, sačekaj da radi normalno.
 2. **Pritisni taster.** Zelena počne da treperi.
-3. ~115 s: uređaj sluša i uči. Ne dirati ništa.
+3. Finalnih `k=10`: oko 15 s `WAIT` + 10 validnih prozora po 10 s, ukupno
+   približno 115 s. Uređaj sluša i uči; ne dirati ništa. `k=20` ostaje
+   referentni PC benchmark, nije konfiguracija ovog firmwarea.
 4. **Zelena pređe u stalno svjetlo** — naučio je.
 5. Izazovi promjenu. Alarm traži **tri uzastopna prozora**, dakle ~30 s trajne
-   promjene. Kratka buka, govor i zalupljena vrata ne pale alarm — to je
-   izmjereno u Fazi 4.
+   promjene. Faza 4 je sintetičkim score-pobudama potvrdila samo da jedan ili
+   dva izolovana prozora iznad praga ne pale alarm. Govor, zalupljena vrata i
+   druge stvarne akustičke smetnje tek se mjere u ovom fizičkom protokolu.
 6. Vrati ventilator u normalu; alarm se gasi tek kad score padne ispod
    **0,7× praga** (histereza).
 
