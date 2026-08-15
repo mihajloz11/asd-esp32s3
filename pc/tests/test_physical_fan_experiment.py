@@ -1483,3 +1483,56 @@ def test_unknown_operator_tokens_are_protocol_errors() -> None:
         parsed = physical.parse_serial_line(line)
         assert parsed["kind"] == "PARSE_ERROR", line
         assert parsed["reason"] == expected
+
+
+def test_virtual_button_records_cannot_invalidate_a_run() -> None:
+    """`FLAGS`/`VBUTTON` su izvan zakljucanog rjecnika i moraju biti nevidljivi.
+
+    Oba reda emituje firmware zbog panela (virtuelni taster i lampice). Ako bi
+    ih parser prepoznao kao telemetriju, pali bi izmedju `QUALITY phase=DET` i
+    njegovog `DET` reda i ponistavali inace ispravan prolaz. Zato se traktiraju
+    kao nepoznat tekst: `None`, pa ih petlja u `run_experiment` preskoci prije
+    `transition_firmware_protocol`.
+    """
+    ignored = [
+        "FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL "
+        "waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off",
+        "FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 "
+        "learning=0 learned=1 anomaly=1 fault=0 green=off red=on",
+        "VBUTTON protocol=asd-quality-v1.3.0 source=console event=SHORT "
+        "result=accepted",
+        "VBUTTON protocol=asd-quality-v1.3.0 source=console event=NONE "
+        "result=unknown_command",
+    ]
+    for line in ignored:
+        assert physical.parse_serial_line(line) is None, line
+
+    # Virtuelni pritisak se i dalje prijavljuje obicnim `BUTTON` redom, pa
+    # dokaz o operaterovoj radnji ostaje u zakljucanoj telemetriji.
+    parsed = physical.parse_serial_line(
+        "BUTTON protocol=asd-quality-v1.3.0 event=SHORT mode=IDLE "
+        "command=START_LEARNING discards=0"
+    )
+    assert parsed["kind"] == "BUTTON"
+    assert parsed["command"] == "START_LEARNING"
+
+
+def test_virtual_button_shares_the_physical_button_path() -> None:
+    """Konzola smije da ubaci samo dogadjaj, nikad odluku.
+
+    Ako bi virtuelni pritisak imao svoj `asd_ui_command`/`emit_button`, dva
+    ulaza bi mogla da se raziđu u ponasanju. Zato se `asd_cmd_take_event`
+    cita na istom mjestu gdje i pin, i sve dalje je zajednicko.
+    """
+    source = (
+        ROOT / "firmware" / "esp32s3_asd" / "main" / "psd_live.c"
+    ).read_text(encoding="utf-8")
+    assert "event = asd_cmd_take_event();" in source
+    assert source.count("asd_ui_command(mode, event)") == 1
+    assert source.count("emit_button(") == 2  # definicija + jedan poziv
+
+    console = (
+        ROOT / "firmware" / "esp32s3_asd" / "main" / "asd_cmd.c"
+    ).read_text(encoding="utf-8")
+    for forbidden in ("asd_ui_command", "emit_button", "gpio_"):
+        assert forbidden not in console, forbidden

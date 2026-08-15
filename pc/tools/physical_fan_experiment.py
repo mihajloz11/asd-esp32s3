@@ -1807,7 +1807,29 @@ def run_experiment(args: argparse.Namespace) -> int:
                             kind="session", label="abort", note=rest,
                         )
                         break
-                    if verb == "note" and rest:
+                    if verb in ("press", "hold"):
+                        # Virtuelni taster: isti ulaz kao fizicki pritisak, samo
+                        # preko konzole (firmware/main/asd_cmd.c). Postoji da bi
+                        # se protokol mogao izvesti dok taster nije zalemljen.
+                        # Uredjaj na pritisak odgovara `VBUTTON` pa `BUTTON`
+                        # zapisom, tako da dokaz ostaje u telemetriji, a ne samo
+                        # u host logu.
+                        wire = b"PRESS\n" if verb == "press" else b"HOLD\n"
+                        try:
+                            ser.write(wire)
+                            ser.flush()
+                        except serial.SerialException as exc:
+                            print(f"slanje komande nije uspjelo: {exc}")
+                            add_event(
+                                events, event_writer, event_handle, started=started,
+                                kind="command_error", label=verb, note=str(exc),
+                            )
+                            continue
+                        add_event(
+                            events, event_writer, event_handle, started=started,
+                            kind="virtual_button", label=verb, note=rest,
+                        )
+                    elif verb == "note" and rest:
                         add_event(
                             events, event_writer, event_handle, started=started,
                             kind="note", label="operator", note=rest,
@@ -1829,7 +1851,8 @@ def run_experiment(args: argparse.Namespace) -> int:
                             kind="condition", label=current_condition, note=note,
                         )
                     else:
-                        print("nepoznata komanda; koristi condition, note ili stop")
+                        print("nepoznata komanda; koristi press, hold, "
+                              "condition, note ili stop")
                 if status == "aborted_by_operator":
                     break
 
