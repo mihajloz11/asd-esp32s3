@@ -8,9 +8,12 @@ flešovan i provjeren na pločici 14.08.2026.
 > **Izmjene u v1.6.0** (detaljno: [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md),
 > blokovi B–D):
 >
-> - **Operater pokreće učenje tasterom.** Prva sesija poslije uključenja krene
->   sama poslije 10 s; svaka sljedeća traži pritisak. Lampica javlja kada je
->   učenje gotovo — puni tok demoa je u [PREOSTALO.md](PREOSTALO.md).
+> - **Operater pokreće učenje.** Nema vremenskog autostarta — nijedna sesija,
+>   ni prva poslije uključenja, ne kreće sama (`wait_for_start()` u
+>   [psd_live.c](../firmware/esp32s3_asd/main/psd_live.c)). Radnja stiže sa
+>   fizičkog tastera **ili** kao `PRESS`/`HOLD` sa konzole; oba ulaza dijele
+>   isti put i isti `BUTTON` zapis. Lampica javlja kada je učenje gotovo —
+>   puni tok demoa je u [PREOSTALO.md](PREOSTALO.md).
 > - `EVENT` nosi `event`, `capability` i `level` (semantika Faze 2).
 > - Novi zapisi `PRESENCE`, `TEMPORAL`, `SESSION`, `BUTTON`. Prva dva
 >   objavljuju politike kojima host **nezavisno ponavlja** odluku uređaja.
@@ -219,6 +222,8 @@ Primjer pokretanja:
 Ručne komande tokom rada:
 
 ```text
+press                     virtuelni taster: kratak pritisak (pokrece ucenje)
+hold                      virtuelni taster: dug pritisak (nova kalibracija)
 condition normal_baseline pocetak stabilnog normalnog mjerenja
 condition speed_change ugrađena brzina 2
 condition airflow_change djelimično pokrivena spoljna rešetka, bez kontakta
@@ -233,6 +238,10 @@ stop
 Za headless pokretanje može se dodati `--command-file <putanja>` i iste komande
 dopisivati u tu datoteku. Alat čita samo novodopisane redove i čuva ih u
 `events.csv`.
+
+Umjesto kucanja, isti `press`/`hold` mogu doći iz panela u pregledaču — vidi
+[panel-i-virtuelni-taster.md](panel-i-virtuelni-taster.md). Panel ne drži port
+i ne ulazi u metrike; dopisuje u isti command file i čita `serial.log` runa.
 
 ## 6. Artefakti i integritet
 

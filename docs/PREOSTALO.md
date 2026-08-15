@@ -52,6 +52,12 @@ Drugi INMP441 ostaje **rezerva**, ne dio šeme.
 [donijeti-sa-posla.md](donijeti-sa-posla.md), stavka 3. LED se ne smije vezati
 direktno na GPIO.
 
+> Ništa od ovoga više ne blokira eksperiment. Taster i obje lampice imaju
+> softverski pandan u panelu
+> ([panel-i-virtuelni-taster.md](panel-i-virtuelni-taster.md)), pa se demo i
+> mjerenje mogu izvesti sa samo ESP32-S3 i mikrofonom na breadboardu.
+> Lemljenje ostaje za čvrst sklop i snimak odbrane.
+
 Šta lampice pokazuju (firmware je gotov i testiran, 43 testa):
 
 | režim | zelena | crvena | značenje |
@@ -105,7 +111,10 @@ verzija parsera `physical-fan-v1.6.0`.
 Tok demoa, onako kako ga operater vidi:
 
 1. Pusti ventilator, sačekaj da radi normalno.
-2. **Pritisni taster.** Zelena počne da treperi.
+2. **Pritisni taster — ili klikni `press` u panelu.** Zelena počne da treperi.
+   Uređaj **nikad** ne kreće sam, ni prva sesija poslije uključenja. Oba ulaza
+   su ravnopravna i daju isti `BUTTON` zapis:
+   [panel-i-virtuelni-taster.md](panel-i-virtuelni-taster.md).
 3. Finalnih `k=10`: oko 15 s `WAIT` + 10 validnih prozora po 10 s, ukupno
    približno 115 s. Uređaj sluša i uči; ne dirati ništa. `k=20` ostaje
    referentni PC benchmark, nije konfiguracija ovog firmwarea.
