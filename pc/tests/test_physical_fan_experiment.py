@@ -1152,6 +1152,106 @@ def test_stop_drains_buffered_terminal_telemetry_and_bad_condition_does_not_cras
     assert state["terminal_event_seen"] is True
 
 
+def test_run_experiment_dispatches_temporal_and_completes_valid_protocol(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regresija za stvarnu serijsku petlju, ne samo cisti state-machine."""
+    import serial
+
+    q = physical.QUALITY_PROTOCOL_VERSION
+    lines = [
+        f"STATE protocol={q} from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED",
+        f"SESSION protocol={q} action=STARTED source=BUTTON "
+        "reason=OPERATOR_REQUEST discards_calibration=0",
+    ]
+    for index in range(1, 61):
+        lines.append(
+            f"QUALITY protocol={q} phase=WAIT index={index} total=60 result=OK "
+            "metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-30.000 "
+            "dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 dropped_delta=0 "
+            "feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 "
+            "tonal_gate=not_computed"
+        )
+    for index in range(1, 11):
+        lines.append(
+            f"QUALITY protocol={q} phase=CAL index={index} total=10 result=OK "
+            "metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-30.000 "
+            "dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 dropped_delta=0 "
+            "feature_valid=1 tonalness_valid=1 tonalness_proxy=1.000000 "
+            "tonal_gate=pending_normal_only"
+        )
+    lines.extend([
+        f"QUALITY protocol={q} phase=CAL_SUMMARY result=OBSERVED "
+        "loo_mean=1.000000 loo_sd=0.200000 loo_cv=0.200000 "
+        "loo_range=0.500000 loo_gate=pending_normal_only",
+        "ADAPTTHR n=10 mean=1.000000 sd=0.200000 k=0 theta=0 p=0.9000 "
+        "thr=1.60000002 lo=0.000000 factory=0.000000",
+        f"PRESENCE protocol={q} level_mean_dbfs=-30 margin_db=11 "
+        "gate_dbfs=-41 min_consecutive=3",
+        f"TEMPORAL protocol={q} policy=asd-temporal-policy-v1.0.0 "
+        "min_consecutive=3 ewma_alpha=0 enter_scale=1 exit_scale=0.7 fast_scale=0",
+        f"STATE protocol={q} from=NO_MACHINE to=CALIBRATED_NORMAL "
+        "reason=CALIBRATION_ACCEPTED",
+        f"EVENT protocol={q} type=CALIBRATION_ACCEPTED state=CALIBRATED_NORMAL "
+        "phase=CAL reason=QUALITY_OK event=NONE capability=AVAILABLE level=DEVIATION",
+        f"QUALITY protocol={q} phase=DET index=1 total=0 result=OK "
+        "metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-30.000 "
+        "dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 dropped_delta=0 "
+        "feature_valid=1 tonalness_valid=1 tonalness_proxy=1.000000 "
+        "tonal_gate=pending_normal_only",
+        "DET 1 score=0.5 lo=0 hi=1.60000002 led=1 anom=0 total_anom=0 "
+        "normal (uzastopnih=0 nivo=-30.0 dBFS racun=700 ms)",
+    ])
+
+    class FakeSerial:
+        def __init__(self, *args, **kwargs):
+            self.timeout = kwargs.get("timeout", 1)
+            self.lines = [(line + "\n").encode("ascii") for line in lines]
+            self.closed = False
+
+        def readline(self):
+            return self.lines.pop(0) if self.lines else b""
+
+        def close(self):
+            self.closed = True
+
+    fake_instances: list[FakeSerial] = []
+
+    def open_fake(*args, **kwargs):
+        instance = FakeSerial(*args, **kwargs)
+        fake_instances.append(instance)
+        return instance
+
+    condition_sent = False
+    stop_sent = False
+
+    def poll_until_consumed(path, offset):
+        nonlocal condition_sent, stop_sent
+        if not condition_sent:
+            condition_sent = True
+            return offset, ["condition normal_baseline"]
+        if fake_instances and not fake_instances[0].lines and not stop_sent:
+            stop_sent = True
+            return offset, ["stop"]
+        return offset, []
+
+    _mock_ready_host(monkeypatch)
+    monkeypatch.setattr(serial, "Serial", open_fake)
+    monkeypatch.setattr(physical, "poll_command_file", poll_until_consumed)
+    rc = physical.run_experiment(_run_args(tmp_path, tmp_path / "commands.txt"))
+
+    assert rc == 0
+    assert fake_instances and fake_instances[0].closed is True
+    run_dir = next(tmp_path.glob("run_*"))
+    provenance = json.loads((run_dir / "provenance.json").read_text(encoding="utf-8"))
+    assert provenance["status"] == "completed_by_operator"
+    assert provenance["firmware_telemetry_counts"]["TEMPORAL"] == 1
+    state = provenance["firmware_protocol_state"]
+    assert state["temporal_seen"] is True
+    assert physical.firmware_protocol_complete(state)
+    assert provenance["valid_det_window_count"] == 1
+
+
 def test_final_buffer_drain_is_bounded_by_quiet_or_total_time() -> None:
     assert physical.final_buffer_drain_decision(0.1, 0.01) == "continue"
     assert physical.final_buffer_drain_decision(
@@ -1327,8 +1427,8 @@ def test_short_press_claiming_a_discard_is_a_protocol_error() -> None:
 
 def test_session_records_must_be_paired() -> None:
     started = physical.parse_serial_line(
-        "SESSION protocol=asd-quality-v1.3.0 action=STARTED source=AUTOSTART "
-        "reason=BOOT_GRACE_EXPIRED discards_calibration=0"
+        "SESSION protocol=asd-quality-v1.3.0 action=STARTED source=BUTTON "
+        "reason=OPERATOR_REQUEST discards_calibration=0"
     )
     assert started["kind"] == "SESSION"
     state = physical.transition_firmware_protocol(
@@ -1344,6 +1444,26 @@ def test_session_records_must_be_paired() -> None:
     out = physical.transition_firmware_protocol(
         physical.new_firmware_protocol_state(), orphan)
     assert out["invalid_reason"] == "SESSION_ENDED_without_START"
+
+
+def test_autostart_session_source_is_rejected() -> None:
+    parsed = physical.parse_serial_line(
+        "SESSION protocol=asd-quality-v1.3.0 action=STARTED source=AUTOSTART "
+        "reason=BOOT_GRACE_EXPIRED discards_calibration=0"
+    )
+    assert parsed["kind"] == "PARSE_ERROR"
+    assert parsed["reason"] == "unknown_session_source:AUTOSTART"
+
+
+def test_button_only_firmware_checks_ui_task_creation() -> None:
+    source = (
+        ROOT / "firmware" / "esp32s3_asd" / "main" / "psd_live.c"
+    ).read_text(encoding="utf-8")
+    assert "BaseType_t ui_task_result" in source
+    assert "if (ui_task_result != pdPASS)" in source
+    assert "ESP_ERROR_CHECK(ESP_ERR_NO_MEM);" in source
+    assert "AUTOSTART" not in source
+    assert "BOOT_GRACE_EXPIRED" not in source
 
 
 def test_unknown_operator_tokens_are_protocol_errors() -> None:
