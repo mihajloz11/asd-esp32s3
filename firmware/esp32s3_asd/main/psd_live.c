@@ -16,6 +16,7 @@
 #include "audio_i2s.h"
 #include "audio_quality_state.h"
 #include "asd_events.h"
+#include "asd_cmd.h"
 #include "asd_operator.h"
 #include "asd_temporal.h"
 #include "psd_features_c.h"
@@ -101,6 +102,40 @@ static void emit_button(asd_ui_mode_t mode, asd_button_event_t event,
            asd_ui_command_discards_calibration(mode, command));
 }
 
+/* Softverski pandan lampicama. Obrazac zelene i crvene je čista funkcija
+ * režima (`asd_indicator_level`/`asd_alarm_level`), pa se ovdje objavljuje sam
+ * režim i imenovani obrazac — host onda crta istu lampicu koju bi vidio na
+ * ploči, i kad nijedna dioda nije zalemljena.
+ *
+ * Emituje se SAMO na promjenu režima, ne na svaki treptaj: pet promjena po
+ * sesiji umjesto deset redova u sekundi.
+ *
+ * Ime zapisa je namjerno izvan zaključanog rječnika `asd-quality-v1.3.0` —
+ * host parser ga ne prepoznaje i preskače, pa red ne može ući u lanac
+ * telemetrije koji odlučuje o valjanosti prolaza. Sva mjerodavna stanja i
+ * dalje idu kroz `STATE`/`EVENT`. */
+static const char *green_pattern(asd_ui_mode_t mode) {
+    switch (mode) {
+        case ASD_UI_IDLE:     return "flash_2s";
+        case ASD_UI_LEARNING: return "blink_5hz";
+        case ASD_UI_READY:    return "on";
+        case ASD_UI_ALARM:    return "off";
+        default:              return "double_blink";
+    }
+}
+
+static void emit_flags(asd_ui_mode_t mode, asd_state_t state) {
+    printf("FLAGS protocol=%s mode=%s state=%s waiting=%d learning=%d "
+           "learned=%d anomaly=%d fault=%d green=%s red=%s\n",
+           ASD_QUALITY_PROTOCOL, asd_ui_mode_name(mode), asd_state_name(state),
+           mode == ASD_UI_IDLE, mode == ASD_UI_LEARNING,
+           mode == ASD_UI_READY || mode == ASD_UI_ALARM,
+           mode == ASD_UI_ALARM, mode == ASD_UI_FAULT,
+           green_pattern(mode),
+           mode == ASD_UI_ALARM ? "on"
+                                : (mode == ASD_UI_FAULT ? "double_blink" : "off"));
+}
+
 static void emit_quality(const char *phase, int index, int total,
                          const asd_quality_metrics_t *m,
                          asd_quality_reason_t reason, int feature_valid,
@@ -173,14 +208,31 @@ static int clamp_nonnegative_score(float *value) {
  * odbounceovati. */
 static void ui_task(void *arg) {
     (void)arg;
+    int last_flags_mode = -1;
+    uint32_t last_flags_at = 0;
     for (;;) {
         uint32_t t = now_ms();
-        asd_ui_mode_t mode = asd_ui_mode(ui_stage, ui_state);
+        asd_state_t state = ui_state;
+        asd_ui_mode_t mode = asd_ui_mode(ui_stage, state);
         gpio_set_level(PIN_LED, asd_indicator_level(mode, t));
         gpio_set_level(PIN_LED_ALARM, asd_alarm_level(mode, t));
+        /* Na promjenu režima odmah, inače na 5 s. Ponavljanje postoji zbog
+         * hosta koji se zakači usred sesije: bez njega bi panel čekao prvu
+         * sljedeću promjenu da uopšte sazna šta lampica pokazuje. */
+        if ((int)mode != last_flags_mode || (uint32_t)(t - last_flags_at) >= 5000u) {
+            emit_flags(mode, state);
+            last_flags_mode = (int)mode;
+            last_flags_at = t;
+        }
         /* Taster je na masu, sa unutrašnjim pull-upom: nizak nivo = pritisnut. */
         asd_button_event_t event =
             asd_button_update(&button, gpio_get_level(PIN_BUTTON) == 0, t);
+        /* Virtuelni pritisak sa konzole ulazi ovdje, na istom mjestu gdje i pin,
+         * i odatle dijeli cijeli put: `asd_ui_command`, `BUTTON` zapis i
+         * `ui_command`. Fizički taster ima prednost — ako je stigao pravi
+         * pritisak u istom ciklusu, virtuelni ostaje da čeka sljedeći. */
+        if (event == ASD_BTN_NONE)
+            event = asd_cmd_take_event();
         if (event != ASD_BTN_NONE) {
             asd_ui_command_t command = asd_ui_command(mode, event);
             emit_button(mode, event, command);
@@ -200,7 +252,8 @@ static void wait_for_start(asd_state_t state) {
     ui_stage = ASD_STAGE_IDLE;
     ui_state = state;
     take_command();                       /* odbaci komandu zaostalu iz ranije */
-    ESP_LOGI(TAG, "pritisni taster (GPIO%d) da pocne ucenje", PIN_BUTTON);
+    ESP_LOGI(TAG, "pritisni taster (GPIO%d) ili posalji PRESS da pocne ucenje",
+             PIN_BUTTON);
     for (;;) {
         if (take_command() == ASD_UI_CMD_START_LEARNING) return;
         vTaskDelay(pdMS_TO_TICKS(UI_TICK_MS));
@@ -580,6 +633,9 @@ void psd_live_run(void) {
     asd_button_policy_t btn_policy = asd_button_default_policy();
     asd_button_init(&button, &btn_policy, gpio_get_level(PIN_BUTTON) == 0,
                     now_ms());
+    /* Drugi ulaz za istu operaterovu radnju: PRESS/HOLD sa konzole. Postoji da
+     * bi eksperiment mogao da se izvede i dok taster nije zalemljen. */
+    asd_cmd_start();
     /* 4 KB steka: task zove `printf` sa vise `%s` argumenata pri svakom
      * pritisku, a newlib formatiranje na Xtensi ume da potrosi preko 2 KB. */
     BaseType_t ui_task_result =
@@ -599,8 +655,8 @@ void psd_live_run(void) {
     ESP_LOGI(TAG, "model: %d traka, matrica %dx%d iz flesa, naucen na 990 "
              "normalnih snimaka ventilatora", DIM, DIM, DIM);
     ESP_LOGI(TAG, "1) pusti ventilator koji radi NORMALNO");
-    ESP_LOGI(TAG, "2) pritisni taster -> ucenje %d x 10 s = %d s, lampica treperi",
-             N_CAL, N_CAL * 10);
+    ESP_LOGI(TAG, "2) pritisni taster ILI posalji PRESS sa konzole -> ucenje "
+             "%d x 10 s = %d s, lampica treperi", N_CAL, N_CAL * 10);
     ESP_LOGI(TAG, "3) lampica stalno svijetli = naucio; tek tada izazovi kvar");
 
     asd_state_t state = ASD_STATE_NO_MACHINE;
