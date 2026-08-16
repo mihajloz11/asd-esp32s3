@@ -19,6 +19,10 @@ esp_err_t audio_i2s_start(void);
 /* Blokirajuće čitanje n uzoraka (16-bit PCM) iz ring buffera. */
 size_t audio_read(int16_t *dst, size_t n_samples);
 
+/* Prazni ring bafer i vraća koliko je uzoraka odbačeno. Zove se na početku
+ * sesije, da nakupljeno čekanje ne padne na teret prvog mjernog bloka. */
+size_t audio_flush(void);
+
 /* Broj dropovanih uzoraka od starta (dijagnostika DMA overruna, rizik C4). */
 uint32_t audio_dropped_samples(void);
 

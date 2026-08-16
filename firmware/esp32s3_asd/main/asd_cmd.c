@@ -19,10 +19,23 @@
 #define CMD_TICK_MS   20   /* isti period kao UI task; komande su rijetke */
 #define CMD_MAX_LEN   16   /* najduža komanda je "PRESS" */
 
+/* Dva porta su dva NEZAVISNA toka i moraju imati dva odvojena bafera reda.
+ *
+ * Sa jednim zajednickim baferom, ista komanda koja stigne na oba porta u istom
+ * trenutku isprepletala je bajtove: "HOLD" + "HOLD" -> "HHOOLLDD", pa
+ * `unknown_command`. To se desilo cim je host poceo da salje na oba porta
+ * (izmjereno 16.08.2026, run `cold-start-06`) -- dotad je USB put bio mrtav pa
+ * se sudar nije mogao vidjeti. */
+typedef enum { SRC_USB = 0, SRC_UART, SRC_COUNT } cmd_source_t;
+
+typedef struct {
+    char buf[CMD_MAX_LEN];
+    int len;
+    int overflow;
+} cmd_line_t;
+
 static _Atomic int pending_event = ASD_BTN_NONE;
-static char line_buf[CMD_MAX_LEN];
-static int line_len;
-static int line_overflow;
+static cmd_line_t lines[SRC_COUNT];
 
 /* Provenijencija. Zaključani host parser ne prepoznaje `VBUTTON` i uredno ga
  * preskače (u regexu nema granice riječi ispred `BUTTON`), pa red ne može
@@ -46,26 +59,27 @@ static void dispatch(const char *cmd) {
     }
 }
 
-static void feed(uint8_t byte) {
+static void feed(cmd_source_t src, uint8_t byte) {
+    cmd_line_t *line = &lines[src];
     if (byte == '\r' || byte == '\n') {
-        if (line_overflow) {
+        if (line->overflow) {
             emit_vbutton("NONE", "unknown_command");
-        } else if (line_len > 0) {
-            line_buf[line_len] = '\0';
-            dispatch(line_buf);
+        } else if (line->len > 0) {
+            line->buf[line->len] = '\0';
+            dispatch(line->buf);
         }
-        line_len = 0;
-        line_overflow = 0;
+        line->len = 0;
+        line->overflow = 0;
         return;
     }
     /* Predugačak red se odbacuje cijeli, da se njegov rep ne protumači kao
      * zasebna komanda. */
-    if (line_len >= CMD_MAX_LEN - 1) {
-        line_overflow = 1;
+    if (line->len >= CMD_MAX_LEN - 1) {
+        line->overflow = 1;
         return;
     }
     if (byte >= 'a' && byte <= 'z') byte = (uint8_t)(byte - 'a' + 'A');
-    line_buf[line_len++] = (char)byte;
+    line->buf[line->len++] = (char)byte;
 }
 
 /* Oba periferijala se samo prazne iz svog RX FIFO-a. Ništa se ne instalira i
@@ -74,11 +88,19 @@ static void poll_sources(void) {
     uint8_t buf[32];
 
 #if SOC_USB_SERIAL_JTAG_SUPPORTED
+    /* Periferija drzi primljeni OUT paket dok se status prijema ne obrise, i
+     * do tada NE prima sljedeci. Bez ovog brisanja radi samo prva komanda
+     * poslije boota, a svaka sljedeca nikad ne stigne (izmjereno 16.08.2026:
+     * dva `PRESS` preko COM3 bez ijednog `VBUTTON`). */
+    int total = 0;
     while (usb_serial_jtag_ll_rxfifo_data_available()) {
         int n = usb_serial_jtag_ll_read_rxfifo(buf, sizeof(buf));
         if (n <= 0) break;
-        for (int i = 0; i < n; i++) feed(buf[i]);
+        for (int i = 0; i < n; i++) feed(SRC_USB, buf[i]);
+        total += n;
     }
+    if (total > 0)
+        usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT);
 #endif
 
     uart_dev_t *uart0 = UART_LL_GET_HW(0);
@@ -87,7 +109,7 @@ static void poll_sources(void) {
         if (avail == 0) break;
         if (avail > sizeof(buf)) avail = sizeof(buf);
         uart_ll_read_rxfifo(uart0, buf, avail);
-        for (uint32_t i = 0; i < avail; i++) feed(buf[i]);
+        for (uint32_t i = 0; i < avail; i++) feed(SRC_UART, buf[i]);
     }
 }
 
@@ -100,7 +122,7 @@ static void cmd_task(void *arg) {
 }
 
 void asd_cmd_start(void) {
-    line_len = 0;
+    memset(lines, 0, sizeof(lines));
     atomic_store(&pending_event, ASD_BTN_NONE);
     /* 3 KB: task zove `printf` sa tri `%s` argumenta, isto kao UI task. */
     xTaskCreatePinnedToCore(cmd_task, "asd_cmd", 3072, NULL, 4, NULL, 0);
