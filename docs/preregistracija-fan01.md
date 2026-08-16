@@ -33,19 +33,31 @@ koliko je margina između normale i praga stvarno tijesna**.
 
 ## 2. Postavka (zaključati prije prvog `condition`)
 
+Izmjereno 16.08.2026, prije pokretanja runa:
+
 | Stavka | Vrijednost |
 |---|---|
 | `fan_id` | `fan01` |
-| `session_id` | `POPUNITI NA LICU MJESTA` (npr. `cold-start-03`) |
-| Tip ventilatora | prenosivi USB ventilator |
-| Napajanje / brzina | `POPUNITI NA LICU MJESTA` (USB 5 V; upisati stepen ako ih ima) |
-| Rastojanje mikrofona | `POPUNITI NA LICU MJESTA` cm |
-| Ugao | `POPUNITI NA LICU MJESTA` ° |
+| `session_id` | `cold-start-03` |
+| Tip ventilatora | prenosivi USB ventilator sa ugrađenom baterijom |
+| Napajanje | **USB kabl 5 V** — radi na struji, baterija se ne prazni tokom runa |
+| Rastojanje mikrofon–osovina | **20 cm** |
+| Ugao | **90°**, mikrofon usmjeren ka osovini |
+| Smjer duvanja | **90° od mikrofona** — mikrofon je van struje vazduha |
+| Montaža | ventilator i mikrofon na stolici, zalijepljeni; ne pomjeraju se |
+| Laptop | **85 cm vodoravno, 30 cm više** (na stolu); mora ostati neopterećen |
 | Prostorija | soba, **prozor zatvoren** |
-| Pozadinska buka | ulica prigušena zatvorenim prozorom; upisati šta se još čuje |
-| Fiksiranje | mikrofon i žice zalijepljeni, ne pomjeraju se do kraja sesije |
-| Hladni / topli start | `POPUNITI NA LICU MJESTA` |
-| Operater | odmaknut od laptopa ([P19](problemi-i-rjesenja.md#p19)) |
+| Pozadinska buka | ulica prigušena zatvorenim prozorom |
+| Hladni / topli start | `POPUNITI PRI POKRETANJU` |
+
+Ventilator, mikrofon, rastojanje, ugao i napajanje se **ne pomjeraju** između
+kalibracije i ocjene iste sesije.
+
+> **Laptop na 85 cm je bliže nego što je poželjno.** Njegov ventilator je već
+> dvaput kontaminirao mjerenje ([P10](problemi-i-rjesenja.md#p10),
+> [P19](problemi-i-rjesenja.md#p19)). Uslov: tokom runa se na laptopu ne
+> pokreće ništa osim alata i panela, i njegov ventilator ne smije biti čujan.
+> Ako se čuje, stolica se odmiče i run se ponavlja iz početka.
 
 Ventilator, mikrofon, rastojanje, ugao i napajanje se **ne pomjeraju** između
 kalibracije i ocjene iste sesije.
@@ -106,17 +118,50 @@ kontakta sa lopaticama i bez guranja kroz rešetku. Ventilator se ne oštećuje.
 
 ---
 
+## 4b. Šta je palo 16.08.2026 i zašto (četiri runa, nijedan valjan)
+
+Prvi pokušaj mjerenja izvukao je pet grešaka. Nijedna nije bila u modelu; sve su
+bile u putevima koje do tada niko nije prošao — jer je operaterski taster nov, a
+rekalibracija na zahtjev nikad nije išla kroz strogi host.
+
+| # | Šta je palo | Uzrok | Popravka |
+|---|---|---|---|
+| 1 | prvi WAIT blok obarao sesiju u `SENSOR_ERROR` | ring bafer se punio od boota dok uređaj čeka pritisak; `dropped_delta=1024` naslijeđen iz čekanja | `audio_flush()` na početku sesije |
+| 2 | druga komanda preko native USB-a nikad ne stigne | periferija drži OUT paket dok se status prijema ne obriše | `usb_serial_jtag_ll_clr_intsts_mask` poslije čitanja |
+| 3 | `HOLD` stiže kao smeće | jedan bafer reda za oba porta; ista komanda sa dva porta ispreplela bajtove | odvojen bafer po izvoru |
+| 4 | run odbačen čim je prag objavljen | host poredio float32 prag sa float64 računom uz apsolutnu toleranciju manju od jednog ulp-a | tolerancija prati veličinu praga |
+| 5 | run odbačen pri rekalibraciji | firmware šalje `ABORTED` pa `ENDED`; host je `ABORTED` računao kao zatvaranje | `ABORTED` je razlog, `ENDED` zatvara |
+| 6 | **svaka komanda iz alata nestajala** | na Windowsu dodjela `Serial.timeout` odbaci bajtove koji čekaju slanje, a petlja ju je radila u svakom prolazu | postavlja se samo kad se stvarno mijenja |
+
+Šesta je bila uzrok svih „kliknuo sam, ništa se nije desilo": `events.csv` je
+bilježio pritisak, `ser.write` nije prijavio grešku, a do pločice nije stizao
+nijedan bajt. Izmjereno na istom portu: bez te dodjele 3/3 komande stignu, sa
+njom 0/3.
+
+**Nalaz koji ostaje za rad, nezavisno od ovih grešaka:** ventilator na bateriji
+usporava, harmonijske linije se pomjeraju, i score skoči preko dvostrukog praga
+bez ikakvog kvara (`cold-start-04`: 35 uzastopnih alarmnih prozora, nivo pao sa
+−47,6 na −49,0 dBFS). Na punjaču isto rasipanje pada devet puta
+(`loo_cv` 0,63 → 0,52). To je mjerljiva osjetljivost PSD modela na promjenu
+obrtaja i tako se piše.
+
 ## 5. Kako se pokreće
 
-Panel ide u `--command-file` režim jer port smije držati samo alat:
+Jednom komandom — pokreće alat, sačeka run direktorij, pa na njega zakači panel:
 
 ```bash
-.venv\Scripts\python.exe pc\tools\physical_fan_experiment.py run --port COM3 --fan-id fan01 --session-id cold-start-03 --distance-cm NN --angle-deg NN --room soba --fan-speed-or-voltage usb-5v --command-file results\physical_fan\cmd_fan01.txt
+.venv\Scripts\python.exe pc\tools\start_fan_run.py --session-id cold-start-07 --montaza-potvrdio "ime, ventilator na punjacu, radi normalno, montaza bezbjedna"
 ```
 
-```bash
-.venv\Scripts\python.exe pc\tools\asd_panel.py --command-file results\physical_fan\cmd_fan01.txt --follow results\physical_fan\run_XXXX\serial.log
-```
+`--montaza-potvrdio` zamjenjuje ono ručno `DA`: potvrdu daje čovjek koji gleda
+postavku, skripta je samo doslovno prenosi u `events.csv` i `provenance.json`.
+Bez tog argumenta se ništa ne pokreće.
+
+Panel se javi na `http://127.0.0.1:8772/`. Odatle su tri klika:
+
+1. **Pokreni učenje** — pločica kreće u WAIT+CAL, oko 2 minuta
+2. provjeri `loo_cv` (pravilo K1) — panel ga pokazuje sa ✓ ili ✗
+3. **Kreni sa mjerenjem** — vodič vodi svih deset faza sam do `stop`
 
 Klik u panelu i otkucana komanda u alatu rade isto.
 

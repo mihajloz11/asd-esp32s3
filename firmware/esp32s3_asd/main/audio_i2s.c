@@ -131,6 +131,32 @@ size_t audio_read(int16_t *dst, size_t n_samples) {
     return got;
 }
 
+/* Prazni sve sto se nakupilo dok niko nije citao.
+ *
+ * ZASTO POSTOJI. Otkako ucenje pokrece operater, uredjaj izmedju boota i
+ * pritiska ne cita ni jedan uzorak, a capture task i dalje puni ring. Poslije
+ * dvije sekunde ring je pun i `dropped` raste sve vrijeme cekanja. Prvi WAIT
+ * blok bi taj nakupljeni dug vidio kao svoj `dropped_delta` i fail-closed bi
+ * oborio sesiju u SENSOR_ERROR -- to jest, sto duze operater ceka da ustali
+ * ventilator, to je sigurnije da sesija ne moze ni poceti (izmjereno 16.08.2026,
+ * 4,5 min cekanja -> dropped_delta=1024 na prvom bloku).
+ *
+ * Prazni se NA POCETKU SESIJE, ne u toku: odbaceni uzorci tokom mjerenja su i
+ * dalje kvar senzora i i dalje ruse tok. Ovo samo kaze da ono sto je palo prije
+ * nego sto je mjerenje pocelo nije dokaz ni o cemu. */
+size_t audio_flush(void) {
+    size_t flushed = 0;
+    for (;;) {
+        size_t item_size;
+        void *p = xRingbufferReceiveUpTo(ring, &item_size, 0,
+                                         AUDIO_RING_LEN * sizeof(int16_t));
+        if (!p) break;
+        flushed += item_size / sizeof(int16_t);
+        vRingbufferReturnItem(ring, p);
+    }
+    return flushed;
+}
+
 uint32_t audio_dropped_samples(void) { return dropped; }
 
 int32_t audio_raw_peak(void) { return raw_peak; }

@@ -145,9 +145,24 @@ konzumira na sljedećoj kontrolnoj tački toka, ne trenutno.
 Serijski ispis se nije pokvario ni u jednom trenutku — zaključani protokol je
 prošao kroz WAIT/CAL/DET kako treba.
 
-## 6. Šta još nije provjereno
+## 6. Vodič kroz run i pokretanje
+
+Panel ne samo da pokazuje stanje nego i vodi mjerenje: odbrojava fazu, piše šta
+operater radi, i u trenutku prelaza upisuje `condition` u command file alata.
+Time se dvije stvari koje je lako promašiti sa štopericom — trajanje od najmanje
+pet prozora i oznaka **prije** promjene — više ne mogu promašiti.
+
+Sve se pokreće jednom komandom, [start_fan_run.py](../pc/tools/start_fan_run.py):
+podigne alat, sačeka run direktorij, zakači panel na njegov `serial.log` i odbije
+da krene ako stari panel još drži port.
+
+## 7. Šta još nije provjereno
 
 1. **Ponašanje ako alat i panel oba drže port** — ne smije se raditi, ali nije
    testirano šta se desi ako se ipak pokuša.
 2. Panel čita `serial.log` sa 0,3 s kašnjenja; za lampicu je to nevidljivo, za
-   dugme nebitno (komanda ide drugim putem).
+   dugme nebitno.
+3. **Rekalibracija i puna detekcija nisu izvršene uživo poslije popravki.** Oba
+   puta su provjerena ponovnim puštanjem stvarno snimljene telemetrije kroz
+   ispravljeni host i jediničnim testovima, ali ne i na ventilatoru koji radi —
+   za to treba sljedeći fizički run.
