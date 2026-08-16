@@ -352,6 +352,14 @@ static asd_state_t run_session(void) {
     ui_state = state;
     emit_state(state, state, "BOOT_FAIL_CLOSED");
 
+    /* Baci sve sto se nakupilo dok je uredjaj cekao pritisak. Bez ovoga prvi
+     * WAIT blok naslijedi `dropped` iz cijelog perioda cekanja i fail-closed
+     * obori sesiju u SENSOR_ERROR. Vidi audio_flush() u audio_i2s.c. */
+    size_t stale = audio_flush();
+    if (stale)
+        ESP_LOGI(TAG, "odbacen ustajali zvuk iz cekanja: %u uzoraka",
+                 (unsigned)stale);
+
     /* --- 1) cekanje: operater pusta ventilator, provjerava se da mikrofon
      * stvarno nesto cuje (P3: konstantan score ne dokazuje da mikrofon radi) --- */
     static int16_t pcm[HOP];

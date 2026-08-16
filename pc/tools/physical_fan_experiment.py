@@ -612,6 +612,7 @@ def new_firmware_protocol_state() -> dict[str, Any]:
         "deviation_run": 0,
         "anomaly_active": False,
         "session_started": False,
+        "session_aborted": False,
         "sessions": 0,
         "terminal": False,
         "drain_required": False,
@@ -1071,7 +1072,20 @@ def transition_firmware_protocol(
         if any(record[field] != 0.0 for field in ("k", "theta", "lo", "factory")):
             return _invalidate(state, "invalid_firmware_telemetry", "ADAPTTHR_legacy_field_mismatch")
         minimum_threshold = record["mean"] + 3.0 * record["sd"]
-        if record["threshold"] + 2e-5 < minimum_threshold:
+        # Firmware racuna `mean + 3*sd` u binary32 i ispisuje devet znacajnih
+        # cifara; host isti izraz ponavlja u binary64. Kad prag dodje BAS sa te
+        # grane (a ne sa p90 LOO grane), dvije vrijednosti se razlikuju za par
+        # float32 ulp-a i stroga provjera pada na nistavnoj razlici. Fiksnih
+        # 2e-5 je bilo manje od jednog ulp-a na ovoj skali: izmjereno 16.08.2026,
+        # mean=285,661469 sd=149,634216 -> host 734,564117, uredjaj 734,564087,
+        # razlika 3e-5, run odbacen kao `ADAPTTHR_below_mean_plus_3sd` iako je
+        # prag tacan. Tolerancija zato mora da prati velicinu praga.
+        #
+        # 1e-6 relativno je oko osam float32 ulp-a; stvarno prekrsen prag
+        # (uredjaj objavio nizi prag nego sto politika dozvoljava) razlikuje se
+        # redovima velicine, ne ulp-ovima, pa ova granica i dalje hvata kvar.
+        tolerance = max(2e-5, 1e-6 * abs(minimum_threshold))
+        if record["threshold"] + tolerance < minimum_threshold:
             return _invalidate(state, "invalid_firmware_telemetry", "ADAPTTHR_below_mean_plus_3sd")
         state["adapt_seen"] = True
         state["adapt_threshold"] = float(record["threshold"])
@@ -1134,8 +1148,21 @@ def transition_firmware_protocol(
             return _invalidate(
                 state, "invalid_firmware_telemetry", f"SESSION_{action}_without_START",
             )
+        elif action == "ABORTED":
+            # `ABORTED` je RAZLOG, ne zatvaranje. Firmware ga emituje iz
+            # `run_session()` kad operater dugim pritiskom trazi novo ucenje, a
+            # sesiju zatim uredno zatvara sa `ENDED` iz glavne petlje. Host je
+            # ranije `ABORTED` racunao kao zatvaranje, pa je sljedeci `ENDED`
+            # visio bez para i rusio prolaz sa `SESSION_ENDED_without_START`
+            # (izmjereno 16.08.2026, `cold-start-06`). Ovo je bio put koji do
+            # tada nikad nije prosao kroz strogi host: rekalibracija na zahtjev.
+            #
+            # Strogost ostaje ista -- i dalje se trazi tacno jedan `ENDED` po
+            # `STARTED`; `ABORTED` samo vise ne trosi otvorenu sesiju.
+            state["session_aborted"] = True
         else:
             state["session_started"] = False
+            state["session_aborted"] = False
     elif kind == "STATE":
         from_state = str(record["from_state"])
         to_state = str(record["to_state"])
@@ -1436,6 +1463,27 @@ def poll_command_file(path: Path, offset: int) -> tuple[int, list[str]]:
         handle.seek(offset)
         lines = [line.strip() for line in handle if line.strip()]
         return handle.tell(), lines
+
+
+def apply_serial_timeout(ser: Any, desired: float) -> bool:
+    """Postavi `timeout` SAMO ako se stvarno mijenja. Vraca True ako jeste.
+
+    Na Windowsu dodjela `Serial.timeout` poziva `_reconfigure_port()`, a to
+    odbaci bajtove koji jos cekaju na slanje. Petlja koja je u svakom prolazu
+    pisala `ser.timeout = 1` zato je gutala svaku komandu poslatu uredjaju:
+    izmjereno 16.08.2026, isti kod i isti port -- bez te dodjele 3/3 komande
+    stignu, sa njom 0/3. To je bio uzrok svih danasnjih "kliknuo sam, nista se
+    nije desilo": `events.csv` je biljezio pritisak, `ser.write` nije prijavio
+    gresku, a do plocice nije stizao nijedan bajt.
+
+    U ustaljenom radu timeout je konstantan, pa se port ne konfigurise nijednom
+    i pisanje je bezbjedno. Tokom terminalnog drena vrijednost se stvarno
+    mijenja i port se rekonfigurise -- ali tada se komande vise i ne salju.
+    """
+    if ser.timeout == desired:
+        return False
+    ser.timeout = desired
+    return True
 
 
 def resolve_port(requested: str, ports: list[dict[str, Any]]) -> str:
@@ -1858,11 +1906,12 @@ def run_experiment(args: argparse.Namespace) -> int:
 
                 if drain_started is not None:
                     remaining = TERMINAL_DRAIN_TIMEOUT_S - (time.monotonic() - drain_started)
-                    ser.timeout = max(0.01, min(0.10, remaining))
+                    desired_timeout = max(0.01, min(0.10, remaining))
                 elif finalize_drain_started is not None:
-                    ser.timeout = 0.05
+                    desired_timeout = 0.05
                 else:
-                    ser.timeout = 1
+                    desired_timeout = 1
+                apply_serial_timeout(ser, desired_timeout)
                 raw = ser.readline()
                 if not raw:
                     continue

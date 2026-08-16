@@ -1536,3 +1536,89 @@ def test_virtual_button_shares_the_physical_button_path() -> None:
     ).read_text(encoding="utf-8")
     for forbidden in ("asd_ui_command", "emit_button", "gpio_"):
         assert forbidden not in console, forbidden
+
+
+def test_adaptthr_tolerance_follows_threshold_magnitude() -> None:
+    """Float32 zaokruzenje ne smije da obori tacan prag.
+
+    Firmware racuna `mean + 3*sd` u binary32, host u binary64. Kad prag dodje
+    sa te grane, razlika je par ulp-a i mora proci; stvarno nizi prag mora pasti.
+    Brojke su iz runa `cold-start-05` (16.08.2026), koji je bio odbacen ovdje.
+    """
+    mean, sd = 285.661469, 149.634216
+    minimum = mean + 3.0 * sd
+    device_threshold = 734.564087       # binary32 ispis uredjaja
+    assert device_threshold < minimum   # strogo manji, razlika ~3e-5
+
+    tolerance = max(2e-5, 1e-6 * abs(minimum))
+    assert device_threshold + tolerance >= minimum, "float32 zaokruzenje palo"
+
+    # Prag nizi za promil je stvarno krsenje politike i mora pasti.
+    assert not (minimum * 0.999 + tolerance >= minimum)
+
+
+def test_operator_relearn_emits_aborted_then_ended() -> None:
+    """Rekalibracija na zahtjev operatera ne smije da obori prolaz.
+
+    Firmware pri dugom pritisku emituje `SESSION ABORTED` (razlog) pa
+    `SESSION ENDED` (zatvaranje). Host je `ABORTED` ranije racunao kao
+    zatvaranje, pa je `ENDED` visio bez para. Put je izvrsen prvi put
+    16.08.2026 u runu `cold-start-06` i tada ga je host odbacio.
+    """
+    state = physical.new_firmware_protocol_state()
+    for line in (
+        "SESSION protocol=asd-quality-v1.3.0 action=STARTED source=BUTTON "
+        "reason=OPERATOR_REQUEST discards_calibration=0",
+        "SESSION protocol=asd-quality-v1.3.0 action=ABORTED source=BUTTON "
+        "reason=OPERATOR_RELEARN discards_calibration=1",
+        "SESSION protocol=asd-quality-v1.3.0 action=ENDED source=FIRMWARE "
+        "reason=CALIBRATED_NORMAL discards_calibration=0",
+    ):
+        parsed = physical.parse_serial_line(line)
+        assert parsed is not None and parsed["kind"] == "SESSION", line
+        state = physical.transition_firmware_protocol(state, parsed)
+        assert state["invalid_status"] is None, (line, state["invalid_reason"])
+
+    assert state["sessions"] == 1
+    assert state["session_started"] is False
+
+    # Zatvaranje bez otvorene sesije i dalje mora pasti.
+    orphan = physical.parse_serial_line(
+        "SESSION protocol=asd-quality-v1.3.0 action=ENDED source=FIRMWARE "
+        "reason=CALIBRATED_NORMAL discards_calibration=0"
+    )
+    state = physical.transition_firmware_protocol(state, orphan)
+    assert state["invalid_reason"] == "SESSION_ENDED_without_START"
+
+
+def test_serial_timeout_is_not_reassigned_when_unchanged() -> None:
+    """Ponovna dodjela `timeout` na Windowsu odbaci bajtove koji cekaju slanje.
+
+    Petlja je u svakom prolazu pisala `ser.timeout = 1`, pa je svaka komanda
+    poslata uredjaju nestajala prije nego sto izadje iz racunara -- uzrok svih
+    "kliknuo sam, nista se nije desilo" 16.08.2026. Mjereno na istom portu:
+    bez dodjele 3/3 komande stignu, sa dodjelom 0/3.
+    """
+    class FakeSerial:
+        def __init__(self) -> None:
+            self._timeout = 1
+            self.reconfigures = 0
+
+        @property
+        def timeout(self):
+            return self._timeout
+
+        @timeout.setter
+        def timeout(self, value):
+            self._timeout = value
+            self.reconfigures += 1   # na Windowsu ovdje ide _reconfigure_port()
+
+    ser = FakeSerial()
+    for _ in range(100):
+        assert physical.apply_serial_timeout(ser, 1) is False
+    assert ser.reconfigures == 0, "ustaljeni rad ne smije da konfigurise port"
+
+    assert physical.apply_serial_timeout(ser, 0.05) is True
+    assert ser.reconfigures == 1
+    assert physical.apply_serial_timeout(ser, 0.05) is False
+    assert ser.reconfigures == 1
