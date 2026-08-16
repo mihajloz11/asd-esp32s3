@@ -1,5 +1,13 @@
 # Šta je ostalo — tri fizička koraka
 
+> **Ažurirano 16.08.2026: sva tri koraka su izvršena.** Ventilator je nabavljen,
+> demo i mjerenje su odrađeni bez lemljenja (taster i lampice imaju softverski
+> pandan), i postoji prvi valjan fizički rezultat:
+> [rezultat-fan01-2026-08-16.md](rezultat-fan01-2026-08-16.md) — AUC 0,999 na
+> izazvanoj promjeni protoka, uz 90 % lažnih alarma zbog praga.
+> Ostatak ovog dokumenta opisuje stanje prije toga i lemljenje koje i dalje
+> predstoji za čvrst sklop i snimak odbrane.
+
 **Stanje:** 14.08.2026. · **Softver:** zatvoren · **Hardver:** otvoren
 
 Sve softverske faze iz [PLAN-NEXT-LEVEL.md](PLAN-NEXT-LEVEL.md) su izvršene i
