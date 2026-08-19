@@ -138,20 +138,20 @@ NETS_IF = [
 BOM_U = [
     ("ESP32-S3-DevKitC-1 N32R16V", "1", "63,0 × 25,5 mm, 2×22 pina", "imaš"),
     ("Muška letvica 40 pin  (A1632)", "2", "2,54 mm — ~44 pina na S3", "imaš"),
-    ("Ženski header 1×22", "2", "2,54 mm — S3 ostaje vadiv", "KUPITI ≈ 60 din"),
-    ("Prototipna ploča 7×9 cm", "1", "24 × 34 rupe, 2,54 mm", "KUPITI ≈ 100 din"),
+    ("PIN letvica 40x1 prava F", "3", "ženska 2,54 mm · MP 407 · reže se", "KUPITI 3×42 din"),
+    ("Test ploča 100x50 tačke", "1", "18 × 38 rupa · Mikro Princ 057516", "KUPITI 144 din"),
     ("LED 5 mm zelena  (A3506)", "1", "prozirna — status", "imaš"),
     ("LED 5 mm crvena  (A2177)", "1", "alarm", "imaš"),
-    ("Otpornik 330 Ω  1/4 W", "2", "narandž./narandž./smeđa", "donijeti s posla"),
-    ("Ženski header 1×6  (K-MIK)", "1", "konektor mikrofona", "KUPITI"),
-    ("Ženski header 1×2  (K-TAS)", "1", "konektor tastera", "KUPITI"),
-    ("Ženski header 1×4  (K-M)", "1", "konektor ka mjernoj ploči", "KUPITI"),
+    ("RM1/4 330 otpornik", "10", "metal film 0,25 W ±1 % · MP 32004 (min 10)", "KUPITI 23 din"),
+    ("  → 2 × 1×22 za S3", "44", "kolone 3 i 12, redovi 4–25", "iz letvice"),
+    ("  → K-MIK 1×6 i K-TAS 1×2", "8", "kolona 16, redovi 3–8 i 12–13", "iz letvice"),
+    ("  → K-M 1×4", "4", "kolona 16, redovi 17–20", "iz letvice"),
     ("Gola kalajisana žica", "≈15 cm", "GND i 3V3 šina", "imaš"),
 ]
 
 BOM_U_OFF = [
     ("INMP441  (A1477)", "1", "12,0 × 14,0 mm, na žicama < 10 cm", "imaš, +1 rezerva"),
-    ("Keramika 470 nF  (A2400)", "1", "MLCC 50 V, oznaka 474 — NA PADOVE MIKROFONA", "imaš"),
+    ("CKM 0.1uF/63V RM2.5", "1", "keramika 100 nF, raster 2,54 — NA PADOVE MIKROFONA", "KUPITI 12 din"),
     ("Elektrolit 10 µF  (iz A642K)", "1", "polarizovan — NA PADOVE MIKROFONA", "imaš"),
     ("Arkadni taster 30 mm  (A4059)", "1", "2 faston jezička 2,8 mm, plavi", "imaš"),
     ("Powerbank + USB-C kabl", "1", "napajanje u normalnom radu", "imaš"),
@@ -162,11 +162,11 @@ BOM_M = [
     ("AMS1117-3.3 modul 800 mA  (A1652)", "1", "≈20 × 10 mm, 4 muška pina već zalemljena", "imaš"),
     ("INA226 modul  (A3627)", "1", "20,5 × 19,4 mm, R100 = 0,1 Ω, adresa 0x44", "imaš"),
     ("Elektrolit 470 µF  (iz A642K)", "1", "polarizovan, na VADIVIM kontaktima", "imaš"),
-    ("Ženski header 1×8  (INA226)", "1", "da modul ostane vadiv", "KUPITI"),
-    ("Ženski header 2× 1×2  (AMS1117)", "2", "IN+/IN− i OUT+/OUT−", "KUPITI"),
-    ("Ženski header 1×2  (470 µF)", "1", "vadiv kondenzator", "KUPITI"),
-    ("Ženski header 1×2  (5 V ULAZ)", "1", "ulaz sa punjača", "KUPITI"),
-    ("Ženski header 1×4  (K-U)", "1", "izlaz ka ploči U", "KUPITI"),
+    ("Ženski header 1×8  (INA226)", "8", "red 18 — modul ostaje vadiv", "iz letvice"),
+    ("Ženski header 2× 1×2 (AMS1117)", "4", "red 6 — OUT kol. 4–5, IN kol. 10–11", "iz letvice"),
+    ("Ženski header 1×2  (470 µF)", "2", "red 20, kolone 13–14 — vadiv", "iz letvice"),
+    ("Ženski header 1×2  (5 V ULAZ)", "2", "kolona 14, redovi 3–4", "iz letvice"),
+    ("Ženski header 1×4  (K-U)", "4", "kolona 2, redovi 17–20", "iz letvice"),
     ("Gola kalajisana žica", "≈10 cm", "GND šina", "imaš"),
 ]
 
@@ -530,10 +530,14 @@ def page_schema_u(pdf):
 
 # ================================================= crtač ploče U
 def draw_board_u(ax, ox, oy, s, detail):
-    """Perfboard 70×90 mm (24×34 rupe) — samo uređaj, bez mjerne grane."""
-    NC, NR = 24, 34
+    """Perfboard 100×50 mm (18×38 rupa) — samo uređaj, bez mjerne grane.
+
+    Ploca stoji uspravno: 50 mm je sirina (18 kolona), 100 mm visina (38 redova).
+    Mikro Princ „Test ploca 100x50 tacke", ident 057516.
+    """
+    NC, NR = 18, 38
     p = PITCH * s
-    bw, bh = 70.0 * s, 90.0 * s
+    bw, bh = 50.0 * s, 100.0 * s
     gx = ox + (bw - (NC - 1) * p) / 2
     gy = oy + (bh - (NR - 1) * p) / 2
     f = s
@@ -565,8 +569,8 @@ def draw_board_u(ax, ox, oy, s, detail):
         ax.text(num_x, y, str(r), fontsize=4.5 * f, ha="center", va="center",
                 color=C_MUTED)
 
-    # --- ESP32-S3: J1 = kol 4, J3 = kol 13, pinovi red 4..25
-    j1c, j3c, r0 = 4, 13, 4
+    # --- ESP32-S3: J1 = kol 3, J3 = kol 12, pinovi red 4..25
+    j1c, j3c, r0 = 3, 12, 4
     xj1, yj1 = hole(j1c, r0)
     xj3, _ = hole(j3c, r0)
     ax.add_patch(FancyBboxPatch((xj1 - 1.3 * s, yj1 - 4.8 * s),
@@ -627,16 +631,16 @@ def draw_board_u(ax, ox, oy, s, detail):
             ax.text(x0, y0 - 4.4 * s, name, fontsize=4.4 * f, ha="center",
                     color=C_INK, fontweight="bold", zorder=9, bbox=BB)
 
-    connector(20, 5, K_MIC, "K-MIK → INMP441")
-    connector(20, 14, K_BTN, "K-TAS → taster")
-    connector(20, 19, K_M, "K-M → ploča M")
+    connector(16, 3, K_MIC, "K-MIK → INMP441")
+    connector(16, 12, K_BTN, "K-TAS → taster")
+    connector(16, 17, K_M, "K-M → ploča M")
 
     # --- LED + otpornici ispod S3
-    for cc, col, tag in ((5, C_GRN, "GPIO2"), (10, C_RED, "GPIO11")):
-        r1, r2 = hole(cc, 29), hole(cc + 2, 29)
+    for cc, col, tag in ((4, C_GRN, "GPIO2"), (10, C_RED, "GPIO11")):
+        r1, r2 = hole(cc, 30), hole(cc + 2, 30)
         ax.add_patch(Rectangle((r1[0], r1[1] - 1.3 * s), r2[0] - r1[0], 2.6 * s,
                                fc="#e8dcc0", ec="#8b7355", lw=0.5, zorder=7))
-        lx, ly = hole(cc + 2, 31)
+        lx, ly = hole(cc + 2, 33)
         ax.add_patch(Circle((lx, ly), 2.4 * s, fc=col, ec="#3f3f46", lw=0.5, zorder=7))
         if detail:
             ax.text((r1[0] + r2[0]) / 2, r1[1] - 2.2 * s, "330 Ω", fontsize=3.9 * f,
@@ -645,7 +649,7 @@ def draw_board_u(ax, ox, oy, s, detail):
                     color=C_INK, zorder=9, bbox=BB)
 
     # --- šine na dnu
-    for rr, col, lab in ((33, C_BLACK, "GND"), (34, C_RED, "3V3")):
+    for rr, col, lab in ((37, C_BLACK, "GND"), (38, C_RED, "3V3")):
         s0, s1 = hole(2, rr), hole(NC - 1, rr)
         ax.plot([s0[0], s1[0]], [s0[1], s1[1]], color=col, lw=2.4 * (1 + (s - 1) * 0.6),
                 solid_capstyle="round", zorder=5)
@@ -661,17 +665,17 @@ def draw_board_u(ax, ox, oy, s, detail):
 def page_board_u(pdf):
     fig, ax = new_page(
         pdf, "PLOČA U (uređaj) — fizički raspored, uvećano",
-        "prototipna ploča 7 × 9 cm  ·  24 × 34 rupe  ·  verzija 1:1 za štampu je na strani 5")
+        "prototipna ploča 100 × 50 mm  ·  18 × 38 rupa  ·  Mikro Princ „Test ploča 100x50 tačke“, ident 057516")
 
-    s = 1.62
-    ox, oy, bw, bh = draw_board_u(ax, 50, 34, s, detail=True)
+    s = 1.52
+    ox, oy, bw, bh = draw_board_u(ax, 62, 34, s, detail=True)
 
     nx = ox + bw + 14
     panel(ax, nx, 32, 116, 50, "Šta je NA ovoj ploči",
-          ["ESP32-S3-DevKitC-1  — ženski headeri 1×22, kolone 4 (J1) i 13 (J3), redovi 4–25",
-           "2 × LED 5 mm + 2 × 330 Ω  — redovi 29 i 31, zelena kod GPIO2, crvena kod GPIO11",
-           "K-MIK 1×6  · K-TAS 1×2  · K-M 1×4  — kolona 20, ženski headeri",
-           "GND šina (red 33) i 3V3 šina (red 34) — gola kalajisana žica",
+          ["ESP32-S3-DevKitC-1  — ženski headeri 1×22, kolone 3 (J1) i 12 (J3), redovi 4–25",
+           "2 × LED 5 mm + 2 × 330 Ω  — otpornici red 30, LED red 33 (GPIO2 lijevo, GPIO11 desno)",
+           "K-MIK 1×6  · K-TAS 1×2  · K-M 1×4  — kolona 16, redovi 3–8 / 12–13 / 17–20",
+           "GND šina (red 37) i 3V3 šina (red 38) — gola kalajisana žica",
            "Ništa drugo. Regulator, senzor struje i 470 µF NISU na ovoj ploči.",
            "Kondenzatori mikrofona NISU na ovoj ploči — oni su na samom mikrofonu."],
           fc="#f1f8f3", ec=C_PCB, tc=C_PCB, fs=5.2, lh=5.4)
@@ -683,12 +687,13 @@ def page_board_u(pdf):
            "USB-C → powerbank (u normalnom radu)"],
           fs=5.2, lh=5.4)
 
-    panel(ax, nx, 128, 116, 40, "Provjeriti prije lemljenja",
+    panel(ax, nx, 124, 116, 46, "Provjeriti prije lemljenja",
           ["1.  Pin se traži po OZNACI na silkscreenu, ne po broju rupe. J1/J3 numeracija",
            "     je iz Espressif DevKitC-1 v1.1 — na klonu provjeri multimetrom.",
-           "2.  3V3 šina dodiruje SAMO pinove 3V3 i K-M pin 1. Nijedan GPIO na šinu.",
-           "3.  Kapton preko sound porta mikrofona tokom lemljenja (P16).",
-           "4.  Ženski headeri za S3 — da ploča ostane vadiva za flešovanje."],
+           "2.  Prebroj rupe na SVOJOJ ploči: ovdje je uzeto 18 × 38 na 100 × 50 mm.",
+           "     Ako tvoj komad ima 19 × 39, pomjeri sve za jednu rupu — mm ostaju isti.",
+           "3.  3V3 šina dodiruje SAMO pinove 3V3 i K-M pin 1. Nijedan GPIO na šinu.",
+           "4.  Kapton preko sound porta mikrofona tokom lemljenja (P16)."],
           fc="#fff7ed", ec=C_WARN, tc=C_WARN, fs=5.2, lh=5.4)
 
     panel(ax, nx, 174, 116, 22, "Redoslijed lemljenja ploče U",
@@ -696,7 +701,7 @@ def page_board_u(pdf):
            "4. konektori K-MIK / K-TAS / K-M   5. mikrofon na žice + dekapling  → test 5 s WAV"],
           fs=5.2, lh=5.4)
 
-    footer(ax, "Strana 3/7 — raspored ploče U.  Ploča 70 × 90 mm, mreža 24 × 34 rupe.",
+    footer(ax, "Strana 3/7 — raspored ploče U.  Ploča 100 × 50 mm, mreža 18 × 38 rupa.",
            "uvećano  —  NE mjeriti sa ove strane")
     save(pdf, fig, 3)
 
@@ -951,15 +956,15 @@ def page_print_1to1(pdf):
         "štampaj na 100 % (bez 'fit to page'); tada je raster tačno 2,54 mm i "
         "komponente se mogu naslagati direktno na papir")
 
-    draw_board_u(ax, 24, 44, 1.0, detail=False)
-    ax.text(59, 40, "PLOČA U — 70 × 90 mm", fontsize=7, ha="center", color=C_PCB,
+    draw_board_u(ax, 26, 46, 1.0, detail=False)
+    ax.text(51, 42, "PLOČA U — 100 × 50 mm", fontsize=7, ha="center", color=C_PCB,
             fontweight="bold")
 
-    draw_board_m(ax, 112, 44, 1.0, detail=False)
-    ax.text(132, 40, "PLOČA M — 40 × 60 mm", fontsize=7, ha="center", color=C_PCB2,
+    draw_board_m(ax, 96, 46, 1.0, detail=False)
+    ax.text(116, 42, "PLOČA M — 40 × 60 mm", fontsize=7, ha="center", color=C_PCB2,
             fontweight="bold")
 
-    nx = 170
+    nx = 150
     ax.text(nx, 44, "Kako se koristi ova strana", fontsize=8, color=C_INK,
             fontweight="bold")
     for i, t in enumerate([
@@ -977,18 +982,18 @@ def page_print_1to1(pdf):
         ax.plot([nx + k * 2.54, nx + k * 2.54], [93.5, 96], color=C_INK, lw=0.7)
     ax.text(nx, 101, "25,4 mm = 10 rastera — kontrolna skala", fontsize=5.5, color=C_MUTED)
 
-    panel(ax, nx, 110, 110, 40, "Ovo je predloženi raspored, ne izmjereni",
+    panel(ax, nx, 110, 130, 40, "Ovo je predloženi raspored, ne izmjereni",
           ["Obrisi S3 ploče (63,0 × 25,5 mm) i razmak headera (22,86 mm) su iz zvanične",
            "Espressif dokumentacije. Obrisi INA226 (20,5 × 19,4 mm) i AMS1117 (≈ 20 × 10 mm)",
            "su iz fotografija modula u docs/img — razmak njihovih pinova nije potvrđen",
            "mjerenjem. Izmjeri ih lenjirom na svojim komadima prije nego išta zalemiš."],
           fc="#fff7ed", ec=C_WARN, tc=C_WARN, fs=5.3, lh=5.4)
 
-    panel(ax, nx, 156, 110, 40, "Ploča U ne staje na 4×6 cm",
-          ["ESP32-S3-DevKitC-1 je 63 mm dugačak, ploča A1938 je 60 mm. Zato ploča U",
-           "traži novu ploču 7×9 cm (≈ 100 din) i 2 ženska headera 1×22 (≈ 60 din).",
-           "Postojeća ploča 4×6 cm (A1938) postaje ploča M — na njoj sve staje sa",
-           "viškom mjesta, i to je jedina ploča koja se rasklapa i mijenja."],
+    panel(ax, nx, 156, 130, 40, "Zašto baš ove dvije veličine",
+          ["ESP32-S3-DevKitC-1 je 63 mm dugačak, ploča A1938 je 60 mm — ne staje.",
+           "Zato ploča U ide na 100 × 50 mm (Mikro Princ, ident 057516, 144 din):",
+           "S3 leži uz dužu stranu, a ostaje blok 33 × 50 mm za konektore, LED i šine.",
+           "Postojeća A1938 postaje ploča M — na njoj je popunjeno svega 36 % mreže."],
           fc="#f0f7ff", ec="#7ba7d7", tc="#1e5aa8", fs=5.3, lh=5.4)
 
     footer(ax, "Strana 5/7 — obje ploče 1:1.  Za oznake pinova vidi strane 3 i 4.")
@@ -1077,7 +1082,7 @@ def page_bom(pdf):
     card(lx, y, w, "INMP441 + pasivne", "šta gledati na komadu",
          ["6 pada u 2 reda po 3 (ne 1×6!) — MEMS u sredini, oznaka 441",
           "L/R → GND = lijevi kanal;  sound port se NE dira",
-          "470 nF (474) — nije polarizovan, lemi se na padove mikrofona",
+          "100 nF keramika — nije polarizovan, lemi se na padove mikrofona",
           "10 µF — pruga / kraća nožica = minus → GND mikrofona",
           "LED — duža nožica = anoda;  330 Ω = narandž./narandž./smeđa"])
 
@@ -1094,7 +1099,7 @@ def page_bom(pdf):
           "nikad USB i eksterno 3V3 istovremeno",
           "ulaz: presječen USB kabl sa zidnog punjača (crvena +5 V, crna GND)"])
 
-    footer(ax, "Strana 7/7 — spisak komponenti.  Cijene su orijentacione (elektromodul.rs, 08.2026).", "")
+    footer(ax, "Strana 7/7 — spisak komponenti.  Cijene: mikroprinc.com i elektromodul.rs, 19.08.2026.", "")
     save(pdf, fig, 7)
 
 
