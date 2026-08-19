@@ -1,6 +1,6 @@
 # Plan: dvije odvojene pločice — uređaj i mjerna
 
-**Datum:** 19.08.2026. · *dopunjeno istog dana: provjerene dimenzije i nabavka*
+**Datum:** 19.08.2026. · *dopunjeno: dimenzije, nabavka, varijanta sa laboratorijskim napajanjem, ispravka VBS*
 **Status:** plan lemljenja, ništa još nije zalemljeno
 **Grafika:** [sema-sklopa.pdf](sema-sklopa.pdf) — 7 strana A4, generiše se sa
 [`make_sema_sklopa.py`](make_sema_sklopa.py)
@@ -49,6 +49,7 @@ Provjera dimenzija je urađena i za jednu i za drugu ploču — sekcija 2.5.
 | Ženski header 1×6 — **K-MIK** | 1 | iz letvice | kolona 16, redovi 3–8 |
 | Ženski header 1×2 — **K-TAS** | 1 | iz letvice | kolona 16, redovi 12–13 |
 | Ženski header 1×4 — **K-M** | 1 | iz letvice | kolona 16, redovi 17–20 |
+| Ženski header 1×3 — **K-UART** | 1 | iz letvice | kolona 16, redovi 24–26 |
 | Gola kalajisana žica | ≈15 cm | — | **GND šina** red 37, **3V3 šina** red 38 |
 
 ### 2.2 PLOČA U — dio uređaja, ali NIJE na ploči
@@ -67,7 +68,7 @@ Provjera dimenzija je urađena i za jednu i za drugu ploču — sekcija 2.5.
 |---|---|---|---|
 | Prototipna ploča 4×6 cm (A1938) | 1 | **imaš** | ovo je ploča M |
 | AMS1117-3.3 modul 800 mA (A1652) | 1 | ≈20 × 10 mm, 4 muška pina **već zalemljena** | red 6 — OUT+ kol. 4, OUT− kol. 5, IN+ kol. 10, IN− kol. 11 |
-| INA226 modul (A3627) | 1 | 20,5 × 19,4 mm, jedan shunt **R100 = 0,1 Ω**, adresa **0x44** | red 18, kolone 4–11 |
+| INA226 modul (A3627) | 1 | 20,5 × 19,4 mm, jedan shunt **R100 = 0,1 Ω**, adresa **0x44** | red 18, kolone 4–11 · **VBS se spaja**, vidi 4.1 |
 | Elektrolit 470 µF (iz A642K) | 1 | **polarizovan**, na **vadivim** kontaktima | kolone 13/14, red 20 |
 | Ženski header 1×8 (INA226) | 1 | iz letvice | red 18 |
 | Ženski header 1×2, 2 kom (AMS1117) | 2 | iz letvice | red 6 |
@@ -131,6 +132,62 @@ Ponuda je 100×50 (144 din), 100×75 (210), 100×100 (270), 100×160 (420) — n
 
 ---
 
+### 2.6 Varijanta A — laboratorijsko napajanje, mjerni dio na MB-102
+
+**Ovo je preporučena varijanta ako se mjerenje radi na poslu.**
+
+Cijeli mjerni dio postoji zato što nije bilo regulisanog izvora 3,3 V. Sa
+laboratorijskim napajanjem (podesiv napon i strujna granica) polovina njega
+otpada:
+
+| Šta | Varijanta osnovna (zidni punjač) | **Varijanta A (lab. napajanje)** |
+|---|---|---|
+| Izvor | punjač 5 V | lab. napajanje na **3,3 V** |
+| 5 V ULAZ 1×2 | treba | **ne treba** |
+| AMS1117-3.3 | treba (5 V → 3,3 V) | **ne treba** — lab. napajanje je već regulisano |
+| INA226 | treba | treba |
+| 470 µF | vadiv | vadiv |
+| Nosač | ploča M, zalemljena | **MB-102, ništa se ne lemi** |
+
+Ostaje samo: **INA226 + 470 µF + četiri žice** ka ploči U. To se ubode u MB-102
+za dvije minute i rasklopi kad se završi.
+
+```
+lab. napajanje 3,3 V  ──→  INA226 IN+   (čvor 3V3 IZVOR, tu ide i VCC)
+                                │ shunt 0,1 Ω
+                           INA226 IN−   (čvor 3V3 POTROŠAČ, tu ide i VBS)
+                                ├──→  470 µF (+)   [vadiv]
+                                └──→  K-M pin 1 na ploči U
+lab. napajanje  −     ──→  GND šina  ──→  K-M pin 2
+                           INA226 SDA ──→  K-M pin 3   (GPIO 8)
+                           INA226 SCL ──→  K-M pin 4   (GPIO 9)
+```
+
+**Šta se i dalje mora zalemiti:** letvica od 8 pinova na sam INA226 modul —
+stigao je nezalemljen i bez toga ne ulazi u MB-102. To je 8 spojeva, ne cijela
+ploča.
+
+**Podešavanje lab. napajanja prije nego išta spojiš:**
+
+- napon **3,30 V**, provjeren multimetrom na krajevima kablova, ne po displeju;
+- strujna granica **300–500 mA** — to je jedina zaštita koju imaš, jer 3V3 pin
+  zaobilazi onboard LDO ploče S3;
+- **nikad preko 3,6 V** — to je apsolutni maksimum ESP32-S3. Pogrešno okrenuta
+  dugmad = mrtva ploča, bez upozorenja.
+
+**Rizik varijante A:** kontakti na MB-102 su opružni i mogu zaigrati. Padne li
+kontakt usred runa, S3 se resetuje (brownout) i run je nevažeći. To se odmah
+vidi jer uređaj krene ispočetka, pa nije tiha greška. Mjere: kratke krute žice,
+pritisnuti do kraja, ne pomjerati ploču tokom mjerenja. Ako se ponovi — tek tada
+se isplati lemiti ploču M.
+
+**Kada ipak lemiti ploču M na A1938:** ako mjerenje ne prolazi iz prve i mora se
+ponavljati, ili ako se E5 radi više puta u različitim uslovima. Staje sa viškom
+(sekcija 2.5), pa je to uvijek otvorena opcija — ne gubiš ništa time što prvo
+probaš na MB-102.
+
+---
+
 ## 3. Interfejs K-M ↔ K-U (4 žice)
 
 | Pin | Signal | Ploča M | Ploča U |
@@ -144,8 +201,30 @@ Ponuda je 100×50 (144 din), 100×75 (210), 100×100 (270), 100×160 (420) — n
 K-M/3V3. Nikad oboje — dva izvora na istom 3,3 V čvoru znače da onboard LDO
 ploče S3 gura protiv AMS1117.
 
-Redoslijed za E5: otkači USB → ubodi 4-žilni kabl → uključi punjač u struju.
+Redoslijed za E5: otkači USB → ubodi 4-žilni kabl → uključi napajanje.
 Poslije mjerenja obrnutim redom.
+
+### 3.1 K-UART 1×3 — čitanje dok je USB otkačen
+
+USB mora biti otkačen tokom E5, a s njim odlazi i serijska konzola preko
+onboard CH343 mosta. Dvije opcije:
+
+| Opcija | Šta treba | Napomena |
+|---|---|---|
+| **UART adapter** | USB-TTL adapter (3,3 V) na K-UART | logovi uživo tokom mjerenja |
+| **Log u flash** | ništa | čitaš poslije, preko USB-a |
+
+| K-UART pin | S3 | Na adapteru |
+|---|---|---|
+| 1 **TX** | J3-2, GPIO43 | ide na **RX** adaptera |
+| 2 **RX** | J3-3, GPIO44 | ide na **TX** adaptera |
+| 3 **GND** | GND šina | zajednička masa |
+
+Header je 3 rupe i praktično ništa ne košta sada, a poslije se ne može dodati
+uredno. Zalemi ga bez obzira na to koju opciju biraš.
+
+> CH343 ostaje spojen na te iste linije i kad je USB izvučen. U praksi radi, ali
+> ako adapter ne uhvati ništa, to je prvo mjesto gdje treba gledati.
 
 ---
 
@@ -163,6 +242,30 @@ Između njih je shunt od **0,1 Ω** i sva mjerena struja ide kroz njega.
 > Ako se ta dva čvora spoje, struja zaobiđe shunt: **INA226 mjeri nulu, a ploča U
 > i dalje uredno radi.** Greška se ne vidi bez mjerenja. Zato prije prvog
 > napajanja izmjeri otpornost IZVOR ↔ POTROŠAČ — mora biti **≈ 0,1 Ω, ne 0 Ω**.
+
+### 4.1 VBS mora biti spojen — ispravka
+
+Ranija verzija ove šeme je govorila da `VBS` ostaje prazan. **To je bilo pogrešno.**
+
+Firmware u [`ina226_test.c`](../firmware/esp32s3_asd/main/ina226_test.c) u svakom
+očitavanju čita četiri veličine:
+
+```c
+ina226_shunt_uv(&shunt_uv);
+ina226_bus_mv(&bus_mv);
+ina226_current_ua(&cur_ua);
+ina226_power_uw(&pwr_uw);
+```
+
+`bus_mv` dolazi iz registra napona magistrale, a `pwr_uw` INA226 računa interno
+kao *napon magistrale × struja*. Oba mjere napon na pinu **VBS** u odnosu na GND.
+Ako VBS visi u vazduhu, ta dva registra su **nula ili smeće**, i cijelo E5
+mjerenje energije je bezvrijedno — a struja i shunt napon i dalje izgledaju
+tačno, pa se greška ne primijeti dok se ne pogleda snaga.
+
+**VBS ide na čvor *3V3 POTROŠAČ*** — isti čvor kao `IN−`, 470 µF (+) i K-U pin 1.
+To je napon koji ESP32-S3 stvarno dobija, pa je i snaga onda stvarna snaga
+potrošača. `ALE` ostaje jedini nepovezan pin.
 
 **Izmjena u odnosu na [sema-povezivanja.md](sema-povezivanja.md):** INA226 `VCC`
 sada ide na čvor **3V3 IZVOR** (prije shunta), a ne na 3V3 šinu ploče S3.
@@ -186,7 +289,10 @@ ju je uračunavala.
 8. Taster na faston jezičke.
 9. Ploča U radi na powerbanku. Demo sa ventilatorom je time zatvoren.
 
-### Faza B — ploča M (blokira samo E5 mjerenje)
+### Faza B — mjerni dio (blokira samo E5 mjerenje)
+
+> Prvo pročitaj **2.6**. Sa laboratorijskim napajanjem na poslu preskačeš
+> korake 10, 12 i AMS1117 — ubodeš INA226 i 470 µF u MB-102 i to je to.
 
 10. Isjeći ženske headere za M iz letvice (1×8, 2 × 1×2, 1×2, 1×2, 1×4).
 11. Zalemiti letvicu 8 pinova na INA226 modul (stigla nezalemljena).
@@ -195,7 +301,7 @@ ju je uračunavala.
     - izmjeri AMS1117 OUT+ sa punjačem — mora biti ≈ 3,3 V;
     - izmjeri otpornost IZVOR ↔ POTROŠAČ — mora biti ≈ 0,1 Ω;
     - provjeri da GND ploče M i GND ploče U dolaze na isti čvor.
-14. Otkači USB sa S3 → ubodi K-M → uključi punjač.
+14. Otkači USB sa S3 → ubodi K-M (i K-UART ako čitaš uživo) → uključi napajanje.
 15. Mjeri **prvo BEZ 470 µF**. Dodaj ga samo ako se javi brownout reset, i
     dokumentuj oba slučaja (rizik C7).
 
@@ -269,6 +375,7 @@ vrijednost od 470 nF iz starije verzije dokumentacije. Uzeti 2 komada
 | Muške letvice | imaš 2 × 40 pinova (A1632), troši se ~44 na samu S3 ploču |
 | Elektrolit 10 µF i 470 µF | iz seta od 120 komada (A642K) |
 | INA226, AMS1117, INMP441, LED, taster | sve stiglo 04.08.2026 |
+| Napajanje 5 V | mjeri se na poslu, laboratorijskim napajanjem — sekcija 2.6 |
 | Bilo koji dodatni otpornik | nema ga u šemi — vidi gore |
 
 ---
@@ -287,6 +394,10 @@ vrijednost od 470 nF iz starije verzije dokumentacije. Uzeti 2 komada
 - [ ] INMP441 `L/R` **obavezno na GND** — inače firmware čita tišinu (rizik C1).
 - [ ] Redoslijed pinova INA226 provjeri po silkscreenu prije lemljenja letvice.
 - [ ] Otpornost IZVOR ↔ POTROŠAČ na ploči M ≈ 0,1 Ω (ne 0 Ω, ne prekid).
+- [ ] **VBS spojen na 3V3 POTROŠAČ.** Ako visi, `bus_mv` i `pwr_uw` su nula, a
+      struja i dalje izgleda tačno — vidi 4.1.
+- [ ] Lab. napajanje: **3,30 V** izmjereno multimetrom, strujna granica **300–500 mA**,
+      nikad preko **3,6 V** (apsolutni maksimum ESP32-S3).
 - [ ] **Prebroj rupe na kupljenoj ploči 100 × 50.** Raspored u PDF-u je crtan
       za mrežu 18 × 38; ako tvoj komad ima 19 × 39, pomjeri sve za jednu rupu —
       milimetri i međusobni odnosi ostaju isti.

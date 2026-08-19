@@ -74,7 +74,7 @@ USED_J1 = {"4": (C_YEL, "SCK"), "5": (C_GRN, "WS"), "6": (C_BLU, "SD"),
            "8": (C_WHT, "SDA"), "9": (C_VIO, "SCL"), "10": (C_GRY, "TASTER"),
            "11": (C_ORA, "LED crv.")}
 
-INA_PINS = [("IN+", C_SRC), ("IN−", C_LOAD), ("VBS", "#4b5563"), ("ALE", "#4b5563"),
+INA_PINS = [("IN+", C_SRC), ("IN−", C_LOAD), ("VBS", C_LOAD), ("ALE", "#4b5563"),
             ("SDA", C_WHT), ("SCL", C_VIO), ("GND", C_BLACK), ("VCC", C_SRC)]
 
 # konektori na ploči U
@@ -82,6 +82,7 @@ K_MIC = [("VDD", C_RED), ("GND", C_BLACK), ("SCK", C_YEL),
          ("WS", C_GRN), ("SD", C_BLU), ("L/R", C_BLACK)]
 K_BTN = [("GPIO10", C_GRY), ("GND", C_BLACK)]
 K_M = [("3V3", C_LOAD), ("GND", C_BLACK), ("SDA", C_WHT), ("SCL", C_VIO)]
+K_UART = [("TX", "#0ea5e9"), ("RX", "#84cc16"), ("GND", C_BLACK)]
 
 # ---------------------------------------------------------------- tabele veza
 # (od, do, boja žice, ime boje, napomena)
@@ -104,6 +105,9 @@ NETS_U = [
     ("K-M  pin 2  GND", "GND šina", C_BLACK, "crna", "zajednička masa sa pločom M"),
     ("K-M  pin 3  SDA", "S3  GPIO8  (J1-12)", C_WHT, "bijela", "I2C ka INA226 (0x44)"),
     ("K-M  pin 4  SCL", "S3  GPIO9  (J1-15)", C_VIO, "ljubičasta", "I2C ka INA226"),
+    ("K-UART  pin 1  TX", "S3  TX  (J3-2, GPIO43)", "#0ea5e9", "svijetloplava", "→ RX na USB-TTL adapteru"),
+    ("K-UART  pin 2  RX", "S3  RX  (J3-3, GPIO44)", "#84cc16", "svijetlozelena", "← TX na USB-TTL adapteru"),
+    ("K-UART  pin 3  GND", "GND šina", C_BLACK, "crna", "zajednička masa sa adapterom"),
 ]
 
 NETS_M = [
@@ -117,7 +121,7 @@ NETS_M = [
     ("INA226  IN−", "čvor 3V3 POTROŠAČ", C_LOAD, "ljubičasta", "shunt U SERIJI — ovdje izlazi struja"),
     ("INA226  SDA", "K-U  pin 3", C_WHT, "bijela", "pull-up je već na modulu"),
     ("INA226  SCL", "K-U  pin 4", C_VIO, "ljubičasta", "I2C"),
-    ("INA226  VBS", "— nepovezan —", None, "—", "ostaviti prazno"),
+    ("INA226  VBS", "čvor 3V3 POTROŠAČ", C_LOAD, "ljubičasta", "OBAVEZNO — bez toga power = 0"),
     ("INA226  ALE", "— nepovezan —", None, "—", "ostaviti prazno"),
     ("470 µF  (+)", "čvor 3V3 POTROŠAČ", C_LOAD, "ljubičasta", "vadiv, samo ako brownout"),
     ("470 µF  (−)", "GND šina ploče M", C_BLACK, "crna", "polarizovan!"),
@@ -146,6 +150,7 @@ BOM_U = [
     ("  → 2 × 1×22 za S3", "44", "kolone 3 i 12, redovi 4–25", "iz letvice"),
     ("  → K-MIK 1×6 i K-TAS 1×2", "8", "kolona 16, redovi 3–8 i 12–13", "iz letvice"),
     ("  → K-M 1×4", "4", "kolona 16, redovi 17–20", "iz letvice"),
+    ("  → K-UART 1×3", "3", "kolona 16, redovi 24–26 — TX/RX/GND", "iz letvice"),
     ("Gola kalajisana žica", "≈15 cm", "GND i 3V3 šina", "imaš"),
 ]
 
@@ -223,8 +228,8 @@ def save(pdf, fig, n):
 def page_overview(pdf):
     fig, ax = new_page(
         pdf, "Podjela na dvije ploče",
-        "PLOČA U radi sama iz powerbanka.  PLOČA M se kači na nju sa 4 žice samo "
-        "za mjerenje potrošnje (E5), pa se skida.")
+        "PLOČA U radi sama iz powerbanka.  Mjerni dio se kači na nju sa 4 žice samo za "
+        "E5, pa se skida — i ne mora biti zalemljen (varijanta A, dolje desno).")
 
     # ---------------- PLOČA U
     ux, uy, uw, uh = 16, 34, 112, 112
@@ -232,7 +237,7 @@ def page_overview(pdf):
                                 fc="#f1f8f3", ec=C_PCB, lw=1.6))
     ax.text(ux + 6, uy + 9, "PLOČA U — UREĐAJ", fontsize=10.5, color=C_PCB,
             fontweight="bold")
-    ax.text(ux + 6, uy + 15.5, "prototipna ploča 7 × 9 cm  ·  ostaje zalemljena zauvijek",
+    ax.text(ux + 6, uy + 15.5, "prototipna ploča 100 × 50 mm  ·  ostaje zalemljena zauvijek",
             fontsize=6, color=C_MUTED)
 
     chip(ax, ux + 8, uy + 21, 58, 26, "", "#1f2937", "#111827")
@@ -246,7 +251,7 @@ def page_overview(pdf):
     for i, (t, sub, col) in enumerate([
             ("2 LED + 2 × 330 Ω", "GPIO2 zelena · GPIO11 crvena", C_GRN),
             ("K-MIK  1×6", "ženski header → INMP441 na žicama", C_BLU),
-            ("K-TAS  1×2", "ženski header → arkadni taster", C_GRY),
+            ("K-TAS 1×2  ·  K-UART 1×3", "taster  ·  TX/RX/GND za USB-TTL", C_GRY),
             ("GND + 3V3 šina", "gola kalajisana žica, donji rub ploče", C_RED)]):
         yy = uy + 53 + i * 13
         ax.add_patch(FancyBboxPatch((ux + 8, yy), 58, 10,
@@ -260,7 +265,7 @@ def page_overview(pdf):
                                 fc="#ede9fe", ec=C_LOAD, lw=1.1))
     ax.text(ux + 89, uy + 60, "K-M  1×4", fontsize=7, ha="center", color=C_LOAD,
             fontweight="bold")
-    ax.text(ux + 89, uy + 66, "jedini spoj\nsa mjernom pločom", fontsize=5,
+    ax.text(ux + 89, uy + 66, "spoj sa mjernim\nsklopom", fontsize=5,
             ha="center", color=C_INK, linespacing=1.4)
     ax.text(ux + 89, uy + 78, "3V3 · GND · SDA · SCL", fontsize=5, ha="center",
             color=C_MUTED)
@@ -273,12 +278,12 @@ def page_overview(pdf):
                                 fc="#eff6ff", ec=C_PCB2, lw=1.6))
     ax.text(mx + 6, my + 9, "PLOČA M — MJERNA", fontsize=10.5, color=C_PCB2,
             fontweight="bold")
-    ax.text(mx + 6, my + 15.5, "prototipna ploča 4 × 6 cm (A1938)  ·  kači se samo za E5",
+    ax.text(mx + 6, my + 15.5, "ploča 4 × 6 cm (A1938) ILI MB-102  ·  kači se samo za E5",
             fontsize=6, color=C_MUTED)
 
     for i, (t, sub, col) in enumerate([
-            ("5 V ULAZ  1×2", "zidni punjač 5 V (NE powerbank)", C_RED),
-            ("AMS1117-3.3  modul", "5 V → čistih 3,3 V, linearni, bez ripple-a", C_BLU),
+            ("5 V ULAZ  1×2", "5 V sa punjača — otpada uz lab. napajanje", C_RED),
+            ("AMS1117-3.3  modul", "5 V → 3,3 V — otpada uz lab. napajanje", C_BLU),
             ("INA226  modul", "shunt R100 = 0,1 Ω U SERIJI · I2C 0x44", C_PCB2),
             ("470 µF elektrolit", "VADIV — ubada se samo ako se javi brownout", C_ORA),
             ("GND šina", "gola kalajisana žica, donji rub", C_BLACK)]):
@@ -303,8 +308,8 @@ def page_overview(pdf):
             fontweight="bold")
     ax.text(mx + 91, my + 76, "mjeri se jednom,\ntraži otkačen USB,\nrasklapa se.",
             fontsize=5, ha="center", color=C_MUTED, linespacing=1.5)
-    ax.text(mx + 91, my + 92, "Nema smisla lemiti\nfiksno na uređaj\nkoji radi na USB-u.",
-            fontsize=5, ha="center", color=C_MUTED, linespacing=1.5, style="italic")
+    ax.text(mx + 91, my + 92, "Zato i ne mora biti\nzalemljen — isti sklop\nradi i na MB-102.",
+            fontsize=5, ha="center", color=C_WARN, linespacing=1.5, style="italic")
 
     # ---------------- interfejs 4 žice
     ix0, ix1 = ux + uw, mx
@@ -328,7 +333,7 @@ def page_overview(pdf):
             fontweight="bold")
     for i, (t, sub) in enumerate([
             ("INMP441 mikrofon", "žice < 10 cm, usmjeren ka ventilatoru"),
-            ("470 nF + 10 µF", "leme se NA PADOVE MIKROFONA, ne na ploču"),
+            ("100 nF + 10 µF", "leme se NA PADOVE MIKROFONA, ne na ploču"),
             ("Arkadni taster 30 mm", "2 faston jezička — žica se nabija"),
             ("Powerbank + USB-C", "napajanje u normalnom radu")]):
         yy = 164 + i * 8
@@ -336,14 +341,17 @@ def page_overview(pdf):
         ax.text(ux + 6, yy, t, fontsize=6, color=C_INK, fontweight="bold")
         ax.text(ux + 6, yy + 4, sub, fontsize=5, color=C_MUTED)
 
-    panel(ax, 132, 152, 148, 42,
+    panel(ax, 132, 150, 148, 20,
           "PRAVILO KOJE SE NE KRŠI",
-          ["ILI powerbank preko USB-C  ILI  ploča M preko K-M/3V3.  NIKAD oboje.",
-           "Dva izvora na istom 3,3 V čvoru = onboard LDO ploče S3 gura protiv AMS1117.",
-           "",
-           "Za E5 mjerenje: otkači USB → tek onda ubodi 4-žilni kabl → tek onda uključi",
-           "punjač u struju.  Poslije mjerenja obrnutim redom."],
+          ["ILI powerbank preko USB-C  ILI  mjerni sklop preko K-M/3V3.  NIKAD oboje.",
+           "Redoslijed za E5: otkači USB → ubodi 4-žilni kabl → tek onda uključi napajanje."],
           fc="#fff7ed", ec=C_WARN, tc=C_WARN, fs=5.4, lh=5.4)
+
+    panel(ax, 132, 174, 148, 22,
+          "VARIJANTA A — laboratorijsko napajanje (preporučeno)",
+          ["Lab. napajanje da 3,3 V pravo na INA226 IN+ → AMS1117 i 5 V ULAZ otpadaju.",
+           "Ostaju INA226 + 470 µF + 4 žice — to staje na MB-102, bez lemljenja ploče M."],
+          fc="#f0f7ff", ec="#7ba7d7", tc="#1e5aa8", fs=5.4, lh=5.4)
 
     footer(ax, "Strana 1/7 — podjela.  Detaljne veze: strane 2–4, tabele: strane 6–7.", "")
     save(pdf, fig, 1)
@@ -605,12 +613,17 @@ def draw_board_u(ax, ox, oy, s, detail):
             ax.text(lab_x, y, f"{nm} · {tag}" if nm.isdigit() else tag,
                     fontsize=4.2 * f, ha="right", va="center", color=C_INK,
                     fontweight="bold", zorder=9)
+    J3_USED = {"2": (C_GRN, "2 · LED zel."), "TX": ("#0ea5e9", "TX · 43"),
+               "RX": ("#84cc16", "RX · 44")}
     for i, nm in enumerate(J3):
         x, y = hole(j3c, r0 + i)
-        col = C_GRN if nm == "2" else (C_BLACK if nm == "G" else "#4b5563")
+        if nm in J3_USED:
+            col, lab = J3_USED[nm]
+        else:
+            col, lab = (C_BLACK if nm == "G" else "#4b5563"), None
         ax.add_patch(Circle((x, y), 1.05 * s, fc=col, ec="#0f172a", lw=0.3 * s, zorder=8))
-        if nm == "2" and detail:
-            ax.text(x + 2.4 * s, y, "2 · LED zel.", fontsize=4.2 * f, va="center",
+        if lab and detail:
+            ax.text(x + 2.4 * s, y, lab, fontsize=4.2 * f, va="center",
                     color=C_INK, fontweight="bold", zorder=9, bbox=BB)
 
     # --- konektori na desnoj strani, kolona 20
@@ -634,6 +647,7 @@ def draw_board_u(ax, ox, oy, s, detail):
     connector(16, 3, K_MIC, "K-MIK → INMP441")
     connector(16, 12, K_BTN, "K-TAS → taster")
     connector(16, 17, K_M, "K-M → ploča M")
+    connector(16, 24, K_UART, "K-UART → USB-TTL")
 
     # --- LED + otpornici ispod S3
     for cc, col, tag in ((4, C_GRN, "GPIO2"), (10, C_RED, "GPIO11")):
@@ -674,31 +688,31 @@ def page_board_u(pdf):
     panel(ax, nx, 32, 116, 50, "Šta je NA ovoj ploči",
           ["ESP32-S3-DevKitC-1  — ženski headeri 1×22, kolone 3 (J1) i 12 (J3), redovi 4–25",
            "2 × LED 5 mm + 2 × 330 Ω  — otpornici red 30, LED red 33 (GPIO2 lijevo, GPIO11 desno)",
-           "K-MIK 1×6  · K-TAS 1×2  · K-M 1×4  — kolona 16, redovi 3–8 / 12–13 / 17–20",
+           "K-MIK 1×6 · K-TAS 1×2 · K-M 1×4 · K-UART 1×3  — kolona 16, redovi 3–26",
            "GND šina (red 37) i 3V3 šina (red 38) — gola kalajisana žica",
            "Ništa drugo. Regulator, senzor struje i 470 µF NISU na ovoj ploči.",
            "Kondenzatori mikrofona NISU na ovoj ploči — oni su na samom mikrofonu."],
           fc="#f1f8f3", ec=C_PCB, tc=C_PCB, fs=5.2, lh=5.4)
 
-    panel(ax, nx, 88, 116, 34, "Šta ide na žice sa ove ploče",
+    panel(ax, nx, 88, 116, 40, "Šta ide na žice sa ove ploče",
           ["K-MIK → INMP441, 6 žica < 10 cm, GND uz signale, L/R na GND",
            "K-TAS → arkadni taster, 2 žice na faston jezičke",
-           "K-M   → ploča M, 4 žice ≈ 20 cm, samo tokom E5 mjerenja",
+           "K-M   → mjerni sklop, 4 žice ≈ 20 cm, samo tokom E5 mjerenja",
+           "K-UART → USB-TTL adapter, samo kad je USB otkačen (E5)",
            "USB-C → powerbank (u normalnom radu)"],
           fs=5.2, lh=5.4)
 
-    panel(ax, nx, 124, 116, 46, "Provjeriti prije lemljenja",
-          ["1.  Pin se traži po OZNACI na silkscreenu, ne po broju rupe. J1/J3 numeracija",
-           "     je iz Espressif DevKitC-1 v1.1 — na klonu provjeri multimetrom.",
-           "2.  Prebroj rupe na SVOJOJ ploči: ovdje je uzeto 18 × 38 na 100 × 50 mm.",
-           "     Ako tvoj komad ima 19 × 39, pomjeri sve za jednu rupu — mm ostaju isti.",
-           "3.  3V3 šina dodiruje SAMO pinove 3V3 i K-M pin 1. Nijedan GPIO na šinu.",
-           "4.  Kapton preko sound porta mikrofona tokom lemljenja (P16)."],
+    panel(ax, nx, 132, 116, 40, "Provjeriti prije lemljenja",
+          ["1.  Pin se traži po OZNACI na silkscreenu, ne po broju rupe — J1/J3 je iz",
+           "     Espressif DevKitC-1 v1.1; na klonu provjeri multimetrom.",
+           "2.  Prebroj rupe: ovdje je uzeto 18 × 38. Ako ih ima 19 × 39, pomjeri",
+           "     sve za jednu — milimetri ostaju isti.",
+           "3.  3V3 šina dodiruje SAMO pinove 3V3 i K-M pin 1. Nijedan GPIO na šinu."],
           fc="#fff7ed", ec=C_WARN, tc=C_WARN, fs=5.2, lh=5.4)
 
-    panel(ax, nx, 174, 116, 22, "Redoslijed lemljenja ploče U",
+    panel(ax, nx, 176, 116, 20, "Redoslijed lemljenja ploče U",
           ["1. ženski headeri za S3   2. GND i 3V3 šina   3. otpornici + LED  → test lampica",
-           "4. konektori K-MIK / K-TAS / K-M   5. mikrofon na žice + dekapling  → test 5 s WAV"],
+           "4. konektori K-MIK / K-TAS / K-M / K-UART   5. mikrofon na žice + dekapling  → test 5 s WAV"],
           fs=5.2, lh=5.4)
 
     footer(ax, "Strana 3/7 — raspored ploče U.  Ploča 100 × 50 mm, mreža 18 × 38 rupa.",
@@ -853,6 +867,8 @@ def draw_board_m(ax, ox, oy, s, detail):
     ax.plot([ina["IN−"][0], hole(3, 19)[0], hole(3, 19)[0], ku["3V3"][0]],
             [y19, y19, ku["3V3"][1], ku["3V3"][1]], color=C_LOAD, lw=1.5 * s,
             solid_capstyle="round", solid_joinstyle="round", zorder=9, alpha=0.92)
+    ax.plot([ina["VBS"][0], ina["VBS"][0]], [ina["VBS"][1], y19], color=C_LOAD,
+            lw=1.5 * s, solid_capstyle="round", zorder=9, alpha=0.92)
     tag(9, 19, "3V3 POTROŠAČ", dr=0.7, fs=4.0)
     return ox, oy, bw, bh
 
@@ -861,8 +877,8 @@ def draw_board_m(ax, ox, oy, s, detail):
 def page_board_m(pdf):
     fig, ax = new_page(
         pdf, "PLOČA M (mjerna) — logička šema i fizički raspored",
-        "prototipna ploča 4 × 6 cm (A1938)  ·  15 × 23 rupe  ·  kači se na ploču U "
-        "samo za E5 mjerenje potrošnje")
+        "ploča 4 × 6 cm (A1938) ili MB-102  ·  15 × 23 rupe  ·  kači se na ploču U "
+        "samo za E5 mjerenje potrošnje, pa se skida")
 
     # ---- logička šema, lijevo
     ax.text(16, 36, "Logička šema — struja ide kroz shunt", fontsize=8,
@@ -922,19 +938,21 @@ def page_board_m(pdf):
 
     panel(ax, 16, 114, 152, 32, "Dva 3,3 V čvora — najveća zamka na ovoj ploči",
           ["3V3 IZVOR    = AMS1117 OUT+ → INA226 IN+  i  INA226 VCC   (narandžasto)",
-           "3V3 POTROŠAČ = INA226 IN− → 470 µF → K-U pin 1 → ploča U   (ljubičasto)",
+           "3V3 POTROŠAČ = INA226 IN− i VBS → 470 µF → K-U pin 1 → ploča U  (ljubičasto)",
            "Između njih je shunt od 0,1 Ω. Ako ih spojiš, struja zaobiđe shunt: INA226",
            "mjeri nulu, a ploča U i dalje radi — greška se NE vidi bez mjerenja."],
           fc="#fff7ed", ec=C_WARN, tc=C_WARN, fs=5.2, lh=4.8)
 
-    panel(ax, 16, 152, 152, 44, "Šta je NA ovoj ploči",
+    panel(ax, 16, 148, 152, 48, "Šta je NA ovoj ploči",
           ["AMS1117-3.3 modul  — ženski header 2 × 1×2, red 6 (OUT kol. 4–5, IN kol. 10–11)",
-           "INA226 modul       — ženski header 1×8, red 18, kolone 4–11 (VBS i ALE prazni)",
+           "INA226 modul       — ženski header 1×8, red 18, kolone 4–11 (ALE ostaje prazan)",
            "470 µF elektrolit  — VADIV, kolone 13/14 red 20, + na ljubičasti čvor",
            "5 V ULAZ 1×2       — kolona 14, redovi 3–4",
            "K-U 1×4            — kolona 2, redovi 17–20: 3V3 · GND · SDA · SCL",
            "GND šina           — red 22, gola kalajisana žica",
-           "Ostale veze (SDA, SCL, GND) nisu crtane — u tabeli su na strani 6."],
+           "Ostale veze (SDA, SCL, GND) nisu crtane — u tabeli su na strani 6.",
+           "VARIJANTA A: lab. napajanje da 3,3 V pravo na IN+ → AMS1117 i 5 V ULAZ",
+           "otpadaju, a ostatak (INA226 + 470 µF) staje i na MB-102, bez lemljenja."],
           fc="#eff6ff", ec=C_PCB2, tc=C_PCB2, fs=5.2, lh=4.8)
 
     # ---- fizički raspored, desno
@@ -1027,9 +1045,9 @@ def _table(ax, x, y, w, title, rows, tc, rh=5.0):
 
 def page_tables(pdf):
     fig, ax = new_page(pdf, "Tabele veza",
-                       "svaka veza koja se lemi, razdvojena po pločama — 38 stavki")
+                       "svaka veza koja se lemi, razdvojena po pločama — 41 stavka")
 
-    y = _table(ax, 16, 34, 128, "PLOČA U — uređaj  (18 veza)", NETS_U, C_PCB)
+    y = _table(ax, 16, 34, 128, "PLOČA U — uređaj  (21 veza)", NETS_U, C_PCB)
     _table(ax, 16, y + 8, 128, "INTERFEJS  K-M ↔ K-U  (4 žice, ≈ 20 cm)", NETS_IF, C_LOAD)
 
     y = _table(ax, 152, 34, 128, "PLOČA M — mjerna  (16 veza)", NETS_M, C_PCB2)
@@ -1091,7 +1109,7 @@ def page_bom(pdf):
     y = card(rx, y, w, "INA226", "20,5 × 19,4 mm, plava ploča",
              ["1×8: IN+ IN− VBS ALE SDA SCL GND VCC — provjeri po silkscreenu",
               "JEDAN shunt R100 = 0,1 Ω;  I2C adresa 0x44 (potvrđeno)",
-              "VBS i ALE ostaju prazni;  pull-up na I2C je već na modulu",
+              "VBS → 3V3 POTROŠAČ (firmware čita bus i power);  ALE ostaje prazan",
               "VCC ide na 3V3 IZVOR (prije shunta) — vlastita struja se ne mjeri"])
     card(rx, y, w, "AMS1117-3.3", "≈ 20 × 10 mm, plava ploča",
          ["4 pina: IN+ IN− / OUT+ OUT− — pinovi su već zalemljeni",
