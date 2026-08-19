@@ -1,6 +1,8 @@
 # Šema povezivanja — INMP441 + INA226 na ESP32-S3 (N32R16V)
 
 Vizuelna šema: [sema-povezivanja.svg](sema-povezivanja.svg)
+Šema zalemljenog sklopa (dvije ploče, 7 strana A4): [sema-sklopa.pdf](sema-sklopa.pdf) ·
+podjela i spisak komponenti: [plan-dvije-plocice.md](plan-dvije-plocice.md)
 Sve ide na protoboard MB-102, žice do mikrofona **< 10 cm**.
 
 ## 1. INMP441 mikrofon (I2S) — ovo je stalna veza, treba ti odmah

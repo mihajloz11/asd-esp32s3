@@ -30,6 +30,11 @@ Puni tabelarni i grafički prikaz: [sema-povezivanja.md](sema-povezivanja.md) ·
 [sema-povezivanja.svg](sema-povezivanja.svg). Redoslijed i mjere opreza:
 [lemljenje.md](lemljenje.md). Ovdje je samo spisak i ono što je novo.
 
+> **19.08.2026 — sklop se lemi na DVIJE ploče**, ne na jednu:
+> ploča U (uređaj, 7×9 cm, powerbank) i ploča M (mjerna, 4×6 cm A1938, samo za E5),
+> spojene sa 4 žice. Šta ide na koju ploču, spisak komponenti i redoslijed:
+> [plan-dvije-plocice.md](plan-dvije-plocice.md) · crteži: [sema-sklopa.pdf](sema-sklopa.pdf).
+
 ### Mikrofon — **jedan, ne dva**
 
 Ovo je pitanje bilo otvoreno i **zatvoreno je mjerenjem 14.08.** Faza 5 je

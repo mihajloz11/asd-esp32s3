@@ -22,6 +22,7 @@ druge stvarne akustičke smetnje ostaju dio budućeg fizičkog protokola.
 | PC testovi | **274 passed**, uključujući PC↔C parity |
 | Na uređaju provjereno | kalibracija, DET faza, fail-closed odbijanja, `dropped=0` |
 | **Ostalo** | **šema · ventilator · demo** → [docs/PREOSTALO.md](docs/PREOSTALO.md) |
+| Lemljenje | dvije ploče (uređaj + mjerna) → [docs/plan-dvije-plocice.md](docs/plan-dvije-plocice.md) · crteži [docs/sema-sklopa.pdf](docs/sema-sklopa.pdf) |
 
 Šta je urađeno i izmjereno, hronološki:
 [docs/DNEVNIK-NEXT-LEVEL.md](docs/DNEVNIK-NEXT-LEVEL.md).
