@@ -144,7 +144,7 @@ def build_audio(speed: str, out_dir: Path) -> tuple[Path, Path, dict]:
 
 # --- serijski tok -----------------------------------------------------------
 
-PROTOCOL_VERSION = "asd-quality-v1.3.0"
+PROTOCOL_VERSION = "asd-quality-v1.5.0"
 
 THR_RE = re.compile(r"ADAPTTHR n=(\d+) mean=([-\d.eE+]+) sd=([-\d.eE+]+).*?thr=([-\d.eE+]+)")
 PRESENCE_RE = re.compile(
@@ -158,6 +158,7 @@ QUALITY_NUM_RE = re.compile(r"(\w+)=([-\d.eE+]+)")
 WAIT_RE = re.compile(r"WAIT (\d+)/(\d+) score=([-\d.eE+]+).*?nivo=([-\d.eE+]+) dBFS (\S+)")
 CAL_RE = re.compile(r"CAL\s+(\d+)/(\d+) score=\S+ nivo=([-\d.eE+]+) dBFS")
 STOP_RE = re.compile(r"fail-closed stop u (\S+): (\S+) -> (\S+)")
+K1_STOP_RE = re.compile(r"K1 odbio kalibraciju: (\S+) -> (\S+)")
 
 
 def build_is_psd_live() -> bool:
@@ -313,6 +314,12 @@ def run(args: argparse.Namespace) -> int:
                         stop_reason = f"{m.group(2)} u fazi {m.group(1)} -> {m.group(3)}"
                         print(f"\n  FAIL-CLOSED STOP: {stop_reason}")
                         deadline = 0  # izlazi iz petlje
+                        break
+                    m = K1_STOP_RE.search(line)
+                    if m:
+                        stop_reason = f"{m.group(1)} u fazi CAL -> {m.group(2)}"
+                        print(f"\n  K1 STOP: {stop_reason}")
+                        deadline = 0
                         break
     except KeyboardInterrupt:
         stop_reason = "prekinuto sa tastature"

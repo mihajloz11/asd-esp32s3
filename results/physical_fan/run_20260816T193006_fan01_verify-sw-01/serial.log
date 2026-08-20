@@ -1,0 +1,246 @@
+2026-08-16T17:30:07.800+00:00	1.110	I (1108) esp_psram: SPI SRAM memory test OK
+2026-08-16T17:30:07.808+00:00	1.125	I (1117) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
+2026-08-16T17:30:07.809+00:00	1.125	I (1117) cpu_start: Pro cpu start user code
+2026-08-16T17:30:07.810+00:00	1.125	I (1117) cpu_start: cpu freq: 240000000 Hz
+2026-08-16T17:30:07.814+00:00	1.125	I (1119) app_init: Application information:
+2026-08-16T17:30:07.819+00:00	1.141	I (1123) app_init: Project name:     esp32s3_asd
+2026-08-16T17:30:07.825+00:00	1.141	I (1127) app_init: App version:      on-device-verified-49-g35cc34f-
+2026-08-16T17:30:07.830+00:00	1.141	I (1133) app_init: Compile time:     Aug 16 2026 12:58:32
+2026-08-16T17:30:07.834+00:00	1.156	I (1139) app_init: ELF file SHA256:  95c91ca5c...
+2026-08-16T17:30:07.840+00:00	1.156	I (1143) app_init: ESP-IDF:          v5.5.5-34-g21f3b71cbbf
+2026-08-16T17:30:07.844+00:00	1.156	I (1148) efuse_init: Min chip rev:     v0.0
+2026-08-16T17:30:07.848+00:00	1.156	I (1152) efuse_init: Max chip rev:     v0.99 
+2026-08-16T17:30:07.851+00:00	1.172	I (1156) efuse_init: Chip rev:         v0.2
+2026-08-16T17:30:07.858+00:00	1.172	I (1160) heap_init: Initializing. RAM available for dynamic allocation:
+2026-08-16T17:30:07.863+00:00	1.172	I (1167) heap_init: At 3FCCFF08 len 00019808 (102 KiB): RAM
+2026-08-16T17:30:07.868+00:00	1.188	I (1172) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+2026-08-16T17:30:07.874+00:00	1.188	I (1177) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+2026-08-16T17:30:07.879+00:00	1.188	I (1182) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+2026-08-16T17:30:07.885+00:00	1.203	I (1188) esp_psram: Adding pool of 16384K of PSRAM memory to heap allocator
+2026-08-16T17:30:07.896+00:00	1.219	W (1195) spi_flash: Octal flash chip is using but dio mode is selected, will automatically switch to Octal mode
+2026-08-16T17:30:07.899+00:00	1.219	I (1204) spi_flash: detected chip: mxic (opi)
+2026-08-16T17:30:07.902+00:00	1.219	I (1208) spi_flash: flash io: opi_str
+2026-08-16T17:30:07.910+00:00	1.219	I (1212) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+2026-08-16T17:30:07.915+00:00	1.235	I (1218) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+2026-08-16T17:30:07.919+00:00	1.235	I (1225) main_task: Started on CPU0
+2026-08-16T17:30:07.927+00:00	1.250	I (1225) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+2026-08-16T17:30:07.930+00:00	1.250	I (1235) main_task: Calling app_main()
+2026-08-16T17:30:07.933+00:00	1.250	I (1235) asd: PSRAM: 16777216 B
+2026-08-16T17:30:07.937+00:00	1.250	I (1245) asd: free heap: 16920655 B
+2026-08-16T17:30:07.940+00:00	1.250	I (1245) asd: I2C idle: SDA=1 SCL=1
+2026-08-16T17:30:07.944+00:00	1.266	I (1255) asd: I2C poslije probe: SDA=1 SCL=1
+2026-08-16T17:30:07.949+00:00	1.266	E (1255) asd: INA226 nije pronadjen na adresama 0x40-0x4F
+2026-08-16T17:30:07.957+00:00	1.266	W (1255) i2s_common: dma frame num is out of dma buffer size, limited to 1023
+2026-08-16T17:30:08.625+00:00	1.938	FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+2026-08-16T17:30:08.628+00:00	1.938	I (1935) psdlive: === SAMOSTALNI PSD DETEKTOR ===
+2026-08-16T17:30:08.638+00:00	1.953	I (1935) psdlive: model: 96 traka, matrica 96x96 iz flesa, naucen na 990 normalnih snimaka ventilatora
+2026-08-16T17:30:08.642+00:00	1.953	I (1945) psdlive: 1) pusti ventilator koji radi NORMALNO
+2026-08-16T17:30:08.653+00:00	1.969	I (1955) psdlive: 2) pritisni taster ILI posalji PRESS sa konzole -> ucenje 10 x 10 s = 100 s, lampica treperi
+2026-08-16T17:30:08.659+00:00	1.969	I (1965) psdlive: 3) lampica stalno svijetli = naucio; tek tada izazovi kvar
+2026-08-16T17:30:08.666+00:00	1.985	I (1965) psdlive: pritisni taster (GPIO10) ili posalji PRESS da pocne ucenje
+2026-08-16T17:30:13.644+00:00	6.953	FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+2026-08-16T17:30:17.682+00:00	11.000	VBUTTON protocol=asd-quality-v1.3.0 source=console event=SHORT result=accepted
+2026-08-16T17:30:17.686+00:00	11.000	BUTTON protocol=asd-quality-v1.3.0 event=SHORT mode=IDLE command=START_LEARNING discards=0
+2026-08-16T17:30:17.696+00:00	11.016	SESSION protocol=asd-quality-v1.3.0 action=STARTED source=BUTTON reason=OPERATOR_REQUEST discards_calibration=0
+2026-08-16T17:30:17.703+00:00	11.016	STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED
+2026-08-16T17:30:17.716+00:00	11.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:30:17.721+00:00	11.031	I (11025) psdlive: odbacen ustajali zvuk iz cekanja: 31104 uzoraka
+2026-08-16T17:30:17.952+00:00	11.266	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=1 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.686 dc=0.998 peak=874 clipped=0 zeros=3 stuck=3 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:17.954+00:00	11.266	WAIT 1/60 score=-40.69 spread=0.000 nivo=-40.7 dBFS cujem
+2026-08-16T17:30:18.207+00:00	11.516	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=2 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.703 dc=-2.548 peak=889 clipped=0 zeros=3 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:18.210+00:00	11.531	WAIT 2/60 score=-40.70 spread=0.000 nivo=-40.7 dBFS cujem
+2026-08-16T17:30:18.465+00:00	11.781	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=3 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.724 dc=1.770 peak=898 clipped=0 zeros=5 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:18.511+00:00	11.828	WAIT 3/60 score=-40.72 spread=0.000 nivo=-40.7 dBFS cujem
+2026-08-16T17:30:18.719+00:00	12.031	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=4 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.823 dc=-1.608 peak=863 clipped=0 zeros=5 stuck=3 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:18.722+00:00	12.031	WAIT 4/60 score=-40.82 spread=0.000 nivo=-40.8 dBFS cujem
+2026-08-16T17:30:18.974+00:00	12.297	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=5 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.716 dc=2.161 peak=883 clipped=0 zeros=6 stuck=3 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:18.977+00:00	12.297	WAIT 5/60 score=-40.72 spread=0.000 nivo=-40.7 dBFS cujem
+2026-08-16T17:30:19.231+00:00	12.547	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=6 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.594 dc=-4.913 peak=932 clipped=0 zeros=1 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:19.233+00:00	12.547	WAIT 6/60 score=-40.59 spread=0.000 nivo=-40.6 dBFS cujem
+2026-08-16T17:30:19.486+00:00	12.797	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=7 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.655 dc=1.416 peak=956 clipped=0 zeros=8 stuck=3 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:19.488+00:00	12.797	WAIT 7/60 score=-40.66 spread=0.000 nivo=-40.7 dBFS cujem
+2026-08-16T17:30:19.742+00:00	13.063	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=8 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.482 dc=0.321 peak=905 clipped=0 zeros=3 stuck=5 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:19.745+00:00	13.063	WAIT 8/60 score=-40.48 spread=0.000 nivo=-40.5 dBFS cujem
+2026-08-16T17:30:19.998+00:00	13.313	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=9 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.453 dc=-3.430 peak=940 clipped=0 zeros=1 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:20.001+00:00	13.313	WAIT 9/60 score=-40.45 spread=0.000 nivo=-40.5 dBFS cujem
+2026-08-16T17:30:20.256+00:00	13.578	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=10 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.472 dc=6.070 peak=909 clipped=0 zeros=4 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:20.256+00:00	13.578	WAIT 10/60 score=-40.47 spread=0.000 nivo=-40.5 dBFS cujem
+2026-08-16T17:30:20.510+00:00	13.828	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=11 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.657 dc=-4.906 peak=914 clipped=0 zeros=3 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:20.513+00:00	13.828	WAIT 11/60 score=-40.66 spread=0.000 nivo=-40.7 dBFS cujem
+2026-08-16T17:30:20.766+00:00	14.078	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=12 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.618 dc=1.260 peak=914 clipped=0 zeros=1 stuck=2 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:20.768+00:00	14.078	WAIT 12/60 score=-40.62 spread=0.000 nivo=-40.6 dBFS cujem
+2026-08-16T17:30:21.021+00:00	14.328	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=13 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.863 dc=-0.189 peak=906 clipped=0 zeros=6 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:21.023+00:00	14.344	WAIT 13/60 score=-40.86 spread=0.000 nivo=-40.9 dBFS cujem
+2026-08-16T17:30:21.277+00:00	14.594	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=14 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.175 dc=-0.118 peak=894 clipped=0 zeros=3 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:21.280+00:00	14.594	WAIT 14/60 score=-41.18 spread=0.000 nivo=-41.2 dBFS cujem
+2026-08-16T17:30:21.533+00:00	14.844	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=15 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.903 dc=-2.080 peak=872 clipped=0 zeros=3 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:21.535+00:00	14.844	WAIT 15/60 score=-40.90 spread=0.000 nivo=-40.9 dBFS cujem
+2026-08-16T17:30:21.788+00:00	15.110	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=16 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.706 dc=0.298 peak=921 clipped=0 zeros=2 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:21.791+00:00	15.110	WAIT 16/60 score=-40.71 spread=0.000 nivo=-40.7 dBFS cujem
+2026-08-16T17:30:22.043+00:00	15.360	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=17 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.447 dc=-1.154 peak=880 clipped=0 zeros=2 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:22.046+00:00	15.360	WAIT 17/60 score=-40.45 spread=0.000 nivo=-40.4 dBFS cujem
+2026-08-16T17:30:22.300+00:00	15.610	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=18 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.421 dc=0.500 peak=893 clipped=0 zeros=2 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:22.302+00:00	15.625	WAIT 18/60 score=-40.42 spread=0.000 nivo=-40.4 dBFS cujem
+2026-08-16T17:30:22.556+00:00	15.875	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=19 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.426 dc=0.847 peak=906 clipped=0 zeros=2 stuck=5 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:22.558+00:00	15.875	WAIT 19/60 score=-40.43 spread=0.000 nivo=-40.4 dBFS cujem
+2026-08-16T17:30:22.713+00:00	16.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:30:22.811+00:00	16.125	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=20 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.326 dc=-4.436 peak=949 clipped=0 zeros=0 stuck=10 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:22.814+00:00	16.125	WAIT 20/60 score=-40.33 spread=0.000 nivo=-40.3 dBFS cujem
+2026-08-16T17:30:23.067+00:00	16.375	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=21 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.369 dc=2.259 peak=876 clipped=0 zeros=4 stuck=4 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:23.070+00:00	16.391	WAIT 21/60 score=-40.37 spread=0.000 nivo=-40.4 dBFS cujem
+2026-08-16T17:30:23.323+00:00	16.641	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=22 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.665 dc=0.546 peak=843 clipped=0 zeros=5 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:23.326+00:00	16.641	WAIT 22/60 score=-40.66 spread=0.000 nivo=-40.7 dBFS cujem
+2026-08-16T17:30:23.579+00:00	16.891	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=23 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.817 dc=-3.816 peak=871 clipped=0 zeros=5 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:23.581+00:00	16.891	WAIT 23/60 score=-40.82 spread=0.000 nivo=-40.8 dBFS cujem
+2026-08-16T17:30:23.834+00:00	17.156	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=24 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.741 dc=2.563 peak=849 clipped=0 zeros=4 stuck=3 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:23.837+00:00	17.156	WAIT 24/60 score=-40.74 spread=0.000 nivo=-40.7 dBFS cujem
+2026-08-16T17:30:24.090+00:00	17.406	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=25 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.487 dc=-2.668 peak=928 clipped=0 zeros=7 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:24.092+00:00	17.406	WAIT 25/60 score=-40.49 spread=0.000 nivo=-40.5 dBFS cujem
+2026-08-16T17:30:24.345+00:00	17.656	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=26 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.246 dc=3.924 peak=994 clipped=0 zeros=6 stuck=5 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:24.348+00:00	17.656	WAIT 26/60 score=-40.25 spread=0.000 nivo=-40.2 dBFS cujem
+2026-08-16T17:30:24.601+00:00	17.922	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=27 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.327 dc=-2.764 peak=957 clipped=0 zeros=1 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:24.604+00:00	17.922	WAIT 27/60 score=-40.33 spread=0.000 nivo=-40.3 dBFS cujem
+2026-08-16T17:30:24.857+00:00	18.172	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=28 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.509 dc=-1.182 peak=887 clipped=0 zeros=1 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:24.860+00:00	18.172	WAIT 28/60 score=-40.51 spread=0.000 nivo=-40.5 dBFS cujem
+2026-08-16T17:30:25.113+00:00	18.422	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=29 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.276 dc=0.517 peak=912 clipped=0 zeros=4 stuck=5 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:25.115+00:00	18.438	WAIT 29/60 score=-40.28 spread=0.000 nivo=-40.3 dBFS cujem
+2026-08-16T17:30:25.369+00:00	18.688	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=30 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.307 dc=-2.070 peak=918 clipped=0 zeros=5 stuck=12 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:25.372+00:00	18.688	WAIT 30/60 score=-40.31 spread=0.000 nivo=-40.3 dBFS cujem
+2026-08-16T17:30:25.625+00:00	18.938	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=31 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.409 dc=0.347 peak=939 clipped=0 zeros=4 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:25.627+00:00	18.938	WAIT 31/60 score=-40.41 spread=0.000 nivo=-40.4 dBFS cujem
+2026-08-16T17:30:25.880+00:00	19.188	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=32 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.471 dc=3.372 peak=878 clipped=0 zeros=7 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:25.883+00:00	19.203	WAIT 32/60 score=-40.47 spread=0.000 nivo=-40.5 dBFS cujem
+2026-08-16T17:30:26.136+00:00	19.453	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=33 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.456 dc=-5.703 peak=918 clipped=0 zeros=3 stuck=10 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:26.139+00:00	19.453	WAIT 33/60 score=-40.46 spread=0.000 nivo=-40.5 dBFS cujem
+2026-08-16T17:30:26.391+00:00	19.703	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=34 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.639 dc=4.612 peak=898 clipped=0 zeros=4 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:26.394+00:00	19.703	WAIT 34/60 score=-40.64 spread=0.000 nivo=-40.6 dBFS cujem
+2026-08-16T17:30:26.647+00:00	19.969	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=35 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.974 dc=-5.207 peak=868 clipped=0 zeros=3 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:26.650+00:00	19.969	WAIT 35/60 score=-40.97 spread=0.000 nivo=-41.0 dBFS cujem
+2026-08-16T17:30:26.904+00:00	20.219	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=36 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.113 dc=4.087 peak=892 clipped=0 zeros=4 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:26.906+00:00	20.219	WAIT 36/60 score=-41.11 spread=0.000 nivo=-41.1 dBFS cujem
+2026-08-16T17:30:27.160+00:00	20.469	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=37 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.274 dc=-4.118 peak=886 clipped=0 zeros=6 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:27.162+00:00	20.485	WAIT 37/60 score=-41.27 spread=0.000 nivo=-41.3 dBFS cujem
+2026-08-16T17:30:27.415+00:00	20.735	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=38 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.281 dc=2.288 peak=879 clipped=0 zeros=6 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:27.417+00:00	20.735	WAIT 38/60 score=-41.28 spread=0.000 nivo=-41.3 dBFS cujem
+2026-08-16T17:30:27.671+00:00	20.985	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=39 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.083 dc=-5.639 peak=899 clipped=0 zeros=4 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:27.674+00:00	20.985	WAIT 39/60 score=-41.08 spread=0.000 nivo=-41.1 dBFS cujem
+2026-08-16T17:30:27.714+00:00	21.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:30:27.927+00:00	21.250	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=40 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.982 dc=4.479 peak=874 clipped=0 zeros=4 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:27.929+00:00	21.250	WAIT 40/60 score=-40.98 spread=0.000 nivo=-41.0 dBFS cujem
+2026-08-16T17:30:28.184+00:00	21.500	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=41 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.052 dc=-5.058 peak=882 clipped=0 zeros=5 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:28.186+00:00	21.500	WAIT 41/60 score=-41.05 spread=0.000 nivo=-41.1 dBFS cujem
+2026-08-16T17:30:28.441+00:00	21.750	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=42 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.098 dc=2.412 peak=914 clipped=0 zeros=1 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:28.443+00:00	21.766	WAIT 42/60 score=-41.10 spread=0.000 nivo=-41.1 dBFS cujem
+2026-08-16T17:30:28.694+00:00	22.016	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=43 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.150 dc=-1.134 peak=865 clipped=0 zeros=1 stuck=12 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:28.696+00:00	22.016	WAIT 43/60 score=-41.15 spread=0.000 nivo=-41.1 dBFS cujem
+2026-08-16T17:30:28.949+00:00	22.266	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=44 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.187 dc=1.329 peak=881 clipped=0 zeros=9 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:28.951+00:00	22.266	WAIT 44/60 score=-41.19 spread=0.000 nivo=-41.2 dBFS cujem
+2026-08-16T17:30:29.205+00:00	22.516	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=45 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.996 dc=-3.691 peak=880 clipped=0 zeros=3 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:29.208+00:00	22.516	WAIT 45/60 score=-41.00 spread=0.000 nivo=-41.0 dBFS cujem
+2026-08-16T17:30:29.460+00:00	22.781	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=46 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.827 dc=2.932 peak=890 clipped=0 zeros=3 stuck=4 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:29.463+00:00	22.781	WAIT 46/60 score=-40.83 spread=0.000 nivo=-40.8 dBFS cujem
+2026-08-16T17:30:29.717+00:00	23.031	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=47 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.643 dc=-4.169 peak=861 clipped=0 zeros=4 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:29.719+00:00	23.031	WAIT 47/60 score=-40.64 spread=0.000 nivo=-40.6 dBFS cujem
+2026-08-16T17:30:29.972+00:00	23.281	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=48 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.834 dc=3.798 peak=859 clipped=0 zeros=2 stuck=5 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:29.976+00:00	23.297	WAIT 48/60 score=-40.83 spread=0.000 nivo=-40.8 dBFS cujem
+2026-08-16T17:30:30.228+00:00	23.547	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=49 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.828 dc=-5.350 peak=862 clipped=0 zeros=1 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:30.230+00:00	23.547	WAIT 49/60 score=-40.83 spread=0.000 nivo=-40.8 dBFS cujem
+2026-08-16T17:30:30.484+00:00	23.797	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=50 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.933 dc=3.731 peak=837 clipped=0 zeros=4 stuck=3 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:30.487+00:00	23.797	WAIT 50/60 score=-40.93 spread=0.000 nivo=-40.9 dBFS cujem
+2026-08-16T17:30:30.740+00:00	24.063	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=51 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-40.983 dc=-2.842 peak=880 clipped=0 zeros=6 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:30.743+00:00	24.063	WAIT 51/60 score=-40.98 spread=0.000 nivo=-41.0 dBFS cujem
+2026-08-16T17:30:30.996+00:00	24.313	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=52 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.034 dc=5.203 peak=899 clipped=0 zeros=5 stuck=10 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:30.997+00:00	24.313	WAIT 52/60 score=-41.03 spread=0.000 nivo=-41.0 dBFS cujem
+2026-08-16T17:30:31.251+00:00	24.563	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=53 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.048 dc=-4.655 peak=885 clipped=0 zeros=1 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:31.253+00:00	24.563	WAIT 53/60 score=-41.05 spread=0.000 nivo=-41.0 dBFS cujem
+2026-08-16T17:30:31.507+00:00	24.828	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=54 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.042 dc=-1.684 peak=880 clipped=0 zeros=5 stuck=7 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:31.510+00:00	24.828	WAIT 54/60 score=-41.04 spread=0.000 nivo=-41.0 dBFS cujem
+2026-08-16T17:30:31.764+00:00	25.078	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=55 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.114 dc=1.321 peak=851 clipped=0 zeros=6 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:31.765+00:00	25.078	WAIT 55/60 score=-41.11 spread=0.000 nivo=-41.1 dBFS cujem
+2026-08-16T17:30:32.018+00:00	25.328	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=56 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.159 dc=-2.808 peak=848 clipped=0 zeros=2 stuck=10 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:32.021+00:00	25.344	WAIT 56/60 score=-41.16 spread=0.000 nivo=-41.2 dBFS cujem
+2026-08-16T17:30:32.274+00:00	25.594	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=57 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.137 dc=2.166 peak=850 clipped=0 zeros=4 stuck=8 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:32.277+00:00	25.594	WAIT 57/60 score=-41.14 spread=0.000 nivo=-41.1 dBFS cujem
+2026-08-16T17:30:32.530+00:00	25.844	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=58 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.067 dc=-3.727 peak=825 clipped=0 zeros=2 stuck=6 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:32.533+00:00	25.844	WAIT 58/60 score=-41.07 spread=0.000 nivo=-41.1 dBFS cujem
+2026-08-16T17:30:32.713+00:00	26.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:30:32.785+00:00	26.094	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=59 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.332 dc=2.954 peak=822 clipped=0 zeros=7 stuck=5 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:32.788+00:00	26.110	WAIT 59/60 score=-41.33 spread=0.000 nivo=-41.3 dBFS cujem
+2026-08-16T17:30:33.041+00:00	26.360	QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=60 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-41.297 dc=-5.235 peak=842 clipped=0 zeros=2 stuck=9 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+2026-08-16T17:30:33.045+00:00	26.360	WAIT 60/60 score=-41.30 spread=0.000 nivo=-41.3 dBFS cujem
+2026-08-16T17:30:33.049+00:00	26.360	I (26355) psdlive: --- KALIBRACIJA: 10 klipova po 10 s ---
+2026-08-16T17:30:37.716+00:00	31.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:30:42.713+00:00	36.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:30:43.037+00:00	36.360	QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=1 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-40.704 dc=-0.418 peak=908 clipped=0 zeros=119 stuck=248 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.760969 tonal_gate=pending_normal_only
+2026-08-16T17:30:43.038+00:00	36.360	CAL  1/10 score=0.00000 nivo=-40.7 dBFS racun=705 ms
+2026-08-16T17:30:47.714+00:00	41.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:30:52.713+00:00	46.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:30:53.013+00:00	46.328	QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=2 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-40.600 dc=-0.388 peak=1232 clipped=0 zeros=117 stuck=238 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.590971 tonal_gate=pending_normal_only
+2026-08-16T17:30:53.014+00:00	46.328	CAL  2/10 score=0.00000 nivo=-40.6 dBFS racun=705 ms
+2026-08-16T17:30:57.715+00:00	51.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:02.713+00:00	56.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:02.987+00:00	56.297	QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=3 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-39.746 dc=-0.453 peak=2806 clipped=0 zeros=139 stuck=233 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.216020 tonal_gate=pending_normal_only
+2026-08-16T17:31:02.988+00:00	56.297	CAL  3/10 score=0.00000 nivo=-39.7 dBFS racun=706 ms
+2026-08-16T17:31:07.714+00:00	61.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:12.713+00:00	66.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:12.960+00:00	66.281	QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=4 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-40.156 dc=-0.429 peak=1802 clipped=0 zeros=133 stuck=186 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.631139 tonal_gate=pending_normal_only
+2026-08-16T17:31:12.962+00:00	66.281	CAL  4/10 score=0.00000 nivo=-40.2 dBFS racun=705 ms
+2026-08-16T17:31:17.715+00:00	71.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:22.714+00:00	76.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:22.997+00:00	76.313	QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=5 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-37.619 dc=-0.301 peak=7340 clipped=0 zeros=132 stuck=203 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=3.909176 tonal_gate=pending_normal_only
+2026-08-16T17:31:23.000+00:00	76.313	CAL  5/10 score=0.00000 nivo=-37.6 dBFS racun=706 ms
+2026-08-16T17:31:27.713+00:00	81.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:32.713+00:00	86.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:32.971+00:00	86.281	QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=6 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-39.441 dc=-0.486 peak=3675 clipped=0 zeros=121 stuck=225 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.109393 tonal_gate=pending_normal_only
+2026-08-16T17:31:32.973+00:00	86.281	CAL  6/10 score=0.00000 nivo=-39.4 dBFS racun=705 ms
+2026-08-16T17:31:37.715+00:00	91.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:42.713+00:00	96.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:42.946+00:00	96.266	QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=7 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-40.376 dc=-0.551 peak=996 clipped=0 zeros=130 stuck=224 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.987479 tonal_gate=pending_normal_only
+2026-08-16T17:31:42.948+00:00	96.266	CAL  7/10 score=0.00000 nivo=-40.4 dBFS racun=705 ms
+2026-08-16T17:31:47.713+00:00	101.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:52.714+00:00	106.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:31:52.920+00:00	106.235	QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=8 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-40.499 dc=-0.372 peak=994 clipped=0 zeros=103 stuck=183 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.965048 tonal_gate=pending_normal_only
+2026-08-16T17:31:52.922+00:00	106.235	CAL  8/10 score=0.00000 nivo=-40.5 dBFS racun=705 ms
+2026-08-16T17:31:57.714+00:00	111.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:32:02.713+00:00	116.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:32:02.895+00:00	116.203	QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=9 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-40.581 dc=-0.507 peak=1033 clipped=0 zeros=127 stuck=192 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.994691 tonal_gate=pending_normal_only
+2026-08-16T17:32:02.896+00:00	116.219	CAL  9/10 score=0.00000 nivo=-40.6 dBFS racun=705 ms
+2026-08-16T17:32:07.714+00:00	121.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:32:12.713+00:00	126.031	FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+2026-08-16T17:32:12.869+00:00	126.188	QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=10 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-40.355 dc=-0.410 peak=1042 clipped=0 zeros=144 stuck=193 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.977165 tonal_gate=pending_normal_only
+2026-08-16T17:32:12.871+00:00	126.188	CAL 10/10 score=0.00000 nivo=-40.4 dBFS racun=705 ms
+2026-08-16T17:32:12.893+00:00	126.203	QUALITY protocol=asd-quality-v1.3.0 phase=CAL_SUMMARY result=OBSERVED loo_mean=9915.897461 loo_sd=10209.892578 loo_cv=1.029649 loo_range=34385.351562 loo_gate=pending_normal_only
+2026-08-16T17:32:12.896+00:00	126.203	I (126195) psdlive: --- kalibracija gotova (centar zamrznut) ---
+2026-08-16T17:32:12.903+00:00	126.219	I (126205) psdlive: LOO score: mean=9915.90 sd=10209.89 min=1757.46 max=36142.81
+2026-08-16T17:32:12.911+00:00	126.219	I (126215) psdlive: referentni nivo masine: -40.01 dBFS (gate prisustva -51.01 dBFS)
+2026-08-16T17:32:12.920+00:00	126.235	LOOALL 4612.021 1757.459 10199.610 2307.895 36142.812 17372.738 6623.158 6192.229 7161.224 6789.837
+2026-08-16T17:32:12.933+00:00	126.250	I (126225) psdlive: PRAG = 40545.57 (p90 dao 19249.73, sredina+3sd dao 40545.57), alarm poslije 3 uzastopna prozora, gasi se ispod 28381.90
+2026-08-16T17:32:12.942+00:00	126.250	ADAPTTHR n=10 mean=9915.897461 sd=10209.892578 k=0 theta=0 p=0.9000 thr=40545.5742 lo=0.000000 factory=0.000000
+2026-08-16T17:32:12.948+00:00	126.266	I (126255) psdlive: racun po klipu: 705 ms (rezerva 14.2x), dropped=107520
+2026-08-16T17:32:12.961+00:00	126.281	PRESENCE protocol=asd-quality-v1.3.0 level_mean_dbfs=-40.0079155 margin_db=11 gate_dbfs=-51.0079155 min_consecutive=3
+2026-08-16T17:32:12.973+00:00	126.281	TEMPORAL protocol=asd-quality-v1.3.0 policy=asd-temporal-policy-v1.0.0 min_consecutive=3 ewma_alpha=0 enter_scale=1 exit_scale=0.699999988 fast_scale=0
+2026-08-16T17:32:12.981+00:00	126.297	STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=CALIBRATED_NORMAL reason=CALIBRATION_ACCEPTED
+2026-08-16T17:32:12.995+00:00	126.313	EVENT protocol=asd-quality-v1.3.0 type=CALIBRATION_ACCEPTED state=CALIBRATED_NORMAL phase=CAL reason=QUALITY_OK event=NONE capability=AVAILABLE level=DEVIATION
+2026-08-16T17:32:13.007+00:00	126.328	FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+2026-08-16T17:32:13.012+00:00	126.328	I (126315) psdlive: LAMPICA STALNO SVIJETLI = ucenje gotovo, nadzirem
+2026-08-16T17:32:13.026+00:00	126.344	I (126325) psdlive: --- DETEKCIJA RADI. Sada izazovi kvar. ---
+2026-08-16T17:32:13.028+00:00	126.344	I (126325) psdlive: zelena LED (GPIO2) svijetli = normalno; crvena (GPIO11) = ALARM
+2026-08-16T17:32:18.003+00:00	131.313	FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+2026-08-16T17:32:22.907+00:00	136.219	QUALITY protocol=asd-quality-v1.3.0 phase=DET index=1 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-40.241 dc=-0.490 peak=1062 clipped=0 zeros=132 stuck=235 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.886137 tonal_gate=pending_normal_only
+2026-08-16T17:32:22.917+00:00	136.235	DET 1 score=4387.69189 lo=0 hi=40545.5742 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-40.2 dBFS racun=705 ms)
+2026-08-16T17:32:23.005+00:00	136.313	FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+2026-08-16T17:32:28.005+00:00	141.313	FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+2026-08-16T17:32:32.881+00:00	146.203	QUALITY protocol=asd-quality-v1.3.0 phase=DET index=2 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-40.544 dc=-0.478 peak=979 clipped=0 zeros=164 stuck=217 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=5.011007 tonal_gate=pending_normal_only
+2026-08-16T17:32:32.889+00:00	146.203	DET 2 score=5388.17871 lo=0 hi=40545.5742 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-40.5 dBFS racun=706 ms)
+2026-08-16T17:32:33.003+00:00	146.313	FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+2026-08-16T17:32:34.022+00:00	147.344	VBUTTON protocol=asd-quality-v1.3.0 source=console event=LONG result=accepted
+2026-08-16T17:32:34.027+00:00	147.344	BUTTON protocol=asd-quality-v1.3.0 event=LONG mode=READY command=START_LEARNING discards=1
+2026-08-16T17:32:38.003+00:00	151.313	FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+2026-08-16T17:32:42.855+00:00	156.172	QUALITY protocol=asd-quality-v1.3.0 phase=DET index=3 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-40.359 dc=-0.457 peak=922 clipped=0 zeros=183 stuck=225 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.994128 tonal_gate=pending_normal_only
+2026-08-16T17:32:42.863+00:00	156.172	DET 3 score=5571.97412 lo=0 hi=40545.5742 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-40.4 dBFS racun=705 ms)
+2026-08-16T17:32:42.873+00:00	156.188	SESSION protocol=asd-quality-v1.3.0 action=ABORTED source=BUTTON reason=OPERATOR_RELEARN discards_calibration=1
+2026-08-16T17:32:42.878+00:00	156.188	W (156185) psdlive: operater prekinuo nadzor i trazi novo ucenje
+2026-08-16T17:32:42.888+00:00	156.203	SESSION protocol=asd-quality-v1.3.0 action=ENDED source=FIRMWARE reason=CALIBRATED_NORMAL discards_calibration=0
+2026-08-16T17:32:42.924+00:00	156.235	I (156195) psdlive: sesija zavrsena u stanju CALIBRATED_NORMAL; taster pokrece novo ucenje
+2026-08-16T17:32:42.925+00:00	156.235	SESSION protocol=asd-quality-v1.3.0 action=STARTED source=BUTTON reason=OPERATOR_REQUEST discards_calibration=1
+2026-08-16T17:32:42.926+00:00	156.235	STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED

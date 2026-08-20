@@ -35,12 +35,26 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
+import secrets
+import sys
 import threading
 import time
 import webbrowser
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+PC_DIR = Path(__file__).resolve().parents[1]
+if str(PC_DIR) not in sys.path:
+    sys.path.insert(0, str(PC_DIR))
+
+from asd.commissioning_policy import (  # noqa: E402
+    MAX_LOO_CV,
+    calibration_acceptance,
+)
+from asd.guided_test import GUIDED25, GUIDED25_PLAN  # noqa: E402
 
 FLAGS_RE = re.compile(r"\bFLAGS\s+(?P<body>.*)$")
 VBUTTON_RE = re.compile(r"\bVBUTTON\s+.*?result=(?P<result>\S+)")
@@ -54,6 +68,12 @@ CAL_RE = re.compile(r"\bCAL\s+(?P<index>\d+)/(?P<total>\d+)")
 SUMMARY_RE = re.compile(r"phase=CAL_SUMMARY\b.*?\bloo_cv=(?P<loo_cv>\S+)")
 ADAPT_RE = re.compile(r"\bADAPTTHR\b.*?\bthr=(?P<thr>\S+)")
 KV_RE = re.compile(r"(?P<key>[A-Za-z_][A-Za-z0-9_]*)=(?P<value>\S+)")
+PROFILE_RE = re.compile(r"^PROFILE\b.*?derive_windows=(?P<derive>\d+)\s+verify_windows=(?P<verify>\d+)")
+SESSION_START_RE = re.compile(r"^SESSION\b.*?action=STARTED\b")
+STATE_RE = re.compile(r"^STATE\b.*?\bto=(?P<to>\S+)")
+DROPPED_RE = re.compile(r"(?:^DROPPED\s+|\b)dropped=(?P<count>\d+)")
+VWORKFLOW_RE = re.compile(r"^VWORKFLOW\s+mode=(?P<mode>\S+)\s+result=(?P<result>\S+)")
+DET_ANOM_RE = re.compile(r"^DET\b.*?\banom=(?P<anom>[01])\b")
 
 DEFAULT_PORT = 8772
 LOG_LINES = 12
@@ -62,14 +82,23 @@ LOG_LINES = 12
 # stotine po sesiji i izgurali bi ono zbog cega se log i gleda.
 LOGGED_RECORDS = {"VBUTTON", "BUTTON", "SESSION", "STATE", "EVENT", "ADAPTTHR"}
 
-# Prag prihvatanja kalibracije iz preregistracije (docs/preregistracija-fan01.md,
-# pravilo K1). Panel ga samo PRIKAZUJE; odluku donosi operater prije nego sto
-# pogleda ijedan DET prozor.
-LOO_CV_GATE = 0.6
+# Jedini numericki izvor je verzionisana commissioning politika. Panel ovaj
+# gate sprovodi server-side; browser je samo prikaz iste odluke.
+LOO_CV_GATE = MAX_LOO_CV
+
+
+def finite_float_or_none(value: str | float | None) -> float | None:
+    """Parse UI telemetry without ever retaining a JSON-nonfinite float."""
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return parsed if math.isfinite(parsed) else None
 
 # Redoslijed faza. Trajanja su visekratnici prozora od 10 s: alarm trazi tri
 # uzastopna prozora, pa ispod sest prozora uslov ne dokazuje nista.
 PLANS = {
+    "guided25": GUIDED25_PLAN,
     "full": [
         ("Normalna osnova", "normal_baseline", 600,
          "Sjedi mirno. Ne pricaj, ne kucaj, ne prilazi ventilatoru."),
@@ -116,7 +145,9 @@ PLANS = {
 class PanelState:
     """Sve sto panel zna. Jedan lock, jer HTTP handleri idu u vise niti."""
 
-    def __init__(self, plan: list[tuple[str, str, int, str]]) -> None:
+    def __init__(self, plan: list[tuple[str, str, int, str]], *,
+                 workflow: str = "legacy", report_dir: Path | None = None,
+                 attempt: int = 1, read_only_preview: bool = False) -> None:
         self.lock = threading.Lock()
         self.plan = plan
         self.flags: dict[str, str] = {}
@@ -125,12 +156,36 @@ class PanelState:
         self.source = "ceka podatke"
         self.last_line_at = 0.0
         # vodic
-        self.stage = "IDLE"          # IDLE | CAL | READY_TO_GO | RUN | DONE
+        self.stage = "IDLE"  # IDLE | CAL | CAL_REJECTED | READY_TO_GO | RUN | DONE
         self.cal_progress = ""
         self.loo_cv: float | None = None
         self.threshold: float | None = None
+        self.calibration_accepted = False
+        self.calibration_acceptance_reason = "missing_cal_summary"
         self.started_at: float | None = None
         self.phase_index = -1
+        self.workflow = workflow
+        self.report_dir = report_dir
+        self.attempt = attempt
+        self.read_only_preview = read_only_preview
+        self.workflow_armed = False
+        self.workflow_result = "not_armed"
+        self.pending_workflow_accepted = False
+        self.session_started_at: float | None = None
+        self.profile_counts: tuple[int, int] | None = None
+        self.research_counts = {"FEATURE96": 0, "SUBSEG96": 0}
+        self.max_dropped = 0
+        self.dropped_observed = False
+        self.invalid_reason: str | None = None
+        self.confirmed_phases: set[int] = set()
+        self.phase_stats = [
+            {"alarm_episodes": 0, "alarm_windows": 0, "det_windows": 0,
+             "max_consecutive": 0, "hold_windows": 0}
+            for _ in plan
+        ]
+        self.final_result: dict | None = None
+        self.session_generation = 0
+        self.operator_confirmations: list[dict[str, str | int]] = []
 
     # --- ulazni tok -------------------------------------------------------
     def feed(self, line: str) -> None:
@@ -140,8 +195,68 @@ class PanelState:
         with self.lock:
             self.last_line_at = time.time()
 
+            vm = VWORKFLOW_RE.match(line)
+            if vm:
+                self.workflow_result = vm.group("result")
+                self.workflow_armed = vm.group("result") == "accepted"
+                self.pending_workflow_accepted = self.workflow_armed
+                self._log(line)
+                return
+            if SESSION_START_RE.match(line):
+                self.session_generation += 1
+                self.workflow_result = (
+                    "accepted" if self.pending_workflow_accepted else "missing_for_session")
+                self.workflow_armed = self.pending_workflow_accepted
+                self.pending_workflow_accepted = False
+                self.loo_cv = None
+                self.threshold = None
+                self.calibration_accepted = False
+                self.calibration_acceptance_reason = "missing_cal_summary"
+                self.profile_counts = None
+                self.research_counts = {"FEATURE96": 0, "SUBSEG96": 0}
+                self.max_dropped = 0
+                self.dropped_observed = False
+                self.invalid_reason = None
+                self.confirmed_phases.clear()
+                self.phase_stats = [
+                    {"alarm_episodes": 0, "alarm_windows": 0, "det_windows": 0,
+                     "max_consecutive": 0, "hold_windows": 0}
+                    for _ in self.plan
+                ]
+                self.det = {}
+                self.stage = "CAL"
+                self.started_at = None
+                self.phase_index = -1
+                self.final_result = None
+                self.operator_confirmations = []
+                self.session_started_at = time.monotonic()
+                self._log(line)
+                return
+            pm = PROFILE_RE.match(line)
+            if pm:
+                self.profile_counts = (int(pm.group("derive")), int(pm.group("verify")))
+                self._log(line)
+            token = line.split(" ", 1)[0]
+            if token in self.research_counts:
+                self.research_counts[token] += 1
+                return
+            dm = DROPPED_RE.match(line)
+            if dm:
+                self.dropped_observed = True
+                self.max_dropped = max(self.max_dropped, int(dm.group("count")))
+            if line.startswith("PARSE_ERROR") or "AUDIO_TIMEOUT" in line:
+                self.invalid_reason = line[:200]
+            sm = STATE_RE.match(line)
+            if sm and 0 <= self.phase_index < len(self.phase_stats):
+                target = sm.group("to")
+                if target == "ANOMALY":
+                    self.phase_stats[self.phase_index]["alarm_episodes"] += 1
+                elif target == "OBSERVATION_HOLD":
+                    self.phase_stats[self.phase_index]["hold_windows"] += 1
+
             match = FLAGS_RE.search(line)
             if match:
+                was_learning = self.flags.get("learning") == "1"
                 flags = {
                     m.group("key"): m.group("value")
                     for m in KV_RE.finditer(match.group("body"))
@@ -150,7 +265,22 @@ class PanelState:
                 # u log ide samo stvarna promjena, da se ostalo ne izgura.
                 changed = flags != self.flags
                 self.flags = flags
+                if "dropped" in flags:
+                    try:
+                        dropped = int(flags["dropped"])
+                    except ValueError:
+                        self.invalid_reason = "nevalidan FLAGS dropped"
+                    else:
+                        self.dropped_observed = True
+                        self.max_dropped = max(self.max_dropped, dropped)
                 if flags.get("learning") == "1":
+                    if not was_learning:
+                        self.cal_progress = ""
+                        self.loo_cv = None
+                        self.threshold = None
+                        self.det = {}
+                        self.calibration_accepted = False
+                        self.calibration_acceptance_reason = "missing_cal_summary"
                     self.stage = "CAL"
                 if changed:
                     self._log(line)
@@ -158,28 +288,51 @@ class PanelState:
 
             summary = SUMMARY_RE.search(line)
             if summary:
-                try:
-                    self.loo_cv = float(summary.group("loo_cv"))
-                except ValueError:
-                    self.loo_cv = None
+                raw_loo_cv = summary.group("loo_cv")
+                # Centralna politika dobija originalni token da bi sacuvala
+                # tacan reject razlog (npr. nonfinite_loo_cv), dok stanje za
+                # JSON/UI zadrzava samo konacne brojeve.
+                accepted, reason = calibration_acceptance({
+                    "cal_summary": {"loo_cv": raw_loo_cv},
+                })
+                self.loo_cv = finite_float_or_none(raw_loo_cv)
+                self.calibration_accepted = accepted
+                self.calibration_acceptance_reason = reason
+                if not accepted:
+                    self.stage = "CAL_REJECTED"
                 self.cal_progress = "kalibracija gotova"
                 self._log(line)
                 return
 
             adapt = ADAPT_RE.search(line)
             if adapt:
-                try:
-                    self.threshold = float(adapt.group("thr"))
-                except ValueError:
-                    self.threshold = None
-                if self.stage == "CAL":
-                    self.stage = "READY_TO_GO"
+                self.threshold = finite_float_or_none(adapt.group("thr"))
+                if self.loo_cv is None:
+                    accepted = False
+                    reason = self.calibration_acceptance_reason
+                else:
+                    accepted, reason = calibration_acceptance({
+                        "cal_summary": {"loo_cv": self.loo_cv},
+                    })
+                self.calibration_accepted = accepted
+                self.calibration_acceptance_reason = reason
+                if self.stage in {"CAL", "CAL_REJECTED"}:
+                    self.stage = "READY_TO_GO" if accepted else "CAL_REJECTED"
                 self._log(line)
                 return
 
             det = DET_RE.match(line)
             if det:
                 self.det = det.groupdict()
+                if 0 <= self.phase_index < len(self.phase_stats):
+                    stats = self.phase_stats[self.phase_index]
+                    stats["det_windows"] += 1
+                    stats["max_consecutive"] = max(
+                        stats["max_consecutive"], int(det.group("consecutive")))
+                anomaly = DET_ANOM_RE.match(line)
+                if (0 <= self.phase_index < len(self.phase_stats)
+                        and anomaly and anomaly.group("anom") == "1"):
+                    self.phase_stats[self.phase_index]["alarm_windows"] += 1
                 self._log(line)
                 return
 
@@ -236,13 +389,104 @@ class PanelState:
                 "cal_progress": self.cal_progress,
                 "loo_cv": self.loo_cv,
                 "loo_cv_gate": LOO_CV_GATE,
+                "calibration_accepted": self.calibration_accepted,
+                "calibration_acceptance_reason": self.calibration_acceptance_reason,
                 "threshold": self.threshold,
                 "phases": phases,
                 "phase_index": index,
                 "phase_remaining": round(remaining),
                 "elapsed": None if elapsed is None else round(elapsed),
                 "total": total,
+                "workflow": self.workflow,
+                "attempt": self.attempt,
+                "attempt_limit": GUIDED25["acceptance"]["attempt_limit"],
+                "read_only_preview": self.read_only_preview,
+                "workflow_armed": self.workflow_armed,
+                "workflow_result": self.workflow_result,
+                "profile_counts": self.profile_counts,
+                "research_counts": dict(self.research_counts),
+                "max_dropped": self.max_dropped,
+                "dropped_observed": self.dropped_observed,
+                "deadline_remaining": None if self.session_started_at is None else max(
+                    0, round(GUIDED25["hard_deadline_seconds"] -
+                             (time.monotonic() - self.session_started_at))),
+                "confirmed_phases": sorted(self.confirmed_phases),
+                "operator_confirmations": list(self.operator_confirmations),
+                "final_result": self.final_result,
             }
+
+    def guided_preflight(self) -> tuple[bool, list[str]]:
+        reasons = []
+        if self.workflow != "guided25": reasons.append("panel nije u guided25 rezimu")
+        if self.attempt > GUIDED25["acceptance"]["attempt_limit"]: reasons.append("dosegnut limit od 3 pokusaja")
+        if self.last_line_at == 0 or time.time() - self.last_line_at > 15: reasons.append("nema svjeze telemetrije")
+        if self.flags.get("guided25_available") != "1": reasons.append("firmware nema GUIDED25")
+        if self.flags.get("protocol") != "asd-quality-v1.5.0": reasons.append("pogresna firmware/protocol verzija")
+        if self.flags.get("research_telemetry") != "1": reasons.append("research telemetry build nije aktivan")
+        if self.flags.get("profile_persistence_allowed") != "0": reasons.append("DEVELOPMENT storage gate nije zatvoren")
+        if not self.dropped_observed: reasons.append("DROPPED zapis nije primljen")
+        elif self.max_dropped != 0: reasons.append("dropped nije nula")
+        if self.flags.get("waiting") != "1": reasons.append("uredjaj nije IDLE")
+        if self.report_dir is None or not self.report_dir.exists(): reasons.append("run/artefakt direktorij ne postoji")
+        return not reasons, reasons
+
+    def guided_monitoring_gate(self) -> tuple[bool, list[str]]:
+        reasons = []
+        if self.attempt < 1 or self.attempt > GUIDED25["acceptance"]["attempt_limit"]:
+            reasons.append("pokusaj nije 1..3")
+        if self.last_line_at == 0 or time.time() - self.last_line_at > 15:
+            reasons.append("telemetrija nije svjeza")
+        if self.flags.get("protocol") != "asd-quality-v1.5.0":
+            reasons.append("nije q1.5")
+        if self.flags.get("guided25_available") != "1":
+            reasons.append("nema GUIDED25 capability")
+        if self.flags.get("learning") == "1" or self.flags.get("learned") != "1":
+            reasons.append("uredjaj nije READY poslije commissioninga")
+        if self.workflow_result != "accepted":
+            reasons.append("GUIDED25 armiranje nije potvrdjeno")
+        if not self.dropped_observed or self.max_dropped != 0:
+            reasons.append("DROPPED=0 nije potvrdjen")
+        if not self.calibration_accepted:
+            reasons.append("K1 nije prihvacen")
+        if self.profile_counts != (44, 22):
+            reasons.append("firmware nije potvrdio GUIDED25 44/22")
+        if not all(self.research_counts.values()):
+            reasons.append("nedostaje FEATURE96/SUBSEG96 telemetrija")
+        return not reasons, reasons
+
+    def guided_result(self) -> dict:
+        reasons: list[str] = []
+        inconclusive: list[str] = []
+        if not self.calibration_accepted: reasons.append("K1 nije prihvacen")
+        if self.flags.get("protocol") != "asd-quality-v1.5.0": reasons.append("nije q1.5")
+        if self.flags.get("guided25_available") != "1": reasons.append("nema GUIDED25 capability")
+        if self.workflow_result != "accepted": reasons.append("GUIDED25 nije prihvacen")
+        if self.profile_counts != (44, 22): reasons.append("pogresan commissioning 44/22")
+        if not self.dropped_observed: reasons.append("DROPPED zapis nedostaje")
+        if self.max_dropped != 0: reasons.append("dropped_samples nije nula")
+        if self.invalid_reason: reasons.append(self.invalid_reason)
+        if not all(self.research_counts.values()): reasons.append("nedostaje research telemetrija")
+        papers = [s for p, s in zip(self.plan, self.phase_stats) if p[1].startswith("airflow_change_paper_")]
+        passing = sum(s["alarm_episodes"] >= 1 and s["max_consecutive"] >= 3 for s in papers)
+        if passing < 2: reasons.append(f"papiric prosao {passing}/3 blokova; potrebno 2/3")
+        for p, stats in zip(self.plan, self.phase_stats):
+            cond = p[1]
+            minimum = 3
+            if cond == "ambient_door": minimum = 1
+            if stats["det_windows"] < minimum: reasons.append(f"premalo prozora u {cond}")
+            forbidden = (cond.startswith("normal_") or cond.startswith("recovery") or
+                         cond == "final_recovery" or cond.startswith("ambient_"))
+            if forbidden and (stats["alarm_episodes"] or stats["alarm_windows"]):
+                reasons.append(f"alarm ili prenesen alarm u {cond}")
+        required = {index for index, phase in enumerate(self.plan)
+                    if phase[1] != "normal_baseline"}
+        if not required.issubset(self.confirmed_phases):
+            reasons.append("nisu potvrdjeni START/END svih obaveznih faza")
+        status = "FAIL" if reasons else ("INCONCLUSIVE" if inconclusive else "PASS")
+        return {"schema_version": GUIDED25["schema_version"], "status": status,
+                "reasons": reasons, "inconclusive": inconclusive,
+                "attempt": self.attempt, "profile_counts": self.profile_counts,
+                "research_counts": self.research_counts, "phase_stats": self.phase_stats}
 
 
 class SerialLink:
@@ -277,6 +521,11 @@ class SerialLink:
         # se samo u panel log, da se ne pravi privid da je zabiljezena.
         self.state.feed(f"[panel bez zapisa] {line}")
         return f"'{line}' nije zapisano (rezim bez alata)"
+
+    def arm_guided25(self) -> str:
+        self.ser.write(b"GUIDED25\n")
+        self.ser.flush()
+        return "GUIDED25 poslat"
 
 
 class CommandFileLink:
@@ -349,6 +598,13 @@ class CommandFileLink:
             handle.write(line + "\n")
         return f"upisano '{line}' u {self.command_file.name}"
 
+    def arm_guided25(self) -> str:
+        return self.send_raw("guided25 panel")
+
+
+class CalibrationGateError(RuntimeError):
+    """Server-side refusal to start measurement after a failed K1 gate."""
+
 
 class Conductor:
     """Odbrojava faze i upisuje `condition` neposredno prije svake promjene."""
@@ -357,23 +613,101 @@ class Conductor:
         self.state = state
         self.link = link
         self.thread: threading.Thread | None = None
+        self.deadline_thread: threading.Thread | None = None
+        self.stop_event = threading.Event()
+
+    def arm_guided25(self, *, virtual_start: bool) -> str:
+        ok, reasons = self.state.guided_preflight()
+        if not ok:
+            raise CalibrationGateError("preflight: " + "; ".join(reasons))
+        message = self.link.arm_guided25()
+        self.stop_event.clear()
+        if virtual_start:
+            message += "; " + self.link.send("press")
+        expected_generation = self.state.session_generation + 1
+        self.deadline_thread = threading.Thread(
+            target=self._deadline, args=(expected_generation,), daemon=True)
+        self.deadline_thread.start()
+        return message
+
+    def _deadline(self, expected_generation: int) -> None:
+        while not self.stop_event.is_set():
+            with self.state.lock:
+                started = self.state.session_started_at
+                done = self.state.stage == "DONE"
+                generation = self.state.session_generation
+            if generation > expected_generation:
+                return
+            if generation < expected_generation:
+                time.sleep(0.05)
+                continue
+            if done:
+                return
+            if (started is not None and time.monotonic() - started >=
+                    GUIDED25["hard_deadline_seconds"]):
+                self.link.send_raw("abort guided25_hard_deadline")
+                with self.state.lock:
+                    self.state.invalid_reason = "guided25_hard_deadline"
+                    self.state.final_result = self.state.guided_result()
+                    self.state.stage = "DONE"
+                    result = self.state.final_result
+                self._write_report(result)
+                self.stop_event.set()
+                return
+            time.sleep(0.2)
+
+    def _write_report(self, result: dict | None) -> None:
+        # Mjerodavni report pise physical_fan_experiment tek poslije strict
+        # finalizacije FEATURE96/SUBSEG96 paketa i njegovog SHA-256 manifesta.
+        return
+
+    def abort(self, reason: str = "operator_panel_abort") -> str:
+        self.stop_event.set()
+        message = self.link.send_raw(f"abort {reason}")
+        with self.state.lock:
+            self.state.invalid_reason = reason
+            self.state.final_result = (
+                self.state.guided_result() if self.state.workflow == "guided25" else None)
+            self.state.stage = "DONE"
+            result = self.state.final_result
+        self._write_report(result)
+        if (self.thread is not None and self.thread.is_alive() and
+                threading.current_thread() is not self.thread):
+            self.thread.join(timeout=1.0)
+        return message
 
     def start(self) -> str:
         if self.thread is not None and self.thread.is_alive():
             return "vodic vec radi"
         with self.state.lock:
+            accepted, reason = calibration_acceptance({
+                "cal_summary": {"loo_cv": self.state.loo_cv}
+                if self.state.loo_cv is not None else None,
+            })
+            if self.state.stage != "READY_TO_GO" or not accepted:
+                raise CalibrationGateError(
+                    f"mjerenje odbijeno: K1 {reason}; ponovi kalibraciju"
+                )
+            if self.state.workflow == "guided25":
+                ok, reasons = self.state.guided_monitoring_gate()
+                if not ok:
+                    raise CalibrationGateError("start gate: " + "; ".join(reasons))
             self.state.started_at = time.monotonic()
             self.state.stage = "RUN"
             self.state.phase_index = -1
-        self.thread = threading.Thread(target=self._run, daemon=True)
+            generation = self.state.session_generation
+        self.thread = threading.Thread(target=self._run, args=(generation,), daemon=True)
         self.thread.start()
         return "vodic pokrenut"
 
-    def _run(self) -> None:
+    def _run(self, generation: int) -> None:
         sent = -1
-        while True:
+        while not self.stop_event.is_set():
             with self.state.lock:
                 started = self.state.started_at
+                current_generation = self.state.session_generation
+            if current_generation != generation:
+                return
             if started is None:
                 return
             elapsed = time.monotonic() - started
@@ -381,7 +715,11 @@ class Conductor:
             if index == -1:
                 self.link.send_raw("stop kraj plana")
                 with self.state.lock:
+                    self.state.final_result = self.state.guided_result() if self.state.workflow == "guided25" else None
                     self.state.stage = "DONE"
+                    result = self.state.final_result
+                self._write_report(result)
+                self.stop_event.set()
                 return
             if index != sent:
                 name, condition, _, what = self.state.plan[index]
@@ -390,6 +728,31 @@ class Conductor:
                     self.state.phase_index = index
                 sent = index
             time.sleep(0.2)
+
+    def confirm(self, edge: str) -> str:
+        if edge not in {"start", "end"}:
+            raise CalibrationGateError("nepoznata potvrda")
+        with self.state.lock:
+            index = self.state.phase_index
+            if self.state.stage != "RUN" or not 0 <= index < len(self.state.plan):
+                raise CalibrationGateError("nema aktivne faze")
+            phase = self.state.plan[index][1]
+            existing = [item for item in self.state.operator_confirmations
+                        if item["phase_index"] == index]
+            if any(item["edge"] == edge for item in existing):
+                raise CalibrationGateError("potvrda je single-use")
+            if edge == "end" and not any(item["edge"] == "start" for item in existing):
+                raise CalibrationGateError("END prije START potvrde nije dozvoljen")
+            if edge == "start" and existing:
+                raise CalibrationGateError("START nije prvi događaj faze")
+            utc = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+            record = {"phase_index": index, "phase": phase, "edge": edge,
+                      "host_utc": utc}
+            self.state.operator_confirmations.append(record)
+            if edge == "end":
+                self.state.confirmed_phases.add(index)
+        return self.link.send_raw(
+            f"note guided25_confirm phase={phase} edge={edge} host_utc={utc}")
 
 
 PAGE = """<!doctype html>
@@ -433,6 +796,7 @@ PAGE = """<!doctype html>
  button{flex:1;padding:12px;border:0;border-radius:8px;font-size:14px;
         font-weight:600;cursor:pointer;background:#2b313a;color:#dfe4ea}
  button.go{background:#2f6feb;color:#fff}
+ button:disabled{opacity:.42;cursor:not-allowed;transform:none}
  button:active{transform:translateY(1px)}
  table{width:100%;border-collapse:collapse;font-size:13px}
  td{padding:4px 0;border-bottom:1px solid #232830;color:#8b949e}
@@ -469,9 +833,13 @@ PAGE = """<!doctype html>
  </div>
 
  <div class="btns">
-  <button onclick="post('press')">1. Pokreni ucenje</button>
+  <button onclick="post('arm-virtual')">1A. VIRTUELNI TASTER — armiraj GUIDED25 i pokreni</button>
+  <button onclick="post('arm-physical')">1B. Armiraj, pa kratko pritisni fizicki taster</button>
   <button class="go" id="gobtn" onclick="post('start')">2. Kreni sa mjerenjem</button>
-  <button onclick="post('hold')">Ponovi kalibraciju</button>
+  <button onclick="post('hold')">Virtuelni DUGI pritisak — ponovi kalibraciju</button>
+  <button onclick="post('confirm-start')">Potvrdi START faze</button>
+  <button onclick="post('confirm-end')">Potvrdi END faze</button>
+  <button onclick="post('abort')">Prekini i sacuvaj</button>
  </div>
 
  <div class="card"><ol id="plan"></ol></div>
@@ -493,9 +861,10 @@ PAGE = """<!doctype html>
 </div>
 <script>
 let flags = {}, t0 = performance.now(), S = null;
+const csrfToken = '__CSRF_TOKEN__';
 
 function post(what){
-  fetch('/'+what, {method:'POST'}).then(r=>r.json())
+  fetch('/'+what, {method:'POST', headers:{'X-CSRF-Token':csrfToken}}).then(r=>r.json())
    .then(j => document.getElementById('foot').textContent = j.message)
    .catch(e => document.getElementById('foot').textContent = 'greska: '+e);
 }
@@ -555,6 +924,10 @@ function poll(){
     S = s; flags = s.flags || {};
     document.getElementById('source').textContent =
       s.source + (s.age_s === null ? '' : '  ·  zadnji red prije ' + s.age_s + ' s');
+    if(s.read_only_preview) document.getElementById('source').textContent +=
+      ' · SIGURNI READ-ONLY PREGLED (test se ne moze pokrenuti)';
+    if(s.workflow === 'guided25') document.getElementById('source').textContent +=
+      ' · pokusaj '+s.attempt+'/3 · rok '+mmss(s.deadline_remaining);
     document.getElementById('mode').textContent = flags.mode || '—';
     document.getElementById('state').textContent = flags.state || '';
     chip('c-waiting',  flags.waiting  === '1');
@@ -600,8 +973,16 @@ function poll(){
       document.getElementById('bar').style.width = '0';
     } else if (s.stage === 'READY_TO_GO'){
       ph.textContent = 'KALIBRACIJA GOTOVA';
-      wh.textContent = 'Provjeri loo_cv, pa klikni "Kreni sa mjerenjem"';
+      wh.textContent = 'K1 je prošao. Možeš pokrenuti mjerenje.';
       document.getElementById('clock').textContent = '00:00';
+      document.getElementById('total').textContent = '';
+      document.getElementById('bar').style.width = '0';
+    } else if (s.stage === 'CAL_REJECTED'){
+      b.className = 'card act';
+      ph.textContent = 'KALIBRACIJA ODBIJENA';
+      wh.textContent = 'K1 nije prošao (' + s.calibration_acceptance_reason +
+                       '). Ponovi kalibraciju.';
+      document.getElementById('clock').textContent = '!!';
       document.getElementById('total').textContent = '';
       document.getElementById('bar').style.width = '0';
     } else if (s.stage === 'DONE'){
@@ -627,6 +1008,15 @@ function poll(){
     }
     document.getElementById('d-thr').textContent =
       s.threshold === null ? '—' : s.threshold.toFixed(1);
+    document.getElementById('gobtn').disabled =
+      !(s.calibration_accepted && s.stage === 'READY_TO_GO');
+    if(s.read_only_preview){
+      document.querySelectorAll('button').forEach(button => button.disabled = true);
+      if(s.stage === 'IDLE'){
+        ph.textContent = 'PREGLED DASHBOARDA';
+        wh.textContent = 'Read-only: tasteri su prikazani, ali su aktivni tek u pravom runu.';
+      }
+    }
     const d = s.det || {};
     document.getElementById('d-window').textContent = d.window || '—';
     document.getElementById('d-score').textContent =
@@ -642,13 +1032,18 @@ setInterval(poll, 300); poll();
 """
 
 
-def make_handler(state: PanelState, link, conductor: Conductor):
+def make_handler(state: PanelState, link, conductor: Conductor,
+                 csrf_token: str | None = None):
+    token = csrf_token or secrets.token_urlsafe(32)
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):  # bez pristupnog loga u konzoli
             pass
 
         def _json(self, payload: dict, code: int = 200) -> None:
-            body = json.dumps(payload).encode("utf-8")
+            # Standardni JSON nema NaN/Infinity. Ako se ikad provuce nova
+            # nefiltrirana vrijednost, endpoint pada vidljivo umjesto da salje
+            # browseru nestandardni JavaScript literal.
+            body = json.dumps(payload, allow_nan=False).encode("utf-8")
             self.send_response(code)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
@@ -659,7 +1054,7 @@ def make_handler(state: PanelState, link, conductor: Conductor):
             if self.path.startswith("/state"):
                 self._json(state.snapshot())
                 return
-            body = PAGE.encode("utf-8")
+            body = PAGE.replace("__CSRF_TOKEN__", token).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -667,15 +1062,42 @@ def make_handler(state: PanelState, link, conductor: Conductor):
             self.wfile.write(body)
 
         def do_POST(self) -> None:
+            if hasattr(self, "headers"):
+                host = self.headers.get("Host", "")
+                origin = self.headers.get("Origin", "")
+                allowed_hosts = {
+                    f"127.0.0.1:{self.server.server_address[1]}",
+                    f"localhost:{self.server.server_address[1]}",
+                }
+                if (host not in allowed_hosts or origin not in {
+                        f"http://{host}", f"https://{host}"} or
+                        self.headers.get("X-CSRF-Token") != token):
+                    self._json({"message": "odbijen ne-lokalni ili CSRF zahtjev"}, 403)
+                    return
+            if state.read_only_preview:
+                self._json({"message": "read-only preview: komande su blokirane"}, 409)
+                return
             verb = self.path.strip("/").lower()
             try:
                 if verb in ("press", "hold"):
                     message = link.send(verb)
+                elif verb in ("arm-virtual", "arm-physical"):
+                    message = conductor.arm_guided25(
+                        virtual_start=verb == "arm-virtual")
+                elif verb in ("confirm-start", "confirm-end"):
+                    message = conductor.confirm(verb.removeprefix("confirm-"))
+                elif verb == "abort":
+                    message = conductor.abort()
+                elif verb == "pause":
+                    raise CalibrationGateError("pauza bi pokvarila vremenski dokaz; koristi prekid")
                 elif verb == "start":
                     message = conductor.start()
                 else:
                     self._json({"message": "nepoznata komanda"}, 404)
                     return
+            except CalibrationGateError as exc:
+                self._json({"message": f"greska: {exc}"}, 409)
+                return
             except Exception as exc:
                 self._json({"message": f"greska: {exc}"}, 500)
                 return
@@ -702,8 +1124,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="rezim 2: port na koji idu PRESS/HOLD (npr. COM4), dok alat drzi drugi",
     )
     parser.add_argument("--plan", choices=sorted(PLANS), default="full")
+    parser.add_argument("--attempt", type=int, default=1)
+    parser.add_argument("--run-dir", type=Path)
     parser.add_argument("--http-port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--no-browser", action="store_true")
+    parser.add_argument(
+        "--read-only-preview", action="store_true",
+        help="prikazi zivu telemetriju, ali server-side blokiraj sve komande",
+    )
+    parser.add_argument(
+        "--preview-auto-stop-seconds", type=int, default=0,
+        help="u read-only pregledu automatski oslobodi port poslije N sekundi",
+    )
     return parser
 
 
@@ -712,19 +1144,28 @@ def main(argv=None) -> int:
     if bool(args.port) == bool(args.command_file):
         print("izaberi tacno jedno: --port (rezim 1) ili --command-file (rezim 2)")
         return 2
+    if args.read_only_preview and not args.port:
+        print("read-only preview zahtijeva direktni --port")
+        return 2
+    if args.preview_auto_stop_seconds and not args.read_only_preview:
+        print("--preview-auto-stop-seconds vrijedi samo uz --read-only-preview")
+        return 2
 
-    state = PanelState(PLANS[args.plan])
+    state = PanelState(PLANS[args.plan], workflow=args.plan,
+                       report_dir=args.run_dir, attempt=args.attempt,
+                       read_only_preview=args.read_only_preview)
     if args.port:
         link = SerialLink(state, args.port, args.baud)
     else:
         link = CommandFileLink(state, args.command_file, args.follow,
                                args.cmd_port)
     conductor = Conductor(state, link)
+    csrf_token = secrets.token_urlsafe(32)
 
     url = f"http://127.0.0.1:{args.http_port}/"
     try:
         server = ThreadingHTTPServer(("127.0.0.1", args.http_port),
-                                     make_handler(state, link, conductor))
+                                     make_handler(state, link, conductor, csrf_token))
     except OSError as exc:
         # Bez ovoga stari panel ostane da drzi port, novi tiho umre, a u
         # pregledacu se i dalje vidi ZASTARJELO stanje iz proslog runa --
@@ -736,6 +1177,12 @@ def main(argv=None) -> int:
     print(f"panel: {url}   ({state.source}, plan '{args.plan}')")
     if not args.no_browser:
         threading.Timer(0.4, webbrowser.open, args=(url,)).start()
+    if args.preview_auto_stop_seconds > 0:
+        timer = threading.Timer(args.preview_auto_stop_seconds, server.shutdown)
+        timer.daemon = True
+        timer.start()
+        print(f"read-only preview se automatski zatvara za "
+              f"{args.preview_auto_stop_seconds} s")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

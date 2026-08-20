@@ -25,7 +25,7 @@
  * NE DIRA IZLAZ. Čita se direktno iz RX FIFO-a oba periferijala, bez
  * instaliranja drajvera i bez VFS preusmjeravanja. Serijski ispis
  * (`printf`, `ESP_LOG`) ostaje na tačno istom putu kao prije, jer zaključani
- * protokol `asd-quality-v1.3.0` zavisi od njega.
+ * protokol `asd-quality-v1.4.0` zavisi od njega.
  */
 #ifndef ASD_CMD_H
 #define ASD_CMD_H
@@ -38,6 +38,18 @@ extern "C" {
 
 /* Pokreće task koji osluškuje konzolu. Zove se jednom, prije UI taska. */
 void asd_cmd_start(void);
+
+typedef enum {
+    ASD_WORKFLOW_DEFAULT = 0,
+    ASD_WORKFLOW_GUIDED25
+} asd_workflow_t;
+
+/* GUIDED25 can only be armed while no session is active. It changes only the
+ * commissioning counts; PRESS and the physical button still share one path. */
+void asd_cmd_set_session_active(int active);
+asd_workflow_t asd_cmd_take_workflow(void);
+const char *asd_cmd_workflow_name(asd_workflow_t workflow);
+asd_workflow_t asd_cmd_pending_workflow(void);
 
 /* Uzima i briše zaostali virtuelni pritisak; `ASD_BTN_NONE` ako ga nema.
  * Poziva ga UI task na istom mjestu gdje čita i fizički pin. */

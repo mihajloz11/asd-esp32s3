@@ -33,13 +33,14 @@
 #define ASD_EVENTS_H
 
 #include "audio_quality_state.h"
+#include "asd_interference.h"
 #include "asd_temporal.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ASD_EVENTS_PROTOCOL "asd-events-v1.0.0"
+#define ASD_EVENTS_PROTOCOL "asd-events-v1.1.0-development"
 
 typedef enum {
     ASD_EVENT_NONE = 0,
@@ -83,7 +84,8 @@ asd_presence_policy_t asd_presence_default_policy(void);
 typedef struct {
     int valid;
     float level_mean_dbfs;
-    float score_threshold;
+    float threshold_enter;
+    float threshold_exit;
 } asd_calibration_t;
 
 typedef struct {
@@ -91,6 +93,8 @@ typedef struct {
     asd_quality_phase_t phase;
     float rms_dbfs;
     float score;
+    float tonalness_delta;
+    float subsegment_instability;
 } asd_observation_t;
 
 /* Carries the run counters so callers keep no ad-hoc state of their own.
@@ -101,6 +105,7 @@ typedef struct {
     asd_state_t state;
     int absent_run;
     asd_temporal_t temporal;
+    asd_interference_t interference;
     asd_presence_policy_t policy;
 } asd_decision_ctx_t;
 
@@ -110,10 +115,14 @@ typedef struct {
     asd_decision_level_t level;
     int flow_stop;         /* 1 = fail-closed: caller must stop the flow */
     int state_changed;     /* 1 = state differs from the previous observation */
+    int observation_hold;  /* unreliable single-mic observation; no diagnosis */
+    int hold_warning;      /* hold exceeded the DEVELOPMENT inspection limit */
 } asd_decision_t;
 
 void asd_decision_init(asd_decision_ctx_t *ctx,
                        const asd_presence_policy_t *policy);
+void asd_decision_set_interference_policy(
+    asd_decision_ctx_t *ctx, const asd_interference_policy_t *policy);
 
 /* One window in, one decision out.  Deterministic: identical ctx + inputs
  * always produce an identical result. */

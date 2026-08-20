@@ -20,6 +20,14 @@ FW_MAIN = ROOT / "firmware" / "esp32s3_asd" / "main"
 FAN_DIR = ROOT / "data" / "dcase2026_dev" / "fan"
 
 
+class PsdSidecar(ctypes.Structure):
+    _fields_ = [
+        ("segments", ctypes.c_int),
+        ("group_segments", ctypes.c_int * 5),
+        ("group_feature", (ctypes.c_float * 96) * 5),
+    ]
+
+
 def fan_clips_or_skip(split: str = "train"):
     """DCASE skup je gitignoreovan, pa ga na CI runneru nema.
 
@@ -51,7 +59,63 @@ def clib(tmp_path_factory):
     lib.asd_psd_score.restype = ctypes.c_float
     lib.asd_psd_stream_push_hop.restype = ctypes.c_int
     lib.asd_psd_stream_finish.restype = ctypes.c_int
+    lib.asd_psd_stream_finish_sidecar.restype = ctypes.c_int
     return lib
+
+
+def _synthetic_clip() -> np.ndarray:
+    n = 39 * 4096
+    t = np.arange(n, dtype=np.float64) / 16000.0
+    signal = (
+        0.35 * np.sin(2 * np.pi * 173.0 * t)
+        + 0.12 * np.sin(2 * np.pi * 521.0 * t)
+        + 0.03 * np.sin(2 * np.pi * (83.0 + 0.2 * t) * t)
+    )
+    return np.ascontiguousarray(signal, dtype=np.float32)
+
+
+def test_psd_sidecar_keeps_final_feature_bit_identical_and_groups_38_segments(clib):
+    y = _synthetic_clip()
+    ptr = ctypes.POINTER(ctypes.c_float)
+
+    clib.asd_psd_stream_reset()
+    for start in range(0, len(y), 4096):
+        clib.asd_psd_stream_push_hop(y[start:start + 4096].ctypes.data_as(ptr))
+    canonical = np.zeros(96, np.float32)
+    assert clib.asd_psd_stream_finish(canonical.ctypes.data_as(ptr)) == 38
+
+    clib.asd_psd_stream_reset_sidecar()
+    for start in range(0, len(y), 4096):
+        clib.asd_psd_stream_push_hop(y[start:start + 4096].ctypes.data_as(ptr))
+    research_final = np.zeros(96, np.float32)
+    sidecar = PsdSidecar()
+    assert clib.asd_psd_stream_finish_sidecar(
+        research_final.ctypes.data_as(ptr), ctypes.byref(sidecar),
+    ) == 38
+
+    assert np.array_equal(canonical, research_final)
+    assert sidecar.segments == 38
+    assert list(sidecar.group_segments) == [8, 8, 8, 7, 7]
+    groups = np.ctypeslib.as_array(sidecar.group_feature).reshape(5, 96)
+    assert np.isfinite(groups).all()
+
+    for group, (start_segment, count) in enumerate(
+        zip((0, 8, 16, 24, 31), (8, 8, 8, 7, 7), strict=True)
+    ):
+        first = start_segment * 4096
+        group_signal = np.ascontiguousarray(
+            y[first:first + (count + 1) * 4096], dtype=np.float32,
+        )
+        expected = np.zeros(96, np.float32)
+        got_segments = clib.asd_psd_extract(
+            group_signal.ctypes.data_as(ptr), ctypes.c_int(len(group_signal)),
+            expected.ctypes.data_as(ptr),
+        )
+        assert got_segments == count
+        # Sidecar sabira po bandu nakon svakog segmenta da bi zauzeo samo
+        # 5x96, dok batch prvo sabira po FFT binu. Razlika je samo float32
+        # redoslijed sabiranja; kanonski finalni vektor iznad ostaje bit-identican.
+        assert float(np.max(np.abs(groups[group] - expected))) < 5e-5
 
 
 def test_psd_real_wav_pc_vs_c(clib):

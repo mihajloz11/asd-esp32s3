@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import csv
 import importlib.util
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 
@@ -13,6 +15,172 @@ SPEC = importlib.util.spec_from_file_location("physical_fan_experiment", MODULE_
 assert SPEC and SPEC.loader
 physical = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(physical)
+
+
+def _research_vector() -> np.ndarray:
+    return np.linspace(-2.0, 3.0, 96, dtype=np.float32)
+
+
+def _research_line(
+    kind: str, *, phase: str = "CAL", window: int = 1, group: int | None = None,
+    corrupt_checksum: bool = False,
+) -> str:
+    vector = _research_vector()
+    checksum = physical.fnv1a_bytes(vector.astype("<f4").tobytes())
+    if corrupt_checksum:
+        checksum ^= 1
+    values = ",".join(format(float(item), ".9g") for item in vector)
+    common = (
+        f"protocol={physical.RESEARCH_PROTOCOL_VERSION} session=1 phase={phase} "
+        f"window={window} "
+    )
+    if kind == "FEATURE96":
+        body = (
+            "window_start_ms=1000 window_end_ms=10984 score=0 "
+            "level_dbfs=-31.25 quality=OK tonalness_proxy=3 "
+            f"dims=96 fnv1a={checksum:08x} values={values}"
+        )
+    else:
+        assert group is not None
+        body = (
+            f"group={group} segments={physical.RESEARCH_GROUP_SEGMENTS[group - 1]} "
+            f"dims=96 fnv1a={checksum:08x} values={values}"
+        )
+    return f"{kind} {common}{body}"
+
+
+def _research_quality() -> dict:
+    return {
+        "kind": "QUALITY", "phase": "CAL", "index": 1, "result": "OK",
+        "feature_valid": 1, "rms_dbfs": -31.25, "tonalness_proxy": 3.0,
+    }
+
+
+def _profile_store_line(**changes: object) -> str:
+    fields: dict[str, object] = {
+        "protocol": physical.QUALITY_PROTOCOL_VERSION,
+        "schema": physical.PROFILE_STORE_SCHEMA_VERSION,
+        "result": "LOADED",
+        "generation": 7,
+        "fingerprint": physical.PSD_MODEL_FINGERPRINT_HEX,
+        "crc32": "1a2b3c4d",
+        "threshold_enter": 900,
+        "threshold_exit": 600,
+        "center_windows": 10,
+        "derive_windows": physical.RUNTIME_COMMISSIONING_POLICY["derive_windows"],
+        "verify_windows": physical.RUNTIME_COMMISSIONING_POLICY["verify_windows"],
+        "profile_policy_version": physical.PROFILE_POLICY_VERSION,
+        **physical.PROFILE_POLICY_IDS,
+        "derive_mean": 400,
+        "derive_sd": 20,
+        "verify_alarm_time_percent": 0,
+        "verify_alarm_windows": 0,
+        "verify_episodes": 0,
+        "verify_chatter": 0,
+    }
+    fields.update(changes)
+    return "PROFILESTORE " + " ".join(
+        f"{key}={value}" for key, value in fields.items()
+    )
+
+
+def _consume_complete_research_package(state: dict) -> list[str]:
+    lines = [_research_line("FEATURE96")]
+    lines.extend(_research_line("SUBSEG96", group=group) for group in range(1, 6))
+    for line in lines:
+        parsed = physical.parse_serial_line(line)
+        assert parsed is not None and parsed["kind"] != "PARSE_ERROR"
+        physical.research_consume_record(state, parsed, active_session=1)
+    return lines
+
+
+def test_research_feature_and_subsegment_parser_checks_dimension_checksum_and_metadata() -> None:
+    feature = physical.parse_serial_line(_research_line("FEATURE96"))
+    subsegment = physical.parse_serial_line(_research_line("SUBSEG96", group=5))
+    assert feature is not None and feature["kind"] == "FEATURE96"
+    assert feature["values"].shape == (96,)
+    assert feature["window_start_ms"] == 1000
+    assert feature["window_end_ms"] == 10984
+    assert subsegment is not None and subsegment["kind"] == "SUBSEG96"
+    assert subsegment["group"] == 5
+    assert subsegment["segments"] == 7
+
+    damaged = physical.parse_serial_line(
+        _research_line("FEATURE96", corrupt_checksum=True)
+    )
+    assert damaged is not None and damaged["kind"] == "PARSE_ERROR"
+    assert damaged["reason"] == "research_checksum_mismatch"
+
+
+def test_research_artifact_npz_manifest_shapes_hash_and_external_wav_link(tmp_path: Path) -> None:
+    state = physical.new_research_telemetry_state(required=True)
+    physical.research_expect_quality(state, _research_quality(), session=1)
+    lines = _consume_complete_research_package(state)
+    wav = tmp_path / "external.wav"
+    wav.write_bytes(b"external-recorder-fixture")
+    metadata = {
+        "external_wav": str(wav.resolve()),
+        "external_wav_sha256_at_start": physical.sha256_file(wav),
+        "external_wav_sha256_at_end": physical.sha256_file(wav),
+    }
+    manifest = physical.write_research_artifact(tmp_path, state, metadata=metadata)
+
+    assert manifest["artifact_valid"] is True
+    assert manifest["complete_window_count"] == 1
+    assert manifest["feature_record_count"] == 1
+    assert manifest["subsegment_record_count"] == 5
+    assert manifest["external_wav"]["relationship"] == (
+        "linked_external_file_not_recorded_by_host"
+    )
+    assert manifest["npz"]["sha256"] == physical.sha256_file(
+        tmp_path / "window_features.npz"
+    )
+    with np.load(tmp_path / "window_features.npz", allow_pickle=False) as artifact:
+        assert artifact["feature96"].shape == (1, 96)
+        assert artifact["subseg96"].shape == (1, 5, 96)
+        assert artifact["subseg_welch_segments"].tolist() == [[8, 8, 8, 7, 7]]
+        assert np.isfinite(artifact["feature96"]).all()
+        assert np.isfinite(artifact["subseg96"]).all()
+    # 115200 UART, 10 bits/bajt. Prosjecni 10 s budzet i burst oba imaju rezervu.
+    wire_bytes = sum(len((line + "\n").encode("ascii")) for line in lines)
+    assert 115200 / (wire_bytes * 10 / 10.0) > 10.0
+    assert wire_bytes * 10 / 115200 < 1.0
+
+
+@pytest.mark.parametrize("failure", ["missing", "duplicate", "malformed"])
+def test_required_research_artifact_rejects_missing_duplicate_and_malformed(
+    tmp_path: Path, failure: str,
+) -> None:
+    run_dir = tmp_path / failure
+    run_dir.mkdir()
+    state = physical.new_research_telemetry_state(required=True)
+    physical.research_expect_quality(state, _research_quality(), session=1)
+    if failure == "duplicate":
+        _consume_complete_research_package(state)
+        parsed = physical.parse_serial_line(_research_line("FEATURE96"))
+        assert parsed is not None
+        physical.research_consume_record(state, parsed, active_session=1)
+    elif failure == "malformed":
+        parsed = physical.parse_serial_line(
+            _research_line("FEATURE96", corrupt_checksum=True)
+        )
+        assert parsed is not None and parsed["kind"] == "PARSE_ERROR"
+        physical.research_consume_record(state, parsed, active_session=1)
+    manifest = physical.write_research_artifact(run_dir, state, metadata={})
+    assert manifest["artifact_valid"] is False
+    assert manifest["gate_passed"] is False
+    assert manifest["errors"]
+
+
+def test_live_research_path_has_no_per_det_pcm_dump_and_preserves_pair_order() -> None:
+    source = (ROOT / "firmware" / "esp32s3_asd" / "main" / "psd_live.c").read_text(
+        encoding="utf-8",
+    )
+    assert "asd_dump_pcm_block(" not in source
+    quality = source.index('emit_quality("DET"')
+    det = source.index('printf("DET %d score=', quality)
+    research = source.index('emit_research_window(session_index, "DET"', det)
+    assert quality < det < research
 
 
 def test_parse_det_line() -> None:
@@ -64,10 +232,10 @@ def test_parse_phases_threshold_and_dropped() -> None:
         "level_dbfs": -31.5, "compute_ms": 711,
     }
     assert physical.parse_serial_line(
-        "ADAPTTHR n=10 mean=10 sd=2 k=0 theta=0 p=.9 thr=16.125 lo=0 factory=0"
+        "ADAPTTHR n=10 mean=10 sd=2 k=0 theta=0 p=.99 thr=16.125 lo=0 factory=0"
     ) == {
         "kind": "ADAPTTHR", "n": 10, "mean": 10.0, "sd": 2.0,
-        "k": 0.0, "theta": 0.0, "p": 0.9, "threshold": 16.125,
+            "k": 0.0, "theta": 0.0, "p": 0.99, "threshold": 16.125,
         "lo": 0.0, "factory": 0.0,
     }
     assert physical.parse_serial_line(
@@ -77,14 +245,14 @@ def test_parse_phases_threshold_and_dropped() -> None:
 
 def test_parse_quality_state_event_v1_telemetry() -> None:
     quality = physical.parse_serial_line(
-        "I psdlive: QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=2 total=10 "
+        "I psdlive: QUALITY protocol=asd-quality-v1.4.0 phase=CAL index=2 total=10 "
         "result=OK metrics_valid=1 samples=159744 expected=159744 "
         "rms_dbfs=-31.250 dc=2.5 peak=4100 "
         "clipped=0 zeros=3 stuck=7 dropped_delta=0 feature_valid=1 tonalness_proxy=1.125 "
         "tonalness_valid=1 tonal_gate=pending_normal_only"
     )
     assert quality == {
-        "kind": "QUALITY", "protocol": "asd-quality-v1.3.0", "phase": "CAL",
+        "kind": "QUALITY", "protocol": "asd-quality-v1.4.0", "phase": "CAL",
         "index": 2, "total": 10, "result": "OK", "samples": 159744,
         "metrics_valid": 1, "feature_valid": 1,
         "expected": 159744, "rms_dbfs": -31.25, "dc": 2.5, "peak": 4100,
@@ -93,19 +261,19 @@ def test_parse_quality_state_event_v1_telemetry() -> None:
         "tonal_gate": "pending_normal_only",
     }
     assert physical.parse_serial_line(
-        "STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE "
+        "STATE protocol=asd-quality-v1.4.0 from=NO_MACHINE "
         "to=CALIBRATION_REJECTED reason=CLIPPING"
     ) == {
-        "kind": "STATE", "protocol": "asd-quality-v1.3.0",
+        "kind": "STATE", "protocol": "asd-quality-v1.4.0",
         "from_state": "NO_MACHINE", "to_state": "CALIBRATION_REJECTED",
         "reason": "CLIPPING",
     }
     assert physical.parse_serial_line(
-        "EVENT protocol=asd-quality-v1.3.0 type=FLOW_STOPPED "
+        "EVENT protocol=asd-quality-v1.4.0 type=FLOW_STOPPED "
         "state=SENSOR_ERROR phase=CAL reason=DROPPED_SAMPLES "
         "event=SENSOR_FAULT capability=AVAILABLE level=SENSOR_HEALTH"
     ) == {
-        "kind": "EVENT", "protocol": "asd-quality-v1.3.0",
+        "kind": "EVENT", "protocol": "asd-quality-v1.4.0",
         "type": "FLOW_STOPPED", "state": "SENSOR_ERROR", "phase": "CAL",
         "reason": "DROPPED_SAMPLES", "event": "SENSOR_FAULT",
         "capability": "AVAILABLE", "level": "SENSOR_HEALTH",
@@ -113,7 +281,14 @@ def test_parse_quality_state_event_v1_telemetry() -> None:
 
 
 def test_quality_protocol_is_strict_and_operator_truth_is_separate() -> None:
-    assert physical.PROTOCOL_VERSION == "physical-fan-v1.6.0"
+    assert physical.PROTOCOL_VERSION == "physical-fan-v1.8.0"
+    assert physical.LEGACY_READ_PROTOCOL_VERSIONS == frozenset({
+        "physical-fan-v1.6.0", "physical-fan-v1.7.0",
+    })
+    assert physical.SUPPORTED_READ_PROTOCOL_VERSIONS == frozenset({
+        "physical-fan-v1.6.0", "physical-fan-v1.7.0",
+        "physical-fan-v1.8.0",
+    })
     mismatch = physical.parse_serial_line(
         "STATE protocol=asd-quality-v0 from=NO_MACHINE to=ANOMALY reason=x"
     )
@@ -129,9 +304,98 @@ def test_quality_protocol_is_strict_and_operator_truth_is_separate() -> None:
     assert "condition" not in physical.FIRMWARE_EVENT_FIELDS
 
 
+@pytest.mark.parametrize("result", ["AUDIO_TIMEOUT", "AUDIO_READ_ERROR"])
+def test_literal_v15_audio_read_failure_is_fail_closed_sensor_error(result: str) -> None:
+    protocol = physical.QUALITY_PROTOCOL_VERSION
+    state = physical.new_firmware_protocol_state()
+    lines = [
+        f"SESSION protocol={protocol} action=STARTED source=BUTTON "
+        "reason=OPERATOR_REQUEST discards_calibration=0",
+        f"STATE protocol={protocol} from=NO_MACHINE to=NO_MACHINE "
+        "reason=BOOT_FAIL_CLOSED",
+        f"QUALITY protocol={protocol} phase=WAIT index=1 total=60 result={result} "
+        "metrics_valid=0 samples=0 expected=4096 rms_dbfs=-999 dc=0 peak=0 "
+        "clipped=0 zeros=0 stuck=0 dropped_delta=0 feature_valid=0 "
+        "tonalness_proxy=0 tonalness_valid=0 tonal_gate=not_computed",
+    ]
+    for line in lines:
+        parsed = physical.parse_serial_line(line)
+        assert parsed is not None and parsed["kind"] != "PARSE_ERROR"
+        state = physical.transition_firmware_protocol(state, parsed)
+    assert state["invalid_status"] == "invalid_firmware_terminal"
+    assert state["drain_expected_state"] == "SENSOR_ERROR"
+    assert state["drain_expected_reason"] == result
+
+
+def test_development_profile_restore_and_profile_store_are_fail_closed() -> None:
+    protocol = physical.QUALITY_PROTOCOL_VERSION
+    assert physical.PROFILE_PERSISTENCE_ALLOWED is False
+
+    state = physical.new_firmware_protocol_state()
+    restored_session = physical.parse_serial_line(
+        f"SESSION protocol={protocol} action=STARTED source=FIRMWARE "
+        "reason=PROFILE_RESTORED discards_calibration=0"
+    )
+    assert restored_session is not None
+    rejected = physical.transition_firmware_protocol(state, restored_session)
+    assert rejected["invalid_reason"] == "PROFILE_RESTORED_persistence_disabled"
+
+    state = _handshake_state()
+    store = physical.parse_serial_line(_profile_store_line())
+    assert store is not None and store["kind"] == "PROFILESTORE"
+    rejected = physical.transition_firmware_protocol(state, store)
+    assert rejected["invalid_reason"] == "PROFILESTORE_persistence_disabled"
+
+
+def test_fake_restore_state_fails_and_missing_store_relearns() -> None:
+    protocol = physical.QUALITY_PROTOCOL_VERSION
+    state = _handshake_state()
+    state = physical.transition_firmware_protocol(state, {
+        "kind": "STATE", "protocol": protocol,
+        "from_state": "NO_MACHINE", "to_state": "CALIBRATED_NORMAL",
+        "reason": "PROFILE_RESTORED",
+    })
+    assert state["invalid_reason"] == "PROFILE_RESTORED_without_valid_PROFILESTORE"
+
+    # Missing/corrupt DEVELOPMENT blob is not loaded.  The operator starts a
+    # fresh session and the ordinary commissioning path accepts its first WAIT.
+    relearn = physical.new_firmware_protocol_state()
+    for record in (
+        {"kind": "SESSION", "protocol": protocol, "action": "STARTED",
+         "source": "BUTTON", "reason": "OPERATOR_REQUEST",
+         "discards_calibration": 0},
+        {"kind": "STATE", "protocol": protocol, "from_state": "NO_MACHINE",
+         "to_state": "NO_MACHINE", "reason": "BOOT_FAIL_CLOSED"},
+        _quality("WAIT", 1),
+    ):
+        relearn = physical.transition_firmware_protocol(relearn, record)
+    assert relearn["invalid_status"] is None
+    assert relearn["quality_counts"]["WAIT"] == 1
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"schema": "asd-profile-v9"},
+        {"fingerprint": "00" * 32},
+        {"generation": 0},
+        {"crc32": "xyz"},
+        {"threshold_exit": 900},
+        {"center_windows": 0},
+        {"quality_policy_id": 1},
+    ],
+)
+def test_invalid_profile_store_audit_fields_are_rejected(changes: dict) -> None:
+    parsed = physical.parse_serial_line(_profile_store_line(**changes))
+    assert parsed is not None and parsed["kind"] == "PARSE_ERROR"
+    assert parsed["reason"].startswith((
+        "profile_store_", "malformed_numeric_field",
+    ))
+
+
 def test_malformed_v1_telemetry_is_audited_not_raised() -> None:
     malformed = physical.parse_serial_line(
-        "QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=x total=10 "
+        "QUALITY protocol=asd-quality-v1.4.0 phase=CAL index=x total=10 "
         "result=OK samples=10 expected=10 rms_dbfs=-30 dc=0 peak=1 feature_valid=1 "
         "clipped=0 zeros=0 stuck=0 dropped_delta=0 tonalness_proxy=1 "
         "tonal_gate=pending_normal_only"
@@ -139,7 +403,7 @@ def test_malformed_v1_telemetry_is_audited_not_raised() -> None:
     assert malformed["kind"] == "PARSE_ERROR"
     assert malformed["reason"] == "malformed_numeric_field"
     truncated = physical.parse_serial_line(
-        "STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to="
+        "STATE protocol=asd-quality-v1.4.0 from=NO_MACHINE to="
     )
     assert truncated["kind"] == "PARSE_ERROR"
     assert truncated["reason"] == "malformed_key_value_token"
@@ -150,12 +414,12 @@ def test_malformed_v1_telemetry_is_audited_not_raised() -> None:
 
 def test_duplicate_keys_and_nonfinite_adapt_are_audited() -> None:
     duplicate = physical.parse_serial_line(
-        "QUALITY protocol=asd-quality-v1.3.0 phase=WAIT phase=WAIT"
+        "QUALITY protocol=asd-quality-v1.4.0 phase=WAIT phase=WAIT"
     )
     assert duplicate["kind"] == "PARSE_ERROR"
     assert duplicate["reason"] == "duplicate_key:phase"
     nonfinite = physical.parse_serial_line(
-        "ADAPTTHR n=10 mean=inf sd=2 k=0 theta=0 p=.9 thr=16 lo=0 factory=0"
+        "ADAPTTHR n=10 mean=inf sd=2 k=0 theta=0 p=.99 thr=16 lo=0 factory=0"
     )
     assert nonfinite["kind"] == "PARSE_ERROR"
     assert nonfinite["reason"] == "nonfinite_field:ADAPTTHR:mean"
@@ -190,8 +454,10 @@ def _quality(phase: str, index: int = 1) -> dict:
 
 def _adapt(*, threshold: float = 1.6) -> dict:
     return {
-        "kind": "ADAPTTHR", "n": 10, "mean": 1.0, "sd": 0.2,
-        "k": 0.0, "theta": 0.0, "p": 0.9, "threshold": threshold,
+        "kind": "ADAPTTHR",
+        "n": physical.RUNTIME_COMMISSIONING_POLICY["derive_windows"],
+        "mean": 1.0, "sd": 0.2,
+        "k": 0.0, "theta": 0.0, "p": 0.99, "threshold": threshold,
         "lo": 0.0, "factory": 0.0,
     }
 
@@ -206,28 +472,174 @@ def _presence(*, level_mean_dbfs: float = -30.0) -> dict:
     }
 
 
-def _temporal() -> dict:
+def _runtime_profile_line(
+    *, threshold_enter: float = 1.6, threshold_exit: float = 1.1,
+) -> str:
+    policy = physical.RUNTIME_COMMISSIONING_POLICY
+    return (
+        f"PROFILE protocol={physical.QUALITY_PROTOCOL_VERSION} "
+        "schema=asd-runtime-profile-v1.0.0-development "
+        "policy=asd-commissioning-policy-v1.0.0-development "
+        "developmental=1 valid=1 policy_version=1 policy_id=434d5631 "
+        f"center_windows={policy['center_windows']} "
+        f"derive_windows={policy['derive_windows']} "
+        f"verify_windows={policy['verify_windows']} "
+        "level_mean_dbfs=-30 tonalness_reference=1 "
+        f"threshold_enter={threshold_enter:.9g} threshold_exit={threshold_exit:.9g}"
+    )
+
+
+def _commission_line(
+    action: str, phase: str, index: int, total: int, *, score_valid: int = 0,
+) -> str:
+    score = 1 if score_valid else 0
+    return (
+        f"COMMISSION protocol={physical.QUALITY_PROTOCOL_VERSION} "
+        "policy=asd-commissioning-policy-v1.0.0-development developmental=1 "
+        f"action={action} phase={phase} index={index} total={total} result=NONE "
+        f"score_valid={score_valid} score={score} level_dbfs=-30 "
+        "tonalness_proxy=1 feature_drift=0"
+    )
+
+
+def _fresh_commission_lines() -> tuple[list[str], list[str]]:
+    policy = physical.RUNTIME_COMMISSIONING_POLICY
+    prefix_lines = [
+        _commission_line("STARTED", "SETTLE", 0, policy["max_settle_windows"]),
+    ]
+    for index in range(1, policy["min_settle_windows"] + 1):
+        phase = (
+            "CENTER_LEARNING"
+            if index == policy["min_settle_windows"] else "SETTLE"
+        )
+        prefix_lines.append(_commission_line(
+            "WINDOW", phase, index, policy["max_settle_windows"],
+        ))
+    prefix_lines.append(_commission_line(
+        "PHASE_ENTERED", "CENTER_LEARNING", 0, policy["center_windows"],
+    ))
+    suffix_lines = [
+        _commission_line(
+            "WINDOW", "COMMISSION_DERIVE", index, policy["derive_windows"],
+            score_valid=1,
+        )
+        for index in range(1, policy["derive_windows"] + 1)
+    ]
+    suffix_lines.extend(
+        _commission_line(
+            "WINDOW",
+            "MONITORING" if index == policy["verify_windows"] else "COMMISSION_VERIFY",
+            index, policy["verify_windows"], score_valid=1,
+        )
+        for index in range(1, policy["verify_windows"] + 1)
+    )
+    return prefix_lines, suffix_lines
+
+
+def _fresh_commission_records() -> tuple[list[dict], list[dict]]:
+    prefix_lines, suffix_lines = _fresh_commission_lines()
+
+    def parsed(lines: list[str]) -> list[dict]:
+        records = [physical.parse_serial_line(line) for line in lines]
+        assert all(record is not None and record["kind"] != "PARSE_ERROR" for record in records)
+        return records
+    return parsed(prefix_lines), parsed(suffix_lines)
+
+
+def _temporal(
+    *, threshold_enter: float = 1.6, threshold_exit: float = 1.1,
+) -> dict:
     policy = physical.TEMPORAL_POLICY
-    return {
-        "kind": "TEMPORAL", "protocol": physical.QUALITY_PROTOCOL_VERSION,
-        "policy": physical.TEMPORAL_POLICY_RECORD["schema_version"],
-        "min_consecutive": policy["min_consecutive"],
-        "ewma_alpha": policy["ewma_alpha"],
-        "enter_scale": policy["enter_scale"],
-        "exit_scale": policy["exit_scale"],
-        "fast_scale": policy["fast_scale"],
-    }
+    provenance = physical.TEMPORAL_WIRE_PROVENANCE
+    line = _temporal_line(
+        threshold_enter=threshold_enter, threshold_exit=threshold_exit,
+    )
+    record = physical.parse_serial_line(line)
+    assert record is not None and record["kind"] != "PARSE_ERROR"
+    return record
 
 
-def _ready_protocol_state() -> dict:
-    state = physical.new_firmware_protocol_state()
-    state = physical.transition_firmware_protocol(state, {
-        "kind": "STATE", "from_state": "NO_MACHINE", "to_state": "NO_MACHINE",
-        "reason": "BOOT_FAIL_CLOSED",
-    })
+def _temporal_line(
+    *, threshold_enter: float = 1.6, threshold_exit: float = 1.1,
+) -> str:
+    policy = physical.TEMPORAL_POLICY
+    provenance = physical.TEMPORAL_WIRE_PROVENANCE
+    return (
+        f"TEMPORAL protocol={physical.QUALITY_PROTOCOL_VERSION} "
+        f"policy={physical.TEMPORAL_POLICY_RECORD['schema_version']} "
+        f"min_consecutive={policy['min_consecutive']} "
+        f"ewma_alpha={policy['ewma_alpha']} "
+        f"enter_scale={provenance['enter_scale']} "
+        f"exit_scale={provenance['exit_scale']} fast_scale={policy['fast_scale']} "
+        "threshold_mode=absolute_profile "
+        f"threshold_enter={threshold_enter:.9g} threshold_exit={threshold_exit:.9g}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("line", "reason"),
+    [
+        (
+            _temporal_line().replace(" threshold_exit=1.1", ""),
+            "missing_fields:threshold_exit",
+        ),
+        (_temporal_line() + " extra=1", "unexpected_fields:extra"),
+        (
+            _temporal_line().replace("absolute_profile", "scaled"),
+            "temporal_threshold_mode_mismatch:scaled",
+        ),
+        (
+            _temporal_line().replace(
+                physical.TEMPORAL_POLICY_RECORD["schema_version"], "bogus-policy",
+            ),
+            "temporal_policy_schema_mismatch:bogus-policy",
+        ),
+        (
+            _temporal_line(threshold_enter=1.0, threshold_exit=1.0),
+            "temporal_invalid_absolute_thresholds",
+        ),
+    ],
+)
+def test_literal_q15_temporal_v2_is_strict(line: str, reason: str) -> None:
+    parsed = physical.parse_serial_line(line)
+    assert parsed is not None and parsed["kind"] == "PARSE_ERROR"
+    assert parsed["reason"] == reason
+
+
+def test_temporal_v2_must_follow_profile_adapt_and_presence() -> None:
+    state = _fresh_profile_state()
+    state = physical.transition_firmware_protocol(state, _adapt())
+    out = physical.transition_firmware_protocol(state, _temporal())
+    assert out["invalid_reason"] == "TEMPORAL_before_PRESENCE"
+
+
+@pytest.mark.parametrize("line", [_fresh_commission_lines()[0][0], _runtime_profile_line()])
+def test_q15_runtime_sidecar_cannot_precede_session_boot(line: str) -> None:
+    parsed = physical.parse_serial_line(line)
+    assert parsed is not None and parsed["kind"] != "PARSE_ERROR"
+    out = physical.transition_firmware_protocol(
+        physical.new_firmware_protocol_state(), parsed,
+    )
+    assert out["invalid_reason"] == f"{parsed['kind']}_without_open_SESSION"
+
+
+def _fresh_profile_state() -> dict:
+    state = _handshake_state()
+    commission_prefix, commission_suffix = _fresh_commission_records()
+    for record in commission_prefix:
+        state = physical.transition_firmware_protocol(state, record)
     for phase, count in physical.EXPECTED_QUALITY_COUNTS.items():
         for index in range(1, count + 1):
             state = physical.transition_firmware_protocol(state, _quality(phase, index))
+    for record in commission_suffix:
+        state = physical.transition_firmware_protocol(state, record)
+    profile = physical.parse_serial_line(_runtime_profile_line())
+    assert profile is not None and profile["kind"] == "PROFILE"
+    return physical.transition_firmware_protocol(state, profile)
+
+
+def _ready_protocol_state() -> dict:
+    state = _fresh_profile_state()
     state = physical.transition_firmware_protocol(state, _adapt())
     state = physical.transition_firmware_protocol(state, _presence())
     state = physical.transition_firmware_protocol(state, _temporal())
@@ -243,18 +655,22 @@ def _ready_protocol_state() -> dict:
 
 
 def _handshake_state() -> dict:
-    return physical.transition_firmware_protocol(
-        physical.new_firmware_protocol_state(),
-        {
-            "kind": "STATE", "from_state": "NO_MACHINE",
-            "to_state": "NO_MACHINE", "reason": "BOOT_FAIL_CLOSED",
+    state = physical.transition_firmware_protocol(
+        physical.new_firmware_protocol_state(), {
+            "kind": "SESSION", "protocol": physical.QUALITY_PROTOCOL_VERSION,
+            "action": "STARTED", "source": "BUTTON",
+            "reason": "OPERATOR_REQUEST", "discards_calibration": 0,
         },
     )
+    return physical.transition_firmware_protocol(state, {
+        "kind": "STATE", "from_state": "NO_MACHINE",
+        "to_state": "NO_MACHINE", "reason": "BOOT_FAIL_CLOSED",
+    })
 
 
 def test_literal_firmware_quality_replay_wait_and_reject_contract() -> None:
     wait_line = (
-        "QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=1 total=60 "
+            "QUALITY protocol=asd-quality-v1.5.0 phase=WAIT index=1 total=60 "
         "result=LOW_LEVEL_OBSERVATION metrics_valid=1 feature_valid=0 samples=4096 expected=4096 "
         "rms_dbfs=-70.000 dc=123.000 peak=200 clipped=0 zeros=0 stuck=0 "
         "dropped_delta=0 tonalness_valid=0 tonalness_proxy=0.000000 "
@@ -271,7 +687,7 @@ def test_literal_firmware_quality_replay_wait_and_reject_contract() -> None:
     for index in range(1, 61):
         state = physical.transition_firmware_protocol(state, _quality("WAIT", index))
     reject_line = (
-        "QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=1 total=10 "
+        "QUALITY protocol=asd-quality-v1.5.0 phase=CAL index=1 total=10 "
         "result=CLIPPING metrics_valid=1 feature_valid=0 samples=159744 expected=159744 "
         "rms_dbfs=-10.000 dc=0.000 peak=32768 clipped=160 zeros=0 stuck=0 "
         "dropped_delta=0 tonalness_valid=0 tonalness_proxy=0.000000 "
@@ -285,9 +701,223 @@ def test_literal_firmware_quality_replay_wait_and_reject_contract() -> None:
     assert state["drain_expected_reason"] == "CLIPPING"
 
 
+def test_literal_v14_k1_reject_is_valid_terminal_protocol_without_det() -> None:
+    state = _handshake_state()
+    for index in range(1, 61):
+        state = physical.transition_firmware_protocol(
+            state, _quality("WAIT", index),
+        )
+    for index in range(1, 11):
+        state = physical.transition_firmware_protocol(
+            state, _quality("CAL", index),
+        )
+    summary = _quality("CAL_SUMMARY")
+    summary.update(loo_sd=0.600001, loo_cv=0.600001, loo_range=1.0)
+    state = physical.transition_firmware_protocol(state, summary)
+    assert state["invalid_status"] is None
+
+    state_line = (
+        f"STATE protocol={physical.QUALITY_PROTOCOL_VERSION} from=NO_MACHINE "
+        "to=CALIBRATION_REJECTED reason=UNSTABLE_CALIBRATION"
+    )
+    event_line = (
+        f"EVENT protocol={physical.QUALITY_PROTOCOL_VERSION} type=FLOW_STOPPED "
+        "state=CALIBRATION_REJECTED phase=CAL reason=UNSTABLE_CALIBRATION "
+        "event=NONE capability=AVAILABLE level=DEVIATION"
+    )
+    parsed_state = physical.parse_serial_line(state_line)
+    parsed_event = physical.parse_serial_line(event_line)
+    assert parsed_state is not None and parsed_state["kind"] == "STATE"
+    assert parsed_event is not None and parsed_event["kind"] == "EVENT"
+
+    state = physical.transition_firmware_protocol(state, parsed_state)
+    assert state["invalid_status"] is None
+    assert state["calibration_rejected_state"] is True
+    state = physical.transition_firmware_protocol(state, parsed_event)
+
+    assert state["invalid_status"] is None
+    assert state["calibration_rejected_event"] is True
+    assert physical.firmware_protocol_calibration_rejected(state) is False
+    assert physical.firmware_protocol_complete(state) is False
+    assert physical.terminal_drain_decision(state, 0.1) == "continue"
+    assert physical.terminal_drain_decision(
+        state, physical.TERMINAL_DRAIN_TIMEOUT_S,
+    ) == "timeout"
+    assert physical.terminal_drain_timeout_reason(state) == (
+        "terminal_drain_timeout:missing_SESSION_ENDED"
+    )
+
+    state = physical.transition_firmware_protocol(state, {
+        "kind": "SESSION", "protocol": physical.QUALITY_PROTOCOL_VERSION,
+        "action": "ENDED", "source": "FIRMWARE",
+        "reason": "SESSION_RETURNED", "discards_calibration": 0,
+    })
+    assert state["session_started"] is False
+    assert state["sessions"] == state["sessions_ended"] == 1
+    assert physical.terminal_drain_decision(state, 0.2) == "complete"
+    assert physical.firmware_protocol_calibration_rejected(state)
+    assert physical.firmware_protocol_complete(state)
+    validity = physical.evaluate_run_validity(
+        status="completed_calibration_rejected", detections=[],
+        protocol_state=state,
+    )
+    assert validity["protocol_valid"] is True
+    assert validity["calibration_accepted"] is False
+    assert validity["calibration_acceptance_reason"] == "loo_cv_above_max"
+    assert validity["metrics_eligible"] is False
+    assert validity["result_status"] == "calibration_rejected:loo_cv_above_max"
+
+    det_after_reject = physical.transition_firmware_protocol(
+        state, _quality("DET"),
+    )
+    assert det_after_reject["invalid_status"] == "invalid_missing_telemetry"
+    assert det_after_reject["invalid_reason"] == (
+        "QUALITY_without_open_SESSION"
+    )
+
+
+def test_session_started_resets_exact_session_scope_but_preserves_run_scope() -> None:
+    state = _handshake_state()
+    state.update({
+        "sessions": 1,
+        "sessions_ended": 1,
+        "session_history": [{"firmware_session_index": 1, "protocol_status": "accepted"}],
+        "run_quality_counts": {"WAIT": 60, "CAL": 10, "CAL_SUMMARY": 1, "DET": 9},
+        "run_det_records": 9,
+        "quality_counts": {"WAIT": 60, "CAL": 10, "CAL_SUMMARY": 1, "DET": 9},
+        "wait_ok_count": 60,
+        "cal_summary": {"loo_mean": 1.0, "loo_sd": 0.2, "loo_cv": 0.2,
+                        "loo_range": 0.5},
+        "adapt_seen": True,
+        "adapt_threshold": 1.6,
+        "presence_seen": True,
+        "presence_gate_dbfs": -41.0,
+        "temporal_seen": True,
+        "calibration_accepted_state": True,
+        "calibration_accepted_event": True,
+        "det_records": 9,
+        "last_det_window": 9,
+        "last_total_alarm": 4,
+        "det_threshold": 1.6,
+        "absent_run": 2,
+        "deviation_run": 3,
+        "anomaly_active": True,
+        "terminal": True,
+        "last_state": "ANOMALY",
+        "session_started": False,
+    })
+
+    reset = physical.transition_firmware_protocol(state, {
+        "kind": "SESSION", "protocol": physical.QUALITY_PROTOCOL_VERSION,
+        "action": "STARTED", "source": "BUTTON",
+        "reason": "OPERATOR_REQUEST", "discards_calibration": 1,
+    })
+
+    assert reset["handshake"] is True
+    assert reset["sessions"] == 2
+    assert reset["sessions_ended"] == 1
+    assert reset["session_history"] == [
+        {"firmware_session_index": 1, "protocol_status": "accepted"},
+    ]
+    assert reset["run_quality_counts"] == {
+        "WAIT": 60, "CAL": 10, "CAL_SUMMARY": 1, "DET": 9,
+    }
+    assert reset["run_det_records"] == 9
+    assert reset["firmware_session_index"] == 2
+    assert reset["quality_counts"] == {
+        "WAIT": 0, "CAL": 0, "CAL_SUMMARY": 0, "DET": 0,
+    }
+    assert reset["wait_ok_count"] == 0
+    assert reset["cal_summary"] is None
+    assert reset["adapt_seen"] is False
+    assert reset["adapt_threshold"] is None
+    assert reset["presence_seen"] is False
+    assert reset["temporal_seen"] is False
+    assert reset["calibration_accepted_state"] is False
+    assert reset["calibration_accepted_event"] is False
+    assert reset["det_records"] == reset["last_det_window"] == 0
+    assert reset["last_total_alarm"] == 0
+    assert reset["det_threshold"] is None
+    assert reset["absent_run"] == reset["deviation_run"] == 0
+    assert reset["anomaly_active"] is False
+    assert reset["terminal"] is False
+    assert reset["session_boot_seen"] is False
+    assert reset["last_state"] is None
+    assert reset["run_boot_records"] == 1
+
+
+def test_each_session_requires_exactly_one_boot_after_started() -> None:
+    boot = {
+        "kind": "STATE", "from_state": "NO_MACHINE", "to_state": "NO_MACHINE",
+        "reason": "BOOT_FAIL_CLOSED",
+    }
+    started = {
+        "kind": "SESSION", "protocol": physical.QUALITY_PROTOCOL_VERSION,
+        "action": "STARTED", "source": "BUTTON",
+        "reason": "OPERATOR_REQUEST", "discards_calibration": 0,
+    }
+    ended = {
+        "kind": "SESSION", "protocol": physical.QUALITY_PROTOCOL_VERSION,
+        "action": "ENDED", "source": "FIRMWARE",
+        "reason": "SESSION_RETURNED", "discards_calibration": 0,
+    }
+
+    before_session = physical.transition_firmware_protocol(
+        physical.new_firmware_protocol_state(), boot,
+    )
+    assert before_session["invalid_reason"] == "BOOT_without_open_SESSION"
+
+    state = physical.transition_firmware_protocol(
+        physical.new_firmware_protocol_state(), started,
+    )
+    before_boot = physical.transition_firmware_protocol(state, _quality("WAIT", 1))
+    assert before_boot["invalid_reason"] == "QUALITY_before_session_BOOT"
+    ended_before_boot = physical.transition_firmware_protocol(state, ended)
+    assert ended_before_boot["invalid_reason"] == "SESSION_ENDED_before_BOOT"
+
+    state = physical.transition_firmware_protocol(state, boot)
+    assert state["invalid_status"] is None
+    assert state["handshake"] is True
+    assert state["session_boot_seen"] is True
+    assert state["run_boot_records"] == 1
+    duplicate = physical.transition_firmware_protocol(state, boot)
+    assert duplicate["invalid_reason"] == "duplicate_BOOT_STATE"
+
+    state = physical.transition_firmware_protocol(state, ended)
+    state = physical.transition_firmware_protocol(state, started)
+    assert state["handshake"] is True
+    assert state["session_boot_seen"] is False
+    assert state["last_state"] is None
+    state = physical.transition_firmware_protocol(state, boot)
+    assert state["invalid_status"] is None
+    assert state["firmware_session_index"] == 2
+    assert state["run_boot_records"] == 2
+
+
+def test_v14_host_rejects_threshold_or_acceptance_after_failed_k1() -> None:
+    state = _handshake_state()
+    for index in range(1, 61):
+        state = physical.transition_firmware_protocol(state, _quality("WAIT", index))
+    for index in range(1, 11):
+        state = physical.transition_firmware_protocol(state, _quality("CAL", index))
+    summary = _quality("CAL_SUMMARY")
+    summary.update(loo_sd=0.600001, loo_cv=0.600001, loo_range=1.0)
+    state = physical.transition_firmware_protocol(state, summary)
+
+    invalid = physical.transition_firmware_protocol(
+        state, {
+            "kind": "ADAPTTHR", "n": 10, "mean": 1.0, "sd": 0.600001,
+            "k": 0.0, "theta": 0.0, "p": 0.99, "threshold": 2.800003,
+            "lo": 0.0, "factory": 0.0,
+        },
+    )
+    assert invalid["invalid_status"] == "invalid_firmware_telemetry"
+    assert invalid["invalid_reason"] == "ADAPTTHR_after_failed_K1:loo_cv_above_max"
+
+
 def test_literal_pcm_valid_feature_nonfinite_is_a_firmware_reject() -> None:
     line = (
-        "QUALITY protocol=asd-quality-v1.3.0 phase=DET index=1 total=0 "
+            "QUALITY protocol=asd-quality-v1.5.0 phase=DET index=1 total=0 "
         "result=NONFINITE metrics_valid=1 samples=159744 expected=159744 "
         "rms_dbfs=-30.000 dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 "
         "dropped_delta=0 feature_valid=0 tonalness_valid=0 "
@@ -352,7 +982,7 @@ def test_protocol_mismatch_and_terminal_state_invalidate_host_result() -> None:
 def test_quality_reject_and_out_of_order_telemetry_fail_fast() -> None:
     initial = physical.new_firmware_protocol_state()
     before_handshake = physical.transition_firmware_protocol(initial, _quality("WAIT"))
-    assert before_handshake["invalid_reason"] == "QUALITY_before_handshake"
+    assert before_handshake["invalid_reason"] == "QUALITY_without_open_SESSION"
 
     ready = _ready_protocol_state()
     rejected = physical.transition_firmware_protocol(
@@ -390,6 +1020,222 @@ def test_summary_excludes_unconfirmed_operator_condition() -> None:
         max_dropped=0, protocol_state=state,
     )
     assert "Validan fizički rezultat: **DA**" in summary
+
+
+def test_alarm_windows_episodes_recovery_and_transition_exclusion_are_distinct() -> None:
+    rows = [
+        {"run_det_index": 1, "elapsed_s": 10.0, "alarm": 0,
+         "transition_window": 1},
+        {"run_det_index": 2, "elapsed_s": 20.0, "alarm": 1,
+         "transition_window": 0},
+        {"run_det_index": 3, "elapsed_s": 30.0, "alarm": 1,
+         "transition_window": 0},
+        {"run_det_index": 4, "elapsed_s": 40.0, "alarm": 1,
+         "transition_window": 0},
+        {"run_det_index": 5, "elapsed_s": 50.0, "alarm": 0,
+         "transition_window": 0},
+        {"run_det_index": 6, "elapsed_s": 60.0, "alarm": 1,
+         "transition_window": 0},
+    ]
+
+    metrics = physical.detection_metrics(rows)
+
+    assert metrics["det_count"] == 5
+    assert metrics["alarm_window_count"] == 4
+    assert metrics["alarm_entries"] == 2
+    assert metrics["alarm_episodes"] == 2
+    assert metrics["alarm_window_count"] != metrics["alarm_episodes"]
+    assert metrics["alarm_time_percent"] == pytest.approx(100.0 * 4 / 5)
+    assert metrics["recovery_latency_s"] == 10.0
+    assert metrics["excluded_transition_windows"] == 1
+
+
+def test_metrics_never_bridge_alarm_episode_or_recovery_across_sessions() -> None:
+    two_alarm_sessions = [
+        {"firmware_session_index": 1, "run_det_index": 1,
+         "elapsed_s": 10.0, "alarm": 1, "transition_window": 0},
+        {"firmware_session_index": 1, "run_det_index": 2,
+         "elapsed_s": 20.0, "alarm": 1, "transition_window": 0},
+        {"firmware_session_index": 2, "run_det_index": 3,
+         "elapsed_s": 200.0, "alarm": 1, "transition_window": 0},
+        {"firmware_session_index": 2, "run_det_index": 4,
+         "elapsed_s": 210.0, "alarm": 1, "transition_window": 0},
+    ]
+    metrics = physical.detection_metrics(two_alarm_sessions)
+    assert metrics["alarm_window_count"] == 4
+    assert metrics["alarm_entries"] == metrics["alarm_episodes"] == 2
+
+    alarm_then_next_session_normal = [
+        {"firmware_session_index": 1, "run_det_index": 1,
+         "elapsed_s": 10.0, "alarm": 1, "transition_window": 0},
+        {"firmware_session_index": 2, "run_det_index": 2,
+         "elapsed_s": 200.0, "alarm": 0, "transition_window": 0},
+    ]
+    no_cross_session_recovery = physical.detection_metrics(
+        alarm_then_next_session_normal,
+    )
+    assert no_cross_session_recovery["alarm_episodes"] == 1
+    assert no_cross_session_recovery["recovery_latencies_s"] == []
+    assert no_cross_session_recovery["recovery_latency_s"] is None
+
+
+def test_metrics_do_not_bridge_recovery_across_excluded_transition_gap() -> None:
+    rows = [
+        {"firmware_session_index": 1, "run_det_index": 1,
+         "elapsed_s": 10.0, "alarm": 1, "transition_window": 0},
+        {"firmware_session_index": 1, "run_det_index": 2,
+         "elapsed_s": 20.0, "alarm": 0, "transition_window": 1},
+        {"firmware_session_index": 1, "run_det_index": 3,
+         "elapsed_s": 30.0, "alarm": 0, "transition_window": 0},
+    ]
+
+    metrics = physical.detection_metrics(rows)
+
+    assert metrics["det_count"] == 2
+    assert metrics["excluded_transition_windows"] == 1
+    assert metrics["recovery_latencies_s"] == []
+    assert metrics["recovery_latency_s"] is None
+
+
+def test_cold_start_04_recompute_rejects_k1_without_overwriting_original(
+    tmp_path: Path,
+) -> None:
+    run_dir = tmp_path / "run_20260816T130444_fan01_cold-start-04"
+    run_dir.mkdir()
+    original = "istorijski summary mora ostati netaknut\n"
+    (run_dir / "SUMMARY.md").write_text(original, encoding="utf-8")
+
+    state = _ready_protocol_state()
+    state["cal_summary"]["loo_cv"] = 0.627538
+    state = physical.transition_firmware_protocol(state, _quality("DET"))
+    state = physical.transition_firmware_protocol(state, _det())
+    metadata = {
+        "fan_id": "fan01", "session_id": "cold-start-04", "port": "COM3",
+        "baud": 115200, "distance_cm": 20, "room": "soba",
+    }
+    (run_dir / "provenance.json").write_text(
+        json.dumps({
+            "protocol_version": "physical-fan-v1.6.0",
+            "quality_protocol_version": "asd-quality-v1.3.0",
+            "status": "completed_by_operator",
+            "metadata": metadata,
+            "max_dropped": 0,
+            "firmware_protocol_state": state,
+        }),
+        encoding="utf-8",
+    )
+    row = {
+        "condition": "normal_baseline", "condition_confirmed": 1,
+        "protocol_valid": 1, "alarm": 0, "score": 1.0,
+    }
+    with (run_dir / "detections.csv").open("w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=list(row))
+        writer.writeheader()
+        writer.writerow(row)
+
+    recomputed, validity = physical.recompute_run_summary(run_dir)
+
+    assert validity["protocol_valid"] is True
+    assert validity["calibration_accepted"] is False
+    assert validity["calibration_acceptance_reason"] == "loo_cv_above_max"
+    assert validity["metrics_eligible"] is False
+    assert validity["valid_result"] is False
+    assert "Validan fizički rezultat: **NE**" in recomputed
+    assert "Protokol izvještaja: `physical-fan-v1.8.0`" in recomputed
+    assert "Izvorni protokol artefakta: `physical-fan-v1.6.0`" in recomputed
+    assert "Validnih DET prozora za metrike: 0" in recomputed
+    assert "Condition+protocol validnih DET kandidata: 1" in recomputed
+    assert (run_dir / "SUMMARY.md").read_text(encoding="utf-8") == original
+    assert not (run_dir / "SUMMARY.recomputed.md").exists()
+
+
+@pytest.mark.parametrize(
+    "version",
+    [None, "", "physical-fan-v1.5.0", "physical-fan-v2.0.0"],
+)
+def test_offline_artifact_read_rejects_missing_or_unknown_protocol(
+    version: str | None,
+) -> None:
+    provenance = {} if version is None else {
+        "protocol_version": version,
+        "quality_protocol_version": "asd-quality-v1.4.0",
+    }
+    with pytest.raises(ValueError, match="offline citanje podrzava"):
+        physical.artifact_protocol_version_for_read(provenance)
+
+
+@pytest.mark.parametrize(
+    ("version", "quality"), [
+        ("physical-fan-v1.6.0", "asd-quality-v1.3.0"),
+        ("physical-fan-v1.7.0", "asd-quality-v1.4.0"),
+        ("physical-fan-v1.8.0", "asd-quality-v1.5.0"),
+    ],
+)
+def test_offline_artifact_read_accepts_only_explicit_contracts(
+    version: str, quality: str,
+) -> None:
+    provenance = {
+        "protocol_version": version,
+        "quality_protocol_version": quality,
+    }
+    if version in physical.ARTIFACT_CONTRACT_VERSIONS:
+        provenance["artifact_contract_version"] = (
+            physical.ARTIFACT_CONTRACT_VERSIONS[version]
+        )
+    assert physical.artifact_protocol_version_for_read(provenance) == version
+
+
+@pytest.mark.parametrize(
+    ("version", "quality", "error"), [
+        ("physical-fan-v1.6.0", None, "nedostajuci quality_protocol_version"),
+        ("physical-fan-v1.7.0", None, "nedostajuci quality_protocol_version"),
+        ("physical-fan-v1.6.0", "asd-quality-v1.4.0", "nepodudaran host/UART"),
+        ("physical-fan-v1.7.0", "asd-quality-v1.3.0", "nepodudaran host/UART"),
+        ("physical-fan-v1.7.0", "asd-quality-v9.0.0", "nepodudaran host/UART"),
+    ],
+)
+def test_offline_artifact_read_rejects_missing_unknown_or_mismatched_quality(
+    version: str, quality: str | None, error: str,
+) -> None:
+    provenance = {"protocol_version": version}
+    if quality is not None:
+        provenance["quality_protocol_version"] = quality
+    with pytest.raises(ValueError, match=error):
+        physical.artifact_protocol_version_for_read(provenance)
+
+
+@pytest.mark.parametrize("contract", [None, "", "physical-fan-artifacts-v9.0.0"])
+def test_v17_offline_read_requires_exact_artifact_contract(
+    contract: str | None,
+) -> None:
+    provenance = {
+        "protocol_version": physical.PROTOCOL_VERSION,
+        "quality_protocol_version": physical.QUALITY_PROTOCOL_VERSION,
+    }
+    if contract is not None:
+        provenance["artifact_contract_version"] = contract
+    with pytest.raises(ValueError, match="artifact contract"):
+        physical.artifact_protocol_version_for_read(provenance)
+
+
+def test_phase2_provenance_hash_scope_is_explicit_even_for_future_files() -> None:
+    relative = {
+        path.relative_to(physical.ROOT).as_posix()
+        for path in physical.RELEVANT_FILES
+    }
+    assert {
+        "firmware/esp32s3_asd/main/asd_temporal.c",
+        "firmware/esp32s3_asd/main/asd_temporal.h",
+        "firmware/esp32s3_asd/main/asd_cmd.c",
+        "firmware/esp32s3_asd/main/asd_cmd.h",
+        "pc/config/asd_temporal_policy_v2.json",
+        "pc/config/asd_commissioning_policy_v1.json",
+        "firmware/esp32s3_asd/main/asd_calibration_quality.c",
+        "firmware/esp32s3_asd/main/asd_calibration_quality.h",
+        "pc/config/asd_interference_policy_v1.json",
+        "firmware/esp32s3_asd/main/asd_interference.c",
+        "firmware/esp32s3_asd/main/asd_interference.h",
+    } <= relative
 
 
 def _det(
@@ -457,10 +1303,14 @@ def test_det_requires_exact_state_event_transition_and_clear_pair() -> None:
     assert physical.firmware_protocol_complete(state)
 
 
-def test_literal_full_v12_trace_with_roundtrip_det_and_anomaly_pair() -> None:
+def test_literal_full_q15_fresh_trace_with_roundtrip_det_and_anomaly_pair() -> None:
     q = physical.QUALITY_PROTOCOL_VERSION
+    commission_prefix, commission_suffix = _fresh_commission_lines()
     lines = [
+        f"SESSION protocol={q} action=STARTED source=BUTTON "
+        "reason=OPERATOR_REQUEST discards_calibration=0",
         f"STATE protocol={q} from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED",
+        *commission_prefix,
     ]
     for index in range(1, 61):
         lines.append(
@@ -482,12 +1332,14 @@ def test_literal_full_v12_trace_with_roundtrip_det_and_anomaly_pair() -> None:
         f"QUALITY protocol={q} phase=CAL_SUMMARY result=OBSERVED loo_mean=1.000000 "
         "loo_sd=0.200000 loo_cv=0.200000 loo_range=0.500000 "
         "loo_gate=pending_normal_only",
-        "ADAPTTHR n=10 mean=1.000000 sd=0.200000 k=0 theta=0 p=0.9000 "
+        *commission_suffix,
+        _runtime_profile_line(threshold_enter=1.60000002, threshold_exit=1.1),
+        f"ADAPTTHR n={physical.RUNTIME_COMMISSIONING_POLICY['derive_windows']} "
+        "mean=1.000000 sd=0.200000 k=0 theta=0 p=0.9900 "
         "thr=1.60000002 lo=0.000000 factory=0.000000",
         f"PRESENCE protocol={q} level_mean_dbfs=-30 margin_db=11 "
         "gate_dbfs=-41 min_consecutive=3",
-        f"TEMPORAL protocol={q} policy=asd-temporal-policy-v1.0.0 "
-        "min_consecutive=3 ewma_alpha=0 enter_scale=1 exit_scale=0.7 fast_scale=0",
+        _temporal_line(threshold_enter=1.60000002, threshold_exit=1.1),
         f"STATE protocol={q} from=NO_MACHINE to=CALIBRATED_NORMAL "
         "reason=CALIBRATION_ACCEPTED",
         f"EVENT protocol={q} type=CALIBRATION_ACCEPTED state=CALIBRATED_NORMAL "
@@ -583,11 +1435,7 @@ def test_stop_race_with_unconsumed_anomaly_pair_cannot_be_valid() -> None:
 
 
 def test_strict_wait_cal_and_summary_sequence_rejects_replay() -> None:
-    handshake = physical.transition_firmware_protocol(
-        physical.new_firmware_protocol_state(),
-        {"kind": "STATE", "from_state": "NO_MACHINE", "to_state": "NO_MACHINE",
-         "reason": "BOOT_FAIL_CLOSED"},
-    )
+    handshake = _handshake_state()
     out_of_order = physical.transition_firmware_protocol(handshake, _quality("WAIT", 2))
     assert out_of_order["invalid_status"] == "invalid_firmware_telemetry"
     assert out_of_order["invalid_reason"].startswith("WAIT_sequence")
@@ -626,6 +1474,9 @@ def test_all_low_wait_cannot_enter_calibration() -> None:
 
 def test_cal_summary_and_adapt_are_coherent_unique_and_ordered() -> None:
     state = _handshake_state()
+    commission_prefix, commission_suffix = _fresh_commission_records()
+    for record in commission_prefix:
+        state = physical.transition_firmware_protocol(state, record)
     for phase in ("WAIT", "CAL"):
         for index in range(1, physical.EXPECTED_QUALITY_COUNTS[phase] + 1):
             state = physical.transition_firmware_protocol(state, _quality(phase, index))
@@ -647,13 +1498,65 @@ def test_cal_summary_and_adapt_are_coherent_unique_and_ordered() -> None:
     assert accepted_without_adapt["invalid_reason"] == (
         "CALIBRATION_ACCEPTED_without_unique_ADAPTTHR"
     )
+    for record in commission_suffix:
+        state = physical.transition_firmware_protocol(state, record)
+    profile = physical.parse_serial_line(_runtime_profile_line())
+    assert profile is not None
+    state = physical.transition_firmware_protocol(state, profile)
     mismatch = physical.transition_firmware_protocol(
-        state, {**_adapt(), "mean": 2.0},
+        state, {**_adapt(), "threshold": 2.0},
     )
-    assert mismatch["invalid_reason"] == "ADAPTTHR_mean_mismatch"
-    state = physical.transition_firmware_protocol(state, _adapt())
+    assert mismatch["invalid_reason"] == "ADAPTTHR_PROFILE_threshold_mismatch"
+    # DERIVE statistika je vremenski kasnija od CAL_SUMMARY LOO statistike.
+    state = physical.transition_firmware_protocol(state, {**_adapt(), "mean": 2.0})
+    assert state["invalid_status"] is None
     duplicate = physical.transition_firmware_protocol(state, _adapt())
     assert duplicate["invalid_reason"] == "duplicate_ADAPTTHR"
+
+
+def test_cal_summary_cv_consistency_uses_six_decimal_wire_intervals() -> None:
+    # 1e-6/1e-6 izgleda kao CV=1 iz prikazanih centara, ali oba wire bina
+    # predstavljaju [0.5e-6, 1.5e-6]. Stvarne 1.4e-6 i 0.6e-6 daju emitovani
+    # CV=0.428571, pa je zapis matematicki moguc i mora proci.
+    assert physical.cal_summary_cv_is_quantization_consistent(
+        0.000001, 0.000001, 0.428571,
+    )
+    # Stvarni cold-start-04 zapis ostaje koherentan pod istim pravilom.
+    assert physical.cal_summary_cv_is_quantization_consistent(
+        2197.673828, 1379.123047, 0.627538,
+    )
+
+    # Materijalni mismatch-i nemaju presjek kvantizacionih intervala.
+    assert not physical.cal_summary_cv_is_quantization_consistent(1.0, 0.2, 0.3)
+    assert not physical.cal_summary_cv_is_quantization_consistent(
+        2197.673828, 1379.123047, 0.637538,
+    )
+
+    def before_summary() -> dict:
+        state = _handshake_state()
+        for phase in ("WAIT", "CAL"):
+            for index in range(1, physical.EXPECTED_QUALITY_COUNTS[phase] + 1):
+                state = physical.transition_firmware_protocol(
+                    state, _quality(phase, index),
+                )
+        return state
+
+    quantized_example = physical.transition_firmware_protocol(
+        before_summary(), {
+            **_quality("CAL_SUMMARY"),
+            "loo_mean": 0.000001, "loo_sd": 0.000001,
+            "loo_cv": 0.428571, "loo_range": 0.000002,
+        },
+    )
+    assert quantized_example["invalid_status"] is None
+    material_mismatch = physical.transition_firmware_protocol(
+        before_summary(), {
+            **_quality("CAL_SUMMARY"),
+            "loo_mean": 1.0, "loo_sd": 0.2,
+            "loo_cv": 0.3, "loo_range": 1.0,
+        },
+    )
+    assert material_mismatch["invalid_reason"].startswith("CAL_SUMMARY_cv_mismatch")
 
 
 def test_det_threshold_must_equal_unique_adapt_threshold() -> None:
@@ -720,7 +1623,7 @@ def test_tiny_negative_contract_clamps_but_material_negative_rejects() -> None:
     assert invalid["invalid_reason"] == "negative_DET_score:-0.002"
 
     summary = physical.parse_serial_line(
-        "QUALITY protocol=asd-quality-v1.3.0 phase=CAL_SUMMARY result=OBSERVED "
+        "QUALITY protocol=asd-quality-v1.4.0 phase=CAL_SUMMARY result=OBSERVED "
         "loo_mean=-0.0005 loo_sd=0 loo_cv=0 loo_range=0 "
         "loo_gate=pending_normal_only"
     )
@@ -1033,11 +1936,13 @@ def test_serial_close_failure_is_finalized_before_it_is_raised(
         def __init__(self, *args, **kwargs):
             self.timeout = 1
             self.lines = [
-                b"STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE "
+                b"SESSION protocol=asd-quality-v1.4.0 action=STARTED source=BUTTON "
+                b"reason=OPERATOR_REQUEST discards_calibration=0\n",
+                b"STATE protocol=asd-quality-v1.4.0 from=NO_MACHINE "
                 b"to=NO_MACHINE reason=BOOT_FAIL_CLOSED\n",
-                b"STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE "
+                b"STATE protocol=asd-quality-v1.4.0 from=NO_MACHINE "
                 b"to=NO_MACHINE reason=INSUFFICIENT_LEVEL\n",
-                b"EVENT protocol=asd-quality-v1.3.0 type=FLOW_STOPPED "
+                b"EVENT protocol=asd-quality-v1.4.0 type=FLOW_STOPPED "
                 b"state=NO_MACHINE phase=WAIT reason=INSUFFICIENT_LEVEL "
                 b"event=NONE capability=AVAILABLE level=MACHINE_PRESENCE\n",
             ]
@@ -1097,11 +2002,13 @@ def test_stop_drains_buffered_terminal_telemetry_and_bad_condition_does_not_cras
     import serial
 
     lines = [
-        "STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=NO_MACHINE "
+            "SESSION protocol=asd-quality-v1.5.0 action=STARTED source=BUTTON "
+        "reason=OPERATOR_REQUEST discards_calibration=0\n",
+            "STATE protocol=asd-quality-v1.5.0 from=NO_MACHINE to=NO_MACHINE "
         "reason=BOOT_FAIL_CLOSED\n",
-        "STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=NO_MACHINE "
+            "STATE protocol=asd-quality-v1.5.0 from=NO_MACHINE to=NO_MACHINE "
         "reason=INSUFFICIENT_LEVEL\n",
-        "EVENT protocol=asd-quality-v1.3.0 type=FLOW_STOPPED state=NO_MACHINE "
+            "EVENT protocol=asd-quality-v1.5.0 type=FLOW_STOPPED state=NO_MACHINE "
         "phase=WAIT reason=INSUFFICIENT_LEVEL "
         "event=NONE capability=AVAILABLE level=MACHINE_PRESENCE\n",
     ]
@@ -1152,17 +2059,27 @@ def test_stop_drains_buffered_terminal_telemetry_and_bad_condition_does_not_cras
     assert state["terminal_event_seen"] is True
 
 
-def test_run_experiment_dispatches_temporal_and_completes_valid_protocol(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+@pytest.mark.parametrize(
+    ("loo_cv", "expected_rc", "expected_accepted", "expected_result_status"),
+    [
+        (0.2, 0, True, "valid_physical_result"),
+        (0.600001, 1, False, "calibration_rejected:loo_cv_above_max"),
+    ],
+)
+def test_run_experiment_dispatches_temporal_and_uses_k1_for_final_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, loo_cv: float,
+    expected_rc: int, expected_accepted: bool, expected_result_status: str,
 ) -> None:
     """Regresija za stvarnu serijsku petlju, ne samo cisti state-machine."""
     import serial
 
     q = physical.QUALITY_PROTOCOL_VERSION
+    commission_prefix, commission_suffix = _fresh_commission_lines()
     lines = [
-        f"STATE protocol={q} from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED",
         f"SESSION protocol={q} action=STARTED source=BUTTON "
         "reason=OPERATOR_REQUEST discards_calibration=0",
+        f"STATE protocol={q} from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED",
+        *commission_prefix,
     ]
     for index in range(1, 61):
         lines.append(
@@ -1180,28 +2097,58 @@ def test_run_experiment_dispatches_temporal_and_completes_valid_protocol(
             "feature_valid=1 tonalness_valid=1 tonalness_proxy=1.000000 "
             "tonal_gate=pending_normal_only"
         )
-    lines.extend([
+    threshold = 1.0 + 3.0 * loo_cv
+    lines.append(
         f"QUALITY protocol={q} phase=CAL_SUMMARY result=OBSERVED "
-        "loo_mean=1.000000 loo_sd=0.200000 loo_cv=0.200000 "
-        "loo_range=0.500000 loo_gate=pending_normal_only",
-        "ADAPTTHR n=10 mean=1.000000 sd=0.200000 k=0 theta=0 p=0.9000 "
-        "thr=1.60000002 lo=0.000000 factory=0.000000",
-        f"PRESENCE protocol={q} level_mean_dbfs=-30 margin_db=11 "
-        "gate_dbfs=-41 min_consecutive=3",
-        f"TEMPORAL protocol={q} policy=asd-temporal-policy-v1.0.0 "
-        "min_consecutive=3 ewma_alpha=0 enter_scale=1 exit_scale=0.7 fast_scale=0",
-        f"STATE protocol={q} from=NO_MACHINE to=CALIBRATED_NORMAL "
-        "reason=CALIBRATION_ACCEPTED",
-        f"EVENT protocol={q} type=CALIBRATION_ACCEPTED state=CALIBRATED_NORMAL "
-        "phase=CAL reason=QUALITY_OK event=NONE capability=AVAILABLE level=DEVIATION",
-        f"QUALITY protocol={q} phase=DET index=1 total=0 result=OK "
-        "metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-30.000 "
-        "dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 dropped_delta=0 "
-        "feature_valid=1 tonalness_valid=1 tonalness_proxy=1.000000 "
-        "tonal_gate=pending_normal_only",
-        "DET 1 score=0.5 lo=0 hi=1.60000002 led=1 anom=0 total_anom=0 "
-        "normal (uzastopnih=0 nivo=-30.0 dBFS racun=700 ms)",
-    ])
+        f"loo_mean=1.000000 loo_sd={loo_cv:.6f} loo_cv={loo_cv:.6f} "
+        "loo_range=1.000000 loo_gate=pending_normal_only"
+    )
+    if expected_accepted:
+        threshold_exit = threshold * 0.7
+        lines.extend([
+            *commission_suffix,
+            _runtime_profile_line(
+                threshold_enter=threshold, threshold_exit=threshold_exit,
+            ),
+            f"ADAPTTHR n={physical.RUNTIME_COMMISSIONING_POLICY['derive_windows']} "
+            f"mean=1.000000 sd={loo_cv:.6f} k=0 theta=0 p=0.9900 "
+            f"thr={threshold:.8f} lo=0.000000 factory=0.000000",
+            f"PRESENCE protocol={q} level_mean_dbfs=-30 margin_db=11 "
+            "gate_dbfs=-41 min_consecutive=3",
+            _temporal_line(
+                threshold_enter=threshold, threshold_exit=threshold_exit,
+            ),
+            f"STATE protocol={q} from=NO_MACHINE to=CALIBRATED_NORMAL "
+            "reason=CALIBRATION_ACCEPTED",
+            f"EVENT protocol={q} type=CALIBRATION_ACCEPTED state=CALIBRATED_NORMAL "
+            "phase=CAL reason=QUALITY_OK event=NONE capability=AVAILABLE level=DEVIATION",
+            f"QUALITY protocol={q} phase=DET index=1 total=0 result=OK "
+            "metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-30.000 "
+            "dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 dropped_delta=0 "
+            "feature_valid=1 tonalness_valid=1 tonalness_proxy=1.000000 "
+            "tonal_gate=pending_normal_only",
+            f"DET 1 score=0.5 lo=0 hi={threshold:.8f} led=1 anom=0 total_anom=0 "
+            "normal (uzastopnih=0 nivo=-30.0 dBFS racun=700 ms)",
+            f"QUALITY protocol={q} phase=DET index=2 total=0 result=OK "
+            "metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-30.000 "
+            "dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 dropped_delta=0 "
+            "feature_valid=1 tonalness_valid=1 tonalness_proxy=1.000000 "
+            "tonal_gate=pending_normal_only",
+            f"DET 2 score=0.5 lo=0 hi={threshold:.8f} led=1 anom=0 total_anom=0 "
+            "normal (uzastopnih=0 nivo=-30.0 dBFS racun=700 ms)",
+            f"SESSION protocol={q} action=ENDED source=FIRMWARE "
+            "reason=SESSION_RETURNED discards_calibration=0",
+        ])
+    else:
+        lines.extend([
+            f"STATE protocol={q} from=NO_MACHINE to=CALIBRATION_REJECTED "
+            "reason=UNSTABLE_CALIBRATION",
+            f"EVENT protocol={q} type=FLOW_STOPPED state=CALIBRATION_REJECTED "
+            "phase=CAL reason=UNSTABLE_CALIBRATION event=NONE "
+            "capability=AVAILABLE level=DEVIATION",
+            f"SESSION protocol={q} action=ENDED source=FIRMWARE "
+            "reason=SESSION_RETURNED discards_calibration=0",
+        ])
 
     class FakeSerial:
         def __init__(self, *args, **kwargs):
@@ -1227,7 +2174,11 @@ def test_run_experiment_dispatches_temporal_and_completes_valid_protocol(
 
     def poll_until_consumed(path, offset):
         nonlocal condition_sent, stop_sent
-        if not condition_sent:
+        if (
+            expected_accepted and not condition_sent and fake_instances
+            and fake_instances[0].lines
+            and b"phase=DET index=1" in fake_instances[0].lines[0]
+        ):
             condition_sent = True
             return offset, ["condition normal_baseline"]
         if fake_instances and not fake_instances[0].lines and not stop_sent:
@@ -1240,16 +2191,255 @@ def test_run_experiment_dispatches_temporal_and_completes_valid_protocol(
     monkeypatch.setattr(physical, "poll_command_file", poll_until_consumed)
     rc = physical.run_experiment(_run_args(tmp_path, tmp_path / "commands.txt"))
 
-    assert rc == 0
+    assert rc == expected_rc
     assert fake_instances and fake_instances[0].closed is True
     run_dir = next(tmp_path.glob("run_*"))
     provenance = json.loads((run_dir / "provenance.json").read_text(encoding="utf-8"))
-    assert provenance["status"] == "completed_by_operator"
-    assert provenance["firmware_telemetry_counts"]["TEMPORAL"] == 1
+    assert provenance["status"] == (
+        "completed_by_operator" if expected_accepted
+        else "completed_calibration_rejected"
+    )
+    assert provenance["calibration_accepted"] is expected_accepted
+    assert provenance["calibration_acceptance_reason"] == (
+        "accepted" if expected_accepted else "loo_cv_above_max"
+    )
+    assert provenance["physical_result_status"] == expected_result_status
+    assert provenance["metrics_eligible"] is expected_accepted
+    assert provenance["firmware_telemetry_counts"]["TEMPORAL"] == (
+        1 if expected_accepted else 0
+    )
+    assert provenance["firmware_telemetry_counts"]["SESSION"] == 2
     state = provenance["firmware_protocol_state"]
-    assert state["temporal_seen"] is True
+    assert state["temporal_seen"] is expected_accepted
+    assert state["calibration_rejected_event"] is (not expected_accepted)
+    assert state["sessions_ended"] == 1
     assert physical.firmware_protocol_complete(state)
+    assert provenance["valid_det_window_count"] == (1 if expected_accepted else 0)
+    summary = (run_dir / "SUMMARY.md").read_text(encoding="utf-8")
+    assert f"Status fizičkog rezultata: `{expected_result_status}`" in summary
+
+
+def test_full_literal_two_session_run_resets_session_scope_and_keeps_run_totals(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """K1 reject ostaje audit, a cijeli drugi tok daje valjan multi-session run."""
+    import serial
+
+    q = physical.QUALITY_PROTOCOL_VERSION
+    commission_prefix, commission_suffix = _fresh_commission_lines()
+
+    def session_line(action: str) -> str:
+        source = "BUTTON" if action == "STARTED" else "FIRMWARE"
+        reason = "OPERATOR_REQUEST" if action == "STARTED" else "SESSION_RETURNED"
+        return (
+            f"SESSION protocol={q} action={action} source={source} "
+            f"reason={reason} discards_calibration=0"
+        )
+
+    def wait_line(index: int) -> str:
+        return (
+            f"QUALITY protocol={q} phase=WAIT index={index} total=60 result=OK "
+            "metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-30.000 "
+            "dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 dropped_delta=0 "
+            "feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 "
+            "tonal_gate=not_computed"
+        )
+
+    def cal_line(index: int) -> str:
+        return (
+            f"QUALITY protocol={q} phase=CAL index={index} total=10 result=OK "
+            "metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-30.000 "
+            "dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 dropped_delta=0 "
+            "feature_valid=1 tonalness_valid=1 tonalness_proxy=1.000000 "
+            "tonal_gate=pending_normal_only"
+        )
+
+    def det_pair(index: int) -> list[str]:
+        return [
+            f"QUALITY protocol={q} phase=DET index={index} total=0 result=OK "
+            "metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-30.000 "
+            "dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 dropped_delta=0 "
+            "feature_valid=1 tonalness_valid=1 tonalness_proxy=1.000000 "
+            "tonal_gate=pending_normal_only",
+            f"DET {index} score=0.5 lo=0 hi=1.60000000 led=1 anom=0 "
+            "total_anom=0 normal (uzastopnih=0 nivo=-30.0 dBFS racun=700 ms)",
+        ]
+
+    lines = [
+        session_line("STARTED"),
+        f"STATE protocol={q} from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED",
+        *commission_prefix,
+        *[wait_line(index) for index in range(1, 61)],
+        *[cal_line(index) for index in range(1, 11)],
+        f"QUALITY protocol={q} phase=CAL_SUMMARY result=OBSERVED "
+        "loo_mean=1.000000 loo_sd=0.600001 loo_cv=0.600001 "
+        "loo_range=1.000000 loo_gate=pending_normal_only",
+        f"STATE protocol={q} from=NO_MACHINE to=CALIBRATION_REJECTED "
+        "reason=UNSTABLE_CALIBRATION",
+        f"EVENT protocol={q} type=FLOW_STOPPED state=CALIBRATION_REJECTED "
+        "phase=CAL reason=UNSTABLE_CALIBRATION event=NONE "
+        "capability=AVAILABLE level=DEVIATION",
+        session_line("ENDED"),
+        session_line("STARTED"),
+        f"STATE protocol={q} from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED",
+        *commission_prefix,
+        *[wait_line(index) for index in range(1, 61)],
+        *[cal_line(index) for index in range(1, 11)],
+        f"QUALITY protocol={q} phase=CAL_SUMMARY result=OBSERVED "
+        "loo_mean=1.000000 loo_sd=0.200000 loo_cv=0.200000 "
+        "loo_range=0.500000 loo_gate=pending_normal_only",
+        *commission_suffix,
+        _runtime_profile_line(),
+        f"ADAPTTHR n={physical.RUNTIME_COMMISSIONING_POLICY['derive_windows']} "
+        "mean=1.000000 sd=0.200000 k=0 theta=0 p=0.9900 "
+        "thr=1.60000000 lo=0.000000 factory=0.000000",
+        f"PRESENCE protocol={q} level_mean_dbfs=-30 margin_db=11 "
+        "gate_dbfs=-41 min_consecutive=3",
+        _temporal_line(),
+        f"STATE protocol={q} from=NO_MACHINE to=CALIBRATED_NORMAL "
+        "reason=CALIBRATION_ACCEPTED",
+        f"EVENT protocol={q} type=CALIBRATION_ACCEPTED state=CALIBRATED_NORMAL "
+        "phase=CAL reason=QUALITY_OK event=NONE capability=AVAILABLE level=DEVIATION",
+        *det_pair(1),
+        *det_pair(2),
+        *det_pair(3),
+        session_line("ENDED"),
+    ]
+
+    class FakeSerial:
+        def __init__(self, *args, **kwargs):
+            self.timeout = kwargs.get("timeout", 1)
+            self.lines = [(line + "\n").encode("ascii") for line in lines]
+            self.started_count = 0
+            self.closed = False
+
+        def readline(self):
+            if not self.lines:
+                return b""
+            line = self.lines.pop(0)
+            if line.startswith(b"SESSION ") and b"action=STARTED" in line:
+                self.started_count += 1
+            return line
+
+        def close(self):
+            self.closed = True
+
+    fake_instances: list[FakeSerial] = []
+
+    def open_fake(*args, **kwargs):
+        instance = FakeSerial(*args, **kwargs)
+        fake_instances.append(instance)
+        return instance
+
+    stale_condition_sent = False
+    second_condition_sent = False
+    stop_sent = False
+
+    def poll_commands(path, offset):
+        nonlocal stale_condition_sent, second_condition_sent, stop_sent
+        if (
+            fake_instances and fake_instances[0].started_count == 1
+            and not stale_condition_sent
+        ):
+            stale_condition_sent = True
+            return offset, ["condition airflow_change first-session-only"]
+        if (
+            fake_instances and fake_instances[0].started_count == 2
+            and not second_condition_sent and fake_instances[0].lines
+            and b"phase=DET index=2" in fake_instances[0].lines[0]
+        ):
+            second_condition_sent = True
+            return offset, ["condition normal_baseline second-session"]
+        if fake_instances and not fake_instances[0].lines and not stop_sent:
+            stop_sent = True
+            return offset, ["stop"]
+        return offset, []
+
+    _mock_ready_host(monkeypatch)
+    monkeypatch.setattr(serial, "Serial", open_fake)
+    monkeypatch.setattr(physical, "poll_command_file", poll_commands)
+
+    rc = physical.run_experiment(_run_args(tmp_path, tmp_path / "commands.txt"))
+
+    assert rc == 0
+    run_dir = next(tmp_path.glob("run_*"))
+    provenance = json.loads((run_dir / "provenance.json").read_text(encoding="utf-8"))
+    detections = list(csv.DictReader(
+        (run_dir / "detections.csv").open(encoding="utf-8", newline=""),
+    ))
+    quality = list(csv.DictReader(
+        (run_dir / "firmware_quality.csv").open(encoding="utf-8", newline=""),
+    ))
+    events = list(csv.DictReader(
+        (run_dir / "events.csv").open(encoding="utf-8", newline=""),
+    ))
+    firmware_states = list(csv.DictReader(
+        (run_dir / "firmware_states.csv").open(encoding="utf-8", newline=""),
+    ))
+
+    assert provenance["status"] == "completed_by_operator"
+    assert provenance["artifact_contract_version"] == physical.ARTIFACT_CONTRACT_VERSION
+    assert provenance["physical_result_status"] == "valid_physical_result"
+    assert provenance["run_quality_counts"] == {
+        "WAIT": 120, "CAL": 20, "CAL_SUMMARY": 2, "DET": 3,
+    }
+    assert provenance["run_det_records"] == len(detections) == 3
     assert provenance["valid_det_window_count"] == 1
+    assert provenance["excluded_transition_window_count"] == 1
+
+    sessions = provenance["firmware_sessions"]
+    assert [item["firmware_session_index"] for item in sessions] == [1, 2]
+    assert sessions[0]["protocol_status"] == "calibration_rejected"
+    assert sessions[0]["protocol_valid"] is True
+    assert sessions[0]["calibration_accepted"] is False
+    assert sessions[0]["raw_det_count"] == sessions[0]["det_count"] == 0
+    assert sessions[0]["metrics_eligible"] is False
+    assert sessions[1]["protocol_status"] == "accepted"
+    assert sessions[1]["protocol_valid"] is True
+    assert sessions[1]["calibration_accepted"] is True
+    assert sessions[1]["raw_det_count"] == 3
+    assert sessions[1]["protocol_valid_det_count"] == 3
+    assert sessions[1]["det_count"] == 1
+
+    assert [row["firmware_session_index"] for row in detections] == ["2", "2", "2"]
+    assert [row["window"] for row in detections] == ["1", "2", "3"]
+    assert [row["run_det_index"] for row in detections] == ["1", "2", "3"]
+    assert detections[0]["condition"] == "unconfirmed"
+    assert detections[0]["condition_confirmed"] == "0"
+    assert detections[1]["condition"] == "normal_baseline"
+    assert detections[1]["transition_window"] == "1"
+    assert detections[2]["condition"] == "normal_baseline"
+    assert detections[2]["transition_window"] == "0"
+    condition_events = [row for row in events if row["kind"] == "condition"]
+    assert [row["firmware_session_index"] for row in condition_events] == ["1", "2"]
+
+    wait_rows = [row for row in quality if row["phase"] == "WAIT"]
+    assert wait_rows[0]["firmware_session_index"] == "1"
+    second_wait = next(
+        row for row in wait_rows if row["firmware_session_index"] == "2"
+    )
+    assert second_wait["index"] == "1"
+    assert sum(row["firmware_session_index"] == "1" for row in wait_rows) == 60
+    assert sum(row["firmware_session_index"] == "2" for row in wait_rows) == 60
+    boot_rows = [
+        row for row in firmware_states if row["reason"] == "BOOT_FAIL_CLOSED"
+    ]
+    assert [row["firmware_session_index"] for row in boot_rows] == ["1", "2"]
+
+    state = provenance["firmware_protocol_state"]
+    assert state["handshake"] is True
+    assert state["sessions"] == state["sessions_ended"] == 2
+    assert state["firmware_session_index"] == 2
+    assert state["det_records"] == 3
+    assert state["run_det_records"] == 3
+    assert state["run_boot_records"] == 2
+    assert state["session_boot_seen"] is True
+    assert physical.firmware_protocol_complete(state)
+
+    summary = (run_dir / "SUMMARY.md").read_text(encoding="utf-8")
+    assert "Firmware sesija: 2" in summary
+    assert "| 1 | calibration_rejected (valid)" in summary
+    assert "| 2 | accepted (valid)" in summary
 
 
 def test_final_buffer_drain_is_bounded_by_quiet_or_total_time() -> None:
@@ -1277,14 +2467,7 @@ def test_summary_never_calls_zero_det_run_valid() -> None:
 
 def test_presence_record_is_required_before_any_det() -> None:
     """Bez objavljenog gate-a host ne moze nezavisno ponoviti odluku Faze 2."""
-    state = physical.new_firmware_protocol_state()
-    state = physical.transition_firmware_protocol(state, {
-        "kind": "STATE", "from_state": "NO_MACHINE", "to_state": "NO_MACHINE",
-        "reason": "BOOT_FAIL_CLOSED",
-    })
-    for phase, count in physical.EXPECTED_QUALITY_COUNTS.items():
-        for index in range(1, count + 1):
-            state = physical.transition_firmware_protocol(state, _quality(phase, index))
+    state = _fresh_profile_state()
     state = physical.transition_firmware_protocol(state, _adapt())
     assert not physical.firmware_protocol_ready(state)
     assert state["presence_seen"] is False
@@ -1299,16 +2482,19 @@ def test_presence_must_follow_adapt_and_precede_acceptance() -> None:
 
     # Gate poslije prihvacene kalibracije: nedostizno u praksi jer prihvatanje
     # trazi PRESENCE, ali se cuva kao odbrana u dubinu i zato se provjerava.
-    replayed = {**_ready_protocol_state(), "presence_seen": False}
+    replayed = {
+        **_ready_protocol_state(),
+        "presence_seen": False,
+        "temporal_seen": False,
+        "temporal_threshold_enter": None,
+        "temporal_threshold_exit": None,
+    }
     out = physical.transition_firmware_protocol(replayed, _presence())
     assert out["invalid_reason"] == "PRESENCE_after_calibration_acceptance"
 
 
 def test_presence_margin_must_match_the_locked_policy() -> None:
-    state = _handshake_state()
-    for phase, count in physical.EXPECTED_QUALITY_COUNTS.items():
-        for index in range(1, count + 1):
-            state = physical.transition_firmware_protocol(state, _quality(phase, index))
+    state = _fresh_profile_state()
     state = physical.transition_firmware_protocol(state, _adapt())
     tampered = dict(_presence())
     tampered["margin_db"] = 3.0
@@ -1319,7 +2505,7 @@ def test_presence_margin_must_match_the_locked_policy() -> None:
 
 def test_presence_gate_arithmetic_is_checked_at_parse_time() -> None:
     bad = physical.parse_serial_line(
-        "PRESENCE protocol=asd-quality-v1.3.0 level_mean_dbfs=-30 margin_db=11 "
+        "PRESENCE protocol=asd-quality-v1.4.0 level_mean_dbfs=-30 margin_db=11 "
         "gate_dbfs=-35 min_consecutive=3"
     )
     assert bad["kind"] == "PARSE_ERROR"
@@ -1371,7 +2557,7 @@ def test_presence_lost_without_a_level_drop_is_rejected() -> None:
 def test_reserved_event_cannot_appear_on_the_wire() -> None:
     """Kapabilitetni gate: MECHANICAL_ANOMALY trazi Fazu 6 i ne smije se emitovati."""
     parsed = physical.parse_serial_line(
-        "EVENT protocol=asd-quality-v1.3.0 type=ANOMALY_ENTERED state=ANOMALY "
+        "EVENT protocol=asd-quality-v1.4.0 type=ANOMALY_ENTERED state=ANOMALY "
         "phase=DET reason=THRESHOLD_PERSISTENCE event=MECHANICAL_ANOMALY "
         "capability=NEEDS_TRANSIENT level=DEVIATION"
     )
@@ -1381,7 +2567,7 @@ def test_reserved_event_cannot_appear_on_the_wire() -> None:
 
 def test_reserved_event_relabelled_as_available_is_still_rejected() -> None:
     parsed = physical.parse_serial_line(
-        "EVENT protocol=asd-quality-v1.3.0 type=ANOMALY_ENTERED state=ANOMALY "
+        "EVENT protocol=asd-quality-v1.4.0 type=ANOMALY_ENTERED state=ANOMALY "
         "phase=DET reason=THRESHOLD_PERSISTENCE event=SPEED_CHANGED "
         "capability=AVAILABLE level=DEVIATION"
     )
@@ -1391,7 +2577,7 @@ def test_reserved_event_relabelled_as_available_is_still_rejected() -> None:
 
 def test_event_without_faza2_fields_is_a_protocol_error() -> None:
     parsed = physical.parse_serial_line(
-        "EVENT protocol=asd-quality-v1.3.0 type=FLOW_STOPPED state=NO_MACHINE "
+        "EVENT protocol=asd-quality-v1.4.0 type=FLOW_STOPPED state=NO_MACHINE "
         "phase=WAIT reason=INSUFFICIENT_LEVEL"
     )
     assert parsed["kind"] == "PARSE_ERROR"
@@ -1405,7 +2591,7 @@ def test_button_record_never_breaks_the_det_pair() -> None:
     state = physical.transition_firmware_protocol(state, _quality("DET", 1))
     assert state["pending_det_quality"] == 1
     button = physical.parse_serial_line(
-        "BUTTON protocol=asd-quality-v1.3.0 event=LONG mode=READY "
+            "BUTTON protocol=asd-quality-v1.5.0 event=LONG mode=READY "
         "command=START_LEARNING discards=1"
     )
     assert button["kind"] == "BUTTON"
@@ -1418,7 +2604,7 @@ def test_button_record_never_breaks_the_det_pair() -> None:
 
 def test_short_press_claiming_a_discard_is_a_protocol_error() -> None:
     parsed = physical.parse_serial_line(
-        "BUTTON protocol=asd-quality-v1.3.0 event=SHORT mode=READY "
+        "BUTTON protocol=asd-quality-v1.4.0 event=SHORT mode=READY "
         "command=START_LEARNING discards=1"
     )
     assert parsed["kind"] == "PARSE_ERROR"
@@ -1427,7 +2613,7 @@ def test_short_press_claiming_a_discard_is_a_protocol_error() -> None:
 
 def test_session_records_must_be_paired() -> None:
     started = physical.parse_serial_line(
-        "SESSION protocol=asd-quality-v1.3.0 action=STARTED source=BUTTON "
+            "SESSION protocol=asd-quality-v1.5.0 action=STARTED source=BUTTON "
         "reason=OPERATOR_REQUEST discards_calibration=0"
     )
     assert started["kind"] == "SESSION"
@@ -1438,7 +2624,7 @@ def test_session_records_must_be_paired() -> None:
         state, started)["invalid_reason"] == "SESSION_STARTED_twice"
 
     orphan = physical.parse_serial_line(
-        "SESSION protocol=asd-quality-v1.3.0 action=ENDED source=FIRMWARE "
+        "SESSION protocol=asd-quality-v1.5.0 action=ENDED source=FIRMWARE "
         "reason=NO_MACHINE discards_calibration=0"
     )
     out = physical.transition_firmware_protocol(
@@ -1448,7 +2634,7 @@ def test_session_records_must_be_paired() -> None:
 
 def test_autostart_session_source_is_rejected() -> None:
     parsed = physical.parse_serial_line(
-        "SESSION protocol=asd-quality-v1.3.0 action=STARTED source=AUTOSTART "
+        "SESSION protocol=asd-quality-v1.4.0 action=STARTED source=AUTOSTART "
         "reason=BOOT_GRACE_EXPIRED discards_calibration=0"
     )
     assert parsed["kind"] == "PARSE_ERROR"
@@ -1468,15 +2654,15 @@ def test_button_only_firmware_checks_ui_task_creation() -> None:
 
 def test_unknown_operator_tokens_are_protocol_errors() -> None:
     cases = [
-        ("SESSION protocol=asd-quality-v1.3.0 action=RESUMED source=BUTTON "
+        ("SESSION protocol=asd-quality-v1.4.0 action=RESUMED source=BUTTON "
          "reason=X discards_calibration=0", "unknown_session_action:RESUMED"),
-        ("SESSION protocol=asd-quality-v1.3.0 action=STARTED source=TIMER "
+        ("SESSION protocol=asd-quality-v1.4.0 action=STARTED source=TIMER "
          "reason=X discards_calibration=0", "unknown_session_source:TIMER"),
-        ("BUTTON protocol=asd-quality-v1.3.0 event=DOUBLE mode=IDLE "
+        ("BUTTON protocol=asd-quality-v1.4.0 event=DOUBLE mode=IDLE "
          "command=NONE discards=0", "unknown_button_event:DOUBLE"),
-        ("BUTTON protocol=asd-quality-v1.3.0 event=LONG mode=SLEEPING "
+        ("BUTTON protocol=asd-quality-v1.4.0 event=LONG mode=SLEEPING "
          "command=NONE discards=0", "unknown_button_mode:SLEEPING"),
-        ("BUTTON protocol=asd-quality-v1.3.0 event=LONG mode=IDLE "
+        ("BUTTON protocol=asd-quality-v1.4.0 event=LONG mode=IDLE "
          "command=RECALIBRATE discards=0", "unknown_button_command:RECALIBRATE"),
     ]
     for line, expected in cases:
@@ -1495,13 +2681,13 @@ def test_virtual_button_records_cannot_invalidate_a_run() -> None:
     `transition_firmware_protocol`.
     """
     ignored = [
-        "FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL "
+        "FLAGS protocol=asd-quality-v1.4.0 mode=READY state=CALIBRATED_NORMAL "
         "waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off",
-        "FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 "
+        "FLAGS protocol=asd-quality-v1.4.0 mode=ALARM state=ANOMALY waiting=0 "
         "learning=0 learned=1 anomaly=1 fault=0 green=off red=on",
-        "VBUTTON protocol=asd-quality-v1.3.0 source=console event=SHORT "
+        "VBUTTON protocol=asd-quality-v1.4.0 source=console event=SHORT "
         "result=accepted",
-        "VBUTTON protocol=asd-quality-v1.3.0 source=console event=NONE "
+        "VBUTTON protocol=asd-quality-v1.4.0 source=console event=NONE "
         "result=unknown_command",
     ]
     for line in ignored:
@@ -1510,7 +2696,7 @@ def test_virtual_button_records_cannot_invalidate_a_run() -> None:
     # Virtuelni pritisak se i dalje prijavljuje obicnim `BUTTON` redom, pa
     # dokaz o operaterovoj radnji ostaje u zakljucanoj telemetriji.
     parsed = physical.parse_serial_line(
-        "BUTTON protocol=asd-quality-v1.3.0 event=SHORT mode=IDLE "
+        "BUTTON protocol=asd-quality-v1.4.0 event=SHORT mode=IDLE "
         "command=START_LEARNING discards=0"
     )
     assert parsed["kind"] == "BUTTON"
@@ -1567,15 +2753,17 @@ def test_operator_relearn_emits_aborted_then_ended() -> None:
     """
     state = physical.new_firmware_protocol_state()
     for line in (
-        "SESSION protocol=asd-quality-v1.3.0 action=STARTED source=BUTTON "
+        "SESSION protocol=asd-quality-v1.5.0 action=STARTED source=BUTTON "
         "reason=OPERATOR_REQUEST discards_calibration=0",
-        "SESSION protocol=asd-quality-v1.3.0 action=ABORTED source=BUTTON "
+        "STATE protocol=asd-quality-v1.5.0 from=NO_MACHINE to=NO_MACHINE "
+        "reason=BOOT_FAIL_CLOSED",
+        "SESSION protocol=asd-quality-v1.5.0 action=ABORTED source=BUTTON "
         "reason=OPERATOR_RELEARN discards_calibration=1",
-        "SESSION protocol=asd-quality-v1.3.0 action=ENDED source=FIRMWARE "
+        "SESSION protocol=asd-quality-v1.5.0 action=ENDED source=FIRMWARE "
         "reason=CALIBRATED_NORMAL discards_calibration=0",
     ):
         parsed = physical.parse_serial_line(line)
-        assert parsed is not None and parsed["kind"] == "SESSION", line
+        assert parsed is not None and parsed["kind"] in {"SESSION", "STATE"}, line
         state = physical.transition_firmware_protocol(state, parsed)
         assert state["invalid_status"] is None, (line, state["invalid_reason"])
 
@@ -1584,7 +2772,7 @@ def test_operator_relearn_emits_aborted_then_ended() -> None:
 
     # Zatvaranje bez otvorene sesije i dalje mora pasti.
     orphan = physical.parse_serial_line(
-        "SESSION protocol=asd-quality-v1.3.0 action=ENDED source=FIRMWARE "
+        "SESSION protocol=asd-quality-v1.5.0 action=ENDED source=FIRMWARE "
         "reason=CALIBRATED_NORMAL discards_calibration=0"
     )
     state = physical.transition_firmware_protocol(state, orphan)

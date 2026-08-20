@@ -1,0 +1,30 @@
+{
+  "schema_version": "asd-temporal-policy-v2.0.0-development",
+  "developmental": true,
+  "numeric_status": "development_pending_physical_validation",
+  "target_anomalies_used_for_fit": false,
+  "threshold_contract": {
+    "source": "validated asd-runtime-profile-v1.0.0-development",
+    "enter": "absolute threshold_enter",
+    "exit": "absolute threshold_exit",
+    "constraint": "0 < threshold_exit < threshold_enter",
+    "hidden_exit_scale_allowed": false
+  },
+  "policy": {
+    "min_consecutive": 3,
+    "ewma_alpha": 0.0,
+    "cusum_k": 0.0,
+    "cusum_h": 0.0,
+    "fast_scale": 0.0
+  },
+  "legacy_wire_provenance": {
+    "enter_scale": 1.0,
+    "exit_scale": 0.7,
+    "runtime_authority": false
+  },
+  "legacy_v1": {
+    "read_only": true,
+    "scale_fields_are_not_runtime_authority": true
+  },
+  "change_rule": "Temporal logic may change only with normal-only evidence and a schema bump."
+}

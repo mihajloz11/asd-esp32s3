@@ -102,6 +102,7 @@ def main() -> None:
     }
     META_OUT.write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
+    fingerprint_bytes = ", ".join(f"0x{value:02x}" for value in bytes.fromhex(checksum))
     header = f"""/* AUTO-GENERISANO: pc/tools/gen_psd_model_header.py - NE EDITOVATI.
  * Normal-only model: {len(source)} source klipova; sha256={checksum}
  * Target centar i prag mjere se lokalno na uredjaju. */
@@ -109,6 +110,12 @@ def main() -> None:
 #define ASD_PSD_MODEL_DATA_H
 
 #define ASD_PSD_MODEL_DIM {DIM}
+#define ASD_PSD_MODEL_FINGERPRINT_SIZE 32
+#define ASD_PSD_MODEL_FINGERPRINT_HEX "{checksum}"
+
+static const unsigned char asd_psd_model_fingerprint[ASD_PSD_MODEL_FINGERPRINT_SIZE] = {{
+    {fingerprint_bytes}
+}};
 
 static const float asd_psd_norm_mean[{DIM}] = {{
     {floats(mean32)}
