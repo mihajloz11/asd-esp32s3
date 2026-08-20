@@ -1,10 +1,16 @@
 # Šta donijeti s posla
 
-> Stanje 14.08.2026. Spisak je kratak namjerno — **kondenzatori se ne kupuju i
+> Stanje 20.08.2026. Spisak je kratak namjerno — **kondenzatori se ne kupuju i
 > ne donose, svi su već na stolu** (set od 120 elektrolita 1 µF–470 µF i 3×
 > keramika 470 nF, stiglo 04.08. — [hardver-lista.md](hardver-lista.md)).
 > I2C pull-upovi se takođe ne donose: INA226 modul ih ima na sebi, izmjereno je
 > `obaranje=0`, `pušteno@5us=1` na obje linije.
+>
+> **Ventilator se više ne traži.** FAN01 od 16.08. je izveden na prenosivom USB
+> ventilatoru koji već imaš, uz mikrofon na 20 cm i 90° na osu duvanja
+> ([rezultat-fan01-2026-08-16.md](rezultat-fan01-2026-08-16.md)). Raniji zapisi
+> koji su ventilator, 12 V adapter i nosač vodili kao otvorenu nabavku su
+> zatvoreni.
 
 ---
 
@@ -12,18 +18,24 @@
 
 | # | Šta | Kom | Zašto | Šta odblokira | Prioritet |
 |---|---|---|---|---|---|
-| 1 | **5 V izvor sa golim žicama** — USB-A breakout, 5 V adapter sa terminalima, ili žrtveni USB kabl koji se smije rezati | 1 | Ulaz za AMS1117 koji već imaš | **E5 mjerenja kod kuće, bez laboratorijskog napajanja** | **visok** |
-| 2 | **Multimetar** (ili 15 min pristupa njemu) | 1 | Sonde direktno na nožice INA226 modula | Eksperiment A — lokalizacija greške naponskog kanala | **visok** |
-| 3 | Otpornik **220–330 Ω**, 1/4 W | 4 | 2 potrebna + 2 rezerve | LED demo — **zelena GPIO2 (status), crvena GPIO11 (alarm)**; firmware je gotov i testiran, ovo je jedino što fali | **visok** |
-| 4 | *(opciono)* Laboratorijsko napajanje, ako se smije iznijeti | 1 | Podesiv napon + **strujni limit** | Bolje od AMS1117: limit štiti od kratkog spoja, napon se može podesiti na tačnih 3,30 V | srednji |
+| 1 | Otpornik **330 Ω**, 1/4 W | 2 + rezerva | Račun i izbor vrijednosti su niže | LED demo — **zelena GPIO2 (status), crvena GPIO11 (alarm)**; firmware je gotov i testiran | **visok** |
+| 2 | Otpornik **100 Ω**, 1/4 W | 2 | Rezerva ako je zelena LED visokog `Vf` — vidi zamku niže | Isto; bez toga zelena može ostati tamna a da firmware bude ispravan | **visok** |
+| 3 | **Multimetar** (ili 15 min pristupa njemu) | 1 | Sonde direktno na nožice INA226 modula; isti instrument provjerava LED u diodnom režimu | Eksperiment A — lokalizacija greške naponskog kanala | **visok** |
+| 4 | **Laboratorijsko napajanje** — koristi se **na poslu**, ne iznosi se | 1 | Podesiv napon + **strujni limit** | E5 po varijanti A: INA226 + 470 µF na MB-102, ploča M se ne lemi | srednji |
 | 5 | *(opciono)* Ženski header 2.54 mm | ~1 | Da INMP441 ostane vadiv | Faza 2 (ploča 4×6) — bez toga se moduli leme fiksno | nizak |
+| 6 | *(opciono)* Nezavisan audio snimač — hendi rekorder ili USB mik | 1 | Firmware u `ASD_PSD_LIVE` **ne šalje sirovi PCM** dok detektor radi | Paralelni WAV uz fizički run; bez fajla se po protokolu ne smije tvrditi da je sirovi WAV snimljen | nizak |
+| 7 | *(opciono)* Drugi **INA226** modul | 1 | Poređenje dva komada na istoj postavci | E5 eksperiment C — razlikuje grešku pojačanja (moguć klon) od greške postavke; sa jednim komadom se ta hipoteza ne može zatvoriti | nizak |
 
-**Zašto je stavka 1 najvažnija:** AMS1117 3.3 V modul (800 mA, 4 muška pina već
-zalemljena) je već tu, ali nema šta da ga napoji. Sa golim 5 V žicama iz punjača
-E5 se može mjeriti kod kuće — bez toga svako dalje mjerenje potrošnje čeka da
-pločica ode na posao.
+**Napomena uz stavku 4 — E5 se mjeri na poslu, ne kod kuće.** Ranija verzija
+ovog spiska je tražila „5 V izvor sa golim žicama" da bi se AMS1117 napojio kod
+kuće. [plan-dvije-plocice.md §2.6](plan-dvije-plocice.md) je to zamijenio:
+sa laboratorijskim napajanjem na 3,3 V otpadaju i AMS1117 i 5 V ulaz i lemljenje
+ploče M — ostaju **INA226 + 470 µF + četiri žice** na MB-102. Zato 5 V izvor
+više nije stavka spiska. Podešavanje prije spajanja: **3,30 V** provjereno
+multimetrom na krajevima kablova (ne po displeju), strujna granica **300–500 mA**,
+nikad preko **3,6 V**.
 
-**Zašto stavka 2 nije zamjenjiva softverom:** otvoreni nalaz je da INA226 čita
+**Zašto stavka 3 nije zamjenjiva softverom:** otvoreni nalaz je da INA226 čita
 3,425 V umjesto ~3,22 V, a hipoteza je razlika potencijala između INA-ine i
 ESP-ove mase. To je mjerenje na fizičkim nožicama modula i ne može se ustanoviti
 iz firmvera. Detalji i tabela A1–A3:
@@ -41,14 +53,70 @@ putu za demo, ne više „srednji prioritet".
 varijante slabije od jednog kanala; modul #2 ostaje rezerva. Detalji:
 [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md), blok G.
 
+### Otpornik za LED — račun i zamka sa zelenom
+
+Spisak je ranije govorio „220–330 Ω" bez broja koji to opravdava, pa se pred
+policom i dalje moralo računati.
+
+| Vrijednost | Kom | Struja i namjena |
+|---|---|---|
+| **330 Ω**, 1/4 W | 2 + rezerva | Sa crvenom LED (`Vf ≈ 2,0 V`): `(3,3 − 2,0) / 330 = 3,9 mA`. Na 220 Ω je 5,9 mA. Oba su daleko ispod granice GPIO pina, pa se bira veći otpornik |
+| **100 Ω**, 1/4 W | 2 | Rezerva za zelenu — vidi zamku ispod |
+
+**Zamka sa zelenom LED.** Kupljena zelena je „prozirna dioda zeleno svetlo"
+([porudzbina-elektromodul.md](porudzbina-elektromodul.md), stavka 9), dakle
+skoro sigurno InGaN sa `Vf ≈ 3,0–3,2 V`. Na 3,3 V GPIO tada ostaje samo ~0,2 V
+na otporniku, kroz 330 Ω teče manje od 1 mA i dioda jedva tinja — a to izgleda
+identično kao „firmware ne pali LED". Zelena nosi cijeli tok demoa kroz pet
+obrazaca, pa bi ta zamjena poslala traženje greške u pogrešan kod.
+
+Provjera je multimetrom u **diodnom režimu, prije lemljenja**: ako crvena pokaže
+~1,8 V a zelena `OL`, njen `Vf` je preko napona diodnog testa i ide joj 100 Ω
+umjesto 330 Ω.
+
+> Otpornici za ploču U se ionako **kupuju** sa Mikro Princa (ident 32004, 10 kom
+> za ≈ 23 din — [plan-dvije-plocice.md §7](plan-dvije-plocice.md)). Ovaj spisak
+> ih drži zato što je nekoliko komada s posla najbrži put do provjere lampica
+> prije nego porudžbina stigne, i zato što 100 Ω nije u toj porudžbini.
+
+### Kondenzatori — samo 100 nF, i to iz kupovine
+
+Jedini kondenzator koji ovom sklopu fali je **100 nF keramika, raster 2,54 mm**,
+i ide između `VDD` i `GND` mikrofona, **manje od 5 mm od INMP441**
+([sema-povezivanja.md](sema-povezivanja.md)). Ne donosi se s posla: onaj s posla
+je SMD i bez nožica ne ulazi u perfboard, pa je i on u porudžbini sa Mikro
+Princa. **10 µF** (bulk uz mikrofon) i **470 µF** (poslije INA, samo ako se javi
+brownout) vade se iz kupljenog seta od 120 elektrolita, a INA226 modul ima svoj
+dekapling na sebi.
+
 ## Šta NE treba donositi
 
-- **Kondenzatori** — svi su tu. 10 µF i 470 µF iz seta elektrolita, 470 nF
-  keramika za mikrofon.
+- **Kondenzatori.** 10 µF i 470 µF su u kupljenom setu elektrolita; 100 nF za
+  mikrofon je u porudžbini sa Mikro Princa, a onaj s posla je SMD i ne ulazi u
+  perfboard.
 - **Pull-up otpornici za I2C** — na INA226 modulu su, potvrđeno mjerenjem.
+- **Lemilica, kalaj, fluks, pletenica, ESD narukvica** — lemljenje se radi na
+  poslu ([lemljenje-kratko.md §2](lemljenje-kratko.md)); kući se vraćaju
+  zalemljeni moduli, ne alat.
+- **USB-UART adapter** — CH340 je već tu i korišćen je u E5 prolazu (COM7).
+- **5 V izvor i AMS1117 put** — otpali su sa varijantom A, vidi napomenu uz
+  stavku 4.
+- **Ventilator, 12 V adapter, nosač za mikrofon** — postavka iz FAN01 radi i
+  ponavlja se; nabavka je zatvorena.
 - **Ništa za mikrofon.** INMP441 radi bez ijedne dodatne komponente; kondenzatori
   uz njega su poboljšanje, ne uslov. Živi lanac je radio bez njih 06.08.
   (rms 158,7 / peak 1020 / clipped 0 / dropped 0).
+
+## Šta se ovim otključava
+
+Ovaj spisak pokriva samo nabavni dio. Šta se radi kad komponente budu na stolu i
+kojim redom stoji u [PREOSTALO.md](PREOSTALO.md); redoslijed lemljenja ploče U je
+u [plan-dvije-plocice.md §5](plan-dvije-plocice.md), a vođeni test u
+[GUIDED25-TEST-VENTILATORA.md](GUIDED25-TEST-VENTILATORA.md).
+
+Dvije granice koje ovaj spisak **ne** ukida: build v1.8/q1.5 nije flashovan ni
+runtime-potvrđen na pločici, a commissioning pragovi su još
+`DEVELOPMENT/PENDING`. Nijedna komponenta sa spiska ne mijenja te dvije stavke.
 
 ---
 
