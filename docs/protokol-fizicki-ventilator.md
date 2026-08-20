@@ -1,31 +1,65 @@
 # Zaključani protokol stvarnog fizičkog ventilatora
 
-**Verzija:** `physical-fan-v1.6.0`
-**Datum zaključavanja:** 09.08.2026, bumpovano 14.08.2026.
-**Firmware:** fail-closed `ASD_PSD_LIVE`, serijski protokol `asd-quality-v1.3.0`,
-flešovan i provjeren na pločici 14.08.2026.
+**Verzija:** `physical-fan-v1.8.0`
+
+**Datum zaključavanja:** 09.08.2026, bumpovano 16.08.2026. i 20.08.2026.
+**Firmware:** fail-closed `ASD_PSD_LIVE`, serijski protokol `asd-quality-v1.5.0`.
+V1.5 je host-testiran i ESP-IDF build prolazi; flash/runtime potvrda ovog bumpa
+ostaje za naredni fizički test.
+
+> **Izmjene u v1.8.0:** bounded audio read uvodi imenovane razloge
+> `AUDIO_TIMEOUT` i `AUDIO_READ_ERROR`, oba fail-closed u `SENSOR_ERROR`.
+> Novi zapis koristi `physical-fan-artifacts-v1.8.0`; offline reader strogo
+> čuva istorijske parove v1.6↔quality-v1.3 i v1.7↔quality-v1.4, te dodaje samo
+> novi v1.8↔quality-v1.5 par. Firmware ima testiran, verzionisan storage modul
+> `asd-profile-v1.0.0`, ali trenutna DEVELOPMENT politika je RAM-only:
+> compile-time gate je `0`, a runtime dodatno zahtijeva non-developmental
+> policy. Zato ovaj build ne radi NVS init/load/save i ne emituje
+> `PROFILESTORE`; takav zapis ili lažni `PROFILE_RESTORED` host odbija.
+> Svježi commissioning ima razvojni sidecar
+> `SETTLE → CENTER_LEARNING → COMMISSION_DERIVE → COMMISSION_VERIFY →
+> MONITORING`, zamrznut centar i odvojene apsolutne enter/exit pragove. Broj
+> prozora i numeričke granice još su `DEVELOPMENT/PENDING` i ne smiju se
+> proglasiti finalnim bez novog normal-only fizičkog runa.
+
+> **Izmjene u v1.7.0:** K1 commissioning pravilo `loo_cv <= 0,6` sada je
+> centralna, verzionisana odluka. Pad emituje terminalni
+> `CALIBRATION_REJECTED`/`FLOW_STOPPED`, nikada `ADAPTTHR` ili DET. Host čeka i
+> odgovarajući `SESSION ENDED`; ako nedostaje, bounded drain završava
+> fail-closed timeoutom umjesto da visi ili prerano proglasi kompletan protokol.
+> Offline reader prihvata samo parove `physical-fan-v1.6.0` ↔
+> `asd-quality-v1.3.0` i `physical-fan-v1.7.0` ↔ `asd-quality-v1.4.0`;
+> novi v1.7 zapis dodatno mora imati
+> `artifact_contract_version=physical-fan-artifacts-v1.7.0`.
+> Jedan host run sada može sadržati više firmware sesija. Svaki `SESSION
+> STARTED` resetuje samo session-scope brojače, pragove i operator condition,
+> dok boot handshake, provenance i run totals ostaju sačuvani.
 
 > **Izmjene u v1.6.0** (detaljno: [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md),
 > blokovi B–D):
 >
-> - **Operater pokreće učenje tasterom.** Prva sesija poslije uključenja krene
->   sama poslije 10 s; svaka sljedeća traži pritisak. Lampica javlja kada je
->   učenje gotovo — puni tok demoa je u [PREOSTALO.md](PREOSTALO.md).
+> - **Operater pokreće učenje.** Nema vremenskog autostarta — nijedna sesija,
+>   ni prva poslije uključenja, ne kreće sama (`wait_for_start()` u
+>   [psd_live.c](../firmware/esp32s3_asd/main/psd_live.c)). Radnja stiže sa
+>   fizičkog tastera **ili** kao `PRESS`/`HOLD` sa konzole; oba ulaza dijele
+>   isti put i isti `BUTTON` zapis. Lampica javlja kada je učenje gotovo —
+>   puni tok demoa je u [PREOSTALO.md](PREOSTALO.md).
 > - `EVENT` nosi `event`, `capability` i `level` (semantika Faze 2).
 > - Novi zapisi `PRESENCE`, `TEMPORAL`, `SESSION`, `BUTTON`. Prva dva
 >   objavljuju politike kojima host **nezavisno ponavlja** odluku uređaja.
-> - Alarm se gasi tek ispod **0,7× praga** (histereza iz Faze 4).
+> - Tadašnja v1.6 politika gasila je alarm ispod **0,7× praga**. V1.8 runtime
+>   umjesto toga koristi zaseban apsolutni `threshold_exit` iz profila.
 > - Zaustavljanje ventilatora daje `PRESENCE_LOST` → `NO_MACHINE`, ne anomaliju.
 >
 > **Prije prolaza pročitati [P17](problemi-i-rjesenja.md#p17)** — prag se između
 > kalibracija razlikuje i do 16× i to direktno utiče na osjetljivost demoa.
 
-Ovaj protokol je za prvi stvarni test u kojem INMP441 sluša ventilator direktno.
+Ovaj protokol je nastao za prvi stvarni test u kojem INMP441 sluša ventilator direktno.
 Reprodukcija DCASE WAV-a preko zvučnika nije fizički fan eksperiment. Bezbjedno
 izazvana promjena uslova takođe se ne naziva „stvarnim kvarom” bez nezavisne
 stručne potvrde.
 
-## 1. Trenutni preflight i prvi pokušaji
+## 1. Istorijski preflight, prvi pokušaji i FAN01
 
 Početna provjera 09.08.2026. nije vidjela serijski port. Nakon spajanja pločice,
 zapisani preflight u 22:35 je pronašao COM3 (ESP32-S3, VID:PID `303A:1001`) i
@@ -43,10 +77,11 @@ preflight metapodaci, a ne opis stvarne postavke:
 - `cold-start-02`: `invalid_no_physical_fan`; samo 6/60 WAIT mjerenja bilo je
   iznad `-60 dBFS`, što je očekivano jer fan nije postojao u postavci.
 
-Stvarni fizički eksperiment je odgođen za drugi dan, dok se ne nabavi fizički
-ventilator. Tada treba unaprijed izmjeriti i zapisati stvarnu postavku, pa
-ponoviti build/flash/preflight/run. Novi fail-closed firmware još nije na
-pločici i stari build se više ne smije koristiti za valjanu kalibraciju.
+Fizički ventilator je zatim nabavljen i 16.08.2026. je završen prvi valjan
+v1.6/q1.3 FAN01 run. On je dokazao stvarni capture i separaciju papirića, ali ne
+i upotrebljiv prag. Trenutni v1.8/q1.5 build od 349 728 B prolazi ESP-IDF build,
+ali još nije flashovan niti fizički validiran. Istorijski run se ne prepisuje;
+novi run uvijek dobija novi direktorij i novi verzioni par.
 
 Ponoviti provjeru nakon spajanja pločice podatkovnim USB kablom:
 
@@ -60,7 +95,7 @@ je dokaz stanja hardvera, ali nije eksperimentalni run.
 ## 2. Fail-closed kalibracioni ugovor
 
 Firmware emituje ASCII zapise `QUALITY`, `STATE` i `EVENT` sa protokolom
-`asd-quality-v1.3.0`. Prije ulaska u kalibraciju i za svaki kalibracioni klip
+`asd-quality-v1.5.0`. Prije ulaska u kalibraciju i za svaki kalibracioni klip
 provjeravaju se broj vraćenih uzoraka, konačne numeričke vrijednosti, stuck/zero signal,
 nivo, clipping i `dropped_delta`. Nevalidan rezultat zaustavlja tok; ne postoji
 više put „upozori i nastavi“.
@@ -76,34 +111,51 @@ u toj fazi nije računata ima `tonalness_valid=0`, `tonalness_proxy=0` i
 ali host ga nezavisno ponovo izračunava iz verzionisane quality politike i
 odbija nemoguće kombinacije metrike i razloga.
 
+Poslije deset CAL klipova firmware prvo emituje `CAL_SUMMARY`, pa primjenjuje
+K1 nad istom šestodecimalnom `loo_cv` vrijednošću. Host koherentnost
+`loo_cv = loo_sd / |loo_mean|` provjerava iz tačnih intervala koje predstavlja
+šestodecimalni UART ispis (±0,5×10⁻⁶), a ne proizvoljnom relativnom tolerancijom.
+K1 reject je validan, ali metrički nepodoban protokol tek kada su upareni
+terminalni STATE/EVENT i otvoreni `SESSION STARTED` zatvoren sa `SESSION ENDED`.
+
 Tokom WAIT-a pojedinačni tihi blok je `LOW_LEVEL_OBSERVATION`, a ne reject, jer
 je to namjenski period u kojem operater pokreće fan. Ne broji se kao validan;
 ako manje od pola blokova prođe, zaseban `INSUFFICIENT_LEVEL` reject završava u
 `NO_MACHINE`. Isti low-level rezultat u CAL/DET odmah zaustavlja tok. Guard za
-short read postoji i host fixture ga provjerava, ali stvarni `audio_read`
-trenutno koristi `portMAX_DELAY`; prekid I2S toka zato može ostati blokiran
-umjesto da vrati short read. Timeout/liveness ostaje otvorena hardverska P2
-provjera, ne prijavljuje se kao runtime potvrđena zaštita.
+V1.8 production put koristi bounded `audio_read_exact()` sa jednim ukupnim
+deadlineom. Timeout i read error imaju odvojene javne razloge i završavaju u
+`SENSOR_ERROR`; host fixture i ESP-IDF build to potvrđuju. Stvarno odspajanje
+I2S-a i timeout na pločici još nisu izvršeni, pa ostaju hardverska provjera.
 
 Fiksna quality politika i porijeklo pragova zapisani su u
 [`pc/config/asd_quality_policy_v1.json`](../pc/config/asd_quality_policy_v1.json).
 Target anomalije nisu korištene. Tonalness proxy i LOO mean/sd/CV/range se
-zapisuju. Postojeći LOO-derived prag za kasniji anomaly score ostaje aktivan;
-ono što je `pending_normal_only` jesu zasebni rejection gateovi koji bi odbili
-kalibraciju zbog slabe tonalnosti ili prevelikog LOO rasipanja.
+zapisuju. K1 ostaje quality gate centra, ali više nije izvor runtime praga.
+Svježi profil prvo zamrzava centar, zatim iz vremenski odvojenog normal-only
+DERIVE bloka izvodi dva apsolutna praga, a kasniji VERIFY ih samo provjerava.
+Numeričke vrijednosti su DEVELOPMENT dok novi fizički normal-only run ne prođe.
 
-Dozvoljena javna stanja su `NO_MACHINE`, `CALIBRATION_REJECTED`,
-`CALIBRATED_NORMAL`, `ANOMALY`, `SENSOR_ERROR` i
-`RECALIBRATION_REQUIRED`. Nakon quality rejecta LED se gasi i firmware ne ulazi
-u narednu CAL/DET fazu.
+Dozvoljena javna stanja uključuju `NO_MACHINE`, `CALIBRATION_REJECTED`,
+`CALIBRATED_NORMAL`, `ANOMALY`, `OBSERVATION_HOLD`, `SENSOR_ERROR` i
+`RECALIBRATION_REQUIRED`. HOLD ne znači da je uzrok dokazano razgovor: jedan
+mikrofon ne emituje dijagnozu `AMBIENT_NOISE`. HOLD suspenduje buildup i ne
+briše aktivan alarm ni profil. Numeric policy je trenutno isključen do fizičke
+normal-only validacije. Nakon quality rejecta firmware ne ulazi u narednu fazu.
 
-Host prihvata DET samo poslije `BOOT_FAIL_CLOSED` handshakea, tačno i redom
-`WAIT 1..60/60`, `CAL 1..10/10` i tačno jednog `CAL_SUMMARY`, te oba
+Za novi live v1.8/q1.5 tok host prihvata DET samo poslije
+`BOOT_FAIL_CLOSED` handshakea i literalnog firmware redoslijeda: `COMMISSION
+STARTED`, dinamički SETTLE do stabilnosti (unutar konfigurisanih min/max
+granica), ulazak u CENTER, `WAIT 1..60`, `CAL 1..10`, jedan `CAL_SUMMARY` i K1,
+zatim tačno 120 `COMMISSION_DERIVE` prozora (20 min) i 60 kasnijih VERIFY
+prozora (10 min), čiji posljednji
+zapis prelazi u `MONITORING`, pa strogi `PROFILE`. Poslije svježeg profila slijede
+`ADAPTTHR n=120` iz DERIVE statistike, `PRESENCE`, `TEMPORAL` v2 sa
+`threshold_mode=absolute_profile` i pragovima jednakim profilu, te oba
 `CALIBRATION_ACCEPTED` zapisa (prvo STATE, pa EVENT). Najmanje 30 od 60 WAIT
 blokova mora imati host-potvrđen `OK`; pojedinačni low-level observation se
-nikada ne računa kao prolaz. Između `CAL_SUMMARY` i acceptancea mora postojati
-tačno jedan finite `ADAPTTHR`, saglasan sa summary mean/sd; svaki DET mora
-ponoviti upravo taj prag. Svaki `QUALITY phase=DET`
+nikada ne računa kao prolaz. ADAPTTHR mean/sd su DERIVE statistike, nisu
+CAL_SUMMARY LOO identity. Svaki DET mora ponoviti objavljeni apsolutni enter
+prag. Svaki `QUALITY phase=DET`
 je jednokratni token: njegov `index` mora biti sljedeći window i odmah ga mora
 potrošiti odgovarajući DET zapis. Duplikat, replay, preskočen indeks ili drugi
 firmware zapis između tog para invalidira run.
@@ -132,12 +184,19 @@ stanje `ANOMALY` i alarm postane 0, mora slijediti tačan povratak i
 zabranjena. Run nije kompletan dok očekivani par nije potrošen; time `stop`
 između DET-a i njegovog STATE/EVENT para ne može proizvesti validan rezultat.
 
-Pogrešna/nedostajuća verzija, malformed/truncated v1 telemetrija ili terminalni `FLOW_STOPPED`,
-`SENSOR_ERROR`, `CALIBRATION_REJECTED` odnosno `RECALIBRATION_REQUIRED`
-prekidaju run sa invalid statusom; greška se ne prećutkuje.
-`NO_MACHINE` je legalan samo u početnom `BOOT_FAIL_CLOSED` handshakeu; svaka
-kasnija tranzicija u to stanje takođe invalidira run. STATE/EVENT lanac, razlog,
-faza i očekivano terminalno stanje moraju međusobno odgovarati.
+Pogrešna/nedostajuća verzija, malformed/truncated v1 telemetrija, `SENSOR_ERROR`
+i neupareni ili neočekivani terminalni zapisi prekidaju run sa invalid statusom;
+greška se ne prećutkuje. Jedini kalibracioni reject koji je validan i auditabilan
+terminalni protokol jeste upareni `CALIBRATION_REJECTED` + `FLOW_STOPPED` sa
+razlogom `UNSTABLE_CALIBRATION`, poslije K1 pada i prije `ADAPTTHR`/DET. Ta sesija
+ne ulazi u metrike, ali host može prihvatiti sljedeću novu sesiju.
+
+`NO_MACHINE -> NO_MACHINE / BOOT_FAIL_CLOSED` obavezan je tačno jednom odmah
+poslije svakog `SESSION STARTED`, jer ga firmware emituje unutar svakog
+`run_session()`. Ostale tranzicije u `NO_MACHINE` prihvataju se samo kada ih
+tačno dozvoljava state/event ugovor, na primjer uredno upareni `PRESENCE_LOST`.
+STATE/EVENT lanac, razlog, faza i očekivano terminalno stanje uvijek moraju
+međusobno odgovarati.
 
 Ako QUALITY već prijavi reject, eksperiment je odmah nevalidan i nijedan DET se
 više ne prihvata. Host tada samo nastavlja bounded UART drain najviše 2,5 s da
@@ -184,24 +243,38 @@ kalibracije i ocjene iste sesije.
 - Ako ima vibracija, zagrijavanja, mirisa, oštećenog kabla ili nestabilnog
   nosača, odmah prekinuti napajanje i run označiti kao prekinut.
 
-## 5. Redoslijed jedne sesije
+## 5. Redoslijed jedne ili više sesija u host runu
+
+Host ostaje aktivan poslije uredno zatvorene K1-odbijene sesije, tako da
+operater može pokrenuti novo učenje bez ponovnog pokretanja PC alata. Druga
+svježa sesija ponovo mora emitovati puni q1.5 commissioning slijed opisan iznad,
+uključujući `WAIT 1..60`, `CAL 1..10`, `CAL_SUMMARY`, DERIVE/VERIFY i PROFILE;
+brojači se ne nastavljaju iz prethodne sesije. Condition oznaka se na
+svakom `SESSION STARTED` vraća na `unconfirmed` i mora se ponovo zadati prije
+prozora koji ulaze u metrike.
 
 1. U tihoj prostoriji fiksirati ventilator i mikrofon, tipično na 10–20 cm.
 2. Pokrenuti ventilator u potvrđeno normalnom, stabilnom režimu.
 3. Potvrditi da je novi fail-closed build flešovan, pa pokrenuti capture alat.
    Alat resetuje već fleširanu pločicu, ali sam ništa ne flešuje i ne pušta zvuk
    preko zvučnika.
-4. Tokom oko 15 s `WAIT` i 100 s `CAL` ništa ne mijenjati. Firmware koristi
-   `N_CAL=10`; test od 200 s zahtijeva unaprijed zaključanu posebnu firmware
-   varijantu i ne smije se lažno prijaviti kao da je urađen ovim buildom.
+4. Tokom SETTLE/CENTER ništa ne mijenjati. `N_CAL=10` ostaje lokalni centar;
+   SETTLE nema Mahalanobis score prije centra. DEVELOPMENT firmware counts nisu
+   završna vremenska politika.
 5. Prije prvog prozora koji smije u metrike eksplicitno unijeti
    `condition normal_baseline ...`. Poruka `DETEKCIJA RADI` nikada sama ne
-   postavlja operatorovu istinu. Zatim držati isti režim najmanje 30–60 min.
-6. Svaki bezbjedni događaj označiti neposredno prije promjene komandom
-   `condition`, držati dovoljno dugo za najmanje pet punih prozora, pa označiti
-   `recovery_normal` i vratiti normalan režim.
-7. Završiti komandom `stop`. Ponoviti kroz više hladnih startova i nezavisnih
-   sesija; premještanje mikrofona pripada novoj sesiji.
+   postavlja operatorovu istinu. Snimiti tačno 30 min normal-only podataka i
+   hronološki ih podijeliti: prvih 20 min DERIVE, posljednjih 10 min VERIFY,
+   bez overlap-a ili randomizacije. Ako firmware DEVELOPMENT count završi prije
+   toga, research sidecar i host vrijeme ostaju autoritet ovog commissioning
+   eksperimenta; profile se ne proglašava production defaultom.
+6. Prije target readouta zamrznuti manifest, centar, oba praga i policy ID/hash.
+   VERIFY ne smije mijenjati nijednu od tih vrijednosti.
+7. Tek poslije prolaza uraditi najviše tri `airflow_change` papirić bloka i dva
+   `ambient_noise` conversation bloka. Svaki označiti prije promjene, držati
+   najmanje pet punih prozora, pa označiti `recovery_normal`.
+8. Završiti komandom `stop`. Prag/HOLD granica se ne podešavaju iz ovog target
+   readouta; neuspio kandidat pripada novoj verziji i novoj sesiji.
 
 Primjer pokretanja:
 
@@ -219,6 +292,8 @@ Primjer pokretanja:
 Ručne komande tokom rada:
 
 ```text
+press                     virtuelni taster: kratak pritisak (pokrece ucenje)
+hold                      virtuelni taster: dug pritisak (nova kalibracija)
 condition normal_baseline pocetak stabilnog normalnog mjerenja
 condition speed_change ugrađena brzina 2
 condition airflow_change djelimično pokrivena spoljna rešetka, bez kontakta
@@ -234,22 +309,37 @@ Za headless pokretanje može se dodati `--command-file <putanja>` i iste komande
 dopisivati u tu datoteku. Alat čita samo novodopisane redove i čuva ih u
 `events.csv`.
 
+Umjesto kucanja, isti `press`/`hold` mogu doći iz panela u pregledaču — vidi
+[panel-i-virtuelni-taster.md](panel-i-virtuelni-taster.md). Panel ne drži port
+i ne ulazi u metrike; dopisuje u isti command file i čita `serial.log` runa.
+
 ## 6. Artefakti i integritet
 
 Svaki stvarni run odmah dobija vlastiti `results/physical_fan/run_*` direktorij:
 
 - `serial.raw` — tačni bajtovi primljeni sa pločice;
 - `serial.log` — čitljiv log sa UTC i proteklim vremenom;
-- `events.csv` — operatorova istina: ručne oznake uslova, bilješke i host faze;
-- `detections.csv` — svi DET zapisi uz `condition_confirmed` i `protocol_valid`;
+- `events.csv` — operatorova istina: ručne oznake uslova, bilješke i host faze,
+  uz `firmware_session_index`; potvrda montaže iz `start_fan_run.py` nije typed
+  event nego `provenance.metadata.operator_notes`;
+- `detections.csv` — svi DET zapisi uz `firmware_session_index`, firmware-local
+  `window`, run-global `run_det_index`, `condition_confirmed`,
+  `transition_window` i `protocol_valid`;
 - `firmware_quality.csv` — quality metrike i razlog accept/reject odluke;
 - `firmware_states.csv` — isključivo firmware state tranzicije;
 - `firmware_events.csv` — isključivo firmware događaji;
 - `firmware_parse_errors.csv` — sirova malformed/protocol-mismatch linija i
   host razlog parse ili semantic invalidacije;
+- `window_features.npz` — opcioni razvojni binary32 sidecar: finalni `feature96`,
+  pet `subseg96` vektora, monotonic vrijeme, score, nivo, tonalnost i ključ
+  sesija/prozor;
+- `window_features.manifest.json` — research schema, shape/dtype ugovor, SHA-256
+  NPZ-a, strict validnost i eventualna veza ka eksternom WAV-u;
 - `provenance.json` — COM identitet, metapodaci, Git stanje, SHA-256 firmvera,
   modela i relevantnog izvornog koda;
-- `SUMMARY.md` — deskriptivni rezultat po označenom uslovu.
+- `SUMMARY.md` — deskriptivni rezultat po označenom uslovu, po firmware sesiji
+  i za cio run (DET totals, alarmni prozori/epizode, alarm-time, oporavak i
+  isključeni prelazni prozori).
 
 `stop` prije prvog DET prozora dobija status `aborted_before_detection`, a
 eksplicitni `abort` status `aborted_by_operator`. Nijedan zapis sa nula DET
@@ -260,17 +350,35 @@ paralelni WAV zahtijeva nezavisan audio snimač. Ako postoji, njegova putanja se
 prosljeđuje sa `--wav-path`; alat bilježi SHA-256 na početku i kraju. Bez tog
 fajla ne smije se tvrditi da je sirovi WAV snimljen.
 
-Operatorov `condition` počinje kao `unconfirmed` i nikada se ne popunjava iz
-firmware DET/state/event zapisa. Samo prozori poslije eksplicitne `condition`
-komande, sa validnim firmware protokolom, ulaze u metrike i validan rezultat.
+Research build se eksplicitno uključuje sa `ASD_RESEARCH_TELEMETRY=1`. Njegov
+zasebni wire ugovor je `asd-research-v1.0.0`: jedan `FEATURE96` i tačno pet
+`SUBSEG96` zapisa (`8/8/8/7/7` preklapajućih Welch segmenata) za svaki validni
+CAL/DET prozor. Svaki vektor ima `dims=96` i FNV-1a checksum. U DET fazi ovi
+zapisi dolaze tek poslije neposrednog `QUALITY DET -> DET` para. Host opcija
+`--research-telemetry-required` fail-closed odbija missing, duplicate, malformed,
+checksum ili shape grešku research artefakta; bez te opcije research greška ne
+mijenja zaključani fizički protokol.
+
+Operatorov `condition` počinje kao `unconfirmed`, vraća se na `unconfirmed` na
+svakom novom `SESSION STARTED` i nikada se ne popunjava iz firmware
+DET/state/event zapisa. Prvi prozor nakon nove `condition` komande označava se
+kao `transition_window=1` i ne ulazi u metrike. Tek naredni prozori sa potvrđenim
+uslovom i validnim firmware protokolom ulaze u validan rezultat.
 
 ## 7. Metrike i pošteno tumačenje
 
-Za normalni dio prijaviti trajanje, broj odluka, alarmne prozore i lažne alarme
-na sat. Za svaki unaprijed definisan događaj prijaviti broj ponavljanja, broj
+Za normalni dio prijaviti trajanje, broj odluka, alarmne prozore, alarmne
+epizode, alarm-time i chatter odvojeno. `324/h` iz FAN01 znači 54/60 alarmnih
+prozora skaliranih na sat, ne 324 alarmne epizode/h. Za svaki unaprijed definisan događaj prijaviti broj ponavljanja, broj
 uhvaćenih događaja, prvi alarm, kašnjenje, uzastopne prozore, score/prag i
 oporavak. Granice uslova su host oznake; 10-sekundni prozor na granici može
 sadržati oba stanja i mora ostati označen kao prelaz u naknadnoj analizi.
+
+VERIFY go/no-go u ovom skraćenom testu traži nula alarmnih prozora, nula
+alarmnih epizoda i nula chatter prelaza u posljednjih 10 minuta. To nije dokaz
+niske proizvodne stope: uz nula epizoda za 1/6 h jednostrani 95% Poisson gornji
+limit je približno 18 epizoda/h. Rezultat je funkcionalni gate, ne procjena
+dugoročne pouzdanosti.
 
 Jedan ventilator dokazuje samo funkcionalnost prototipa u toj postavci, ne
 generalizaciju na nove ventilatore. Za jaču tvrdnju potrebni su različiti fanovi,

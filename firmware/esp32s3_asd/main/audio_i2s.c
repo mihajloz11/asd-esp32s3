@@ -38,6 +38,15 @@ static RingbufHandle_t ring;
 static uint32_t dropped;
 static int32_t raw_peak;
 static size_t settle_remaining = SETTLE_SAMPLES;
+static volatile uint32_t heartbeat_ms;
+static volatile int32_t last_error;
+static volatile uint32_t successful_reads;
+static volatile uint32_t timeout_count;
+static volatile uint32_t error_count;
+
+static uint32_t ticks_ms(void) {
+    return (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS);
+}
 
 /* Capture task: I2S (32-bit slot) -> 16-bit PCM -> ring buffer u PSRAM-u.
  * Visok prioritet, pinovan na core 0 (inference ide na core 1) — rizik C4. */
@@ -46,8 +55,22 @@ static void capture_task(void *arg) {
     static int16_t pcm[READ_CHUNK];
     size_t nbytes;
     while (1) {
-        if (i2s_channel_read(rx_chan, raw, sizeof(raw), &nbytes, portMAX_DELAY) != ESP_OK)
+        esp_err_t read_error = i2s_channel_read(
+            rx_chan, raw, sizeof(raw), &nbytes,
+            pdMS_TO_TICKS(AUDIO_I2S_CAPTURE_WAIT_MS));
+        if (read_error == ESP_ERR_TIMEOUT) {
+            last_error = read_error;
+            timeout_count++;
             continue;
+        }
+        if (read_error != ESP_OK) {
+            last_error = read_error;
+            error_count++;
+            continue;
+        }
+        heartbeat_ms = ticks_ms();
+        last_error = ESP_OK;
+        successful_reads++;
         size_t n = nbytes / sizeof(int32_t);
 
         /* Preskoči period slijeganja; poslednji preskočeni blok je obično
@@ -117,21 +140,90 @@ esp_err_t audio_i2s_start(void) {
     return ok == pdPASS ? ESP_OK : ESP_FAIL;
 }
 
+esp_err_t audio_read_exact(int16_t *dst, size_t n_samples,
+                           uint32_t timeout_ms, size_t *samples_read) {
+    if (samples_read) *samples_read = 0;
+    if (!dst || !samples_read || n_samples == 0 || timeout_ms == 0 || !ring)
+        return ESP_ERR_INVALID_ARG;
+
+    TimeOut_t deadline;
+    TickType_t remaining = pdMS_TO_TICKS(timeout_ms);
+    if (remaining == 0) remaining = 1;
+    vTaskSetTimeOutState(&deadline);
+
+    while (*samples_read < n_samples) {
+        size_t item_size;
+        int16_t *p = xRingbufferReceiveUpTo(
+            ring, &item_size, remaining,
+            (n_samples - *samples_read) * sizeof(int16_t));
+        if (!p) {
+            timeout_count++;
+            last_error = ESP_ERR_TIMEOUT;
+            return ESP_ERR_TIMEOUT;
+        }
+        if ((item_size % sizeof(int16_t)) != 0 ||
+            item_size > (n_samples - *samples_read) * sizeof(int16_t)) {
+            vRingbufferReturnItem(ring, p);
+            error_count++;
+            last_error = ESP_ERR_INVALID_SIZE;
+            return ESP_ERR_INVALID_SIZE;
+        }
+        memcpy(dst + *samples_read, p, item_size);
+        vRingbufferReturnItem(ring, p);
+        *samples_read += item_size / sizeof(int16_t);
+        if (*samples_read < n_samples &&
+            xTaskCheckForTimeOut(&deadline, &remaining) == pdTRUE) {
+            timeout_count++;
+            last_error = ESP_ERR_TIMEOUT;
+            return ESP_ERR_TIMEOUT;
+        }
+    }
+    last_error = ESP_OK;
+    return ESP_OK;
+}
+
 size_t audio_read(int16_t *dst, size_t n_samples) {
     size_t got = 0;
-    while (got < n_samples) {
-        size_t item_size;
-        int16_t *p = xRingbufferReceiveUpTo(ring, &item_size, portMAX_DELAY,
-                                            (n_samples - got) * sizeof(int16_t));
-        if (!p) break;
-        memcpy(dst + got, p, item_size);
-        vRingbufferReturnItem(ring, p);
-        got += item_size / sizeof(int16_t);
-    }
+    (void)audio_read_exact(dst, n_samples, AUDIO_READ_DEFAULT_TIMEOUT_MS, &got);
     return got;
+}
+
+/* Prazni sve sto se nakupilo dok niko nije citao.
+ *
+ * ZASTO POSTOJI. Otkako ucenje pokrece operater, uredjaj izmedju boota i
+ * pritiska ne cita ni jedan uzorak, a capture task i dalje puni ring. Poslije
+ * dvije sekunde ring je pun i `dropped` raste sve vrijeme cekanja. Prvi WAIT
+ * blok bi taj nakupljeni dug vidio kao svoj `dropped_delta` i fail-closed bi
+ * oborio sesiju u SENSOR_ERROR -- to jest, sto duze operater ceka da ustali
+ * ventilator, to je sigurnije da sesija ne moze ni poceti (izmjereno 16.08.2026,
+ * 4,5 min cekanja -> dropped_delta=1024 na prvom bloku).
+ *
+ * Prazni se NA POCETKU SESIJE, ne u toku: odbaceni uzorci tokom mjerenja su i
+ * dalje kvar senzora i i dalje ruse tok. Ovo samo kaze da ono sto je palo prije
+ * nego sto je mjerenje pocelo nije dokaz ni o cemu. */
+size_t audio_flush(void) {
+    size_t flushed = 0;
+    for (;;) {
+        size_t item_size;
+        void *p = xRingbufferReceiveUpTo(ring, &item_size, 0,
+                                         AUDIO_RING_LEN * sizeof(int16_t));
+        if (!p) break;
+        flushed += item_size / sizeof(int16_t);
+        vRingbufferReturnItem(ring, p);
+    }
+    return flushed;
 }
 
 uint32_t audio_dropped_samples(void) { return dropped; }
 
 int32_t audio_raw_peak(void) { return raw_peak; }
 void    audio_raw_peak_reset(void) { raw_peak = 0; }
+
+void audio_liveness_snapshot(audio_liveness_status_t *out) {
+    if (!out) return;
+    out->heartbeat_ms = heartbeat_ms;
+    out->last_error = last_error;
+    out->successful_reads = successful_reads;
+    out->timeout_count = timeout_count;
+    out->error_count = error_count;
+}

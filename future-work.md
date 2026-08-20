@@ -6,12 +6,15 @@
 > Tamo je i nalaz da su DCASE 2026 snimci **dvokanalni**, a da obrada koristi
 > samo prvi kanal — pa se dvomikrofonski pristup može isprobati bez novog hardvera.
 
+Već zatvoreno i zato više nije na listi otvorenih ideja: Mahalanobis score i
+lokalni centar rade na uređaju, a alarm koristi zaključanu temporalnu politiku
+`hysteresis_1.0_0.7_n3`. To ne znači da su stvarni govor, vrata ili fizički
+ventilator već testirani.
+
 - [ ] QAT ako PTQ degradira >5 p.p. na nekoj mašini (fallback A3)
 - [ ] Depthwise-conv AE na log-mel slici (OutlierNets stil, <10 KB)
 - [ ] Dvokanalni noise-aware pristup (DCASE 2026 blizu/daleko parovi)
-- [ ] Majority-vote preko N klipova (ubija pitanje F3 na odbrani)
 - [ ] esp-dsp `dsps_fft2r_fc32` umjesto portabilnog FFT-a (uz re-run PC↔C testa)
-- [ ] On-device Mahalanobis (Welford, dijagonalna kovarijansa)
 - [ ] Demo mod: telefon kao mikrofon preko Wi-Fi (S3 SoftAP + HTML stranica sa
       getUserMedia -> WebSocket PCM -> ring buffer). SAMO za demo/odbranu —
       telefonski AGC/NS boji signal, ne valja za eksperimente; Wi-Fi kvari E5.

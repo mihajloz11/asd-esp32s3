@@ -1,6 +1,13 @@
 # Poglavlje 3 — Teorijske osnove (draft)
 
 > Draft za master rad. Prošireno iz [teorija-ucenje.html](teorija-ucenje.html).
+>
+> **ISTORIJSKI AE/TFLM/GAMMA NACRT — zamijenjen finalnim putem.** Poglavlje
+> čuva teoriju i raniju neuralnu fazu, ali ne opisuje trenutni detektor kao
+> cjelinu. Finalna implementacija koristi visokorezolucioni `psd_shape`,
+> Ledoit–Wolf preciziju, lokalni centar i Mahalanobis score bez TFLM-a, uz
+> normal-only LOO prag i temporalnu politiku `n=3`. Za aktuelno stanje vidi
+> [odluka-finalni-model.md](odluka-finalni-model.md).
 
 ## 3.1 Front-end: log-mel spektrogram
 
@@ -72,9 +79,11 @@ u flash.
 
 **TensorFlow Lite Micro (TFLM)** izvršava kvantizovani model bez dinamičke
 alokacije, iz statički rezervisane *tensor arene*. Optimizovani int8 kerneli
-(esp-nn) koriste PIE. Streaming obrada (frejm po frejm, umjesto baferovanja
-cijelog klipa) drži memorijski otisak ispod 25 KB, omogućavajući izvršavanje i
-na klasičnom ESP32 bez PSRAM-a.
+(esp-nn) koriste PIE. U istorijskom AE putu procjena ispod 25 kB odnosila se
+samo na dio streaming log-mel feature obrade, ne na cijeli firmware niti na
+finalni PSD put. Finalni PSD firmware takođe koristi streaming da ne baferuje
+oko 640 kB velik puni float ulazni prozor; njegov build report navodi oko
+293 kB zauzetog i 342 kB slobodnog DIRAM-a.
 
 ## 3.6 On-device kalibracija praga
 

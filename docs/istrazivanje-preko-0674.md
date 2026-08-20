@@ -83,10 +83,10 @@ Novi front-end je izvodljiv i JEDNOSTAVNIJI od TFLM autoenkodera:
 - Pažnja: PC↔uređaj verifikacija front-enda mora se ponoviti za novi PSD tok
   (postojeća verifikacija 7,99e-05 važi za log-mel, ne za ovo).
 
-## Sljedeći koraci
+## Status naknadno
 
-1. Sačekati da paralelna sesija završi analizu pragova (recall/FPR/F1) i
-   uskladiti konačan izbor: psd_shape + LW + centar (sredina), k=20.
-2. 5-seed × 20-rep finalne tabele za rad; pAUC uz AUC.
-3. C implementacija Welch PSD front-enda + verifikacija PC↔uređaj.
-4. Test sa stvarnim ventilatorom i stvarnim kvarom (mjerodavnije od benchmarka).
+Analiza pragova, finalne razvojne tabele i C implementacija sa PC↔uređaj
+provjerom su završene. Finalni firmware koristi `k=10` zbog praktične
+kalibracije (~115 s sa `WAIT` fazom); `k=20` ostaje jači referentni PC
+benchmark. Otvoren je test sa stvarnim ventilatorom, bezbjedno izazvanim
+promjenama i kompletno spojenim hardverom.

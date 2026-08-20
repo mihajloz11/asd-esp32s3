@@ -1,0 +1,1 @@
+host_utc,elapsed_s,condition,condition_confirmed,protocol_valid,window,score,lo,threshold,alarm,total_alarm,consecutive,verdict,level_dbfs,compute_ms

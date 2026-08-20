@@ -388,7 +388,7 @@ poklapaju se sa reprodukcijom u sekundu. 20 od 54 prozora označeno kao anomalij
 **Novo:** `pc/tools/live_monitor.py` — čita serijski port i služi živi grafik na
 `localhost:8770` (opseg, LED, spisak prelaza, rekonekcija).
 
-### 08.08 (nastavak) — NAJVAŽNIJI DEMO: pravi ventilator, normalan pa neispravan
+### 08.08 (nastavak) — istorijski naziv demoa: snimak ventilatora preko zvučnika
 
 Mihajlova ideja: umjesto proizvoljnog zvuka, pustiti **snimak stvarnog
 ventilatora**, kalibrisati na normalnom dijelu, pa pustiti neispravni dio i

@@ -1,0 +1,2 @@
+host_utc,elapsed_s,protocol,type,state,phase,reason,event,capability,level
+2026-08-16T17:06:47.149+00:00,149.313,asd-quality-v1.3.0,CALIBRATION_ACCEPTED,CALIBRATED_NORMAL,CAL,QUALITY_OK,NONE,AVAILABLE,DEVIATION

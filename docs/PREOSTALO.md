@@ -1,147 +1,89 @@
-# Šta je ostalo — tri fizička koraka
+# Šta je ostalo poslije FAN01
 
-**Stanje:** 14.08.2026. · **Softver:** zatvoren · **Hardver:** otvoren
+**Ažurirano:** 20.08.2026.
 
-Sve softverske faze iz [PLAN-NEXT-LEVEL.md](PLAN-NEXT-LEVEL.md) su izvršene i
-zapisane u [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md). Ovaj dokument je
-spisak onoga što još **nije** urađeno, i namjerno je kratak.
+**Live ugovor:** `physical-fan-v1.8.0` / `physical-fan-artifacts-v1.8.0` ↔ `asd-quality-v1.5.0`
 
-| # | Korak | Blokira | Trajanje |
-|---|---|---|---|
-| 1 | **Zalemiti kompletnu šemu** | demo, E5 mjerenje | pola dana |
-| 2 | **Kupiti ventilator** | svaku tvrdnju o stvarnom kvaru | — |
-| 3 | **Demo i mjerenje sa ventilatorom** | završno poglavlje rada | 2–3 h |
+**Status:** softverska arhitektura i build završeni; numerička politika i novi
+fizički runtime još nisu potvrđeni.
 
-Sve troje je fizički rad. Nijedan od njih ne čeka nijednu softversku odluku.
+Prvi fizički test ventilatora više nije otvorena stavka. FAN01 je pokazao da
+`psd_shape` veoma dobro rangira bezbjedno izazvanu promjenu protoka papirićem,
+ali i da prag iz kratke kalibracije praktično ne radi. Papirić nije potvrđen
+kvar. Detalji: [rezultat-fan01-2026-08-16.md](rezultat-fan01-2026-08-16.md).
 
----
+## Šta je softverski završeno
 
-## 1. Kompletna šema
+- centralni K1 gate i read-only ispravka istorijskog `cold-start-04`;
+- više firmware sesija u jednom host runu, bez nasljeđivanja conditiona i
+  session brojača;
+- research telemetrija: finalni `feature96`, pet `subseg96` vektora i manifest;
+- razvojni alati za hronološki CENTER/DERIVE/VERIFY i threshold kandidate;
+- runtime tok `SETTLE → CENTER_LEARNING → COMMISSION_DERIVE →
+  COMMISSION_VERIFY → MONITORING`;
+- apsolutni `threshold_enter` i `threshold_exit`, bez skrivenog exit scale-a;
+- `OBSERVATION_HOLD` semantika koja suspenduje buildup i ne briše aktivan alarm
+  ni profil;
+- bounded audio read sa fail-closed `AUDIO_TIMEOUT`/`AUDIO_READ_ERROR`;
+- NVS storage profil sa schema/version, model fingerprintom, generation,
+  policy ID-ima i CRC32; DEVELOPMENT integracija je namjerno RAM-only i ne
+  radi load/save;
+- backward offline read v1.6/q1.3 i v1.7/q1.4 uz novi v1.8/q1.5 par.
 
-Puni tabelarni i grafički prikaz: [sema-povezivanja.md](sema-povezivanja.md) ·
-[sema-povezivanja.svg](sema-povezivanja.svg). Redoslijed i mjere opreza:
-[lemljenje.md](lemljenje.md). Ovdje je samo spisak i ono što je novo.
+PC suite 20.08.2026. daje `423 passed`. ESP-IDF 5.5.5 `ASD_PSD_LIVE`
+reconfigure build je PASS; bin je 349 728 B. To su softverski dokazi, ne dokaz
+flasha ili rada na fizičkom ventilatoru.
 
-### Mikrofon — **jedan, ne dva**
+## Šta stvarno ostaje
 
-Ovo je pitanje bilo otvoreno i **zatvoreno je mjerenjem 14.08.** Faza 5 je
-ispitala tri dual-channel varijante i sve tri su slabije od jednog kanala; maska
-izvedena iz drugog mikrofona pada čak ispod slučajnog pogađanja (AUC 0,45).
-Drugi INMP441 ostaje **rezerva**, ne dio šeme.
-
-| Komponenta | Kom | Gdje |
+| # | Stavka | Trenutna granica dokaza |
 |---|---|---|
-| INMP441 | 1 | VDD→3V3, GND→GND, SCK→GPIO4, WS→GPIO5, SD→GPIO6, **L/R→GND** |
-| keramika 470 nF | 1 | VDD↔GND mikrofona, **što bliže modulu** |
-| elektrolit 10 µF | 1 | isti čvor |
+| 1 | Zalemiti taster, dvije LED i 220–330 Ω otpornike | Softverski pandan radi; kompletan samostalan sklop bez PC-a nije potvrđen. |
+| 2 | Flashovati v1.8/q1.5 build | Build prolazi, ali ovaj bump nije boot/runtime potvrđen na pločici. |
+| 3 | Zamrznuti commissioning pragove iz novog normal-only perioda | Trenutni brojevi su `DEVELOPMENT/PENDING`; target anomalije se ne koriste za fit. |
+| 4 | Izvesti skraćeni fizički run | 30 min normal-only: prvih 20 min DERIVE, kasnijih 10 min VERIFY; zatim najviše 3 papirić + 2 razgovor bloka. |
+| 5 | Zamrznuti ili odbiti interference policy | HOLD arhitektura postoji, ali je `enabled=false`; jedan mikrofon ne smije tvrditi `AMBIENT_NOISE`. |
+| 6 | I2S liveness na hardveru | Odspojiti/prekinuti I2S i potvrditi stvarni timeout, terminalni UART i oporavak. |
+| 7 | Persistence/power-loss | Sada potvrditi da DEVELOPMENT restart zahtijeva relearn i da nema ASD NVS zapisa; save/restore/power-loss testirati tek uz frozen production policy bump. |
+| 8 | Završni autonoman demo | Hladan/topao start, rad bez PC-a, LED/taster i više sesija. |
+| 9 | INA226/E5 | Završiti mjernu ploču i provjeriti da ASD NVS postupak nije dirao INA226 namespace. |
 
-> ⚠️ **Ne dirati sound port.** Mikrofon #1 je uništen alkoholom u otvoru
-> ([P16](problemi-i-rjesenja.md#p16)). Kapton traka preko porta tokom lemljenja,
-> skida se poslije.
+## Skraćeni naredni test
 
-### Lampice i taster — **novo, ovo do sada nije bilo zalemljeno**
+Puni zaključani opis je u
+[protokol-fizicki-ventilator.md](protokol-fizicki-ventilator.md), a konsolidovan
+go/no-go protokol u
+[DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md](DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md).
 
-| Komponenta | Kom | Gdje | Uloga |
-|---|---|---|---|
-| LED zelena 5 mm | 1 | GPIO2 → otpornik → LED → GND | status, pet obrazaca |
-| LED crvena 5 mm | 1 | GPIO11 → otpornik → LED → GND | alarm |
-| otpornik 220–330 Ω | 2 | u seriji sa svakom LED | **jedino što još fali** |
-| taster arkadni | 1 | GPIO10 ↔ GND, bez otpornika | interni pull-up je uključen u kodu |
+Minimalni redoslijed:
 
-**Otpornici su jedina stavka koja se još nabavlja** —
-[donijeti-sa-posla.md](donijeti-sa-posla.md), stavka 3. LED se ne smije vezati
-direktno na GPIO.
+1. Fiksirati fan/mikrofon i zapisati montažu; pokrenuti v1.8/q1.5 research run.
+2. SETTLE i CENTER završiti bez diranja postavke.
+3. Snimiti 20 min normal-only DERIVE, zamrznuti centar/politiku/enter/exit i
+   njihove hash/ID vrijednosti.
+4. Na vremenski kasnijih 10 min normal-only VERIFY zahtijevati nula alarmnih
+   epizoda, nula alarmnih prozora i nula chatter prelaza. Ne mijenjati prag ako
+   VERIFY ne prođe; sesija je reject.
+5. Tek poslije prolaza uraditi najviše tri bezbjedna papirić bloka i dva
+   conversation bloka, svaki sa transition oznakom i normalnim oporavkom.
+6. Prijaviti alarmne prozore i alarmne epizode odvojeno. Ranijih `324/h` je
+   broj prozora iznad praga po satu, nije epizoda/h.
+7. Ne podešavati prag ili HOLD granicu iz papirić/razgovor ishoda. Ako readout
+   ne prođe, zamrznuta verzija pada i nova politika pripada novoj sesiji.
 
-Šta lampice pokazuju (firmware je gotov i testiran, 43 testa):
+Nula epizoda u samo 10 minuta VERIFY-a nije dokaz male proizvodne stope: njen
+jednostrani 95% Poisson gornji limit je približno 18 epizoda/h. Zato je ovo
+strogi funkcionalni go/no-go sa malo pokušaja, a ne procjena dugoročne
+pouzdanosti ili generalizacije.
 
-| režim | zelena | crvena | značenje |
-|---|---|---|---|
-| čekanje | kratak bljesak na 2 s | — | pritisni taster |
-| učenje | treperi 5 Hz | — | ne diraj ventilator |
-| **naučio** | **stalno svijetli** | — | nadzire, sve normalno |
-| alarm | ugašena | **svijetli** | trajno odstupanje |
-| kvar | dupli bljesak | dupli bljesak u protivfazi | fail-closed stop |
+## Elektronika
 
-Ako se zalemi samo zelena, ponašanje je nepromijenjeno i potpuno — crvena samo
-razrješava „ugašena zelena" naspram „uređaj mrtav", što se na snimku demoa
-inače ne vidi.
+Plan ostaje u [plan-dvije-plocice.md](plan-dvije-plocice.md) i
+[sema-sklopa.pdf](sema-sklopa.pdf). Za uređajnu ploču trebaju jedan INMP441,
+zelena LED na GPIO2, crvena LED na GPIO11, po jedan otpornik 220–330 Ω i taster
+GPIO10↔GND. Drugi mikrofon nije dio finalne šeme; raniji dual-channel kandidati
+nisu opravdali dodatnu složenost.
 
-### Napajanje i senzor — samo za E5 mjerenje potrošnje
-
-Ovo **nije potrebno** za demo sa ventilatorom; demo radi sa USB napajanjem.
-
-| Komponenta | Kom | Gdje |
-|---|---|---|
-| AMS1117 3.3 V modul | 1 | 5 V ulaz → OUT na INA226 `IN+` |
-| INA226 | 1 | `IN−`→3V3 ploče, VCC→3V3, SDA→GPIO8, SCL→GPIO9, **zvjezdasta masa** |
-| elektrolit 470 µF | 1 | čvor `IN−`/3V3 ↔ GND (rizik C7, brownout) |
-
-Dva blokatora koja ostaju i nemaju veze sa ventilatorom:
-
-1. **5 V izvor sa golim žicama** — [donijeti-sa-posla.md](donijeti-sa-posla.md),
-   stavka 1.
-2. **`ASD_INA_TEST` je zaglavljen u `READY`** i odbija ponoviti mjerenje;
-   treba re-arm put u firmveru (~15 min koda) prije nego što se diraju žice.
-
----
-
-## 2. Ventilator
-
-Bilo koji AC ili DC ventilator na kojem se može **bezbjedno** izazvati promjena
-zvuka: selotejp na lopatici, lagana prepreka toku vazduha, promjena brzine.
-Kriterij nije marka nego to da se promjena može napraviti i **vratiti**, i da
-se može opisati u radu bez tvrdnje da je to stvarni kvar.
-
-Do tada važi pravilo koje se ne pregovara: **sve dosadašnje je zvučnik.** Ni
-jedan rezultat iz repozitorija se ne smije nazvati fizičkim testom ventilatora.
-
----
-
-## 3. Demo i mjerenje
-
-Protokol je zaključan: [protokol-fizicki-ventilator.md](protokol-fizicki-ventilator.md),
-verzija parsera `physical-fan-v1.6.0`.
-
-Tok demoa, onako kako ga operater vidi:
-
-1. Pusti ventilator, sačekaj da radi normalno.
-2. **Pritisni taster.** Zelena počne da treperi.
-3. ~115 s: uređaj sluša i uči. Ne dirati ništa.
-4. **Zelena pređe u stalno svjetlo** — naučio je.
-5. Izazovi promjenu. Alarm traži **tri uzastopna prozora**, dakle ~30 s trajne
-   promjene. Kratka buka, govor i zalupljena vrata ne pale alarm — to je
-   izmjereno u Fazi 4.
-6. Vrati ventilator u normalu; alarm se gasi tek kad score padne ispod
-   **0,7× praga** (histereza).
-
-Šta se mjeri i zapisuje:
-
-```bash
-.venv\Scripts\python.exe pc\tools\physical_fan_experiment.py --port COM4 --fan-id fan01
-```
-
-### Prije nego što se ventilator upali — pročitati
-
-**[P17](problemi-i-rjesenja.md#p17) je otvoren i utiče baš na ovaj demo.** Prag
-se između kalibracija razlikuje i do 16× (izmjereno 5687 / 1088 / 347 u tri
-prolaza). Praktična posljedica: **ako alarm ne reaguje na očiglednu promjenu,
-prvo pogledaj prag u `ADAPTTHR` zapisu, pa tek onda sumnjaj na model.** Ako je
-prag visok, ponovi kalibraciju dugim pritiskom tastera — druga kalibracija često
-da mnogo niži prag.
-
-**[P19](problemi-i-rjesenja.md#p19):** mašina na kojoj se mjeri mora biti
-neopterećena. Ventilator laptopa je jednom već upao u kalibraciju
-([P10](problemi-i-rjesenja.md#p10)) i jednom u detekciju.
-
----
-
-## Šta ostaje otvoreno i poslije ova tri koraka
-
-Ovo nisu prepreke za demo, ali se ne smiju prećutati u radu:
-
-| # | Stavka | Zašto nije zatvoreno |
-|---|---|---|
-| 1 | **Prag** ([P17](problemi-i-rjesenja.md#p17)) | Traži zaseban normal-only izvod robusne statistike, isto kao politika prisustva i vremenska politika. Zaseban posao, ne izmjena konstante. |
-| 2 | `audio_read(..., portMAX_DELAY)` liveness | Nikad testirano na stvarnom prekidu I2S toka. |
-| 3 | Faza 7, PC teacher | Zaustavljeno na feasibility gate-u; pokreće se čim se instalira PyTorch, bez ijedne dalje odluke. |
-| 4 | Margina prisustva od 11 dB | Izvedena iz snimaka. Mora se ponovo izvesti na fizičkom ventilatoru, gdje nivo varira sa udaljenošću i opterećenjem. |
+Elektronika se može završiti narednih dana nezavisno od ovih dokumentacionih
+izmjena. Nijedan softverski PASS u ovom dokumentu ne zamjenjuje fizičku provjeru
+ožičenja, napajanja ili bezbjednosti ventilatora.

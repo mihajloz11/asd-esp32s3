@@ -1,7 +1,8 @@
 # Odluka: finalni model i rezervna alternativa
 
-**Datum:** 09.08.2026 · **Status:** odlučeno; svi kriteriji prihvatanja na
-hardveru **prošli** (vidi tabelu niže). Ostaje test sa fizičkim ventilatorom.
+**Datum odluke:** 09.08.2026 · **Usklađeno:** 14.08.2026. · **Status:**
+odlučeno; svi dosadašnji kriteriji prihvatanja na pločici **prošli** (vidi
+tabelu niže). Ostaje test sa fizičkim ventilatorom i kompletnim hardverom.
 
 Dvije sesije su 09.08.2026 paralelno istraživale kako preći AUC 0,80
 ([cilj-modela.md](cilj-modela.md)). Nalazi su se ukrstili i POTVRĐUJU jedni
@@ -36,17 +37,23 @@ izvodljivo **bez target oznaka** (izbor na source domenu, harmonijska sredina
 
 ## ODLUKA — šta ide na pločicu
 
-**Primarno: psd_shape + Ledoit-Wolf precizija + lokalni centar (sredina), k=20.**
+**Finalna implementacija: psd_shape + Ledoit-Wolf precizija + lokalni centar
+(sredina), `k=10`.** `k=20` ostaje jači referentni PC benchmark, a nije
+konfiguracija trenutnog firmwarea.
 
 - Front-end: Welch FFT 8192 (hop 4096), 96 log traka 10–4000 Hz, log10,
   minus skalarna sredina.
 - Model u flešu: precizija 96×96 (36 864 B) + normalizacija (768 B) —
   `psd_model_data.h`, porijeklo u `models/fan_psd_shape_meta.json`.
-- Kalibracija na licu mjesta: centar (384 B) iz k=20 klipova (200 s);
-  k=10 (100 s, AUC 0,853) je prihvatljiv minimum ako je 200 s nepraktično.
+- Kalibracija na licu mjesta: centar (384 B) iz `k=10` validnih klipova
+  (100 s mjerenja, uz oko 15 s `WAIT`, ukupno oko 115 s). Razvojna evaluacija
+  za ovu konfiguraciju daje AUC 0,856 ± 0,024 na 20 podjela.
+- `k=20` (200 s, AUC 0,864 ± 0,025 u ranijem poređenju; oko 0,867 u
+  kanonskoj evaluaciji sa 100 podjela) ostaje referentni PC rezultat i
+  analiza osjetljivosti, ne skrivena druga firmware konfiguracija.
 - Score: Mahalanobis, **dvostran po konstrukciji** (udaljenost hvata i porast
   i pad) — uklapa se u postojeću dvostranu logiku demoa.
-- Alarm: tek poslije 2–3 uzastopna anomalna prozora (prag sam po sebi daje
+- Alarm: tek poslije tačno 3 uzastopna anomalna prozora (prag sam po sebi daje
   ~64 % odziva uz 12,7 % lažnih — nedovoljno bez vremenske potvrde).
 - Bez tihe rekalibracije: centar se ne pomjera automatski (P10 pouka —
   uređaj ne smije naučiti kvar kao normalu).
@@ -73,15 +80,19 @@ Cilj ([cilj-modela.md](cilj-modela.md)): uči na gomili ispravnih → spusti na
 pločicu → kalibriši na NEPOZNATOM ventilatoru → pločica SAMA fleguje.
 PSD recept je tačno to, i jednostavniji je od svega dosadašnjeg: nema mreže,
 nema TFLM arene, nema treninga na pločici — flash tabela + jedno množenje.
-Jedina nova hardverska nepoznanica je FFT 8192 (esp-dsp), i baš zato je
-sljedeći korak mjerenje na pločici, a ne dalje PC optimizacije.
+U trenutku odluke FFT 8192 bio je nova implementacijska nepoznanica. Taj
+istorijski rizik je naknadno zatvoren PC↔C provjerom, uspješnim buildom i
+on-device speaker/microphone mjerenjem vremena, RAM-a i `dropped=0`. Time nije
+zatvoren rizik stvarnog ventilatora ni potpuno sastavljenog hardvera; oni
+ostaju sljedeća fizička provjera.
 
-## Redoslijed sljedećih koraka
+## Trenutni status i sljedeći koraci
 
-1. Poseban build mod (npr. `ASD_PSD_LIVE`) koji spaja `psd_features_c.c` u
-   živi tok — postojeći demo modovi se NE diraju.
-2. Mjerenje na S3: vrijeme, RAM, `dropped=0`, PC↔uređaj na živom mikrofonu.
-3. Kalibracija centra + prag na uređaju + pravilo 2–3 prozora + LED/serijski flag.
-4. Demo sa pravim ventilatorom (normalan → neispravan → zaustavljen).
-5. Tek onda finalne tabele za rad (5 seedova × 50 rep., pAUC uz AUC) i
-   eventualno cross-machine PSD provjera radi poglavlja o generalizaciji.
+PSD live mod, PC↔C provjera, mjerenje vremena/RAM-a, lokalni centar i prag,
+temporalno pravilo `n=3` i operatorov interfejs su implementirani. Finalni
+softverski izbor je `k=10`; `k=20` se koristi samo kao referentni PC benchmark.
+
+Otvoreni su fizički koraci: zalemiti kompletan sklop, pokrenuti unaprijed
+zaključani protokol na stvarnom ventilatoru, izmjeriti duži normalni rad i
+bezbjedno izazvane promjene te završiti E5 mjerenje potrošnje. Ti rezultati se
+ne smiju unaprijed izvoditi iz speaker testa.

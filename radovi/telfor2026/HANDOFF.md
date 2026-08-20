@@ -1,7 +1,11 @@
 # TELFOR 2026 — handoff za pisanje rada
 
-**Stanje:** istraživanje formata završeno, materijali skinuti, rad **još nije kucan**.
-**Nastavlja se u novom četu.** Ovaj fajl je sve što je potrebno da se nastavi.
+**Stanje 14.08.2026:** izvor rada je ažuriran u [`build_paper.py`](build_paper.py),
+a posljednji generisani [`telfor2026_asd_esp32s3.docx`](telfor2026_asd_esp32s3.docx)
+ima 4 strane i bio je provjeren renderom kroz Word. DOCX treba ponovo generisati
+i vizuelno provjeriti nakon ovih izmjena. Šta još fali: [`PREOSTALO-RAD.md`](PREOSTALO-RAD.md).
+
+Ovaj fajl ostaje kao zapis o formatu i izvorima brojeva.
 
 ---
 
@@ -15,6 +19,7 @@
 | Jezik | engleski **ili** srpski |
 | Validacija | IEEE PDF eXpress prije predaje |
 | Predaja | https://registration.telfor.rs/ |
+| Konferencija | **34. TELFOR, Beograd, 24–26. novembar 2026.** (potvrđeno na telfor.rs) |
 | **Rok za rad** | **4. septembar 2026.** |
 | Obavještenje | 27. oktobar 2026. |
 | Program | 16. novembar 2026. |
@@ -63,8 +68,9 @@ II. ...
 | # | Pitanje | Odluka | Zašto |
 |---|---|---|---|
 | 1 | **Jezik** | **engleski** | TELFOR prima oba, ali u IEEE Xplore idu engleski radovi; korisno i za CV i inostrane prijave |
-| 2 | **Autori** | **Mihajlo Živković, Ivan Mezei** | tim redoslijedom; afilijacija za oba: University of Novi Sad, Faculty of Technical Sciences |
-| 3 | Kategorija | studentski rad | provjeriti da li se prijavljuje kao studentski (može nositi nagradu) — **jedino još otvoreno** |
+| 2 | **Autori** | **Mihajlo Živković, Ivan Mezei** | tim redoslijedom; u radu samo zajednička afilijacija: University of Novi Sad, Faculty of Technical Sciences, Novi Sad, Serbia. Interno: Mezei je na Chair of Electronics; `imezei@uns.ac.rs` potvrđen na [zvaničnoj FTN stranici](https://ftn.uns.ac.rs/944/ivan-mezei) |
+| 3 | Kategorija | **redovan rad** | studentska sekcija po pozivu za radove prima **samo studente kao autore** (mentor ide u fusnotu) i objavljuje **samo u CD zborniku, ne u Xploreu** — a engleski je izabran baš zbog Xplorea. Detalji i tabela poređenja: [PREOSTALO-RAD.md](PREOSTALO-RAD.md) |
+| 4 | Kalibracija | **k=10 u firmwareu i demonstraciji** | oko 115 s i 0,8556 ± 0,0240 AUC / 20 splitova; **k=20** ostaje samo kanonski PC referentni rezultat, 0,8666 AUC / 100 splitova |
 
 Rad se piše na engleskom, dakle `Abstract —` / `Keywords —`, ne `Sadržaj —` /
 `Ključne reči —`.
@@ -97,19 +103,20 @@ ijedne anomalije, i tri izmjerena **negativna** rezultata.
 | Platforma | ESP32-S3-WROOM-1 N32R16V, 240 MHz, 16 MB PSRAM |
 | Mikrofon | INMP441 MEMS I2S, 16 kHz, 16-bit |
 | ESP-IDF | v5.5.5 |
-| Binarni fajl | 316 464 B; **92 %** app particije slobodno |
-| Račun po klipu | **705 ms** na 10 s prozora → **14,2×** rezerve u realnom vremenu |
+| Binarni fajl | 316 400 B; **92 %** app particije slobodno |
+| Račun po klipu | **704 ms** na 10 s prozora → **14,2×** rezerve u realnom vremenu |
 
 ### Feature i model
 | | |
 |---|---|
 | Feature | Welch PSD (`nperseg` 8192, 50 % preklapanje) → **96** log-raspoređenih traka 10–4000 Hz → oduzeta sredina |
 | Model | globalna standardizacija + Ledoit-Wolf precision na `source/train/normal` (**990** klipova); lokalni centar iz **10** kalibracionih klipova; Mahalanobis |
+| Score | `s(x) = (z − c)ᵀ P (z − c)`; kvadrirani Mahalanobis score |
 | Prag | `max(p90 LOO, sredina + 3σ LOO)` |
-| Gate prisustva | nivo ≥ kalibrisana sredina − **11 dB**, 3 uzastopna prozora |
+| Gate prisustva | iznad kalibrisane sredine − **11 dB** odmah znači prisutna mašina; tek **3 uzastopna prozora ispod** znače da je stala |
 | Vremenska odluka | 3 uzastopna prozora, izlaz iz alarma ispod **0,7×** praga |
 
-### Tabela I — kandidati (DCASE 2026 dev, fan, 20 splitova)
+### Tabela I — kandidati (DCASE 2026 dev, fan, k=10, 20 splitova)
 | kandidat | AUC | pAUC@0,1 | Δ |
 |---|---|---|---|
 | `psd_shape` (baseline) | **0,8556 ± 0,0240** | 0,6393 | — |
@@ -123,6 +130,10 @@ ijedne anomalije, i tri izmjerena **negativna** rezultata.
 
 Izvor: `results/advanced/advanced_results.json`
 
+Odvojeni kanonski PC referentni rezultat koristi **k=20 i 100 splitova**:
+`psd_shape` AUC **0,8666**. Ne predstavljati ga kao konfiguraciju ugrađenu u
+firmware; ugrađena/demonstrirana konfiguracija je k=10.
+
 ### Tabela II — vremenska pravila (40 splitova, 2000 normalnih prozora)
 | pravilo | lažnih/h | tuđa mašina/h | pobuda 1 prozor | kašnjenje |
 |---|---|---|---|---|
@@ -135,25 +146,28 @@ Izvor: `results/advanced/advanced_results.json`
 Izvor: `pc/config/asd_temporal_policy_v1.json`
 
 ### Tabela III — nestabilnost praga (glavni otvoren nalaz)
-| prolaz | prag | LOO CV | iznad praga | lažnih/h |
+| prolaz | prag | LOO CV | iznad praga | opažene alarmne epizode/h |
 |---|---|---|---|---|
 | 1 (8 min) | 5687 | 1,77 | 0 % | 0,00 |
-| 2 (30 min) | 347 | 0,36 | 91 % | 8,69 (kontaminiran) |
+| 2 (30 min) | 347 | 0,36 | 91 % | 8,69 (kontaminiran speaker run; nije čista procjena lažnih alarma) |
 | 3 (20 min, čist) | 1088 | 0,59 | 5,6 % | **0,00** |
 
 Ukrštena provjera nad **istim** prozorima: prozori prolaza 1 ocijenjeni pragom
-prolaza 2 → 92 % iznad praga; obrnuto → 8 %. Medijana score-a se razlikuje samo
-2,8×, prag 16×.
+prolaza 2 → 92 % iznad praga; obrnuto → 8 %. Medijana score-a se kroz tri
+prolaza razlikuje **4,689×** (oko 4,7×), a prag 16×.
 
 ### Mjerenje na uređaju (prolaz 3, čist)
 | | |
 |---|---|
 | DET prozora | 107 (17,6 min) |
 | prozora iznad praga | 6 (5,6 %) |
-| alarmnih epizoda | **0** |
-| **lažnih alarma na sat** | **0,00** |
-| QUALITY zapisa / ne-`OK` | 178 / **0** |
-| `dropped_delta` | **0 u svih 178 mjerenih prozora** |
+| alarmnih epizoda | **0 opaženih tokom 17,6 min** |
+| kvalitet | **177 mjerenih audio-prozora**, svi `OK`, plus 1 `CAL_SUMMARY` zapis |
+| `dropped_delta` | **0 u svih 177 mjerenih prozora** |
+
+PC je tokom ovog bench prolaza služio samo kao izvor audio-stimulusa preko
+zvučnika. Kalibracija, score, prag, temporalna odluka i alarm izvršavali su se
+na ESP32-S3, bez hosta u putanji odlučivanja.
 
 > ⚠️ **Preciznost koja se ne smije izgubiti:** kumulativni `dropped` brojač na
 > kraju kalibracije pokazuje 122 880 uzoraka. To **nisu** izgubljeni mjerni
@@ -172,37 +186,33 @@ Rad mora imati jasno označena mjesta za ono što još nije urađeno
 3. **Slika postavke.** Fotografija zalemljene ploče sa tasterom i LED —
    nema je dok se ne zalemi.
 4. **Copyright broj** na dnu prve strane — uzima se iz registracionog sistema.
-5. **E-mail adresa i tačan naziv katedre za Ivana Mezeija** u autorskom bloku —
-   ime je potvrđeno, kontakt podaci nisu.
 
-## 7. Reference — provjerene, ne izmišljene
+## 7. Reference — provjerene prema primarnim izvorima 14.08.2026.
 
-- P. Welch, „The use of the fast Fourier transform for the estimation of power
-  spectra", *IEEE Trans. Audio Electroacoust.*, vol. 15, no. 2, pp. 70–73, 1967.
-- O. Ledoit, M. Wolf, „A well-conditioned estimator for large-dimensional
-  covariance matrices", *J. Multivariate Anal.*, vol. 88, no. 2, pp. 365–411, 2004.
-- Y. Koizumi et al., „ToyADMOS: A dataset of miniature-machine operating sounds
-  for anomalous sound detection", *WASPAA*, 2019.
-- H. Purohit et al., „MIMII Dataset: Sound dataset for malfunctioning industrial
-  machine investigation and inspection", *DCASE Workshop*, 2019.
+- N. Harada et al., „First-shot anomaly **sound** detection for machine
+  condition monitoring: A domain generalization baseline", *EUSIPCO 2023*,
+  pp. 191–195, doi: `10.23919/EUSIPCO58844.2023.10289721`.
 - N. Harada et al., „ToyADMOS2: Another dataset of miniature-machine operating
   sounds for anomalous sound detection under domain shift conditions",
-  *DCASE Workshop*, Barcelona, Nov. 2021.
-- K. Dohi et al., „MIMII DG: Sound dataset for malfunctioning industrial machine
-  investigation and inspection for domain generalization task",
-  arXiv:2205.13879, 2022.
-- N. Harada et al., „First-shot anomaly detection for machine condition
-  monitoring: A domain generalization baseline", *EUSIPCO*, 2023, pp. 191–195.
-
-Godine i mjesta su provjereni pretragom 14.08.2026. Prije predaje ih ipak
-uporediti sa originalima — DOI/stranice nisu potvrđeni za sve.
+  *DCASE Workshop 2021*, pp. 1–5, doi: `10.5281/zenodo.5770113`.
+- K. Dohi et al., „MIMII DG: Sound dataset for malfunctioning industrial
+  machine investigation and inspection for domain generalization task",
+  *DCASE Workshop 2022*, pp. 1–5.
+- P. D. Welch, „The use of the fast Fourier transform for the estimation of
+  power spectra: A method based on time averaging over short, modified
+  periodograms", *IEEE Trans. Audio Electroacoust.*, vol. 15, no. 2,
+  pp. 70–73, doi: `10.1109/TAU.1967.1161901`.
+- O. Ledoit and M. Wolf, „A well-conditioned estimator for large-dimensional
+  covariance matrices", *J. Multivariate Anal.*, vol. 88, no. 2, pp. 365–411,
+  doi: `10.1016/S0047-259X(03)00096-4`.
+- T. Nishida et al., „Description and discussion on DCASE 2026 Challenge Task
+  2: Noise-aware unsupervised anomalous sound detection for machine condition
+  monitoring", arXiv:`2606.01578`, 2026.
 
 ## 8. Prvi korak u novom četu
 
-1. ~~Potvrditi jezik i ime mentora.~~ Riješeno — vidi sekciju 3.
-2. Napraviti `radovi/telfor2026/telfor2026_asd_esp32s3.docx` iz zvaničnog
-   šablona (`python-docx`, otvoriti šablon → obrisati tijelo → puniti stilovima
-   šablona, da se formatiranje ne rekonstruiše ručno).
-3. Provjeriti izgled renderovanjem u PDF i gledanjem strana:
+1. Ponovo generisati `radovi/telfor2026/telfor2026_asd_esp32s3.docx` iz
+   ažuriranog `build_paper.py`.
+2. Provjeriti izgled renderovanjem u PDF i gledanjem svih strana:
    `soffice --headless --convert-to pdf` pa `pdftoppm -jpeg -r 100`.
-4. Držati se 4 strane — to je tvrdo ograničenje, ne preporuka.
+3. Držati se 4 strane — to je tvrdo ograničenje, ne preporuka.

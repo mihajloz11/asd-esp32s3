@@ -1,6 +1,11 @@
 # PLAN NEXT LEVEL — pouzdaniji fan ASD
 
-**Status:** aktivan plan izvršenja  
+> **ISTORIJSKI ZAKLJUČANI PLAN — izvršen ili svjesno zatvoren 14.08.2026.**
+> Ishodi pojedinih faza su u [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md),
+> a aktuelni fizički handoff u [PREOSTALO.md](PREOSTALO.md). Stavke ispod su
+> kriteriji po kojima je rad izveden, ne današnja TODO lista.
+
+**Status:** zatvoren kao plan izvršenja
 **Zaključan:** 09.08.2026.  
 **Polazna tačka:** kanonski razvojni protokol `canonical-evaluation-v1.1.0`  
 **Hardver:** pločica trenutno nije povezana; PC rad i build nisu blokirani, flash i stvarna uređajna mjerenja jesu.
@@ -285,4 +290,3 @@ Redom: reconfigure/build → flash → UART schema → valid/invalid calibration
 runtime dropped/RAM/latency → stabilni normalni baseline → bezbjedno označeni
 događaji → false alarms/hour i latency. Bez fizičkog fana ne postoji validna
 završna potvrda, bez obzira na broj PC testova.
-

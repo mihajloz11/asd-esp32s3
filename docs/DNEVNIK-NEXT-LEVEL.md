@@ -436,8 +436,9 @@ ali sam broj lažnih alarma iz prolaza 2 nije čisto mjerenje. Vidi
 - `BUTTON` je van lanca telemetrije, jer ga piše zaseban UI task; pritisak u
   pogrešnoj milisekundi ne smije poništiti inače ispravan prolaz.
 
-Potvrđeno na uređaju: `SESSION action=STARTED source=AUTOSTART`,
-`PRESENCE gate_dbfs=-56.64`, `EVENT ... event=NONE capability=AVAILABLE level=DEVIATION`.
+Potvrđeno na uređaju u tadašnjem, istorijskom autostart buildu:
+`SESSION action=STARTED source=AUTOSTART`, `PRESENCE gate_dbfs=-56.64`,
+`EVENT ... event=NONE capability=AVAILABLE level=DEVIATION`.
 
 ## Blok C — taster pokreće učenje, lampica javlja dokle se stiglo
 
@@ -448,9 +449,11 @@ Novi modul [`asd_operator.c`](../firmware/esp32s3_asd/main/asd_operator.c),
 
 1. **Kratak pritisak nikad ne odbacuje naučeni centar.** Odbacivanje traži dug
    pritisak (1,5 s). Slučajan dodir tokom kalibracije je ne može pokvariti.
-2. **Nema automatskog ponovnog učenja.** Prva sesija poslije uključenja smije
-   krenuti sama poslije 10 s, da PC alati ne zavise od fizičkog tastera; svaka
-   sljedeća traži operatera i zapisuje se sa `discards_calibration=1`.
+2. **Nema automatskog učenja u finalnoj konfiguraciji.** Istorijski speaker
+   bring-up build dopuštao je da prva sesija krene sama poslije 10 s kako PC
+   alati ne bi zavisili od tastera. Poslije završne revizije autostart je
+   uklonjen: svaka kalibracija traži eksplicitan pritisak operatera, a ponovno
+   učenje zapisuje `discards_calibration=1`.
 
 Lampica, pet obrazaca razlučivih golim okom:
 
@@ -632,7 +635,7 @@ instalira, faza se pokreće bez ijedne dalje odluke.
 |---|---|
 | PC testovi | **271 passed** (bilo 177 na početku bloka) |
 | novi test fajlovi | `test_asd_operator_c.py` (43), `test_asd_temporal_c.py` (22) |
-| ESP-IDF build | `PASS`, bin `0x4d430` = 316 464 B, app particija 92 % slobodna |
+| ESP-IDF build | `PASS`, bin `0x4D3F0` = 316 400 B, slobodno 3 877 904 B od 4 MiB (**92,46 %**) |
 | Flash + provjera na uređaju | `PASS` — `SESSION`/`PRESENCE`/`TEMPORAL` na žici |
 | schema provjera | `PASS` |
 
@@ -649,3 +652,62 @@ instalira, faza se pokreće bez ijedne dalje odluke.
 4. **`audio_read(..., portMAX_DELAY)` liveness** — i dalje neriješen i
    netestiran na stvarnom prekidu I2S toka.
 5. **Taster i LED na pločici** — logika testirana, hardver nije spojen.
+
+## 20.08.2026. — konsolidacija dorada poslije FAN01 (Faze 1–8)
+
+Ovaj datirani blok dopunjava, ali ne prepisuje, raniju hronologiju. Tvrdnja
+iz prethodnog bloka da fizički ventilator ne postoji prestala je važiti
+16.08.2026: FAN01 je prvi valjan fizički run. `psd_shape` je razdvojio
+kontrolisanu promjenu protoka papirićem od normale, ali je tadašnji prag stavio
+54/60 normalnih prozora iznad praga. `324/h` je broj alarmnih prozora skaliran
+na sat, ne alarmnih epizoda/h. Papirić nije potvrđen stvarni kvar.
+
+Poslije tog nalaza izvršen je plan
+[PLAN-DORADA-POSLIJE-FAN01.md](PLAN-DORADA-POSLIJE-FAN01.md):
+
+- **Faza 1:** centralni K1 host/C gate, literalni terminalni UART redoslijed i
+  read-only korekcija `cold-start-04`; originalni artefakt nije mijenjan.
+- **Faza 2:** više firmware sesija u jednom host runu, session-scoped reset,
+  `firmware_session_index`, transition-window i episode-aware metrike.
+- **Faza 3:** opcioni `asd-research-v1.0.0` sidecar sa finalnih 96 obilježja,
+  pet podsegmenata 8/8/8/7/7, checksumom i NPZ manifestom.
+- **Faza 4:** razvojni normal-only laboratorij za hronološki
+  CENTER/DERIVE/VERIFY, threshold i feature kandidate; target anomalija ne
+  ulazi u fit.
+- **Faze 5–6:** čisti commissioning/profile/interference moduli, odvojeni
+  apsolutni enter/exit i `OBSERVATION_HOLD`. HOLD suspenduje buildup, ne briše
+  alarm/profil, ali numeric policy ostaje `DEVELOPMENT`, `enabled=false`.
+- **Faze 7–8:** bounded audio read sa ukupnim timeoutom i NVS storage format
+  `asd-profile-v1.0.0` sa fingerprintom, generation, policy ID-ima i CRC32.
+  DEVELOPMENT runtime je RAM-only: compile i runtime gate zabranjuju load/save.
+
+Aktuelni live par je `physical-fan-v1.8.0` /
+`physical-fan-artifacts-v1.8.0` ↔ `asd-quality-v1.5.0`. Offline reader čuva
+istorijske v1.6/q1.3 i v1.7/q1.4 parove; stari SUMMARY, UART, CSV,
+preregistracija K1–K6 i kanonski benchmark nisu prepisani.
+
+Dokazi na 20.08.2026:
+
+| Dokaz | Rezultat |
+|---|---|
+| puni trenutni PC suite | `423 passed in 14.46s` |
+| research ciljano | `105 passed` |
+| commissioning lab ciljano | `5 passed` |
+| commissioning/HOLD ciljano | `203 passed in 4.83s` |
+| audio/NVS/integracija ciljano | `272 passed` |
+| ESP-IDF 5.5.5 `ASD_PSD_LIVE` | `PASS`, 349 728 B |
+
+Build i host testovi nisu flash/runtime dokaz. V1.8/q1.5 nije potvrđen novim
+bootom ili fizičkim runom; prekid I2S-a, DEVELOPMENT restart/relearn i potpuno
+autonoman LED/taster rad ostaju `PENDING_HARDWARE_RUNTIME`. NVS restore i
+power-loss dolaze tek poslije frozen production policy bumpa.
+Numerički commissioning i interference policy ostaju
+`DEVELOPMENT/PENDING_PHYSICAL_VALIDATION`.
+
+Sljedeći fizički prolaz je namjerno kratak: 30 min normal-only podijeljenih
+hronološki na 20 min DERIVE i kasnijih 10 min VERIFY, zatim najviše tri
+papirić i dva conversation bloka. Centar, oba praga i policy manifest moraju
+biti zamrznuti prije target readouta; nema post-hoc podešavanja. VERIFY traži
+nula alarmnih prozora, epizoda i chatter prelaza. Nula epizoda u 10 min ipak
+daje tek približno 18 epizoda/h kao jednostrani 95% Poisson gornji limit, pa je
+to funkcionalni go/no-go, ne dokaz dugoročne pouzdanosti.

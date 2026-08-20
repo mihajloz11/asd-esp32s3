@@ -2,7 +2,8 @@
 
 > Sažeta lista za projekat. Detalji kompatibilnosti i pinova: [hardware.md](hardware.md)
 > i [sema-povezivanja.md](sema-povezivanja.md). Šta se lemi i kojim redom:
-> [lemljenje.md](lemljenje.md).
+> [lemljenje.md](lemljenje.md). Podjela na dvije ploče (uređaj + mjerna) i
+> spisak komponenti po pločama: [plan-dvije-plocice.md](plan-dvije-plocice.md).
 
 ## ✅ Imamo (potvrđeno na stolu, 19.07.2026)
 

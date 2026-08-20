@@ -336,7 +336,9 @@ umjerena jačina zvuka bitni za mirnu kalibraciju.
 ## Šta ostaje
 
 1. **Test sa stvarnim ventilatorom i fizičkim kvarom** — glavni otvoreni posao.
-2. Duža kalibracija (k=20 → 200 s) na uređaju, ako se traži još mirniji prag.
+2. `k=20` zadržati kao PC analizu osjetljivosti, ne kao drugu finalnu
+   konfiguraciju. Firmware i fizički protokol ostaju na `k=10` (~115 s sa
+   `WAIT` fazom); eventualna promjena tražila bi novu unaprijed zaključanu odluku.
 3. LED (fali otpornik 220–330 Ω) i INA226 E5 strujni put — vidi handoff.
 
 ## Kako ponoviti

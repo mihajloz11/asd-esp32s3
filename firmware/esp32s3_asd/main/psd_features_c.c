@@ -143,11 +143,67 @@ int asd_psd_extract(const float *signal, int n_samples, float *out_feature) {
 static float stream_prev[ASD_PSD_HOP];
 static int stream_have_prev;
 static int stream_segments;
+static int stream_sidecar_enabled;
+static float sidecar_band_power[ASD_PSD_SIDECAR_GROUPS][ASD_PSD_BANDS];
+static int sidecar_group_segments[ASD_PSD_SIDECAR_GROUPS];
+
+static int sidecar_group_for_segment(int segment_index) {
+    static const int group_end[ASD_PSD_SIDECAR_GROUPS] = {8, 16, 24, 31, 38};
+    for (int group = 0; group < ASD_PSD_SIDECAR_GROUPS; group++)
+        if (segment_index < group_end[group]) return group;
+    return -1;
+}
+
+/* Namjerno je odvojena petlja od `power_sum`: razvojni sidecar ne mijenja
+ * redoslijed nijednog sabiranja koje ulazi u kanonski finalni feature. */
+static void sidecar_accumulate_segment(int segment_index) {
+    int group = sidecar_group_for_segment(segment_index);
+    if (group < 0) return;
+    for (int band = 0; band < ASD_PSD_BANDS; band++) {
+        float sum = 0.0f;
+        int first = band_start[band];
+        for (int i = 0; i < band_len[band]; i++) {
+            int bin = first + i;
+            sum += fft_re[bin] * fft_re[bin] + fft_im[bin] * fft_im[bin];
+        }
+        sidecar_band_power[group][band] += sum;
+    }
+    sidecar_group_segments[group]++;
+}
+
+static void sidecar_finalize_group(int group, float *out_feature) {
+    int segments = sidecar_group_segments[group];
+    const float win_sum = (float)ASD_PSD_N_FFT * 0.5f;
+    const float scale = 2.0f / ((float)segments * win_sum * win_sum);
+    float feature_mean = 0.0f;
+    for (int band = 0; band < ASD_PSD_BANDS; band++) {
+        int count = band_len[band];
+        if (count == 0) {
+            out_feature[band] = -20.0f;
+        } else {
+            float mean_power = scale * sidecar_band_power[group][band] /
+                               (float)count;
+            out_feature[band] = log10f(mean_power + 1e-20f);
+        }
+        feature_mean += out_feature[band];
+    }
+    feature_mean /= (float)ASD_PSD_BANDS;
+    for (int band = 0; band < ASD_PSD_BANDS; band++)
+        out_feature[band] -= feature_mean;
+}
 
 void asd_psd_stream_reset(void) {
     memset(power_sum, 0, sizeof(power_sum));
     stream_have_prev = 0;
     stream_segments = 0;
+    stream_sidecar_enabled = 0;
+}
+
+void asd_psd_stream_reset_sidecar(void) {
+    asd_psd_stream_reset();
+    memset(sidecar_band_power, 0, sizeof(sidecar_band_power));
+    memset(sidecar_group_segments, 0, sizeof(sidecar_group_segments));
+    stream_sidecar_enabled = 1;
 }
 
 int asd_psd_stream_push_hop(const float *hop) {
@@ -157,6 +213,7 @@ int asd_psd_stream_push_hop(const float *hop) {
         for (int i = 0; i < ASD_PSD_HOP; i++) fft_re[i] = stream_prev[i];
         for (int i = 0; i < ASD_PSD_HOP; i++) fft_re[ASD_PSD_HOP + i] = hop[i];
         psd_accumulate_segment();
+        if (stream_sidecar_enabled) sidecar_accumulate_segment(stream_segments);
         stream_segments++;
         done = 1;
     }
@@ -167,6 +224,22 @@ int asd_psd_stream_push_hop(const float *hop) {
 
 int asd_psd_stream_finish(float *out_feature) {
     return psd_finalize(stream_segments, out_feature);
+}
+
+int asd_psd_stream_finish_sidecar(float *out_feature,
+                                  asd_psd_sidecar_t *out_sidecar) {
+    int segments = psd_finalize(stream_segments, out_feature);
+    if (!stream_sidecar_enabled || !out_sidecar) return segments;
+    out_sidecar->segments = stream_segments;
+    for (int group = 0; group < ASD_PSD_SIDECAR_GROUPS; group++) {
+        out_sidecar->group_segments[group] = sidecar_group_segments[group];
+        if (sidecar_group_segments[group] > 0)
+            sidecar_finalize_group(group, out_sidecar->group_feature[group]);
+        else
+            memset(out_sidecar->group_feature[group], 0,
+                   sizeof(out_sidecar->group_feature[group]));
+    }
+    return segments;
 }
 
 float asd_psd_score(const float *feature, const float *norm_mean,

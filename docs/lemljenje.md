@@ -1,5 +1,12 @@
 # Lemljenje — šta, kojim redom, na šta paziti
 
+> **Ažurirano 19.08.2026: sklop se dijeli na DVIJE ploče.**
+> Podjela komponenti, raspored i redoslijed: [plan-dvije-plocice.md](plan-dvije-plocice.md) + [sema-sklopa.pdf](sema-sklopa.pdf).
+> Ploča U (uređaj, 7×9 cm) nosi S3, LED, otpornike i konektore; ploča M
+> (mjerna, 4×6 cm A1938) nosi AMS1117, INA226 i 470 µF i kači se samo za E5.
+> Faza 2 niže opisuje stariji raspored „sve na jednoj ploči 4×6" — mjere opreza
+> i dalje važe, raspored ne.
+
 > **Kratka verzija za na posao:** [lemljenje-kratko.md](lemljenje-kratko.md) (+ šema [sema-lemljenje.svg](sema-lemljenje.svg))
 >
 > Komponente stigle 04.08.2026 (vidi [hardver-lista.md](hardver-lista.md)).

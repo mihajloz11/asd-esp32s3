@@ -34,6 +34,13 @@ void asd_decision_init(asd_decision_ctx_t *ctx,
     ctx->state = ASD_STATE_NO_MACHINE;
     ctx->policy = policy ? *policy : asd_presence_default_policy();
     asd_temporal_init(&ctx->temporal, NULL);
+    asd_interference_init(&ctx->interference, NULL);
+}
+
+void asd_decision_set_interference_policy(
+    asd_decision_ctx_t *ctx, const asd_interference_policy_t *policy) {
+    if (!ctx) return;
+    asd_interference_init(&ctx->interference, policy);
 }
 
 asd_capability_t asd_event_capability(asd_event_t event) {
@@ -92,11 +99,18 @@ int asd_transition_allowed(asd_state_t from, asd_state_t to) {
                    to == ASD_STATE_RECALIBRATION_REQUIRED;
         case ASD_STATE_CALIBRATED_NORMAL:
             return to == ASD_STATE_ANOMALY ||
+                   to == ASD_STATE_OBSERVATION_HOLD ||
                    to == ASD_STATE_NO_MACHINE ||
                    to == ASD_STATE_SENSOR_ERROR ||
                    to == ASD_STATE_RECALIBRATION_REQUIRED;
         case ASD_STATE_ANOMALY:
             return to == ASD_STATE_CALIBRATED_NORMAL ||
+                   to == ASD_STATE_NO_MACHINE ||
+                   to == ASD_STATE_SENSOR_ERROR ||
+                   to == ASD_STATE_RECALIBRATION_REQUIRED;
+        case ASD_STATE_OBSERVATION_HOLD:
+            return to == ASD_STATE_CALIBRATED_NORMAL ||
+                   to == ASD_STATE_ANOMALY ||
                    to == ASD_STATE_NO_MACHINE ||
                    to == ASD_STATE_SENSOR_ERROR ||
                    to == ASD_STATE_RECALIBRATION_REQUIRED;
@@ -115,6 +129,8 @@ static int reason_is_sensor_fault(asd_quality_reason_t reason) {
         case ASD_QUALITY_CLIPPING:
         case ASD_QUALITY_DROPPED_SAMPLES:
         case ASD_QUALITY_INVALID_ARGUMENT:
+        case ASD_QUALITY_AUDIO_TIMEOUT:
+        case ASD_QUALITY_AUDIO_READ_ERROR:
             return 1;
         default:
             return 0;
@@ -158,6 +174,8 @@ static asd_decision_t finish(asd_decision_ctx_t *ctx, asd_state_t previous,
     out.level = level;
     out.flow_stop = flow_stop;
     out.state_changed = (next != previous);
+    out.observation_hold = 0;
+    out.hold_warning = 0;
     return out;
 }
 
@@ -179,13 +197,18 @@ asd_decision_t asd_decide(asd_decision_ctx_t *ctx,
     if (reason_is_sensor_fault(obs->quality)) {
         ctx->absent_run = 0;
         asd_temporal_reset(&ctx->temporal);
+        asd_interference_reset(&ctx->interference);
         return finish(ctx, previous,
                       asd_quality_reject_state(obs->quality, obs->phase),
                       ASD_EVENT_SENSOR_FAULT, ASD_LEVEL_SENSOR_HEALTH, 1);
     }
-    if (!isfinite(obs->rms_dbfs) || !isfinite(obs->score)) {
+    if (!isfinite(obs->rms_dbfs) || !isfinite(obs->score) ||
+        !isfinite(obs->tonalness_delta) ||
+        !isfinite(obs->subsegment_instability) ||
+        obs->subsegment_instability < 0.0f) {
         ctx->absent_run = 0;
         asd_temporal_reset(&ctx->temporal);
+        asd_interference_reset(&ctx->interference);
         return finish(ctx, previous, ASD_STATE_SENSOR_ERROR,
                       ASD_EVENT_SENSOR_FAULT, ASD_LEVEL_SENSOR_HEALTH, 1);
     }
@@ -193,9 +216,13 @@ asd_decision_t asd_decide(asd_decision_ctx_t *ctx,
     /* --- 2) prisustvo mašine ------------------------------------------- */
     /* Bez validne kalibracije nema referentnog nivoa, pa se prisustvo ne može
      * ocijeniti; WAIT i CAL faze žive ovdje i Faza 1 ih već pokriva. */
-    if (!cal->valid || !isfinite(cal->level_mean_dbfs)) {
+    if (!cal->valid || !isfinite(cal->level_mean_dbfs) ||
+        !isfinite(cal->threshold_enter) || !isfinite(cal->threshold_exit) ||
+        !(cal->threshold_exit > 0.0f &&
+          cal->threshold_exit < cal->threshold_enter)) {
         ctx->absent_run = 0;
         asd_temporal_reset(&ctx->temporal);
+        asd_interference_reset(&ctx->interference);
         return finish(ctx, previous, previous, ASD_EVENT_NONE,
                       ASD_LEVEL_MACHINE_PRESENCE, 0);
     }
@@ -240,7 +267,35 @@ asd_decision_t asd_decide(asd_decision_ctx_t *ctx,
     /* Vremenska odluka je cijela u `asd_temporal.c` (Faza 4): koliko uzastopnih
      * prozora, histereza pri izlasku, i zašto EWMA/CUSUM nisu uzeti. Ovdje
      * ostaje samo prevod alarma u stanje i događaj. */
-    if (asd_temporal_update(&ctx->temporal, obs->score, cal->score_threshold)) {
+    asd_interference_observation_t interference_observation = {
+        .tonalness_delta = obs->tonalness_delta,
+        .subsegment_instability = obs->subsegment_instability,
+        .score_high = obs->score > cal->threshold_enter,
+        .alarm_active = ctx->temporal.active,
+    };
+    asd_interference_result_t interference = asd_interference_update(
+        &ctx->interference, &interference_observation);
+    if (interference == ASD_INTERFERENCE_INVALID) {
+        asd_temporal_reset(&ctx->temporal);
+        asd_decision_t out = finish(
+            ctx, previous, ASD_STATE_SENSOR_ERROR, ASD_EVENT_SENSOR_FAULT,
+            ASD_LEVEL_SENSOR_HEALTH, 1);
+        return out;
+    }
+    if (interference == ASD_INTERFERENCE_HOLD ||
+        interference == ASD_INTERFERENCE_HOLD_WARNING) {
+        asd_temporal_suspend(&ctx->temporal);
+        asd_state_t held_state = (ctx->temporal.active ||
+                                  previous == ASD_STATE_ANOMALY)
+            ? ASD_STATE_ANOMALY : ASD_STATE_OBSERVATION_HOLD;
+        asd_decision_t out = finish(ctx, previous, held_state, ASD_EVENT_NONE,
+                                    ASD_LEVEL_DEVIATION, 0);
+        out.observation_hold = 1;
+        out.hold_warning = interference == ASD_INTERFERENCE_HOLD_WARNING;
+        return out;
+    }
+    if (asd_temporal_update(&ctx->temporal, obs->score,
+                            cal->threshold_enter, cal->threshold_exit)) {
         /* Status je činjenica, događaj je najslabija tvrdnja koju dokazi
          * podnose. Uzrok se ne tvrdi. */
         return finish(ctx, previous, ASD_STATE_ANOMALY,

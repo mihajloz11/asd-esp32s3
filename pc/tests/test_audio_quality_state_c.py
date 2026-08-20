@@ -68,6 +68,8 @@ INSUFFICIENT_LEVEL = 5
 CLIPPING = 6
 DROPPED_SAMPLES = 7
 INVALID_ARGUMENT = 8
+AUDIO_TIMEOUT = 9
+AUDIO_READ_ERROR = 10
 FLOW_CONTINUE = 0
 FLOW_STOP = 1
 PHASE_WAIT = 0
@@ -206,7 +208,8 @@ def test_only_ok_can_continue_and_public_tokens_are_stable(quality_lib) -> None:
     reasons = [
         "OK", "SHORT_READ", "NONFINITE", "STUCK_SIGNAL",
         "LOW_LEVEL_OBSERVATION", "INSUFFICIENT_LEVEL", "CLIPPING",
-        "DROPPED_SAMPLES", "INVALID_ARGUMENT",
+        "DROPPED_SAMPLES", "INVALID_ARGUMENT", "AUDIO_TIMEOUT",
+        "AUDIO_READ_ERROR",
     ]
     for index, expected in enumerate(reasons):
         assert quality_lib.asd_quality_reason_name(index).decode("ascii") == expected
@@ -261,3 +264,8 @@ def test_phase_specific_stop_state_integration(quality_lib) -> None:
     assert quality_lib.asd_state_name(
         quality_lib.asd_quality_reject_state(CLIPPING, PHASE_DET)
     ) == b"RECALIBRATION_REQUIRED"
+    for reason in (AUDIO_TIMEOUT, AUDIO_READ_ERROR):
+        assert quality_lib.asd_quality_flow_action(reason, PHASE_DET) == FLOW_STOP
+        assert quality_lib.asd_state_name(
+            quality_lib.asd_quality_reject_state(reason, PHASE_DET)
+        ) == b"SENSOR_ERROR"

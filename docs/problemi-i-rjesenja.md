@@ -824,10 +824,11 @@ bile u planu kao vjerovatni pobjednici.
 | CUSUM k=0,5 h=2 | 5,40 | 0,721 |
 
 **Uzrok.** Oba pravila po konstrukciji **prenose** informaciju kroz vrijeme, i
-to je upravo ono zbog čega ovdje gube. Jedan glasan prozor — zalupljena vrata,
-govor, udarac — kod EWMA ostaje u statistici nekoliko prozora i može sam
-dopuniti niz od tri. Kod CUSUM-a se akumulira i može prebaciti prag i bez
-ijednog trajnog odstupanja. Brojanje uzastopnih prozora nema memoriju o
+to je upravo ono zbog čega ovdje gube. U ovom testu korištena je sintetička
+score-pobuda od jednog prozora, kao apstrakcija kratkog događaja. Kod EWMA ona
+ostaje u statistici nekoliko prozora i može sama dopuniti niz od tri. Kod
+CUSUM-a se akumulira i može prebaciti prag bez ijednog trajnog odstupanja.
+Brojanje uzastopnih prozora nema memoriju o
 veličini: jedan prozor iznad praga podigne brojač na 1, a sljedeći normalan
 prozor ga vrati na 0, bez obzira koliko je pobuda bila glasna.
 
@@ -839,8 +840,8 @@ sat na klipovima drugog fizičkog ventilatora).
 
 **Pouka.** Standardna tehnika nije ista stvar kao prikladna tehnika. EWMA i
 CUSUM su napravljeni da uhvate **mali trajni** pomjeraj u šumu; ovdje je zadatak
-obrnut — odbaciti **veliku kratku** pobudu. Da se nije mjerilo, u firmware bi
-ušla nadogradnja koja bi ga pogoršala.
+obrnut — odbaciti **veliku kratku** score-pobudu. Ovo nije akustički test
+govora, vrata ili udarca; njih treba posebno izvesti u fizičkom protokolu.
 
 **Trag u kodu.** Oba pravila su ostavljena u `asd_temporal_policy_t`, isključena
 nulom, sa komentarom zašto. Da se ne „otkriju" ponovo za pola godine kao nova

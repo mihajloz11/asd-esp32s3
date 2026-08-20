@@ -345,10 +345,11 @@ Očekivanje je bilo da će EWMA i CUSUM biti nadogradnja. Izmjereno je suprotno:
 | **histereza 1,0/0,7 + 3 uzastopna** | **0,00** | **0,000** |
 
 **Mehanizam.** EWMA i CUSUM po konstrukciji prenose informaciju kroz vrijeme.
-Jedan glasan prozor — vrata, govor, udarac — kod EWMA ostaje u statistici
-nekoliko prozora i sam dopuni niz od tri; kod CUSUM-a se akumulira. Obje
-tehnike su napravljene da uhvate **mali trajni** pomjeraj u šumu, a ovdje je
-zadatak obrnut: odbaciti **veliku kratku** pobudu. Puno detalja:
+U ovom testu sintetička score-pobuda od jednog prozora kod EWMA ostaje u
+statistici nekoliko prozora i sama dopuni niz od tri; kod CUSUM-a se akumulira.
+Obje tehnike su napravljene da uhvate **mali trajni** pomjeraj u šumu, a ovdje
+je zadatak obrnut: odbaciti **veliku kratku** score-pobudu. Govor, vrata i
+udarac time nisu akustički testirani. Puno detalja:
 [P18](problemi-i-rjesenja.md#p18).
 
 Usvojena je histereza, koja ne unosi memoriju o veličini pobude, a prepolovljuje

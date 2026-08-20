@@ -1,4 +1,4 @@
-# Predaja stanja — ASD na ESP32-S3 (09.08.2026)
+# Predaja stanja — ASD na ESP32-S3 (ažurirano 20.08.2026)
 
 Sažetak za nastavak rada u novoj sesiji. Detalji: [dnevnik-projekta.md](dnevnik-projekta.md),
 [problemi-i-rjesenja.md](problemi-i-rjesenja.md), [model-poboljsanje.md](model-poboljsanje.md).
@@ -15,6 +15,33 @@ Finalni izbor modela, rezervna alternativa i kriteriji prihvatanja na
 hardveru: [odluka-finalni-model.md](odluka-finalni-model.md).
 Otpornost na buku okoline (koraci, razgovor) i dvomikrofonski pristup:
 [plan-otpornost-na-buku.md](plan-otpornost-na-buku.md).
+
+## Autoritativni snapshot 20.08.2026.
+
+- Prvi stvarni FAN01 run postoji: `psd_shape` razdvaja papirić od normalnog
+  rada, ali tadašnji prag je 54/60 normalnih prozora stavio iznad praga.
+  Papirić je kontrolisana promjena protoka, ne potvrđen kvar. Detalji i granice:
+  [rezultat-fan01-2026-08-16.md](rezultat-fan01-2026-08-16.md).
+- `cold-start-04` je istorijski ostavljen netaknut; read-only recompute sada
+  ispravno primjenjuje K1 i daje `calibration_rejected:loo_cv_above_max`.
+- Trenutni ugovor je host `physical-fan-v1.8.0` / artifacts v1.8 uz live
+  `asd-quality-v1.5.0`. Offline čitanje čuva tačne istorijske v1.6/q1.3 i
+  v1.7/q1.4 parove.
+- Softver ima multi-session reset, `96 + 5×96` research telemetriju, odvojeni
+  CENTER/DERIVE/VERIFY commissioning, apsolutne enter/exit pragove, bounded
+  audio read i verzionisani NVS storage format sa CRC-om; DEVELOPMENT runtime
+  je namjerno RAM-only i ne radi NVS load/save.
+- `OBSERVATION_HOLD` je implementirana arhitektura, ali interference policy je
+  `enabled=false` dok normal-only podaci ne zamrznu numeričku granicu.
+- PC suite 20.08. prolazi sa `423 passed`; ESP-IDF 5.5.5 `ASD_PSD_LIVE` build
+  prolazi, bin je 349 728 B. Taj build još nije flashovan niti potvrđen na
+  pločici; I2S prekid i potvrda da DEVELOPMENT restart traži relearn ostaju
+  fizički testovi. Restore/power-loss dolaze tek nakon frozen policy bumpa.
+
+Kompletna konsolidacija faza poslije FAN01 je u
+[DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md](DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md).
+Ostatak dokumenta čuva detaljan raniji tehnički kontekst; gdje se razlikuje,
+ovaj datirani snapshot je noviji autoritet.
 
 ## Projekat
 
@@ -109,6 +136,12 @@ Visokorezolucioni PSD otisak + Ledoit–Wolf kovarijansa + lokalni centar daje
 Stari pristup pod istim seedovima daje 0,669 ± 0,031.
 Detalji: [istrazivanje-psd-model.md](istrazivanje-psd-model.md).
 
+> **Naknadno ažuriranje 14.08.2026. — finalni implementacijski izbor je `k=10`,
+> ne `k=20`.** To je 10 validnih prozora, 100 s mjerenja i oko 115 s zajedno
+> sa `WAIT` fazom. Razvojna evaluacija te konfiguracije daje 0,856 ± 0,024 na
+> 20 podjela; `k=20` ostaje referentni jači PC rezultat i ne opisuje trenutni
+> firmware.
+
 **Ne generalizuje na druge tipove mašina.** Na svih 7 mašina psd_shape pobjeđuje
 samo na 2, a po harmonijskoj sredini (0,537) je lošiji od mel osnove (0,573).
 Razlog je fizički: uske harmonijske linije ima rotaciona mašina, ne ventil ili
@@ -148,7 +181,12 @@ Score = Mahalanobis od tog centra u naučenom obliku.
 Za ploču je **jednostavnije od postojećeg**: nema mreže, nema TFLite, nema
 arene — matrica u flešu i jedno množenje po prozoru umjesto 1055 ms inferencije.
 Za ovaj prethodni pristup front-end (log-mel) se nije dirao i bio je
-verifikovan. Novi PSD pobjednik mijenja front-end, pa traži novu PC↔C provjeru.
+verifikovan. U vrijeme ovog zapisa novi PSD pobjednik je mijenjao front-end i
+zato je tražio novu PC↔C provjeru. Ta potreba je naknadno zatvorena posebnim
+PSD test-vektorima, PC↔C parity testom i on-device speaker/microphone prolazom;
+fizički ventilator tim tadašnjim speaker prolazom nije bio testiran. To je
+naknadno promijenio FAN01 fizički run od 16.08.2026; novi v1.8/q1.5 runtime još
+nije ponovo fizički provjeren.
 
 ### Zaključci
 
@@ -163,11 +201,14 @@ verifikovan. Novi PSD pobjednik mijenja front-end, pa traži novu PC↔C provjer
 
 ## Šta dalje
 
-1. **Izmjeriti sa stvarnim ventilatorom i stvarnim kvarom** — to je sada glavni
-   otvoreni posao; benchmark i „preko zraka" brojke su zatvorene
-2. INA226: multimetar po `ina226-provjera.md`, popraviti ili zamijeniti → E5
-3. Otpornik 220–330 Ω → LED demo (kod već upravlja GPIO2)
-4. 5-seed treninzi za finalne tabele; pisanje poglavlja 2 i 3
+1. Završiti taster/LED/otpornike i provjeriti samostalan rad bez računara.
+2. Flashovati v1.8/q1.5 build i izvršiti skraćeni normal-only commissioning:
+   20 min DERIVE + vremenski kasnijih 10 min VERIFY, bez post-hoc praga.
+3. Tek poslije freeze-a odraditi najviše tri papirić i dva conversation bloka;
+   prijaviti prozore, epizode, vrijeme alarma, kašnjenje i oporavak odvojeno.
+4. Na pločici provjeriti bounded I2S timeout i da DEVELOPMENT restart zahtijeva
+   relearn bez NVS zapisa. Restore/power-loss slijede tek poslije frozen
+   production policy bumpa; zatim INA226/E5 i završni demo.
    (materijal: [put-do-modela.md](put-do-modela.md))
 
 *(Urađeno 09.08.2026: PSD modul spojen u `ASD_PSD_LIVE`, latencija/RAM/`dropped`

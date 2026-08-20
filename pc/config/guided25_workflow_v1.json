@@ -1,0 +1,45 @@
+{
+  "schema_version": "asd-guided25-v1.0.0-development",
+  "developmental": true,
+  "hard_deadline_seconds": 1500,
+  "firmware_mode": "GUIDED25",
+  "window_seconds": 10,
+  "commissioning": {
+    "max_settle_windows": 8,
+    "center_windows": 10,
+    "derive_windows": 44,
+    "verify_windows": 22
+  },
+  "phases": [
+    {"name":"Normalna osnova","condition":"normal_baseline","seconds":50,"prompt":"Miruj i ne pricaj."},
+    {"name":"Papiric 1","condition":"airflow_change_paper_1","seconds":50,"prompt":"Drzi papiric uz usis, bez dodira ventilatora."},
+    {"name":"Oporavak 1","condition":"recovery_normal_1","seconds":50,"prompt":"Skloni papiric i ruku; tisina."},
+    {"name":"Papiric 2","condition":"airflow_change_paper_2","seconds":50,"prompt":"Ponovi isti polozaj papirica."},
+    {"name":"Oporavak 2","condition":"recovery_normal_2","seconds":50,"prompt":"Skloni papiric i ruku; tisina."},
+    {"name":"Papiric 3","condition":"airflow_change_paper_3","seconds":50,"prompt":"Treci put ponovi isti polozaj."},
+    {"name":"Oporavak 3","condition":"recovery_normal_3","seconds":50,"prompt":"Skloni papiric i ruku; tisina."},
+    {"name":"Razgovor","condition":"ambient_speech","seconds":50,"prompt":"Pricaj normalno sa oznacenog mjesta."},
+    {"name":"Oporavak poslije govora","condition":"recovery_after_speech","seconds":50,"prompt":"Prestani da pricas; tisina."},
+    {"name":"Vrata","condition":"ambient_door","seconds":30,"prompt":"Jednom normalno otvori i zatvori vrata; ne lupaj."},
+    {"name":"Zavrsni oporavak","condition":"final_recovery","seconds":50,"prompt":"Miruj i ostavi ventilator da radi normalno."}
+  ],
+  "acceptance": {
+    "paper_blocks_required": 2,
+    "paper_blocks_total": 3,
+    "min_high_run_per_passing_paper_block": 3,
+    "minimum_measured_windows": {
+      "normal_baseline": 3,
+      "paper": 3,
+      "recovery": 3,
+      "ambient_speech": 3,
+      "ambient_door": 1,
+      "final_recovery": 3
+    },
+    "max_alarm_episodes_speech": 0,
+    "max_alarm_episodes_door": 0,
+    "max_alarm_episodes_normal": 0,
+    "max_dropped_samples": 0,
+    "research_telemetry_required": true,
+    "attempt_limit": 3
+  }
+}

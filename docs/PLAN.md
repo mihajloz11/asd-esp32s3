@@ -1,7 +1,11 @@
 # PLAN — gdje smo i šta je sljedeće
 
-**Zadnje ažuriranje:** 09.08.2026 · Ovo je **jedini** dokument koji treba
-pročitati da bi se znalo stanje i redoslijed. Ostali dokumenti su detalji.
+> **ISTORIJSKI SNIMAK STANJA OD 09.08.2026. — ZAMIJENJEN.** Izvršenje je
+> zaključeno u [PLAN-ZAVRSNICA.md](PLAN-ZAVRSNICA.md), a jedini aktuelni kratki
+> spisak preostalog rada je [PREOSTALO.md](PREOSTALO.md). Brojevi i otvorene
+> stavke ispod ostaju radi istraživačkog traga, ne kao trenutni plan.
+
+**Zadnje ažuriranje:** 09.08.2026.
 
 ---
 

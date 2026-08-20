@@ -1,5 +1,12 @@
 # Prijedlog teme master rada — sažetak (1 strana)
 
+> **ISTORIJSKI DOKUMENT — zamijenjen finalnim PSD/Mahalanobis smjerom.** Ovo je
+> prijedlog iz jula 2026. i čuva početni AE/TFLM plan; ne koristiti ga kao
+> trenutno stanje, finalnu metodologiju ili spisak otvorenih zadataka. Za
+> aktuelno stanje vidi [odluka-finalni-model.md](odluka-finalni-model.md),
+> [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md) i
+> [PREOSTALO.md](PREOSTALO.md).
+
 **Student:** Mihajlo Živković · MSc Embedded Systems and Algorithms, FTN
 **Datum:** jul 2026 · **Ciljana odbrana:** kraj septembra 2026
 
