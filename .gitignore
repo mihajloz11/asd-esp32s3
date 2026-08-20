@@ -43,3 +43,7 @@ results/*.wav
 .venv-bare/
 radovi/telfor2026/sablon/*.pdf
 radovi/telfor2026/primjeri/*.pdf
+# Render za provjeru izgleda (render_check.py) — regenerise se iz .docx.
+# Finalni PDF za predaju dodati rucno sa `git add -f`.
+radovi/telfor2026/preview/
+radovi/telfor2026/telfor2026_asd_esp32s3.pdf

@@ -1,0 +1,36 @@
+{
+  "schema_version": "asd-commissioning-policy-v1.0.0-development",
+  "developmental": true,
+  "numeric_status": "development_pending_physical_validation",
+  "target_anomalies_used_for_fit": false,
+  "policy_version": 1,
+  "policy_id_u32": 1129141809,
+  "phase_order": [
+    "SETTLE",
+    "CENTER_LEARNING",
+    "COMMISSION_DERIVE",
+    "COMMISSION_VERIFY",
+    "MONITORING"
+  ],
+  "policy": {
+    "min_settle_windows": 4,
+    "stable_settle_windows": 3,
+    "max_settle_windows": 60,
+    "center_windows": 10,
+    "derive_windows": 120,
+    "verify_windows": 60,
+    "settle_timeout_ms": 120000,
+    "center_timeout_ms": 300000,
+    "derive_timeout_ms": 1500000,
+    "verify_timeout_ms": 900000,
+    "max_level_step_db": 3.0,
+    "max_tonalness_step": 1.0,
+    "max_feature_drift": 5.0,
+    "max_verify_episodes": 0,
+    "max_verify_alarm_windows": 0,
+    "max_verify_chatter": 0,
+    "verify_min_consecutive": 3
+  },
+  "profile_persistence_allowed": false,
+  "change_rule": "Freeze numeric policy from normal-only evidence before production or NVS persistence."
+}

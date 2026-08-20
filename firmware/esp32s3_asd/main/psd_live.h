@@ -6,6 +6,7 @@
  * Vidi docs/odluka-finalni-model.md i docs/istrazivanje-psd-model.md.
  *
  * Build:  set ASD_PSD_LIVE=1  &&  idf.py reconfigure build flash monitor
+ * Research sidecar (bez PCM): dodatno set ASD_RESEARCH_TELEMETRY=1.
  */
 #ifndef ASD_PSD_LIVE_H
 #define ASD_PSD_LIVE_H

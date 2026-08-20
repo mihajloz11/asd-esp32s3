@@ -1,0 +1,22 @@
+{
+  "schema_version": "asd-interference-policy-v1.0.0-development",
+  "developmental": true,
+  "numeric_status": "development_pending_physical_validation",
+  "target_anomalies_used_for_fit": false,
+  "public_state": "OBSERVATION_HOLD",
+  "forbidden_single_microphone_diagnosis": "AMBIENT_NOISE",
+  "policy": {
+    "enabled": false,
+    "max_abs_tonalness_delta": 0.0,
+    "max_subsegment_instability": 0.0,
+    "long_hold_windows": 6
+  },
+  "semantics": {
+    "hold_suspends_alarm_buildup": true,
+    "hold_clears_active_alarm": false,
+    "hold_changes_profile": false,
+    "stable_high_after_hold_starts_fresh_run": true,
+    "long_hold_is_warning_not_normal": true
+  },
+  "change_rule": "Enable and freeze numeric boundaries only from independent normal-only interference data."
+}

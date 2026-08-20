@@ -18,15 +18,15 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 MAIN = ROOT / "firmware" / "esp32s3_asd" / "main"
 SRC = [MAIN / "asd_events.c", MAIN / "audio_quality_state.c",
-       MAIN / "asd_temporal.c"]
+       MAIN / "asd_temporal.c", MAIN / "asd_interference.c"]
 POLICY_JSON = ROOT / "pc" / "config" / "asd_presence_policy_v1.json"
 
 # asd_quality_reason_t
-OK, SHORT_READ, NONFINITE, STUCK, LOW_LEVEL, INSUFFICIENT, CLIPPING, DROPPED, INVALID = range(9)
+OK, SHORT_READ, NONFINITE, STUCK, LOW_LEVEL, INSUFFICIENT, CLIPPING, DROPPED, INVALID, AUDIO_TIMEOUT, AUDIO_READ_ERROR = range(11)
 # asd_quality_phase_t
 WAIT, CAL, DET = range(3)
 # asd_state_t
-NO_MACHINE, CAL_REJECTED, CALIBRATED_NORMAL, ANOMALY, SENSOR_ERROR, RECAL_REQUIRED = range(6)
+NO_MACHINE, CAL_REJECTED, CALIBRATED_NORMAL, ANOMALY, SENSOR_ERROR, RECAL_REQUIRED, OBSERVATION_HOLD = range(7)
 # asd_event_t
 E_NONE, E_FAN_STOPPED, E_SPEED_CHANGED, E_MECHANICAL, E_AMBIENT, E_SENSOR_FAULT, E_UNKNOWN = range(7)
 # asd_capability_t
@@ -35,17 +35,19 @@ CAP_AVAILABLE, CAP_NEEDS_F0, CAP_NEEDS_DUAL, CAP_NEEDS_TRANSIENT = range(4)
 L_SENSOR, L_PRESENCE, L_REGIME, L_DEVIATION = range(4)
 
 ALL_STATES = [NO_MACHINE, CAL_REJECTED, CALIBRATED_NORMAL, ANOMALY,
-              SENSOR_ERROR, RECAL_REQUIRED]
+              SENSOR_ERROR, RECAL_REQUIRED, OBSERVATION_HOLD]
 TERMINAL = {CAL_REJECTED, SENSOR_ERROR, RECAL_REQUIRED}
 
 # Jedini autoritet u testu: prepisana tabela, nezavisno od implementacije.
 ALLOWED = {
     NO_MACHINE: {CALIBRATED_NORMAL, CAL_REJECTED, SENSOR_ERROR, RECAL_REQUIRED},
-    CALIBRATED_NORMAL: {ANOMALY, NO_MACHINE, SENSOR_ERROR, RECAL_REQUIRED},
+    CALIBRATED_NORMAL: {ANOMALY, OBSERVATION_HOLD, NO_MACHINE, SENSOR_ERROR, RECAL_REQUIRED},
     ANOMALY: {CALIBRATED_NORMAL, NO_MACHINE, SENSOR_ERROR, RECAL_REQUIRED},
     CAL_REJECTED: set(),
     SENSOR_ERROR: set(),
     RECAL_REQUIRED: set(),
+    OBSERVATION_HOLD: {CALIBRATED_NORMAL, ANOMALY, NO_MACHINE,
+                       SENSOR_ERROR, RECAL_REQUIRED},
 }
 
 
@@ -57,14 +59,17 @@ class Policy(ctypes.Structure):
 class Calibration(ctypes.Structure):
     _fields_ = [("valid", ctypes.c_int),
                 ("level_mean_dbfs", ctypes.c_float),
-                ("score_threshold", ctypes.c_float)]
+                ("threshold_enter", ctypes.c_float),
+                ("threshold_exit", ctypes.c_float)]
 
 
 class Observation(ctypes.Structure):
     _fields_ = [("quality", ctypes.c_int),
                 ("phase", ctypes.c_int),
                 ("rms_dbfs", ctypes.c_float),
-                ("score", ctypes.c_float)]
+                ("score", ctypes.c_float),
+                ("tonalness_delta", ctypes.c_float),
+                ("subsegment_instability", ctypes.c_float)]
 
 
 class TemporalPolicy(ctypes.Structure):
@@ -87,10 +92,26 @@ class Temporal(ctypes.Structure):
                 ("policy", TemporalPolicy)]
 
 
+class InterferencePolicy(ctypes.Structure):
+    _fields_ = [("enabled", ctypes.c_int),
+                ("developmental", ctypes.c_int),
+                ("max_abs_tonalness_delta", ctypes.c_float),
+                ("max_subsegment_instability", ctypes.c_float),
+                ("long_hold_windows", ctypes.c_uint32)]
+
+
+class Interference(ctypes.Structure):
+    _fields_ = [("policy", InterferencePolicy),
+                ("hold_windows", ctypes.c_uint32),
+                ("hold_active", ctypes.c_int),
+                ("warning_emitted", ctypes.c_int)]
+
+
 class Ctx(ctypes.Structure):
     _fields_ = [("state", ctypes.c_int),
                 ("absent_run", ctypes.c_int),
                 ("temporal", Temporal),
+                ("interference", Interference),
                 ("policy", Policy)]
 
 
@@ -99,7 +120,9 @@ class Decision(ctypes.Structure):
                 ("event", ctypes.c_int),
                 ("level", ctypes.c_int),
                 ("flow_stop", ctypes.c_int),
-                ("state_changed", ctypes.c_int)]
+                ("state_changed", ctypes.c_int),
+                ("observation_hold", ctypes.c_int),
+                ("hold_warning", ctypes.c_int)]
 
 
 @pytest.fixture(scope="module")
@@ -117,6 +140,9 @@ def lib(tmp_path_factory: pytest.TempPathFactory):
     handle = ctypes.CDLL(str(out))
     handle.asd_presence_default_policy.restype = Policy
     handle.asd_decision_init.argtypes = [ctypes.POINTER(Ctx), ctypes.POINTER(Policy)]
+    handle.asd_decision_set_interference_policy.argtypes = [
+        ctypes.POINTER(Ctx), ctypes.POINTER(InterferencePolicy),
+    ]
     handle.asd_decide.argtypes = [ctypes.POINTER(Ctx), ctypes.POINTER(Calibration),
                                   ctypes.POINTER(Observation)]
     handle.asd_decide.restype = Decision
@@ -146,12 +172,14 @@ def make_ctx(lib, margin=11.0, n_consec=3, state=CALIBRATED_NORMAL,
     return ctx
 
 
-def obs(rms=-24.0, score=1.0, quality=OK, phase=DET):
-    return Observation(quality, phase, rms, score)
+def obs(rms=-24.0, score=1.0, quality=OK, phase=DET,
+        tonalness_delta=0.0, instability=0.0):
+    return Observation(quality, phase, rms, score,
+                       tonalness_delta, instability)
 
 
-CAL_OK = Calibration(1, -24.0, 100.0)
-CAL_INVALID = Calibration(0, float("nan"), 0.0)
+CAL_OK = Calibration(1, -24.0, 100.0, 70.0)
+CAL_INVALID = Calibration(0, float("nan"), 0.0, 0.0)
 
 
 # --- policy -----------------------------------------------------------------
@@ -225,7 +253,10 @@ def test_terminal_flag(lib, state):
 
 # --- hijerarhija: zdravlje senzora guši sve ispod ---------------------------
 
-@pytest.mark.parametrize("reason", [SHORT_READ, NONFINITE, STUCK, DROPPED, INVALID])
+@pytest.mark.parametrize(
+    "reason",
+    [SHORT_READ, NONFINITE, STUCK, DROPPED, INVALID, AUDIO_TIMEOUT, AUDIO_READ_ERROR],
+)
 def test_sensor_fault_wins_over_presence_and_deviation(lib, reason):
     ctx = make_ctx(lib)
     # nivo je uredan i score je ispod praga, pa bi bez ovog nivoa sve bilo normal
@@ -370,7 +401,7 @@ def test_anomaly_clears_without_inventing_an_event(lib):
 def test_score_exactly_at_threshold_is_normal(lib):
     ctx = make_ctx(lib, temporal_n=1)
     d = lib.asd_decide(ctx, ctypes.byref(CAL_OK),
-                       ctypes.byref(obs(rms=-24.0, score=CAL_OK.score_threshold)))
+                       ctypes.byref(obs(rms=-24.0, score=CAL_OK.threshold_enter)))
     assert d.state == CALIBRATED_NORMAL, "prag je strogo veće, kao u psd_live.c"
 
 
@@ -424,7 +455,10 @@ def test_null_arguments_fail_closed(lib):
 
 # --- semantika Faze 2 za fail-closed odbijanja iz Faze 1 --------------------
 
-SENSOR_FAULT_REASONS = [SHORT_READ, NONFINITE, STUCK, CLIPPING, DROPPED, INVALID]
+SENSOR_FAULT_REASONS = [
+    SHORT_READ, NONFINITE, STUCK, CLIPPING, DROPPED, INVALID,
+    AUDIO_TIMEOUT, AUDIO_READ_ERROR,
+]
 LEVEL_REASONS = [LOW_LEVEL, INSUFFICIENT]
 
 
@@ -447,7 +481,7 @@ def test_ok_is_not_an_event(lib):
 
 def test_every_reject_event_is_actually_emittable(lib):
     """Preslikavanje ne smije proizvesti dogadjaj koji kapabilitetni gate zabranjuje."""
-    for reason in range(9):
+    for reason in range(11):
         event = lib.asd_event_for_quality_reject(reason)
         assert lib.asd_event_is_emittable(event) == 1
 
@@ -522,3 +556,61 @@ def test_sensor_fault_fully_resets_the_detector(lib):
     lib.asd_decide(ctypes.byref(ctx), ctypes.byref(CAL_OK),
                    ctypes.byref(obs(rms=-24.0, score=150.0, quality=STUCK)))
     assert ctx.temporal.active == 0 and ctx.temporal.run == 0
+
+
+# --- Faza 6: observation HOLD ----------------------------------------------
+
+def enable_interference(lib, ctx, *, long_hold=3):
+    policy = InterferencePolicy(1, 1, 1.0, 0.5, long_hold)
+    lib.asd_decision_set_interference_policy(
+        ctypes.byref(ctx), ctypes.byref(policy),
+    )
+
+
+def test_unreliable_high_window_suspends_alarm_buildup(lib):
+    ctx = make_ctx(lib, temporal_n=3)
+    enable_interference(lib, ctx)
+    d = lib.asd_decide(
+        ctypes.byref(ctx), ctypes.byref(CAL_OK),
+        ctypes.byref(obs(score=150.0, tonalness_delta=2.0)),
+    )
+    assert d.state == OBSERVATION_HOLD
+    assert d.observation_hold == 1 and d.event == E_NONE
+    assert ctx.temporal.run == 0 and ctx.temporal.active == 0
+
+
+def test_stable_high_after_hold_builds_a_fresh_alarm(lib):
+    ctx = make_ctx(lib, temporal_n=3)
+    enable_interference(lib, ctx)
+    held = obs(score=150.0, tonalness_delta=2.0)
+    stable = obs(score=150.0, tonalness_delta=0.1, instability=0.1)
+    assert lib.asd_decide(
+        ctypes.byref(ctx), ctypes.byref(CAL_OK), ctypes.byref(held),
+    ).state == OBSERVATION_HOLD
+    states = [
+        lib.asd_decide(
+            ctypes.byref(ctx), ctypes.byref(CAL_OK), ctypes.byref(stable),
+        ).state
+        for _ in range(3)
+    ]
+    assert states == [OBSERVATION_HOLD, OBSERVATION_HOLD, ANOMALY]
+
+
+def test_active_alarm_is_not_cleared_by_hold_and_long_hold_warns(lib):
+    ctx = make_ctx(lib, temporal_n=1)
+    enable_interference(lib, ctx, long_hold=2)
+    stable = obs(score=150.0, tonalness_delta=0.1, instability=0.1)
+    assert lib.asd_decide(
+        ctypes.byref(ctx), ctypes.byref(CAL_OK), ctypes.byref(stable),
+    ).state == ANOMALY
+    held = obs(score=150.0, tonalness_delta=3.0, instability=1.0)
+    first = lib.asd_decide(
+        ctypes.byref(ctx), ctypes.byref(CAL_OK), ctypes.byref(held),
+    )
+    second = lib.asd_decide(
+        ctypes.byref(ctx), ctypes.byref(CAL_OK), ctypes.byref(held),
+    )
+    assert first.state == second.state == ANOMALY
+    assert ctx.temporal.active == 1
+    assert first.observation_hold == 1 and second.hold_warning == 1
+    assert first.event == second.event == E_NONE

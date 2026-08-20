@@ -18,6 +18,8 @@
 #define FAULT_PERIOD_MS     1600u
 #define FAULT_PULSE_MS       120u
 #define FAULT_GAP_MS         240u
+#define HOLD_PERIOD_MS      1000u
+#define HOLD_ON_MS           250u
 
 asd_button_policy_t asd_button_default_policy(void) {
     asd_button_policy_t policy = {
@@ -86,13 +88,17 @@ asd_button_event_t asd_button_update(asd_button_t *btn, int pressed,
 
 asd_ui_mode_t asd_ui_mode(asd_flow_stage_t stage, asd_state_t state) {
     switch (stage) {
-        case ASD_STAGE_LEARNING:
+        case ASD_STAGE_SETTLE:
+        case ASD_STAGE_CENTER_LEARNING:
+        case ASD_STAGE_COMMISSION_DERIVE:
+        case ASD_STAGE_COMMISSION_VERIFY:
             /* I dok uči, terminalni ishod je jači od faze: fail-closed stop se
              * mora vidjeti odmah, a ne tek kad se sesija formalno zatvori. */
             return asd_state_is_terminal(state) ? ASD_UI_FAULT : ASD_UI_LEARNING;
         case ASD_STAGE_MONITORING:
             if (asd_state_is_terminal(state)) return ASD_UI_FAULT;
             if (state == ASD_STATE_ANOMALY) return ASD_UI_ALARM;
+            if (state == ASD_STATE_OBSERVATION_HOLD) return ASD_UI_HOLD;
             /* Mašine više nema: nadzor nema šta da nadzire, pa lampica ne smije
              * pokazivati „spreman". Vraća se na obrazac čekanja. */
             if (state == ASD_STATE_NO_MACHINE) return ASD_UI_IDLE;
@@ -111,6 +117,8 @@ int asd_indicator_level(asd_ui_mode_t mode, uint32_t now_ms) {
             return 0;
         case ASD_UI_LEARNING:
             return (now_ms % LEARNING_PERIOD_MS) < LEARNING_ON_MS;
+        case ASD_UI_HOLD:
+            return (now_ms % HOLD_PERIOD_MS) < HOLD_ON_MS;
         case ASD_UI_FAULT: {
             uint32_t phase = now_ms % FAULT_PERIOD_MS;
             return phase < FAULT_PULSE_MS ||
@@ -151,6 +159,7 @@ asd_ui_command_t asd_ui_command(asd_ui_mode_t mode, asd_button_event_t event) {
             return event == ASD_BTN_LONG ? ASD_UI_CMD_ABORT : ASD_UI_CMD_NONE;
         case ASD_UI_READY:
         case ASD_UI_ALARM:
+        case ASD_UI_HOLD:
             /* Naučeni centar postoji. Odbacuje ga samo dug pritisak, i to je
              * jedini put do novog centra — automatskog nema. */
             return event == ASD_BTN_LONG ? ASD_UI_CMD_START_LEARNING
@@ -165,7 +174,7 @@ int asd_ui_command_discards_calibration(asd_ui_mode_t mode,
     if (command != ASD_UI_CMD_START_LEARNING) return 0;
     /* Centar postoji samo poslije prihvaćene kalibracije. IDLE i FAULT ga
      * nemaju, pa tu nema šta da se odbaci. */
-    return mode == ASD_UI_READY || mode == ASD_UI_ALARM;
+    return mode == ASD_UI_READY || mode == ASD_UI_ALARM || mode == ASD_UI_HOLD;
 }
 
 const char *asd_ui_mode_name(asd_ui_mode_t mode) {
@@ -175,6 +184,7 @@ const char *asd_ui_mode_name(asd_ui_mode_t mode) {
         case ASD_UI_READY: return "READY";
         case ASD_UI_ALARM: return "ALARM";
         case ASD_UI_FAULT: return "FAULT";
+        case ASD_UI_HOLD: return "OBSERVATION_HOLD";
         default: return "UNKNOWN_MODE";
     }
 }
@@ -200,7 +210,10 @@ const char *asd_ui_command_name(asd_ui_command_t command) {
 const char *asd_flow_stage_name(asd_flow_stage_t stage) {
     switch (stage) {
         case ASD_STAGE_IDLE: return "IDLE";
-        case ASD_STAGE_LEARNING: return "LEARNING";
+        case ASD_STAGE_SETTLE: return "SETTLE";
+        case ASD_STAGE_CENTER_LEARNING: return "CENTER_LEARNING";
+        case ASD_STAGE_COMMISSION_DERIVE: return "COMMISSION_DERIVE";
+        case ASD_STAGE_COMMISSION_VERIFY: return "COMMISSION_VERIFY";
         case ASD_STAGE_MONITORING: return "MONITORING";
         default: return "UNKNOWN_STAGE";
     }

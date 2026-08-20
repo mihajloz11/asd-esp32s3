@@ -1,0 +1,12 @@
+press panel
+condition normal_baseline Normalna osnova: Sjedi mirno. Ne pricaj, ne kucaj, ne prilazi ventilatoru.
+condition airflow_change Papiric 1: Drzi papiric uz USIS (zadnja strana), spolja, bez kontakta.
+condition recovery_normal Oporavak 1: Skloni papiric I ruku. Odmakni se korak. Tisina.
+condition airflow_change Papiric 2: Papiric uz usis, isto mjesto i isti zahvat kao prvi put.
+condition recovery_normal Oporavak 2: Skloni papiric I ruku. Tisina.
+condition airflow_change Papiric 3: Papiric uz usis, treci put.
+condition recovery_normal Oporavak 3: Skloni papiric I ruku. Tisina.
+condition ambient_noise Razgovor: Pricaj normalnim glasom sa oznacenog mjesta, 2 m od mikrofona.
+condition recovery_normal Oporavak: Prestani da pricas. Tisina.
+condition controlled_stop Gasenje: SAD ugasi ventilator. Ne pomjeraj ga.
+stop kraj plana

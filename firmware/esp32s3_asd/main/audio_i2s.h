@@ -12,12 +12,31 @@
 #define AUDIO_SR         16000
 #define AUDIO_RING_SEC   2                       /* ring buffer kapacitet */
 #define AUDIO_RING_LEN   (AUDIO_SR * AUDIO_RING_SEC)
+#define AUDIO_READ_DEFAULT_TIMEOUT_MS 2000u
+#define AUDIO_I2S_CAPTURE_WAIT_MS      250u
+
+typedef struct {
+    uint32_t heartbeat_ms;
+    int32_t last_error;
+    uint32_t successful_reads;
+    uint32_t timeout_count;
+    uint32_t error_count;
+} audio_liveness_status_t;
 
 esp_err_t audio_i2s_init(void);
 esp_err_t audio_i2s_start(void);
 
-/* Blokirajuće čitanje n uzoraka (16-bit PCM) iz ring buffera. */
+/* Bounded exact read.  timeout_ms je jedan ukupni deadline za sve parcijalne
+ * ring-buffer komade; samples_read uvijek javlja stvarno kopirani broj. */
+esp_err_t audio_read_exact(int16_t *dst, size_t n_samples,
+                           uint32_t timeout_ms, size_t *samples_read);
+
+/* Kompatibilni bounded wrapper za starije build modove. */
 size_t audio_read(int16_t *dst, size_t n_samples);
+
+/* Prazni ring bafer i vraća koliko je uzoraka odbačeno. Zove se na početku
+ * sesije, da nakupljeno čekanje ne padne na teret prvog mjernog bloka. */
+size_t audio_flush(void);
 
 /* Broj dropovanih uzoraka od starta (dijagnostika DMA overruna, rizik C4). */
 uint32_t audio_dropped_samples(void);
@@ -26,5 +45,6 @@ uint32_t audio_dropped_samples(void);
  * reseta — provjera da li je shift dobro odabran (rizik C1, mic_test.c). */
 int32_t audio_raw_peak(void);
 void    audio_raw_peak_reset(void);
+void audio_liveness_snapshot(audio_liveness_status_t *out);
 
 #endif

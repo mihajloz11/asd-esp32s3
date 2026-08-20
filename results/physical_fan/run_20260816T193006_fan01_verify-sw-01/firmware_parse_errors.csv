@@ -1,0 +1,2 @@
+host_utc,elapsed_s,record_kind,reason,raw_line
+2026-08-16T17:32:42.926+00:00,156.235,STATE,STATE_chain_mismatch:expected_from=CALIBRATED_NORMAL:got=NO_MACHINE,STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED

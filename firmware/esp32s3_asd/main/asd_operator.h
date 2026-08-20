@@ -36,10 +36,16 @@ extern "C" {
 /* Faza toka, onako kako je vidi operater — ne isto što i `asd_state_t`, koji
  * je činjenica o kalibraciji. */
 typedef enum {
-    ASD_STAGE_IDLE = 0,      /* nema sesije: uređaj čeka taster */
-    ASD_STAGE_LEARNING,      /* WAIT + CAL: sluša i uči normalan rad */
-    ASD_STAGE_MONITORING     /* DET: centar je zamrznut, nadzire */
+    ASD_STAGE_IDLE = 0,
+    ASD_STAGE_CENTER_LEARNING,
+    ASD_STAGE_MONITORING,
+    ASD_STAGE_SETTLE,
+    ASD_STAGE_COMMISSION_DERIVE,
+    ASD_STAGE_COMMISSION_VERIFY
 } asd_flow_stage_t;
+
+/* Source compatibility while psd_live migrates its legacy local name. */
+#define ASD_STAGE_LEARNING ASD_STAGE_CENTER_LEARNING
 
 /* Šta lampica pokazuje. Pet obrazaca, razlučivih golim okom. */
 typedef enum {
@@ -47,7 +53,8 @@ typedef enum {
     ASD_UI_LEARNING,   /* brzo treperi 5 Hz: učim, ne diraj ventilator */
     ASD_UI_READY,      /* stalno svijetli: UČENJE GOTOVO, nadzirem, normalno */
     ASD_UI_ALARM,      /* ugašena: trajno odstupanje */
-    ASD_UI_FAULT       /* dvostruki bljesak: fail-closed stop, treba restart */
+    ASD_UI_FAULT,      /* dvostruki bljesak: fail-closed stop, treba restart */
+    ASD_UI_HOLD        /* sporo treperi: moguca smetnja / cekam */
 } asd_ui_mode_t;
 
 typedef enum {
