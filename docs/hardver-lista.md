@@ -49,8 +49,14 @@ mikroprekidač, bez uticaja na šemu ili kod.
 
 | Šta | Kom | Zašto fali | Bez toga |
 |---|---|---|---|
-| Otpornik **220–330 Ω** (1/4 W) | 2 | Bio na spisku "iz firme" — donijeti s posla | LED se **ne smije** vezati na GPIO |
+| Otpornik **330 Ω** (1/4 W) | 2 + rezerva | Nije bio u porudžbini; sada je u nabavci sa Mikro Princa | LED se **ne smije** vezati na GPIO |
+| Otpornik **100 Ω** (1/4 W) | 2 | Rezerva ako zelena LED ima visok `Vf` | Zelena može ostati tamna a da je firmware ispravan |
+| Keramika **100 nF**, raster 2,54 mm | 2 | Datasheet-tačna vrijednost za INMP441; kupljenih 470 nF radi funkcionalno | Kozmetika, ne blokada |
 | *(opciono)* Ženski header 2.54 mm | ~1 | Nije naručen | Na ploči 4×6 moduli idu fiksno zalemljeni |
+
+Nabavka i identi: [plan-dvije-plocice.md §7](plan-dvije-plocice.md). Šta se od
+toga uzima s posla umjesto kupovine, uz račun struje kroz otpornik i zamku sa
+zelenom LED: [donijeti-sa-posla.md](donijeti-sa-posla.md).
 
 ### Redoslijed lemljenja i mjere opreza
 
