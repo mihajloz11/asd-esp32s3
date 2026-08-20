@@ -22,8 +22,10 @@ import csv
 import hashlib
 import json
 import math
+import os
 import queue
 import re
+import statistics
 import subprocess
 import sys
 import threading
@@ -33,12 +35,75 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
+import numpy as np
+
 
 ROOT = Path(__file__).resolve().parents[2]
+PC_DIR = ROOT / "pc"
+if str(PC_DIR) not in sys.path:
+    sys.path.insert(0, str(PC_DIR))
+
+from asd.commissioning_policy import (  # noqa: E402
+    COMMISSIONING_POLICY_RECORD,
+    calibration_acceptance,
+)
+from asd.guided_test import evaluate_guided25_artifact  # noqa: E402
+from asd.runtime_protocol import (  # noqa: E402
+    COMMISSIONING as RUNTIME_COMMISSIONING_POLICY,
+    PROFILE_PERSISTENCE_ALLOWED,
+    RuntimeProtocolError,
+    RuntimeRecord,
+    advance_runtime_sequence,
+    new_runtime_sequence_state,
+    parse_runtime_record,
+)
+
 DEFAULT_OUT = ROOT / "results" / "physical_fan"
 FIRMWARE_DIR = ROOT / "firmware" / "esp32s3_asd"
-PROTOCOL_VERSION = "physical-fan-v1.6.0"
-QUALITY_PROTOCOL_VERSION = "asd-quality-v1.3.0"
+PROTOCOL_VERSION = "physical-fan-v1.8.0"
+LEGACY_READ_PROTOCOL_VERSIONS = frozenset({
+    "physical-fan-v1.6.0", "physical-fan-v1.7.0",
+})
+SUPPORTED_READ_PROTOCOL_VERSIONS = frozenset({
+    PROTOCOL_VERSION,
+    *LEGACY_READ_PROTOCOL_VERSIONS,
+})
+QUALITY_PROTOCOL_VERSION = "asd-quality-v1.5.0"
+LEGACY_PARSE_QUALITY_PROTOCOL_VERSIONS = frozenset({"asd-quality-v1.4.0"})
+SUPPORTED_PARSE_QUALITY_PROTOCOL_VERSIONS = frozenset({
+    QUALITY_PROTOCOL_VERSION, *LEGACY_PARSE_QUALITY_PROTOCOL_VERSIONS,
+})
+ARTIFACT_CONTRACT_VERSION = "physical-fan-artifacts-v1.8.0"
+RESEARCH_PROTOCOL_VERSION = "asd-research-v1.0.0"
+RESEARCH_ARTIFACT_SCHEMA_VERSION = "asd-research-artifacts-v1.0.0"
+RESEARCH_DIMS = 96
+RESEARCH_GROUP_SEGMENTS = (8, 8, 8, 7, 7)
+VWORKFLOW_ACCEPTED_RE = re.compile(r"\bVWORKFLOW\s+mode=GUIDED25\s+result=accepted\b")
+GUIDED_CAPABILITY_RE = re.compile(
+    r"\bFLAGS\s+protocol=asd-quality-v1\.5\.0\b.*\bguided25_available=1\b")
+PROFILE_STORE_SCHEMA_VERSION = "asd-profile-v1.0.0"
+PSD_MODEL_FINGERPRINT_HEX = (
+    "7bfbd3eeca1caca074562f6e01f6b374237dcea5c1d2cc097df079d68d9d15fe"
+)
+PROFILE_POLICY_VERSION = 1
+PROFILE_POLICY_IDS = {
+    "profile_policy_id": 0x434D5631,
+    "quality_policy_id": 0x51555631,
+    "commissioning_policy_id": 0x434D5631,
+    "temporal_policy_id": 0x54505632,
+    "interference_policy_id": 0x49505631,
+}
+ARTIFACT_QUALITY_PROTOCOL_PAIRS = {
+    "physical-fan-v1.6.0": "asd-quality-v1.3.0",
+    "physical-fan-v1.7.0": "asd-quality-v1.4.0",
+    PROTOCOL_VERSION: QUALITY_PROTOCOL_VERSION,
+}
+ARTIFACT_CONTRACT_VERSIONS = {
+    "physical-fan-v1.7.0": "physical-fan-artifacts-v1.7.0",
+    PROTOCOL_VERSION: ARTIFACT_CONTRACT_VERSION,
+}
+CAL_SUMMARY_DECIMALS = 6
+CAL_SUMMARY_HALF_QUANTUM = 0.5 * (10.0 ** -CAL_SUMMARY_DECIMALS)
 
 RELEVANT_FILES = (
     ROOT / "pc" / "tools" / "physical_fan_experiment.py",
@@ -46,14 +111,37 @@ RELEVANT_FILES = (
     FIRMWARE_DIR / "main" / "psd_live.c",
     FIRMWARE_DIR / "main" / "audio_quality_state.c",
     FIRMWARE_DIR / "main" / "audio_quality_state.h",
+    FIRMWARE_DIR / "main" / "audio_i2s.c",
+    FIRMWARE_DIR / "main" / "audio_i2s.h",
+    FIRMWARE_DIR / "main" / "asd_calibration_quality.c",
+    FIRMWARE_DIR / "main" / "asd_calibration_quality.h",
+    FIRMWARE_DIR / "main" / "asd_profile_runtime.c",
+    FIRMWARE_DIR / "main" / "asd_profile_runtime.h",
+    FIRMWARE_DIR / "main" / "asd_profile_store.c",
+    FIRMWARE_DIR / "main" / "asd_profile_store.h",
+    FIRMWARE_DIR / "main" / "asd_profile_nvs.c",
+    FIRMWARE_DIR / "main" / "asd_profile_nvs.h",
+    FIRMWARE_DIR / "main" / "asd_commissioning.c",
+    FIRMWARE_DIR / "main" / "asd_commissioning.h",
     FIRMWARE_DIR / "main" / "asd_events.c",
     FIRMWARE_DIR / "main" / "asd_events.h",
     FIRMWARE_DIR / "main" / "asd_operator.c",
     FIRMWARE_DIR / "main" / "asd_operator.h",
+    FIRMWARE_DIR / "main" / "asd_temporal.c",
+    FIRMWARE_DIR / "main" / "asd_temporal.h",
+    FIRMWARE_DIR / "main" / "asd_cmd.c",
+    FIRMWARE_DIR / "main" / "asd_cmd.h",
     FIRMWARE_DIR / "main" / "psd_features_c.c",
+    FIRMWARE_DIR / "main" / "psd_features_c.h",
     FIRMWARE_DIR / "main" / "psd_model_data.h",
     ROOT / "pc" / "config" / "asd_quality_policy_v1.json",
     ROOT / "pc" / "config" / "asd_presence_policy_v1.json",
+    ROOT / "pc" / "config" / "asd_commissioning_policy_v1.json",
+    ROOT / "pc" / "config" / "asd_temporal_policy_v2.json",
+    ROOT / "pc" / "config" / "asd_interference_policy_v1.json",
+    ROOT / "pc" / "asd" / "commissioning_policy.py",
+    FIRMWARE_DIR / "main" / "asd_interference.c",
+    FIRMWARE_DIR / "main" / "asd_interference.h",
 )
 
 QUALITY_POLICY_RECORD = json.loads(
@@ -65,34 +153,42 @@ PRESENCE_POLICY_RECORD = json.loads(
 )
 PRESENCE_POLICY = PRESENCE_POLICY_RECORD["policy"]
 TEMPORAL_POLICY_RECORD = json.loads(
-    (ROOT / "pc" / "config" / "asd_temporal_policy_v1.json").read_text(encoding="utf-8")
+    (ROOT / "pc" / "config" / "asd_temporal_policy_v2.json").read_text(encoding="utf-8")
 )
 TEMPORAL_POLICY = TEMPORAL_POLICY_RECORD["policy"]
+TEMPORAL_WIRE_PROVENANCE = TEMPORAL_POLICY_RECORD["legacy_wire_provenance"]
+LEGACY_TEMPORAL_POLICY_RECORD = json.loads(
+    (ROOT / "pc" / "config" / "asd_temporal_policy_v1.json").read_text(encoding="utf-8")
+)
+LEGACY_TEMPORAL_POLICY = LEGACY_TEMPORAL_POLICY_RECORD["policy"]
 
 ASCII_RECORD_RE = re.compile(
-    r"\b(?P<kind>QUALITY|STATE|EVENT|PRESENCE|TEMPORAL|SESSION|BUTTON)"
+    r"\b(?P<kind>QUALITY|STATE|EVENT|PRESENCE|TEMPORAL|SESSION|BUTTON|PROFILESTORE)"
     r"(?:\s+(?P<body>.*))?$"
 )
 KEY_VALUE_RE = re.compile(r"(?P<key>[A-Za-z_][A-Za-z0-9_]*)=(?P<value>\S+)")
 
 QUALITY_FIELDS = [
-    "host_utc", "elapsed_s", "protocol", "phase", "index", "total",
+    "host_utc", "elapsed_s", "firmware_session_index", "protocol", "phase", "index", "total",
     "result", "metrics_valid", "feature_valid", "samples", "expected", "rms_dbfs", "dc", "peak",
     "clipped", "zeros", "stuck", "dropped_delta", "tonalness_proxy",
     "tonalness_valid", "tonal_gate", "loo_mean", "loo_sd", "loo_cv", "loo_range", "loo_gate",
 ]
 STATE_FIELDS = [
-    "host_utc", "elapsed_s", "protocol", "from_state", "to_state", "reason",
+    "host_utc", "elapsed_s", "firmware_session_index", "protocol", "from_state", "to_state", "reason",
 ]
 FIRMWARE_EVENT_FIELDS = [
-    "host_utc", "elapsed_s", "protocol", "type", "state", "phase", "reason",
+    "host_utc", "elapsed_s", "firmware_session_index", "protocol", "type", "state", "phase", "reason",
     "event", "capability", "level",
 ]
 OPERATOR_FIELDS = [
-    "host_utc", "elapsed_s", "protocol", "kind", "action", "source", "reason",
+    "host_utc", "elapsed_s", "firmware_session_index", "protocol", "kind", "action", "source", "reason",
     "discards_calibration", "event", "mode", "command", "discards",
 ]
-PARSE_ERROR_FIELDS = ["host_utc", "elapsed_s", "record_kind", "reason", "raw_line"]
+PARSE_ERROR_FIELDS = [
+    "host_utc", "elapsed_s", "firmware_session_index",
+    "record_kind", "reason", "raw_line",
+]
 
 # Rjecnik Faze 2. Firmware event/capability/level moraju doci iz zakljucane
 # taksonomije; nepoznat token je greska protokola, ne nepoznato polje.
@@ -119,6 +215,7 @@ EXPECTED_QUALITY_COUNTS = {"WAIT": 60, "CAL": 10, "CAL_SUMMARY": 1}
 WAIT_EXPECTED_SAMPLES = 4096
 CLIP_EXPECTED_SAMPLES = 39 * 4096
 N_CONSECUTIVE_ALARM = 3
+COMMISSION_ENTER_QUANTILE = 0.99
 SCORE_NEGATIVE_TOL = 1.0e-3
 PCM_LEVEL_REL_TOL = 1.0e-3
 PCM_LEVEL_ABS_TOL = 1.0
@@ -134,11 +231,18 @@ FIRMWARE_STATES = TERMINAL_FIRMWARE_STATES | {
 QUALITY_REJECT_RESULTS = {
     "SHORT_READ", "NONFINITE", "STUCK_SIGNAL", "LOW_LEVEL_OBSERVATION",
     "INSUFFICIENT_LEVEL", "CLIPPING", "DROPPED_SAMPLES", "INVALID_ARGUMENT",
+    "AUDIO_TIMEOUT", "AUDIO_READ_ERROR",
 }
 # Razlozi zaustavljanja toka koje uvodi Faza 2. Nisu kvar kvaliteta signala
 # nego zakljucak hijerarhije, pa se drze odvojeno od QUALITY_REJECT_RESULTS.
 PRESENCE_STOP_REASONS = {"FAN_STOPPED", "PRESENCE_LOST"}
-FLOW_STOP_REASONS = QUALITY_REJECT_RESULTS | PRESENCE_STOP_REASONS
+CALIBRATION_STOP_REASONS = {"UNSTABLE_CALIBRATION"}
+FLOW_STOP_REASONS = (
+    QUALITY_REJECT_RESULTS | PRESENCE_STOP_REASONS | CALIBRATION_STOP_REASONS
+)
+RESEARCH_RECORD_RE = re.compile(
+    r"\b(?P<kind>FEATURE96|SUBSEG96)(?:\s+(?P<body>.*))?$"
+)
 
 DET_RE = re.compile(
     r"^DET\s+(?P<window>\d+)\s+"
@@ -183,6 +287,14 @@ def sha256_file(path: Path) -> str | None:
     return digest.hexdigest()
 
 
+def fnv1a_bytes(data: bytes) -> int:
+    """FNV-1a 32, identicno framed PCM/feature firmware obrascu."""
+    value = 0x811C9DC5
+    for byte in data:
+        value = ((value ^ byte) * 0x01000193) & 0xFFFFFFFF
+    return value
+
+
 def git_output(*args: str) -> str | None:
     try:
         proc = subprocess.run(
@@ -222,6 +334,15 @@ def build_is_psd_live() -> bool:
     return "-DASD_PSD_LIVE" in ninja.read_text(encoding="utf-8", errors="replace")
 
 
+def build_has_research_telemetry() -> bool:
+    ninja = FIRMWARE_DIR / "build" / "build.ninja"
+    if not ninja.is_file():
+        return False
+    return "-DASD_RESEARCH_TELEMETRY" in ninja.read_text(
+        encoding="utf-8", errors="replace",
+    )
+
+
 def collect_provenance(args: argparse.Namespace, ports: list[dict[str, Any]]) -> dict[str, Any]:
     build_bin = FIRMWARE_DIR / "build" / "esp32s3_asd.bin"
     project_json = FIRMWARE_DIR / "build" / "project_description.json"
@@ -239,6 +360,14 @@ def collect_provenance(args: argparse.Namespace, ports: list[dict[str, Any]]) ->
     return {
         "protocol_version": PROTOCOL_VERSION,
         "quality_protocol_version": QUALITY_PROTOCOL_VERSION,
+        "artifact_contract_version": ARTIFACT_CONTRACT_VERSION,
+        "research_protocol_version": RESEARCH_PROTOCOL_VERSION,
+        "research_artifact_schema_version": RESEARCH_ARTIFACT_SCHEMA_VERSION,
+        "artifact_contract": {
+            "scope": "run-with-firmware-sessions",
+            "session_key": "firmware_session_index",
+            "detection_keys": ["firmware_session_index", "window", "run_det_index"],
+        },
         "created_utc": utc_now(),
         "command": sys.argv,
         "python": sys.version,
@@ -254,6 +383,7 @@ def collect_provenance(args: argparse.Namespace, ports: list[dict[str, Any]]) ->
         "baud": getattr(args, "baud", None),
         "firmware": {
             "psd_live_build_flag_confirmed": build_is_psd_live(),
+            "research_telemetry_build_flag_confirmed": build_has_research_telemetry(),
             "build_bin": str(build_bin.relative_to(ROOT)),
             "build_bin_sha256": sha256_file(build_bin),
             "build_bin_bytes": build_bin.stat().st_size if build_bin.is_file() else None,
@@ -333,19 +463,47 @@ def _vocabulary_error(kind: str, parsed: dict[str, Any]) -> str | None:
         if parsed["event"] == "SHORT" and parsed["discards"] == 1:
             return "short_press_discarded_calibration"
     elif kind == "TEMPORAL":
-        if parsed["policy"] != TEMPORAL_POLICY_RECORD["schema_version"]:
+        live_v2 = parsed["protocol"] == QUALITY_PROTOCOL_VERSION
+        policy_record = (
+            TEMPORAL_POLICY_RECORD if live_v2 else LEGACY_TEMPORAL_POLICY_RECORD
+        )
+        policy = TEMPORAL_POLICY if live_v2 else LEGACY_TEMPORAL_POLICY
+        if parsed["policy"] != policy_record["schema_version"]:
             return f"temporal_policy_schema_mismatch:{parsed['policy']}"
-        for field, expected in (
-            ("min_consecutive", TEMPORAL_POLICY["min_consecutive"]),
-            ("ewma_alpha", TEMPORAL_POLICY["ewma_alpha"]),
-            ("enter_scale", TEMPORAL_POLICY["enter_scale"]),
-            ("exit_scale", TEMPORAL_POLICY["exit_scale"]),
-            ("fast_scale", TEMPORAL_POLICY["fast_scale"]),
-        ):
-            if not math.isclose(float(parsed[field]), float(expected), abs_tol=1e-6):
-                return f"temporal_policy_off_config:{field}"
-        if parsed["exit_scale"] > parsed["enter_scale"]:
-            return "temporal_exit_above_enter"
+        if live_v2:
+            for field in (
+                "ewma_alpha", "enter_scale", "exit_scale", "fast_scale",
+                "threshold_enter", "threshold_exit",
+            ):
+                if not math.isfinite(float(parsed[field])):
+                    return f"nonfinite_field:TEMPORAL:{field}"
+            if parsed["threshold_mode"] != "absolute_profile":
+                return f"temporal_threshold_mode_mismatch:{parsed['threshold_mode']}"
+            for field, expected in (
+                ("min_consecutive", policy["min_consecutive"]),
+                ("ewma_alpha", policy["ewma_alpha"]),
+                ("fast_scale", policy["fast_scale"]),
+                ("enter_scale", TEMPORAL_WIRE_PROVENANCE["enter_scale"]),
+                ("exit_scale", TEMPORAL_WIRE_PROVENANCE["exit_scale"]),
+            ):
+                if not math.isclose(float(parsed[field]), float(expected), abs_tol=1e-6):
+                    return f"temporal_policy_off_config:{field}"
+            if not (
+                0.0 < parsed["threshold_exit"] < parsed["threshold_enter"]
+            ):
+                return "temporal_invalid_absolute_thresholds"
+        else:
+            for field, expected in (
+                ("min_consecutive", policy["min_consecutive"]),
+                ("ewma_alpha", policy["ewma_alpha"]),
+                ("enter_scale", policy["enter_scale"]),
+                ("exit_scale", policy["exit_scale"]),
+                ("fast_scale", policy["fast_scale"]),
+            ):
+                if not math.isclose(float(parsed[field]), float(expected), abs_tol=1e-6):
+                    return f"temporal_policy_off_config:{field}"
+            if parsed["exit_scale"] > parsed["enter_scale"]:
+                return "temporal_exit_above_enter"
     elif kind == "PRESENCE":
         for field in ("level_mean_dbfs", "margin_db", "gate_dbfs"):
             if not math.isfinite(parsed[field]):
@@ -357,11 +515,175 @@ def _vocabulary_error(kind: str, parsed: dict[str, Any]) -> str | None:
         expected_gate = parsed["level_mean_dbfs"] - parsed["margin_db"]
         if not math.isclose(parsed["gate_dbfs"], expected_gate, abs_tol=1e-4):
             return "presence_gate_inconsistent"
+    elif kind == "PROFILESTORE":
+        if parsed["schema"] != PROFILE_STORE_SCHEMA_VERSION:
+            return "profile_store_schema_mismatch"
+        if parsed["result"] != "LOADED":
+            return "profile_store_result_not_loaded"
+        if parsed["fingerprint"].lower() != PSD_MODEL_FINGERPRINT_HEX:
+            return "profile_store_fingerprint_mismatch"
+        if parsed["generation"] < 1:
+            return "profile_store_invalid_generation"
+        for field in (
+            "threshold_enter", "threshold_exit", "derive_mean", "derive_sd",
+            "verify_alarm_time_percent",
+        ):
+            if not math.isfinite(float(parsed[field])):
+                return f"nonfinite_field:PROFILESTORE:{field}"
+        if not (0.0 < parsed["threshold_exit"] < parsed["threshold_enter"]):
+            return "profile_store_invalid_thresholds"
+        if any(parsed[field] < 1 for field in (
+            "center_windows", "derive_windows", "verify_windows",
+        )):
+            return "profile_store_invalid_counts"
+        if parsed["profile_policy_version"] != PROFILE_POLICY_VERSION:
+            return "profile_store_policy_version_mismatch"
+        for field, expected in PROFILE_POLICY_IDS.items():
+            if parsed[field] != expected:
+                return f"profile_store_policy_id_mismatch:{field}"
+        if parsed["derive_mean"] < 0.0 or parsed["derive_sd"] < 0.0:
+            return "profile_store_invalid_summary"
+        if not 0.0 <= parsed["verify_alarm_time_percent"] <= 100.0:
+            return "profile_store_invalid_verify_percent"
+        if parsed["verify_alarm_windows"] > parsed["verify_windows"]:
+            return "profile_store_alarm_windows_exceed_verify"
     return None
 
 
 def parse_serial_line(line: str) -> dict[str, Any] | None:
     """Parse one firmware status line without depending on ESP-IDF log prefix."""
+    stripped = line.strip()
+    if stripped.startswith(("COMMISSION ", "PROFILE ")):
+        kind = stripped.partition(" ")[0]
+        try:
+            runtime = parse_runtime_record(stripped)
+        except RuntimeProtocolError as exc:
+            return {
+                "kind": "PARSE_ERROR", "record_kind": kind,
+                "reason": f"runtime_protocol:{exc}", "raw_line": line,
+            }
+        assert runtime is not None
+        return {"kind": runtime.kind, **runtime.fields}
+
+    research_record = RESEARCH_RECORD_RE.search(line)
+    if research_record:
+        kind = research_record.group("kind")
+        values, parse_error = _parse_strict_key_values(
+            kind, research_record.group("body") or "", line,
+        )
+        if parse_error:
+            return parse_error
+        assert values is not None
+        common = {"protocol", "session", "phase", "window", "dims", "fnv1a", "values"}
+        required = (
+            common
+            | {"window_start_ms", "window_end_ms", "score", "level_dbfs",
+               "quality", "tonalness_proxy"}
+            if kind == "FEATURE96"
+            else common | {"group", "segments"}
+        )
+        missing = sorted(required - set(values))
+        extras = sorted(set(values) - required)
+        if missing or extras:
+            reason = f"{kind}_schema"
+            if missing:
+                reason += ":missing=" + ",".join(missing)
+            if extras:
+                reason += ":extra=" + ",".join(extras)
+            return {
+                "kind": "PARSE_ERROR", "record_kind": kind,
+                "reason": reason, "raw_line": line,
+            }
+        try:
+            parsed_research: dict[str, Any] = {
+                "kind": kind,
+                "protocol": values["protocol"],
+                "session": int(values["session"]),
+                "phase": values["phase"],
+                "window": int(values["window"]),
+                "dims": int(values["dims"]),
+                "fnv1a": values["fnv1a"].lower(),
+            }
+            if kind == "FEATURE96":
+                parsed_research.update({
+                    "window_start_ms": int(values["window_start_ms"]),
+                    "window_end_ms": int(values["window_end_ms"]),
+                    "score": float(values["score"]),
+                    "level_dbfs": float(values["level_dbfs"]),
+                    "quality": values["quality"],
+                    "tonalness_proxy": float(values["tonalness_proxy"]),
+                })
+            else:
+                parsed_research.update({
+                    "group": int(values["group"]),
+                    "segments": int(values["segments"]),
+                })
+            vector = np.asarray(
+                [float(item) for item in values["values"].split(",")],
+                dtype="<f4",
+            )
+        except (ValueError, OverflowError):
+            return {
+                "kind": "PARSE_ERROR", "record_kind": kind,
+                "reason": "malformed_numeric_field", "raw_line": line,
+            }
+        if parsed_research["protocol"] != RESEARCH_PROTOCOL_VERSION:
+            return {
+                "kind": "PARSE_ERROR", "record_kind": kind,
+                "reason": "invalid_research_protocol_mismatch", "raw_line": line,
+            }
+        if (
+            parsed_research["session"] < 1
+            or parsed_research["window"] < 1
+            or parsed_research["phase"] not in {"CAL", "DET"}
+            or parsed_research["dims"] != RESEARCH_DIMS
+            or vector.shape != (RESEARCH_DIMS,)
+            or not np.isfinite(vector).all()
+            or not re.fullmatch(r"[0-9a-f]{8}", parsed_research["fnv1a"])
+        ):
+            return {
+                "kind": "PARSE_ERROR", "record_kind": kind,
+                "reason": "invalid_research_vector_contract", "raw_line": line,
+            }
+        if kind == "FEATURE96":
+            if (
+                parsed_research["window_end_ms"] < parsed_research["window_start_ms"]
+                or parsed_research["quality"] != "OK"
+                or not all(math.isfinite(parsed_research[field]) for field in (
+                    "score", "level_dbfs", "tonalness_proxy",
+                ))
+            ):
+                return {
+                    "kind": "PARSE_ERROR", "record_kind": kind,
+                    "reason": "invalid_research_metadata", "raw_line": line,
+                }
+        else:
+            group = parsed_research["group"]
+            if (
+                group not in range(1, len(RESEARCH_GROUP_SEGMENTS) + 1)
+                or parsed_research["segments"] != RESEARCH_GROUP_SEGMENTS[group - 1]
+            ):
+                return {
+                    "kind": "PARSE_ERROR", "record_kind": kind,
+                    "reason": "invalid_research_group_contract", "raw_line": line,
+                }
+        got_hash = fnv1a_bytes(vector.tobytes(order="C"))
+        if parsed_research["fnv1a"] != f"{got_hash:08x}":
+            return {
+                "kind": "PARSE_ERROR", "record_kind": kind,
+                "reason": "research_checksum_mismatch", "raw_line": line,
+            }
+        parsed_research["values"] = vector
+        return parsed_research
+
+    stripped = line.strip()
+    if stripped.startswith("FEATURE96") or stripped.startswith("SUBSEG96"):
+        kind = stripped.split(maxsplit=1)[0]
+        return {
+            "kind": "PARSE_ERROR", "record_kind": kind,
+            "reason": "malformed_or_truncated_research_record", "raw_line": line,
+        }
+
     ascii_record = ASCII_RECORD_RE.search(line)
     if ascii_record:
         kind = ascii_record.group("kind")
@@ -377,7 +699,7 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
                 "kind": "PARSE_ERROR", "record_kind": kind,
                 "reason": "invalid_protocol_missing", "raw_line": line,
             }
-        if protocol != QUALITY_PROTOCOL_VERSION:
+        if protocol not in SUPPORTED_PARSE_QUALITY_PROTOCOL_VERSIONS:
             return {
                 "kind": "PARSE_ERROR", "record_kind": kind,
                 "reason": "invalid_protocol_mismatch", "raw_line": line,
@@ -386,12 +708,18 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
             "index", "total", "samples", "expected", "peak", "clipped",
             "zeros", "stuck", "dropped_delta", "metrics_valid", "feature_valid",
             "tonalness_valid", "min_consecutive", "discards_calibration",
-            "discards",
+            "discards", "generation", "center_windows", "derive_windows",
+            "verify_windows", "profile_policy_version", "profile_policy_id",
+            "quality_policy_id", "commissioning_policy_id",
+            "temporal_policy_id", "interference_policy_id",
+            "verify_alarm_windows", "verify_episodes", "verify_chatter",
         }
         float_fields = {
             "rms_dbfs", "dc", "tonalness_proxy", "loo_mean", "loo_sd",
             "loo_cv", "loo_range", "level_mean_dbfs", "margin_db", "gate_dbfs",
             "ewma_alpha", "enter_scale", "exit_scale", "fast_scale",
+            "threshold_enter", "threshold_exit", "derive_mean", "derive_sd",
+            "verify_alarm_time_percent",
         }
         parsed: dict[str, Any] = {"kind": kind, "protocol": values.pop("protocol")}
         try:
@@ -400,6 +728,10 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
                     parsed[key] = int(value)
                 elif key in float_fields:
                     parsed[key] = float(value)
+                elif key == "crc32":
+                    if not re.fullmatch(r"[0-9A-Fa-f]{8}", value):
+                        raise ValueError("crc32")
+                    parsed[key] = int(value, 16)
                 elif kind == "STATE" and key == "from":
                     parsed["from_state"] = value
                 elif kind == "STATE" and key == "to":
@@ -439,13 +771,30 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
             required = {"protocol", "level_mean_dbfs", "margin_db", "gate_dbfs",
                         "min_consecutive"}
         elif kind == "TEMPORAL":
-            required = {"protocol", "policy", "min_consecutive", "ewma_alpha",
-                        "enter_scale", "exit_scale", "fast_scale"}
+            required = {
+                "protocol", "policy", "min_consecutive", "ewma_alpha",
+                "enter_scale", "exit_scale", "fast_scale",
+            }
+            if parsed["protocol"] == QUALITY_PROTOCOL_VERSION:
+                required |= {
+                    "threshold_mode", "threshold_enter", "threshold_exit",
+                }
         elif kind == "SESSION":
             required = {"protocol", "action", "source", "reason",
                         "discards_calibration"}
         elif kind == "BUTTON":
             required = {"protocol", "event", "mode", "command", "discards"}
+        elif kind == "PROFILESTORE":
+            required = {
+                "protocol", "schema", "result", "generation", "fingerprint",
+                "crc32", "threshold_enter", "threshold_exit", "center_windows",
+                "derive_windows", "verify_windows", "profile_policy_version",
+                "profile_policy_id", "quality_policy_id",
+                "commissioning_policy_id", "temporal_policy_id",
+                "interference_policy_id", "derive_mean", "derive_sd",
+                "verify_alarm_time_percent", "verify_alarm_windows",
+                "verify_episodes", "verify_chatter",
+            }
         else:
             required = {"protocol", "type", "state", "phase", "reason",
                         "event", "capability", "level"}
@@ -580,17 +929,273 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
     return None
 
 
-def new_firmware_protocol_state() -> dict[str, Any]:
-    """Return a JSON-serializable, immutable-by-convention host tracker."""
+def new_research_telemetry_state(*, required: bool) -> dict[str, Any]:
+    """Zaseban research scope; nikad ne mijenja core firmware protocol state."""
     return {
-        "handshake": False,
+        "required": bool(required),
+        "records_seen": 0,
+        "expected": {},
+        "packages": {},
+        "errors": [],
+    }
+
+
+def _research_key(session: int, phase: str, window: int) -> tuple[int, str, int]:
+    return int(session), str(phase), int(window)
+
+
+def research_expect_quality(
+    state: dict[str, Any], record: dict[str, Any], *, session: int,
+) -> None:
+    if (
+        record.get("kind") != "QUALITY"
+        or record.get("phase") not in {"CAL", "DET"}
+        or record.get("result") != "OK"
+        or int(record.get("feature_valid", 0)) != 1
+    ):
+        return
+    key = _research_key(session, str(record["phase"]), int(record["index"]))
+    if key in state["expected"]:
+        state["errors"].append(f"duplicate_expected_quality:{key}")
+        return
+    state["expected"][key] = {
+        "level_dbfs": float(record["rms_dbfs"]),
+        "tonalness_proxy": float(record["tonalness_proxy"]),
+        "score": None,
+    }
+
+
+def research_note_det(
+    state: dict[str, Any], record: dict[str, Any], *, session: int,
+) -> None:
+    key = _research_key(session, "DET", int(record["window"]))
+    expected = state["expected"].get(key)
+    if expected is None:
+        state["errors"].append(f"DET_without_expected_research_quality:{key}")
+        return
+    expected["score"] = float(record["score"])
+
+
+def research_consume_record(
+    state: dict[str, Any], record: dict[str, Any], *, active_session: int,
+    pending_det_quality: int | None = None,
+) -> None:
+    kind = str(record.get("kind"))
+    if kind == "PARSE_ERROR":
+        state["errors"].append(
+            f"{record.get('record_kind')}:{record.get('reason')}"
+        )
+        return
+    state["records_seen"] += 1
+    if pending_det_quality is not None:
+        state["errors"].append(
+            f"research_record_between_DET_quality_and_DET:{kind}:window={pending_det_quality}"
+        )
+    key = _research_key(record["session"], record["phase"], record["window"])
+    if record["session"] != active_session:
+        state["errors"].append(
+            f"research_session_mismatch:wire={record['session']}:active={active_session}"
+        )
+    if key not in state["expected"]:
+        state["errors"].append(f"unexpected_research_window:{key}")
+    package = state["packages"].setdefault(key, {"feature": None, "groups": {}})
+    if kind == "FEATURE96":
+        if package["feature"] is not None:
+            state["errors"].append(f"duplicate_FEATURE96:{key}")
+        else:
+            package["feature"] = record
+    elif kind == "SUBSEG96":
+        group = int(record["group"])
+        if group in package["groups"]:
+            state["errors"].append(f"duplicate_SUBSEG96:{key}:group={group}")
+        else:
+            package["groups"][group] = record
+
+
+def _atomic_npz(path: Path, arrays: dict[str, np.ndarray]) -> None:
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        with temporary.open("wb") as handle:
+            np.savez_compressed(handle, **arrays)
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        temporary.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def write_research_artifact(
+    run_dir: Path, state: dict[str, Any], *, metadata: dict[str, Any],
+) -> dict[str, Any]:
+    """Zakljuci strict paket i objavi NPZ prije hash manifesta."""
+    errors = list(state["errors"])
+    expected_keys = set(state["expected"])
+    package_keys = set(state["packages"])
+    for key in sorted(expected_keys - package_keys):
+        errors.append(f"missing_research_package:{key}")
+    for key in sorted(package_keys - expected_keys):
+        errors.append(f"unexpected_research_package:{key}")
+
+    complete: list[tuple[tuple[int, str, int], dict[str, Any]]] = []
+    previous_end: int | None = None
+    for key in sorted(expected_keys, key=lambda item: (item[0], item[1] == "DET", item[2])):
+        package = state["packages"].get(key)
+        if package is None:
+            continue
+        feature = package["feature"]
+        groups = package["groups"]
+        if feature is None:
+            errors.append(f"missing_FEATURE96:{key}")
+        missing_groups = sorted(set(range(1, 6)) - set(groups))
+        if missing_groups:
+            errors.append(f"missing_SUBSEG96:{key}:groups={missing_groups}")
+        if feature is None or missing_groups:
+            continue
+        expected = state["expected"][key]
+        if not math.isclose(
+            float(feature["level_dbfs"]), float(expected["level_dbfs"]), abs_tol=6e-4,
+        ):
+            errors.append(f"research_level_mismatch:{key}")
+        if not math.isclose(
+            float(feature["tonalness_proxy"]),
+            float(expected["tonalness_proxy"]), abs_tol=2e-6,
+        ):
+            errors.append(f"research_tonalness_mismatch:{key}")
+        if key[1] == "CAL":
+            if feature["score"] != 0.0:
+                errors.append(f"research_CAL_score_not_zero:{key}")
+        elif expected["score"] is None:
+            errors.append(f"missing_DET_for_research_feature:{key}")
+        elif not math.isclose(
+            float(feature["score"]), float(expected["score"]), rel_tol=1e-6, abs_tol=1e-6,
+        ):
+            errors.append(f"research_score_mismatch:{key}")
+        if previous_end is not None and feature["window_start_ms"] < previous_end:
+            errors.append(f"nonmonotonic_research_window_time:{key}")
+        previous_end = int(feature["window_end_ms"])
+        complete.append((key, package))
+
+    enabled = state["records_seen"] > 0
+    if state["required"] and not enabled:
+        errors.append("required_research_telemetry_missing")
+    artifact_valid: bool | None = not errors if (enabled or state["required"]) else None
+    npz_path = run_dir / "window_features.npz"
+    if complete:
+        arrays = {
+            "firmware_session_index": np.asarray([key[0] for key, _ in complete], dtype=np.int32),
+            "phase": np.asarray([key[1] for key, _ in complete], dtype="U3"),
+            "window": np.asarray([key[2] for key, _ in complete], dtype=np.int32),
+            "window_start_ms": np.asarray([
+                package["feature"]["window_start_ms"] for _, package in complete
+            ], dtype=np.uint64),
+            "window_end_ms": np.asarray([
+                package["feature"]["window_end_ms"] for _, package in complete
+            ], dtype=np.uint64),
+            "score": np.asarray([
+                package["feature"]["score"] for _, package in complete
+            ], dtype=np.float32),
+            "level_dbfs": np.asarray([
+                package["feature"]["level_dbfs"] for _, package in complete
+            ], dtype=np.float32),
+            "tonalness_proxy": np.asarray([
+                package["feature"]["tonalness_proxy"] for _, package in complete
+            ], dtype=np.float32),
+            "feature96": np.stack([
+                package["feature"]["values"] for _, package in complete
+            ]).astype(np.float32, copy=False),
+            "subseg96": np.stack([
+                np.stack([package["groups"][group]["values"] for group in range(1, 6)])
+                for _, package in complete
+            ]).astype(np.float32, copy=False),
+            "subseg_welch_segments": np.tile(
+                np.asarray(RESEARCH_GROUP_SEGMENTS, dtype=np.int32), (len(complete), 1),
+            ),
+        }
+        _atomic_npz(npz_path, arrays)
+        array_contract = {
+            name: {"shape": list(value.shape), "dtype": str(value.dtype)}
+            for name, value in arrays.items()
+        }
+    else:
+        array_contract = {}
+
+    external_wav = metadata.get("external_wav")
+    manifest = {
+        "schema_version": RESEARCH_ARTIFACT_SCHEMA_VERSION,
+        "wire_protocol_version": RESEARCH_PROTOCOL_VERSION,
+        "required": bool(state["required"]),
+        "enabled": enabled,
+        "artifact_valid": artifact_valid,
+        "gate_passed": artifact_valid is not False,
+        "expected_window_count": len(expected_keys),
+        "complete_window_count": len(complete),
+        "feature_record_count": sum(
+            package["feature"] is not None for package in state["packages"].values()
+        ),
+        "subsegment_record_count": sum(
+            len(package["groups"]) for package in state["packages"].values()
+        ),
+        "errors": errors,
+        "npz": (
+            {"path": npz_path.name, "sha256": sha256_file(npz_path), "arrays": array_contract}
+            if complete else None
+        ),
+        "external_wav": (
+            {
+                "path": external_wav,
+                "relationship": "linked_external_file_not_recorded_by_host",
+                "sha256_at_start": metadata.get("external_wav_sha256_at_start"),
+                "sha256_at_end": metadata.get("external_wav_sha256_at_end"),
+            }
+            if external_wav else None
+        ),
+        "pcm_per_det": False,
+    }
+    _atomic_json(run_dir / "window_features.manifest.json", manifest)
+    return manifest
+
+
+def new_session_protocol_state(*, firmware_session_index: int = 0) -> dict[str, Any]:
+    """Fresh session scope; boot/run evidence deliberately lives elsewhere."""
+    return {
+        "firmware_session_index": firmware_session_index,
         "quality_counts": {"WAIT": 0, "CAL": 0, "CAL_SUMMARY": 0, "DET": 0},
         "wait_ok_count": 0,
         "cal_summary": None,
         "adapt_seen": False,
         "adapt_threshold": None,
+        "profile_store_seen": False,
+        "profile_store_valid": False,
+        "profile_store_generation": None,
+        "profile_store_crc32": None,
+        "profile_store_threshold_enter": None,
+        "profile_store_threshold_exit": None,
+        "profile_store_center_windows": None,
+        "profile_store_derive_windows": None,
+        "profile_store_verify_windows": None,
+        "runtime_commissioning": new_runtime_sequence_state(),
+        "runtime_profile_seen": False,
+        "runtime_profile_threshold_enter": None,
+        "runtime_profile_threshold_exit": None,
+        "runtime_profile_level_mean_dbfs": None,
+        "runtime_profile_derive_windows": None,
         "calibration_accepted_state": False,
         "calibration_accepted_event": False,
+        "calibration_rejected_state": False,
+        "calibration_rejected_event": False,
+        "calibration_rejection_reason": None,
         "expected_state_transition": None,
         "pending_state_event": None,
         "det_records": 0,
@@ -606,14 +1211,17 @@ def new_firmware_protocol_state() -> dict[str, Any]:
         "presence_min_consecutive": None,
         "temporal_seen": False,
         "temporal_min_consecutive": None,
-        "temporal_enter_scale": None,
-        "temporal_exit_scale": None,
+        "temporal_threshold_mode": None,
+        "temporal_threshold_enter": None,
+        "temporal_threshold_exit": None,
         "absent_run": 0,
         "deviation_run": 0,
         "anomaly_active": False,
+        # `run_session()` emituje BOOT_FAIL_CLOSED odmah nakon SESSION STARTED.
+        # Ovo je session-local wire anchor, odvojen od run-scope handshake-a.
+        "session_boot_seen": False,
         "session_started": False,
         "session_aborted": False,
-        "sessions": 0,
         "terminal": False,
         "drain_required": False,
         "terminal_state_seen": False,
@@ -623,21 +1231,73 @@ def new_firmware_protocol_state() -> dict[str, Any]:
         "drain_expected_state": None,
         "drain_mismatch": None,
         "last_state": None,
+    }
+
+
+def new_firmware_protocol_state() -> dict[str, Any]:
+    """Return separated run/session scopes in one JSON-compatible tracker.
+
+    Flat session keys are retained because they are the strict parser's hot
+    path.  ``run_*`` counters and ``session_history`` are never reset by a new
+    firmware session.
+    """
+    return {
+        "handshake": False,
+        "run_boot_records": 0,
+        "run_quality_counts": {"WAIT": 0, "CAL": 0, "CAL_SUMMARY": 0, "DET": 0},
+        "run_det_records": 0,
+        "sessions": 0,
+        "sessions_ended": 0,
+        "session_history": [],
         "invalid_status": None,
         "invalid_reason": None,
+        **new_session_protocol_state(),
     }
+
+
+def reset_session_protocol_state(
+    state: dict[str, Any], *, firmware_session_index: int,
+) -> dict[str, Any]:
+    """Reset exactly the firmware-session scope, preserving run evidence."""
+    state.update(new_session_protocol_state(
+        firmware_session_index=firmware_session_index,
+    ))
+    return state
+
+
+def session_boot_seen(state: dict[str, Any]) -> bool:
+    """Read the session BOOT anchor, preserving v1.6 offline provenance."""
+    if "session_boot_seen" in state:
+        return bool(state["session_boot_seen"])
+    # Istorijski v1.6 tracker imao je samo run-level `handshake`. Njegov BOOT
+    # pripada jedinoj implicitnoj sesiji prilikom offline citanja.
+    return bool(state.get("handshake", False))
+
+
+def firmware_calibration_source_accepted(state: dict[str, Any]) -> bool:
+    return bool(
+        state.get("profile_store_valid", False)
+        or calibration_acceptance(state)[0]
+    )
 
 
 def firmware_protocol_ready(state: dict[str, Any]) -> bool:
     counts = state["quality_counts"]
+    calibration_source_complete = bool(
+        state.get("profile_store_valid", False)
+        or all(counts[phase] == expected
+               for phase, expected in EXPECTED_QUALITY_COUNTS.items())
+    )
     return bool(
         state["handshake"]
+        and session_boot_seen(state)
         and state["calibration_accepted_state"]
         and state["calibration_accepted_event"]
         and state["adapt_seen"]
+        and state.get("runtime_profile_seen", False)
         and state["presence_seen"]
         and state["temporal_seen"]
-        and all(counts[phase] == expected for phase, expected in EXPECTED_QUALITY_COUNTS.items())
+        and calibration_source_complete
         and state["expected_state_transition"] is None
         and state["pending_state_event"] is None
         and not state["terminal"]
@@ -646,13 +1306,304 @@ def firmware_protocol_ready(state: dict[str, Any]) -> bool:
 
 
 def firmware_protocol_complete(state: dict[str, Any]) -> bool:
-    return bool(
+    accepted_complete = bool(
         firmware_protocol_ready(state)
         and state["pending_det_quality"] is None
         and state["expected_state_transition"] is None
         and state["pending_state_event"] is None
         and state["quality_counts"]["DET"] == state["det_records"]
     )
+    return accepted_complete or firmware_protocol_calibration_rejected(state)
+
+
+def firmware_protocol_calibration_rejected(state: dict[str, Any]) -> bool:
+    """A K1 rejection is a valid terminal protocol, not malformed telemetry."""
+    counts = state["quality_counts"]
+    return bool(
+        state["handshake"]
+        and session_boot_seen(state)
+        and state["cal_summary"] is not None
+        and state.get("calibration_rejected_state", False)
+        and state.get("calibration_rejected_event", False)
+        and state.get("calibration_rejection_reason") == "UNSTABLE_CALIBRATION"
+        and state.get("sessions", 0) > 0
+        and state.get("sessions_ended", 0) == state.get("sessions", 0)
+        and not state.get("session_started", False)
+        and all(counts[phase] == expected
+                for phase, expected in EXPECTED_QUALITY_COUNTS.items())
+        and counts["DET"] == 0
+        and state["det_records"] == 0
+        and not state["adapt_seen"]
+        and not state["presence_seen"]
+        and not state["temporal_seen"]
+        and not state["calibration_accepted_state"]
+        and not state["calibration_accepted_event"]
+        and state["pending_det_quality"] is None
+        and state["expected_state_transition"] is None
+        and state["pending_state_event"] is None
+        and state["terminal"]
+        and state["terminal_state_seen"]
+        and state["terminal_event_seen"]
+        and state["drain_mismatch"] is None
+        and state["invalid_status"] is None
+    )
+
+
+def session_protocol_record(
+    state: dict[str, Any], *, closed: bool | None = None,
+) -> dict[str, Any]:
+    """Freeze the protocol verdict for the current firmware-local session."""
+    if state.get("profile_store_valid", False):
+        accepted, acceptance_reason = True, "restored_profile_valid"
+    else:
+        accepted, acceptance_reason = calibration_acceptance(state)
+    rejected = firmware_protocol_calibration_rejected(state)
+    accepted_complete = bool(
+        firmware_protocol_ready(state)
+        and state["pending_det_quality"] is None
+        and state["expected_state_transition"] is None
+        and state["pending_state_event"] is None
+        and state["quality_counts"]["DET"] == state["det_records"]
+    )
+    protocol_complete = accepted_complete or rejected
+    protocol_valid = bool(protocol_complete and state["invalid_status"] is None)
+    if rejected:
+        protocol_status = "calibration_rejected"
+    elif accepted_complete:
+        protocol_status = "accepted"
+    elif state["invalid_status"] is not None:
+        protocol_status = str(state["invalid_status"])
+    else:
+        protocol_status = "incomplete"
+    index = int(state.get("firmware_session_index") or state.get("sessions") or 0)
+    return {
+        "firmware_session_index": index,
+        "closed": (not state.get("session_started", False)) if closed is None else bool(closed),
+        "session_aborted": bool(state.get("session_aborted", False)),
+        "protocol_status": protocol_status,
+        "protocol_complete": protocol_complete,
+        "protocol_valid": protocol_valid,
+        "session_boot_seen": session_boot_seen(state),
+        "calibration_accepted": accepted,
+        "calibration_acceptance_reason": acceptance_reason,
+        "quality_counts": dict(state["quality_counts"]),
+        "det_records": int(state["det_records"]),
+        "alarm_windows_reported": int(state["last_total_alarm"]),
+        "threshold": state["adapt_threshold"],
+    }
+
+
+def protocol_session_records(state: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return closed history plus the current/legacy active session once."""
+    records = [dict(item) for item in state.get("session_history", [])]
+    current_index = int(
+        state.get("firmware_session_index") or state.get("sessions") or 0
+    )
+    if current_index == 0 and (
+        state.get("cal_summary") is not None
+        or any(int(value) for value in state.get("quality_counts", {}).values())
+    ):
+        # Host-unit fixtures and v1.6 artefacts predate the explicit index.
+        current_index = 1
+    if current_index > 0 and not any(
+        int(item.get("firmware_session_index", 0)) == current_index
+        for item in records
+    ):
+        current = session_protocol_record(state)
+        current["firmware_session_index"] = current_index
+        records.append(current)
+    return records
+
+
+def _detection_session_index(row: dict[str, Any]) -> int:
+    """v1.6 rows predate the explicit key and belong to their sole session."""
+    try:
+        return max(1, int(row.get("firmware_session_index", 1)))
+    except (TypeError, ValueError):
+        return 1
+
+
+def detection_metrics(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Window metrics without bridging sessions or excluded time gaps."""
+    excluded_transition_windows = sum(
+        int(row.get("transition_window", 0)) for row in rows
+    )
+    metric_rows = [
+        row for row in rows if int(row.get("transition_window", 0)) == 0
+    ]
+    ordered = sorted(
+        metric_rows,
+        key=lambda row: (
+            _detection_session_index(row),
+            int(row.get("run_det_index") or row.get("window") or 0),
+        ),
+    )
+    alarm_windows = sum(int(row.get("alarm", 0)) for row in ordered)
+    alarm_entries = 0
+    alarm_episodes = 0
+    previous_alarm = 0
+    recovery_latencies: list[float] = []
+    previous_elapsed: float | None = None
+    previous_session: int | None = None
+    previous_index: int | None = None
+    for row in ordered:
+        session_index = _detection_session_index(row)
+        row_index = int(row.get("run_det_index") or row.get("window") or 0)
+        # Nova firmware sesija i rupa u run indeksima predstavljaju stvarni
+        # commissioning/condition gap. Alarm, epizoda i recovery ne smiju se
+        # povezati preko vremena koje nije podobno za metrike.
+        if (
+            previous_session is not None
+            and (
+                session_index != previous_session
+                or (previous_index is not None and row_index != previous_index + 1)
+            )
+        ):
+            previous_alarm = 0
+            previous_elapsed = None
+        alarm = int(row.get("alarm", 0))
+        try:
+            elapsed = float(row.get("elapsed_s"))
+        except (TypeError, ValueError):
+            elapsed = None
+        if alarm and not previous_alarm:
+            alarm_entries += 1
+            alarm_episodes += 1
+        if previous_alarm and not alarm:
+            recovery_latencies.append(
+                max(0.0, elapsed - previous_elapsed)
+                if elapsed is not None and previous_elapsed is not None
+                else 10.0
+            )
+        previous_alarm = alarm
+        previous_elapsed = elapsed
+        previous_session = session_index
+        previous_index = row_index
+    return {
+        "det_count": len(ordered),
+        "alarm_window_count": alarm_windows,
+        "alarm_entries": alarm_entries,
+        "alarm_episodes": alarm_episodes,
+        "alarm_time_percent": (
+            100.0 * alarm_windows / len(ordered) if ordered else 0.0
+        ),
+        "recovery_latency_s": (
+            statistics.median(recovery_latencies) if recovery_latencies else None
+        ),
+        "recovery_latencies_s": recovery_latencies,
+        "excluded_transition_windows": excluded_transition_windows,
+    }
+
+
+def evaluate_run_validity(
+    *, status: str, detections: list[dict[str, Any]],
+    protocol_state: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Central multi-session verdict with K1 and metrics kept separate."""
+    if protocol_state is None:
+        session_protocols: list[dict[str, Any]] = []
+    else:
+        session_protocols = protocol_session_records(protocol_state)
+
+    status_completed = status.startswith("completed")
+    session_summaries: list[dict[str, Any]] = []
+    metric_detections: list[dict[str, Any]] = []
+    condition_protocol_detections: list[dict[str, Any]] = []
+    protocol_valid_detections = [
+        row for row in detections if int(row.get("protocol_valid", 0)) == 1
+    ]
+    protocol_by_index = {
+        int(record["firmware_session_index"]): record
+        for record in session_protocols
+    }
+    for index in sorted(protocol_by_index):
+        protocol = protocol_by_index[index]
+        session_rows = [
+            row for row in detections if _detection_session_index(row) == index
+        ]
+        protocol_rows = [
+            row for row in session_rows if int(row.get("protocol_valid", 0)) == 1
+        ]
+        candidates = [
+            row for row in protocol_rows
+            if int(row.get("condition_confirmed", 0)) == 1
+            and int(row.get("transition_window", 0)) == 0
+        ]
+        condition_protocol_detections.extend(candidates)
+        count_consistent = int(protocol["det_records"]) == len(protocol_rows)
+        eligible = bool(
+            status_completed and protocol["protocol_valid"]
+            and protocol["calibration_accepted"] and count_consistent
+        )
+        eligible_rows = candidates if eligible else []
+        metric_detections.extend(eligible_rows)
+        session_summaries.append({
+            **protocol,
+            "tracker_count_consistent": count_consistent,
+            "metrics_eligible": bool(eligible and eligible_rows),
+            **detection_metrics(eligible_rows),
+            "raw_det_count": len(session_rows),
+            "protocol_valid_det_count": len(protocol_rows),
+            "excluded_transition_windows": sum(
+                int(row.get("transition_window", 0)) for row in session_rows
+            ),
+        })
+
+    run_det_records = (
+        int(protocol_state.get("run_det_records", protocol_state.get("det_records", 0)))
+        if protocol_state is not None else -1
+    )
+    tracker_count_consistent = run_det_records == len(protocol_valid_detections)
+    protocol_complete = bool(
+        session_summaries
+        and all(item["protocol_complete"] for item in session_summaries)
+    )
+    protocol_valid = bool(
+        protocol_complete and tracker_count_consistent
+        and all(item["protocol_valid"] for item in session_summaries)
+    )
+    accepted_sessions = [
+        item for item in session_summaries if item["calibration_accepted"]
+    ]
+    calibration_accepted = bool(accepted_sessions)
+    calibration_reason = (
+        "accepted" if calibration_accepted
+        else (
+            session_summaries[-1]["calibration_acceptance_reason"]
+            if session_summaries else "missing_protocol_state"
+        )
+    )
+    metrics_eligible = bool(
+        status_completed and protocol_valid and metric_detections
+    )
+
+    if not status_completed:
+        result_status = f"run_status:{status}"
+    elif not protocol_valid:
+        result_status = "protocol_not_complete_or_inconsistent"
+    elif not calibration_accepted:
+        result_status = f"calibration_rejected:{calibration_reason}"
+    elif not metric_detections:
+        result_status = "no_confirmed_metric_detections"
+    else:
+        result_status = "valid_physical_result"
+
+    return {
+        "valid_result": metrics_eligible,
+        "result_status": result_status,
+        "protocol_valid": protocol_valid,
+        "protocol_complete": protocol_complete,
+        "tracker_count_consistent": tracker_count_consistent,
+        "calibration_accepted": calibration_accepted,
+        "calibration_acceptance_reason": calibration_reason,
+        "metrics_eligible": metrics_eligible,
+        "condition_protocol_detections": condition_protocol_detections,
+        "protocol_valid_detections": protocol_valid_detections,
+        "metric_detections": metric_detections if metrics_eligible else [],
+        "sessions": session_summaries,
+        "run_metrics": detection_metrics(metric_detections if metrics_eligible else []),
+        "run_det_records": run_det_records,
+    }
 
 
 def terminal_drain_decision(
@@ -661,11 +1612,42 @@ def terminal_drain_decision(
     """Pure bounded-drain decision used by the serial loop and unit tests."""
     if not state["drain_required"]:
         return "not_required"
-    if state["terminal_state_seen"] and state["terminal_event_seen"]:
+    terminal_pair_seen = bool(
+        state["terminal_state_seen"] and state["terminal_event_seen"]
+    )
+    is_k1_rejection = bool(
+        state.get("calibration_rejected_state")
+        or state.get("calibration_rejected_event")
+        or state.get("calibration_rejection_reason") == "UNSTABLE_CALIBRATION"
+    )
+    session_pair_closed = bool(
+        state.get("sessions", 0) > 0
+        and state.get("sessions_ended", 0) == state.get("sessions", 0)
+        and not state.get("session_started", False)
+    )
+    if terminal_pair_seen and (not is_k1_rejection or session_pair_closed):
         return "complete"
     if elapsed_s >= timeout_s:
         return "timeout"
     return "continue"
+
+
+def terminal_drain_timeout_reason(state: dict[str, Any]) -> str:
+    """Stable audit reason for the first missing part of a bounded drain."""
+    if not state.get("terminal_state_seen"):
+        return "terminal_drain_timeout:missing_STATE"
+    if not state.get("terminal_event_seen"):
+        return "terminal_drain_timeout:missing_FLOW_STOPPED"
+    if (
+        state.get("calibration_rejection_reason") == "UNSTABLE_CALIBRATION"
+        and (
+            state.get("session_started", False)
+            or state.get("sessions", 0) <= 0
+            or state.get("sessions_ended", 0) != state.get("sessions", 0)
+        )
+    ):
+        return "terminal_drain_timeout:missing_SESSION_ENDED"
+    return "terminal_drain_timeout:incomplete_terminal_pair"
 
 
 def final_buffer_drain_decision(elapsed_s: float, quiet_s: float) -> str:
@@ -700,6 +1682,8 @@ def _expected_terminal_state(reason: str, phase: str) -> str:
         return "NO_MACHINE"
     if reason in {"LOW_LEVEL_OBSERVATION", "INSUFFICIENT_LEVEL"}:
         return "NO_MACHINE"
+    if reason == "UNSTABLE_CALIBRATION":
+        return "CALIBRATION_REJECTED"
     if reason == "CLIPPING":
         return "RECALIBRATION_REQUIRED" if phase == "DET" else "CALIBRATION_REJECTED"
     return "SENSOR_ERROR"
@@ -711,6 +1695,42 @@ def _inferred_terminal_phase(state: dict[str, Any]) -> str:
     if state["quality_counts"]["CAL"] > 0 or state["quality_counts"]["CAL_SUMMARY"] > 0:
         return "CAL"
     return "WAIT"
+
+
+def cal_summary_cv_is_quantization_consistent(
+    loo_mean: float, loo_sd: float, loo_cv: float,
+) -> bool:
+    """Check ``cv = sd / abs(mean)`` using the actual six-decimal wire bins.
+
+    Every value printed with ``%.6f`` represents an interval of half a decimal
+    quantum around the received number.  A record is coherent when the possible
+    ratio interval for mean/sd overlaps the possible interval for the emitted
+    CV.  This is scale-aware and does not hide material mismatches behind an
+    arbitrary relative tolerance.
+    """
+    values = (loo_mean, loo_sd, loo_cv)
+    if not all(math.isfinite(value) and value >= 0.0 for value in values):
+        return False
+
+    half = CAL_SUMMARY_HALF_QUANTUM
+    mean_lo = max(0.0, loo_mean - half)
+    mean_hi = loo_mean + half
+    sd_lo = max(0.0, loo_sd - half)
+    sd_hi = loo_sd + half
+    cv_lo = max(0.0, loo_cv - half)
+    cv_hi = loo_cv + half
+
+    # Firmware explicitly reports CV=0 when the unrounded mean is effectively
+    # zero.  The all-zero point is therefore a valid member of these bins.
+    if mean_lo <= 1e-12 and sd_lo <= 0.0 and cv_lo <= 0.0:
+        return True
+    if mean_hi <= 0.0:
+        return False
+
+    ratio_lo = sd_lo / mean_hi
+    ratio_hi = math.inf if mean_lo <= 0.0 else sd_hi / mean_lo
+    epsilon = max(math.ulp(ratio_lo), math.ulp(cv_lo), math.ulp(cv_hi))
+    return max(ratio_lo, cv_lo) <= min(ratio_hi, cv_hi) + epsilon
 
 
 def _quality_semantic_error(state: dict[str, Any], record: dict[str, Any]) -> str | None:
@@ -758,11 +1778,13 @@ def _quality_semantic_error(state: dict[str, Any], record: dict[str, Any]) -> st
             return "duplicate_CAL_SUMMARY"
         if any(record[field] < 0.0 for field in ("loo_mean", "loo_sd", "loo_cv", "loo_range")):
             return "negative_CAL_SUMMARY_value"
-        expected_cv = (
-            record["loo_sd"] / abs(record["loo_mean"])
-            if abs(record["loo_mean"]) > 1e-12 else 0.0
-        )
-        if not math.isclose(record["loo_cv"], expected_cv, rel_tol=2e-5, abs_tol=2e-6):
+        if not cal_summary_cv_is_quantization_consistent(
+            record["loo_mean"], record["loo_sd"], record["loo_cv"],
+        ):
+            expected_cv = (
+                record["loo_sd"] / abs(record["loo_mean"])
+                if abs(record["loo_mean"]) > 1e-12 else 0.0
+            )
             return f"CAL_SUMMARY_cv_mismatch:expected={expected_cv}:got={record['loo_cv']}"
         if record["loo_range"] + 1e-6 < record["loo_sd"]:
             return "CAL_SUMMARY_range_smaller_than_sd"
@@ -807,6 +1829,12 @@ def _quality_semantic_error(state: dict[str, Any], record: dict[str, Any]) -> st
         )
         if rms_pcm > rms_limit:
             return f"rms_exceeds_peak:{phase}"
+    if record["result"] in {"AUDIO_TIMEOUT", "AUDIO_READ_ERROR"}:
+        if samples >= expected_samples:
+            return f"audio_failure_without_short_read:{phase}"
+        if record["feature_valid"] != 0 or record["tonalness_valid"] != 0:
+            return f"audio_failure_with_valid_feature:{phase}"
+        return None
     zero_fraction = record["zeros"] / samples if samples else 1.0
     stuck_fraction = record["stuck"] / (samples - 1) if samples > 1 else 1.0
     if samples != expected_samples:
@@ -877,8 +1905,10 @@ def _det_semantic_error(state: dict[str, Any], record: dict[str, Any]) -> str | 
 
     # Faza 4: histereza. Iz alarma se izlazi tek ISPOD nizeg praga, pa score
     # koji visi oko praga ne pali i gasi alarm iz prozora u prozor.
-    enter = threshold * (state["temporal_enter_scale"] or 1.0)
-    leave = threshold * (state["temporal_exit_scale"] or 1.0)
+    enter = state["temporal_threshold_enter"]
+    leave = state["temporal_threshold_exit"]
+    if enter is None or leave is None:
+        return "DET_before_absolute_TEMPORAL_thresholds"
     temporal_n = state["temporal_min_consecutive"] or min_consecutive
     over = float(record["score"]) > enter
 
@@ -917,9 +1947,26 @@ def transition_firmware_protocol(
     state = {
         **previous,
         "quality_counts": dict(previous["quality_counts"]),
+        "run_quality_counts": dict(previous.get(
+            "run_quality_counts", previous["quality_counts"],
+        )),
+        "session_history": [
+            dict(item) for item in previous.get("session_history", [])
+        ],
+        "runtime_commissioning": dict(previous.get(
+            "runtime_commissioning", new_runtime_sequence_state(),
+        )),
     }
 
     kind = record.get("kind")
+    if (
+        kind in {"QUALITY", "STATE", "EVENT", "PRESENCE", "TEMPORAL",
+                 "SESSION", "BUTTON", "PROFILESTORE", "COMMISSION", "PROFILE"}
+        and record.get("protocol") not in {None, QUALITY_PROTOCOL_VERSION}
+    ):
+        return _invalidate(
+            state, "invalid_protocol_mismatch", "invalid_protocol_mismatch",
+        )
     if state["invalid_status"] is not None:
         if state["drain_required"] and kind == "STATE":
             if record.get("to_state") in TERMINAL_FIRMWARE_STATES or record.get("to_state") == "NO_MACHINE":
@@ -970,6 +2017,19 @@ def transition_firmware_protocol(
     if kind == "BUTTON":
         return state
 
+    if kind in {"QUALITY", "ADAPTTHR", "TEMPORAL", "PRESENCE", "DET",
+                "EVENT", "PROFILESTORE", "COMMISSION", "PROFILE"}:
+        if not state.get("session_started", False):
+            return _invalidate(
+                state, "invalid_missing_telemetry",
+                f"{kind}_without_open_SESSION",
+            )
+        if not session_boot_seen(state):
+            return _invalidate(
+                state, "invalid_missing_telemetry",
+                f"{kind}_before_session_BOOT",
+            )
+
     pending_terminal_state = bool(
         kind == "STATE"
         and record.get("to_state") in TERMINAL_FIRMWARE_STATES | {"NO_MACHINE"}
@@ -994,13 +2054,90 @@ def transition_firmware_protocol(
             f"missing_paired_EVENT_before:{kind}",
         )
 
-    if kind == "QUALITY":
+    if kind == "COMMISSION":
+        if state.get("profile_store_seen", False):
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "COMMISSION_after_PROFILESTORE_restore",
+            )
+        try:
+            advance_runtime_sequence(
+                state["runtime_commissioning"], RuntimeRecord(kind, {
+                    key: value for key, value in record.items() if key != "kind"
+                }),
+            )
+        except RuntimeProtocolError as exc:
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                f"runtime_sequence:{exc}",
+            )
+        if record.get("phase") == "COMMISSION_DERIVE":
+            accepted, reason = calibration_acceptance(state)
+            if not accepted:
+                return _invalidate(
+                    state, "invalid_firmware_telemetry",
+                    f"COMMISSION_DERIVE_before_K1:{reason}",
+                )
+    elif kind == "PROFILE":
+        if state["runtime_profile_seen"]:
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "duplicate_PROFILE",
+            )
+        if state.get("profile_store_valid", False):
+            if state["runtime_commissioning"].get("started", False):
+                return _invalidate(
+                    state, "invalid_firmware_telemetry",
+                    "restored_PROFILE_after_fresh_COMMISSION",
+                )
+            for record_key, state_key in (
+                ("threshold_enter", "profile_store_threshold_enter"),
+                ("threshold_exit", "profile_store_threshold_exit"),
+                ("center_windows", "profile_store_center_windows"),
+                ("derive_windows", "profile_store_derive_windows"),
+                ("verify_windows", "profile_store_verify_windows"),
+            ):
+                if not math.isclose(
+                    float(record[record_key]), float(state[state_key]),
+                    rel_tol=1e-6, abs_tol=1e-6,
+                ):
+                    return _invalidate(
+                        state, "invalid_firmware_telemetry",
+                        f"PROFILE_PROFILESTORE_mismatch:{record_key}",
+                    )
+        else:
+            try:
+                advance_runtime_sequence(
+                    state["runtime_commissioning"], RuntimeRecord(kind, {
+                        key: value for key, value in record.items() if key != "kind"
+                    }),
+                )
+            except RuntimeProtocolError as exc:
+                return _invalidate(
+                    state, "invalid_firmware_telemetry",
+                    f"runtime_sequence:{exc}",
+                )
+            accepted, reason = calibration_acceptance(state)
+            if not accepted:
+                return _invalidate(
+                    state, "invalid_firmware_telemetry",
+                    f"PROFILE_before_K1:{reason}",
+                )
+        state["runtime_profile_seen"] = True
+        state["runtime_profile_threshold_enter"] = float(record["threshold_enter"])
+        state["runtime_profile_threshold_exit"] = float(record["threshold_exit"])
+        state["runtime_profile_level_mean_dbfs"] = float(record["level_mean_dbfs"])
+        state["runtime_profile_derive_windows"] = int(record["derive_windows"])
+    elif kind == "QUALITY":
+        if (
+            state.get("profile_store_seen", False)
+            and record.get("phase") in {"WAIT", "CAL", "CAL_SUMMARY"}
+        ):
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "QUALITY_after_PROFILESTORE_restore",
+            )
         phase = str(record["phase"])
         result = str(record["result"])
-        if not state["handshake"]:
-            state["invalid_status"] = "invalid_missing_telemetry"
-            state["invalid_reason"] = "QUALITY_before_handshake"
-            return state
         allowed_results = {
             "WAIT": {"OK", "LOW_LEVEL_OBSERVATION"},
             "CAL": {"OK"},
@@ -1041,6 +2178,9 @@ def transition_firmware_protocol(
             state["invalid_reason"] = "DET_quality_before_calibration_acceptance"
             return state
         state["quality_counts"][phase] = state["quality_counts"].get(phase, 0) + 1
+        state["run_quality_counts"][phase] = (
+            state["run_quality_counts"].get(phase, 0) + 1
+        )
         if phase == "WAIT" and result == "OK":
             state["wait_ok_count"] += 1
         if phase == "CAL_SUMMARY":
@@ -1050,6 +2190,39 @@ def transition_firmware_protocol(
             }
         if phase == "DET":
             state["pending_det_quality"] = record["index"]
+    elif kind == "PROFILESTORE":
+        if not PROFILE_PERSISTENCE_ALLOWED:
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "PROFILESTORE_persistence_disabled",
+            )
+        if state.get("profile_store_seen", False):
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "duplicate_PROFILESTORE",
+            )
+        if (
+            any(int(value) for value in state["quality_counts"].values())
+            or state["adapt_seen"] or state["presence_seen"]
+            or state["temporal_seen"] or state["calibration_accepted_state"]
+            or state["calibration_accepted_event"]
+        ):
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "PROFILESTORE_after_commissioning_started",
+            )
+        state["profile_store_seen"] = True
+        state["profile_store_valid"] = True
+        state["profile_store_generation"] = int(record["generation"])
+        state["profile_store_crc32"] = int(record["crc32"])
+        state["profile_store_threshold_enter"] = float(record["threshold_enter"])
+        state["profile_store_threshold_exit"] = float(record["threshold_exit"])
+        state["profile_store_center_windows"] = int(record["center_windows"])
+        state["profile_store_derive_windows"] = int(record["derive_windows"])
+        state["profile_store_verify_windows"] = int(record["verify_windows"])
+        # Restored profile is the v1.8 threshold authority.  Reuse the legacy
+        # threshold slots so all DET arithmetic stays single-source.
+        state["adapt_seen"] = True
+        state["adapt_threshold"] = float(record["threshold_enter"])
     elif kind == "ADAPTTHR":
         if state["adapt_seen"]:
             return _invalidate(state, "invalid_firmware_telemetry", "duplicate_ADAPTTHR")
@@ -1057,36 +2230,40 @@ def transition_firmware_protocol(
             return _invalidate(
                 state, "invalid_missing_telemetry", "ADAPTTHR_before_CAL_SUMMARY",
             )
+        k1_accepted, k1_reason = calibration_acceptance(state)
+        if not k1_accepted:
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                f"ADAPTTHR_after_failed_K1:{k1_reason}",
+            )
+        if not state["runtime_profile_seen"]:
+            return _invalidate(
+                state, "invalid_missing_telemetry", "ADAPTTHR_before_PROFILE",
+            )
         if state["calibration_accepted_state"] or state["calibration_accepted_event"]:
             return _invalidate(
                 state, "invalid_firmware_telemetry", "ADAPTTHR_after_calibration_acceptance",
             )
-        if record["n"] != 10 or record["sd"] < 0.0 or record["threshold"] < 0.0:
+        if (
+            record["n"] != state["runtime_profile_derive_windows"]
+            or record["sd"] < 0.0 or record["mean"] < 0.0
+            or record["threshold"] <= 0.0
+        ):
             return _invalidate(state, "invalid_firmware_telemetry", "invalid_ADAPTTHR_numeric")
-        if not math.isclose(record["mean"], state["cal_summary"]["loo_mean"], abs_tol=1e-6):
-            return _invalidate(state, "invalid_firmware_telemetry", "ADAPTTHR_mean_mismatch")
-        if not math.isclose(record["sd"], state["cal_summary"]["loo_sd"], abs_tol=1e-6):
-            return _invalidate(state, "invalid_firmware_telemetry", "ADAPTTHR_sd_mismatch")
-        if not math.isclose(record["p"], 0.9, abs_tol=1e-6):
+        if not math.isclose(
+            record["p"], COMMISSION_ENTER_QUANTILE, abs_tol=1e-6,
+        ):
             return _invalidate(state, "invalid_firmware_telemetry", "ADAPTTHR_p_mismatch")
         if any(record[field] != 0.0 for field in ("k", "theta", "lo", "factory")):
             return _invalidate(state, "invalid_firmware_telemetry", "ADAPTTHR_legacy_field_mismatch")
-        minimum_threshold = record["mean"] + 3.0 * record["sd"]
-        # Firmware racuna `mean + 3*sd` u binary32 i ispisuje devet znacajnih
-        # cifara; host isti izraz ponavlja u binary64. Kad prag dodje BAS sa te
-        # grane (a ne sa p90 LOO grane), dvije vrijednosti se razlikuju za par
-        # float32 ulp-a i stroga provjera pada na nistavnoj razlici. Fiksnih
-        # 2e-5 je bilo manje od jednog ulp-a na ovoj skali: izmjereno 16.08.2026,
-        # mean=285,661469 sd=149,634216 -> host 734,564117, uredjaj 734,564087,
-        # razlika 3e-5, run odbacen kao `ADAPTTHR_below_mean_plus_3sd` iako je
-        # prag tacan. Tolerancija zato mora da prati velicinu praga.
-        #
-        # 1e-6 relativno je oko osam float32 ulp-a; stvarno prekrsen prag
-        # (uredjaj objavio nizi prag nego sto politika dozvoljava) razlikuje se
-        # redovima velicine, ne ulp-ovima, pa ova granica i dalje hvata kvar.
-        tolerance = max(2e-5, 1e-6 * abs(minimum_threshold))
-        if record["threshold"] + tolerance < minimum_threshold:
-            return _invalidate(state, "invalid_firmware_telemetry", "ADAPTTHR_below_mean_plus_3sd")
+        if not math.isclose(
+            record["threshold"], state["runtime_profile_threshold_enter"],
+            rel_tol=1e-6, abs_tol=1e-6,
+        ):
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "ADAPTTHR_PROFILE_threshold_mismatch",
+            )
         state["adapt_seen"] = True
         state["adapt_threshold"] = float(record["threshold"])
     elif kind == "TEMPORAL":
@@ -1095,23 +2272,62 @@ def transition_firmware_protocol(
         if not state["adapt_seen"]:
             return _invalidate(
                 state, "invalid_missing_telemetry", "TEMPORAL_before_ADAPTTHR")
+        if not state["presence_seen"]:
+            return _invalidate(
+                state, "invalid_missing_telemetry", "TEMPORAL_before_PRESENCE")
+        if not state["runtime_profile_seen"]:
+            return _invalidate(
+                state, "invalid_missing_telemetry", "TEMPORAL_before_PROFILE")
         if state["calibration_accepted_state"] or state["calibration_accepted_event"]:
             return _invalidate(
                 state, "invalid_firmware_telemetry",
                 "TEMPORAL_after_calibration_acceptance")
+        threshold_enter = float(record["threshold_enter"])
+        threshold_exit = float(record["threshold_exit"])
+        if not math.isclose(
+            threshold_enter, float(state["adapt_threshold"]), rel_tol=1e-6,
+            abs_tol=1e-6,
+        ):
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "TEMPORAL_enter_mismatch_threshold_source",
+            )
+        if (
+            not math.isclose(
+                threshold_enter, float(state["runtime_profile_threshold_enter"]),
+                rel_tol=1e-6, abs_tol=1e-6,
+            )
+            or not math.isclose(
+                threshold_exit, float(state["runtime_profile_threshold_exit"]),
+                rel_tol=1e-6, abs_tol=1e-6,
+            )
+        ):
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "TEMPORAL_PROFILE_threshold_mismatch",
+            )
         state["temporal_seen"] = True
         state["temporal_min_consecutive"] = int(record["min_consecutive"])
-        state["temporal_enter_scale"] = float(record["enter_scale"])
-        state["temporal_exit_scale"] = float(record["exit_scale"])
+        state["temporal_threshold_mode"] = str(record["threshold_mode"])
+        state["temporal_threshold_enter"] = threshold_enter
+        state["temporal_threshold_exit"] = threshold_exit
     elif kind == "PRESENCE":
         # Gate prisustva mora stici tacno jednom, poslije praga i prije nego
         # sto kalibracija bude prihvacena — isti razlog kao za ADAPTTHR: da
         # nijedan DET prozor ne bude ocijenjen gate-om koji host nije vidio.
         if state["presence_seen"]:
             return _invalidate(state, "invalid_firmware_telemetry", "duplicate_PRESENCE")
+        if state["temporal_seen"]:
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "PRESENCE_after_TEMPORAL",
+            )
         if not state["adapt_seen"]:
             return _invalidate(
                 state, "invalid_missing_telemetry", "PRESENCE_before_ADAPTTHR",
+            )
+        if not state["runtime_profile_seen"]:
+            return _invalidate(
+                state, "invalid_missing_telemetry", "PRESENCE_before_PROFILE",
             )
         if state["calibration_accepted_state"] or state["calibration_accepted_event"]:
             return _invalidate(
@@ -1121,6 +2337,13 @@ def transition_firmware_protocol(
         if record["level_mean_dbfs"] > 0.0:
             return _invalidate(
                 state, "invalid_firmware_telemetry", "positive_PRESENCE_level",
+            )
+        if not math.isclose(
+            record["level_mean_dbfs"], state["runtime_profile_level_mean_dbfs"],
+            rel_tol=1e-6, abs_tol=1e-6,
+        ):
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "PRESENCE_PROFILE_level_mismatch",
             )
         if not math.isclose(record["margin_db"], PRESENCE_POLICY["absent_margin_db"],
                             abs_tol=1e-4):
@@ -1138,15 +2361,35 @@ def transition_firmware_protocol(
     elif kind == "SESSION":
         action = str(record["action"])
         if action == "STARTED":
+            if (
+                not PROFILE_PERSISTENCE_ALLOWED
+                and (
+                    record.get("source") == "FIRMWARE"
+                    or record.get("reason") == "PROFILE_RESTORED"
+                )
+            ):
+                return _invalidate(
+                    state, "invalid_firmware_telemetry",
+                    "PROFILE_RESTORED_persistence_disabled",
+                )
             if state["session_started"]:
                 return _invalidate(
                     state, "invalid_firmware_telemetry", "SESSION_STARTED_twice",
                 )
+            next_index = int(state.get("sessions", 0)) + 1
+            reset_session_protocol_state(
+                state, firmware_session_index=next_index,
+            )
             state["session_started"] = True
-            state["sessions"] += 1
+            state["sessions"] = next_index
         elif action in {"ENDED", "ABORTED"} and not state["session_started"]:
             return _invalidate(
                 state, "invalid_firmware_telemetry", f"SESSION_{action}_without_START",
+            )
+        elif action in {"ENDED", "ABORTED"} and not session_boot_seen(state):
+            return _invalidate(
+                state, "invalid_missing_telemetry",
+                f"SESSION_{action}_before_BOOT",
             )
         elif action == "ABORTED":
             # `ABORTED` je RAZLOG, ne zatvaranje. Firmware ga emituje iz
@@ -1162,6 +2405,10 @@ def transition_firmware_protocol(
             state["session_aborted"] = True
         else:
             state["session_started"] = False
+            state["sessions_ended"] = state.get("sessions_ended", 0) + 1
+            state["session_history"].append(
+                session_protocol_record(state, closed=True)
+            )
             state["session_aborted"] = False
     elif kind == "STATE":
         from_state = str(record["from_state"])
@@ -1173,20 +2420,35 @@ def transition_firmware_protocol(
             from_state == "NO_MACHINE" and to_state == "NO_MACHINE"
             and reason == "BOOT_FAIL_CLOSED"
         )
-        if state["last_state"] is None:
-            if not is_boot:
-                return _invalidate(state, "invalid_missing_telemetry", "first_STATE_not_BOOT")
+        if is_boot:
+            if not state.get("session_started", False):
+                return _invalidate(
+                    state, "invalid_missing_telemetry", "BOOT_without_open_SESSION",
+                )
+            if session_boot_seen(state):
+                return _invalidate(
+                    state, "invalid_firmware_telemetry", "duplicate_BOOT_STATE",
+                )
+            if state["last_state"] is not None:
+                return _invalidate(
+                    state, "invalid_firmware_telemetry", "BOOT_after_session_STATE",
+                )
             state["handshake"] = True
+            state["session_boot_seen"] = True
+            state["run_boot_records"] = int(state.get("run_boot_records", 0)) + 1
             state["last_state"] = "NO_MACHINE"
             return state
+        if not state.get("session_started", False):
+            return _invalidate(
+                state, "invalid_missing_telemetry", "STATE_without_open_SESSION",
+            )
+        if not session_boot_seen(state):
+            return _invalidate(state, "invalid_missing_telemetry", "first_STATE_not_BOOT")
         if from_state != state["last_state"]:
             return _invalidate(
                 state, "invalid_firmware_telemetry",
                 f"STATE_chain_mismatch:expected_from={state['last_state']}:got={from_state}",
             )
-        if is_boot:
-            return _invalidate(state, "invalid_firmware_telemetry", "duplicate_BOOT_STATE")
-
         expected_transition = state["expected_state_transition"]
         if expected_transition is not None:
             expected_state = expected_transition["state"]
@@ -1207,6 +2469,29 @@ def transition_firmware_protocol(
             from_state == "NO_MACHINE" and to_state == "CALIBRATED_NORMAL"
             and reason == "CALIBRATION_ACCEPTED"
         )
+        is_profile_restore = (
+            from_state == "NO_MACHINE" and to_state == "CALIBRATED_NORMAL"
+            and reason == "PROFILE_RESTORED"
+        )
+        if is_profile_restore:
+            if (
+                not state.get("profile_store_valid", False)
+                or not state["adapt_seen"] or not state["presence_seen"]
+                or not state["temporal_seen"]
+                or any(int(value) for value in state["quality_counts"].values())
+                or state["calibration_accepted_state"]
+            ):
+                return _invalidate(
+                    state, "invalid_missing_telemetry",
+                    "PROFILE_RESTORED_without_valid_PROFILESTORE",
+                )
+            state["calibration_accepted_state"] = True
+            state["last_state"] = to_state
+            state["pending_state_event"] = {
+                "type": "PROFILE_RESTORED", "state": "CALIBRATED_NORMAL",
+                "phase": "PROFILE", "reason": "PROFILE_VALID",
+            }
+            return state
         if is_calibration_accept and not all(
             state["quality_counts"][phase] == expected
             for phase, expected in EXPECTED_QUALITY_COUNTS.items()
@@ -1215,6 +2500,12 @@ def transition_firmware_protocol(
             state["invalid_reason"] = "CALIBRATION_ACCEPTED_before_expected_quality"
             return state
         if is_calibration_accept:
+            k1_accepted, k1_reason = calibration_acceptance(state)
+            if not k1_accepted:
+                return _invalidate(
+                    state, "invalid_firmware_telemetry",
+                    f"CALIBRATION_ACCEPTED_after_failed_K1:{k1_reason}",
+                )
             if not state["adapt_seen"] or state["calibration_accepted_state"]:
                 return _invalidate(
                     state, "invalid_missing_telemetry", "CALIBRATION_ACCEPTED_without_unique_ADAPTTHR",
@@ -1225,6 +2516,51 @@ def transition_firmware_protocol(
                 "type": "CALIBRATION_ACCEPTED", "state": "CALIBRATED_NORMAL",
                 "phase": "CAL", "reason": "QUALITY_OK",
             }
+            return state
+
+        is_k1_reject = (
+            from_state == "NO_MACHINE" and to_state == "CALIBRATION_REJECTED"
+            and reason == "UNSTABLE_CALIBRATION"
+        )
+        if is_k1_reject:
+            if not all(
+                state["quality_counts"][phase] == expected
+                for phase, expected in EXPECTED_QUALITY_COUNTS.items()
+            ):
+                return _invalidate(
+                    state, "invalid_missing_telemetry",
+                    "UNSTABLE_CALIBRATION_before_expected_quality",
+                )
+            k1_accepted, k1_reason = calibration_acceptance(state)
+            if k1_accepted or k1_reason != "loo_cv_above_max":
+                return _invalidate(
+                    state, "invalid_firmware_telemetry",
+                    f"UNSTABLE_CALIBRATION_without_failed_K1:{k1_reason}",
+                )
+            if not state.get("session_started", False):
+                return _invalidate(
+                    state, "invalid_firmware_telemetry",
+                    "UNSTABLE_CALIBRATION_without_open_SESSION",
+                )
+            if (
+                state["adapt_seen"] or state["presence_seen"]
+                or state["temporal_seen"] or state["calibration_accepted_state"]
+                or state["calibration_accepted_event"]
+                or state["calibration_rejected_state"]
+            ):
+                return _invalidate(
+                    state, "invalid_firmware_telemetry",
+                    "UNSTABLE_CALIBRATION_after_acceptance_or_duplicate",
+                )
+            state["calibration_rejected_state"] = True
+            state["calibration_rejection_reason"] = reason
+            state["last_state"] = to_state
+            state["terminal"] = True
+            state["drain_required"] = True
+            state["terminal_state_seen"] = True
+            state["drain_expected_state"] = to_state
+            state["drain_expected_reason"] = reason
+            state["drain_expected_phase"] = "CAL"
             return state
 
         # Nenajavljen PRESENCE_LOST: firmware tvrdi da masine nema, a host je iz
@@ -1290,12 +2626,39 @@ def transition_firmware_protocol(
                 if state["calibration_accepted_event"]:
                     return _invalidate(state, "invalid_firmware_telemetry", "duplicate_CALIBRATION_ACCEPTED_EVENT")
                 state["calibration_accepted_event"] = True
+            elif event_payload["type"] == "PROFILE_RESTORED":
+                if (
+                    not state.get("profile_store_valid", False)
+                    or state["calibration_accepted_event"]
+                ):
+                    return _invalidate(
+                        state, "invalid_firmware_telemetry",
+                        "invalid_or_duplicate_PROFILE_RESTORED_EVENT",
+                    )
+                state["calibration_accepted_event"] = True
             return state
         if event_payload["type"] == "FLOW_STOPPED":
             if event_payload["reason"] not in FLOW_STOP_REASONS:
                 return _invalidate(state, "invalid_firmware_telemetry", "FLOW_STOPPED_reason_unknown")
             if event_payload["phase"] not in {"WAIT", "CAL", "DET"}:
                 return _invalidate(state, "invalid_firmware_telemetry", "FLOW_STOPPED_phase_unknown")
+            if event_payload["reason"] == "UNSTABLE_CALIBRATION":
+                expected = {
+                    "type": "FLOW_STOPPED", "state": "CALIBRATION_REJECTED",
+                    "phase": "CAL", "reason": "UNSTABLE_CALIBRATION",
+                }
+                if (
+                    event_payload != expected
+                    or not state["calibration_rejected_state"]
+                    or state["calibration_rejected_event"]
+                ):
+                    return _invalidate(
+                        state, "invalid_firmware_telemetry",
+                        "invalid_or_duplicate_UNSTABLE_CALIBRATION_EVENT",
+                    )
+                state["calibration_rejected_event"] = True
+                state["terminal_event_seen"] = True
+                return state
             expected_terminal = _expected_terminal_state(
                 event_payload["reason"], event_payload["phase"],
             )
@@ -1324,6 +2687,7 @@ def transition_firmware_protocol(
             if semantic_error:
                 return _invalidate(state, "invalid_firmware_telemetry", semantic_error)
             state["det_records"] += 1
+            state["run_det_records"] = state.get("run_det_records", 0) + 1
             state["pending_det_quality"] = None
             state["last_det_window"] = record["window"]
             state["last_total_alarm"] = record["total_alarm"]
@@ -1433,10 +2797,12 @@ def record_preflight(args: argparse.Namespace) -> int:
 def add_event(
     events: list[dict[str, Any]], writer: csv.DictWriter, handle: Any, *,
     started: float, kind: str, label: str, note: str = "",
+    firmware_session_index: int = 0,
 ) -> dict[str, Any]:
     event = {
         "host_utc": utc_now(),
         "elapsed_s": round(time.monotonic() - started, 3),
+        "firmware_session_index": firmware_session_index,
         "kind": kind,
         "label": label,
         "note": note,
@@ -1504,34 +2870,37 @@ def make_summary(
     *, metadata: dict[str, Any], status: str, events: list[dict[str, Any]],
     detections: list[dict[str, Any]], max_dropped: int | None,
     protocol_state: dict[str, Any] | None = None,
+    source_protocol_version: str = PROTOCOL_VERSION,
 ) -> str:
+    if source_protocol_version not in SUPPORTED_READ_PROTOCOL_VERSIONS:
+        raise ValueError(
+            "nepodrzan physical-fan protokol izvornog artefakta: "
+            f"{source_protocol_version!r}"
+        )
     threshold = (
         protocol_state.get("adapt_threshold")
         if protocol_state is not None else None
     )
-    valid_detections = [
-        row for row in detections
-        if int(row.get("condition_confirmed", 0)) == 1
-        and int(row.get("protocol_valid", 0)) == 1
-    ]
-    protocol_valid_detections = [
-        row for row in detections if int(row.get("protocol_valid", 0)) == 1
-    ]
-    tracker_count_consistent = bool(
-        protocol_state is not None
-        and protocol_state["det_records"] == len(protocol_valid_detections)
+    validity = evaluate_run_validity(
+        status=status, detections=detections, protocol_state=protocol_state,
     )
-    valid_result = bool(
-        status.startswith("completed") and valid_detections
-        and protocol_state is not None and firmware_protocol_complete(protocol_state)
-        and tracker_count_consistent
-    )
+    valid_detections = validity["metric_detections"]
+    condition_protocol_detections = validity["condition_protocol_detections"]
+    protocol_valid_detections = validity["protocol_valid_detections"]
+    run_metrics = validity["run_metrics"]
     lines = [
         "# Stvarni fizicki fan eksperiment",
         "",
         f"- Status: `{status}`",
-        f"- Validan fizički rezultat: **{'DA' if valid_result else 'NE'}**",
-        f"- Protokol: `{PROTOCOL_VERSION}`",
+        f"- Status fizičkog rezultata: `{validity['result_status']}`",
+        f"- Validan fizički rezultat: **{'DA' if validity['valid_result'] else 'NE'}**",
+        f"- Protokol izvještaja: `{PROTOCOL_VERSION}`",
+        f"- Izvorni protokol artefakta: `{source_protocol_version}`",
+        f"- Firmware protokol validan i kompletan: **{'DA' if validity['protocol_valid'] else 'NE'}**",
+        f"- Kalibracija prihvaćena (K1): **{'DA' if validity['calibration_accepted'] else 'NE'}** "
+        f"(`{validity['calibration_acceptance_reason']}`; politika "
+        f"`{COMMISSIONING_POLICY_RECORD['schema_version']}`)",
+        f"- Prozori podobni za metrike: **{'DA' if validity['metrics_eligible'] else 'NE'}**",
         f"- Fan ID: `{metadata['fan_id']}`",
         f"- Sesija: `{metadata['session_id']}`",
         f"- Port: `{metadata['port']}` @ {metadata['baud']} baud",
@@ -1540,17 +2909,49 @@ def make_summary(
         f"- Prag: {threshold if threshold is not None else 'nije dobijen'}",
         f"- DET prozora: {len(detections)}",
         f"- Validnih DET prozora za metrike: {len(valid_detections)}",
+        f"- Condition+protocol validnih DET kandidata: {len(condition_protocol_detections)}",
         f"- Protocol-valid DET prozora: {len(protocol_valid_detections)}",
-        f"- Tracker/CSV DET count saglasan: **{'DA' if tracker_count_consistent else 'NE'}**",
+        f"- Tracker/CSV DET count saglasan: **{'DA' if validity['tracker_count_consistent'] else 'NE'}**",
         f"- Isključenih DET prozora: {len(detections) - len(valid_detections)}",
         f"- Alarmnih validnih DET prozora: {sum(int(row['alarm']) for row in valid_detections)}",
+        f"- Firmware sesija: {len(validity['sessions'])}",
+        f"- Run DET total (tracker/CSV): {validity['run_det_records']}/{len(protocol_valid_detections)}",
+        f"- Alarmnih prozora / ulazaka / epizoda: "
+        f"{run_metrics['alarm_window_count']} / {run_metrics['alarm_entries']} / "
+        f"{run_metrics['alarm_episodes']}",
+        f"- Vrijeme u alarmu: {run_metrics['alarm_time_percent']:.2f}%",
+        f"- Medijana oporavka: "
+        f"{run_metrics['recovery_latency_s'] if run_metrics['recovery_latency_s'] is not None else 'nije izmjerena'} s",
+        f"- Isključenih prelaznih prozora: "
+        f"{sum(item['excluded_transition_windows'] for item in validity['sessions'])}",
         f"- Najveci prijavljeni `dropped`: {max_dropped if max_dropped is not None else 'nije ispisan'}",
+        "",
+        "## Rezultati po firmware sesiji",
+        "",
+        "| Sesija | Protokol | K1 | DET raw/metric | Alarm prozori/epizode | Alarm % | Oporavak s | Prelazni isključeni |",
+        "|---:|---|---|---:|---:|---:|---:|---:|",
+    ]
+    for session in validity["sessions"]:
+        recovery = session["recovery_latency_s"]
+        lines.append(
+            f"| {session['firmware_session_index']} | {session['protocol_status']} "
+            f"({'valid' if session['protocol_valid'] else 'invalid'}) | "
+            f"{session['calibration_acceptance_reason']} | "
+            f"{session['raw_det_count']}/{session['det_count']} | "
+            f"{session['alarm_window_count']}/{session['alarm_episodes']} | "
+            f"{session['alarm_time_percent']:.2f} | "
+            f"{recovery if recovery is not None else '-'} | "
+            f"{session['excluded_transition_windows']} |"
+        )
+    if not validity["sessions"]:
+        lines.append("| - | nema | - | 0/0 | 0/0 | 0.00 | - | 0 |")
+    lines.extend([
         "",
         "## Rezultati po rucno oznacenom uslovu",
         "",
         "| Uslov | Prozora | Alarmnih | Score medijana | Score opseg |",
         "|---|---:|---:|---:|---:|",
-    ]
+    ])
     labels: list[str] = []
     for row in valid_detections:
         label = str(row["condition"])
@@ -1572,7 +2973,8 @@ def make_summary(
         "## Ogranicenje",
         "",
         "Samo DET prozori nakon eksplicitne operatorove condition komande i "
-        "nakon validnog firmware handshake/CAL ugovora ulaze u metrike. "
+        "nakon validnog firmware handshake/CAL ugovora i prihvaćene K1 "
+        "kalibracije ulaze u metrike. "
         "Uslovi su vremenski oznaceni na PC-u kada je operater unio komandu. "
         "Jedan DET prozor pokriva oko 10 s, pa granicni prozor moze sadrzati "
         "dio prethodnog i dio novog uslova. Ovaj zapis ne naziva bezbjedno "
@@ -1587,6 +2989,95 @@ def make_summary(
             + (f": {event['note']}" if event["note"] else "")
         )
     return "\n".join(lines) + "\n"
+
+
+def _read_csv_rows(path: Path) -> list[dict[str, Any]]:
+    if not path.is_file():
+        return []
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def artifact_protocol_version_for_read(provenance: dict[str, Any]) -> str:
+    """Validate the locked host/UART artifact pair before offline reading."""
+    version = provenance.get("protocol_version")
+    if not isinstance(version, str) or version not in SUPPORTED_READ_PROTOCOL_VERSIONS:
+        supported = ", ".join(sorted(SUPPORTED_READ_PROTOCOL_VERSIONS))
+        raise ValueError(
+            "nepodrzan ili nedostajuci physical-fan protocol_version "
+            f"{version!r}; offline citanje podrzava: {supported}"
+        )
+    quality_version = provenance.get("quality_protocol_version")
+    expected_quality = ARTIFACT_QUALITY_PROTOCOL_PAIRS[version]
+    if not isinstance(quality_version, str):
+        raise ValueError(
+            "nedostajuci quality_protocol_version za offline artefakt; "
+            f"{version} zahtijeva {expected_quality}"
+        )
+    if quality_version != expected_quality:
+        raise ValueError(
+            "nepodudaran host/UART protokolarni par za offline artefakt: "
+            f"{version} zahtijeva {expected_quality}, dobijeno {quality_version!r}"
+        )
+    if version in ARTIFACT_CONTRACT_VERSIONS:
+        contract = provenance.get("artifact_contract_version")
+        expected_contract = ARTIFACT_CONTRACT_VERSIONS[version]
+        if contract != expected_contract:
+            raise ValueError(
+                "nedostajuci ili nepodudaran artifact contract: "
+                f"ocekivano {expected_contract}, dobijeno {contract!r}"
+            )
+    return version
+
+
+def recompute_run_summary(run_dir: Path) -> tuple[str, dict[str, Any]]:
+    """Re-evaluate an existing run without changing any original artifact."""
+    provenance_path = run_dir / "provenance.json"
+    provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+    source_protocol_version = artifact_protocol_version_for_read(provenance)
+    detections = _read_csv_rows(run_dir / "detections.csv")
+    if source_protocol_version == "physical-fan-v1.6.0":
+        for run_index, row in enumerate(detections, start=1):
+            row.setdefault("firmware_session_index", "1")
+            row.setdefault("run_det_index", str(run_index))
+            row.setdefault("transition_window", "0")
+    events = _read_csv_rows(run_dir / "events.csv")
+    for event in events:
+        event["elapsed_s"] = float(event["elapsed_s"])
+    status = str(provenance["status"])
+    protocol_state = provenance.get("firmware_protocol_state")
+    validity = evaluate_run_validity(
+        status=status, detections=detections, protocol_state=protocol_state,
+    )
+    summary = make_summary(
+        metadata=provenance["metadata"],
+        status=status,
+        events=events,
+        detections=detections,
+        max_dropped=provenance.get("max_dropped"),
+        protocol_state=protocol_state,
+        source_protocol_version=source_protocol_version,
+    )
+    return summary, validity
+
+
+def recompute_summary_command(args: argparse.Namespace) -> int:
+    run_dir = Path(args.run_dir).resolve()
+    output_name = str(args.output_name)
+    if Path(output_name).name != output_name or output_name == "SUMMARY.md":
+        raise SystemExit("recompute smije pisati samo novi sidecar, ne originalni SUMMARY.md")
+    summary, validity = recompute_run_summary(run_dir)
+    output_path = run_dir / output_name
+    try:
+        with output_path.open("x", encoding="utf-8", newline="") as handle:
+            handle.write(summary)
+    except FileExistsError as exc:
+        raise SystemExit(f"recompute sidecar vec postoji: {output_path}") from exc
+    print(
+        f"recompute: {validity['result_status']} "
+        f"(K1={validity['calibration_acceptance_reason']}): {output_path}"
+    )
+    return 0
 
 
 class AuditedExitStack(ExitStack):
@@ -1609,11 +3100,22 @@ def _best_effort_finalize_setup_failure(
     exc: BaseException,
 ) -> None:
     """Replace in_progress after import/open/close failure where disk permits."""
+    protocol_state = new_firmware_protocol_state()
+    validity = evaluate_run_validity(
+        status="failed", detections=[], protocol_state=protocol_state,
+    )
     provenance.update({
         "status": "failed",
         "finished_utc": utc_now(),
         "metadata": metadata,
         "failure": f"{type(exc).__name__}: {exc}",
+        "physical_result_status": validity["result_status"],
+        "protocol_valid": validity["protocol_valid"],
+        "calibration_accepted": validity["calibration_accepted"],
+        "calibration_acceptance_reason": validity["calibration_acceptance_reason"],
+        "metrics_eligible": validity["metrics_eligible"],
+        "commissioning_policy": COMMISSIONING_POLICY_RECORD,
+        "firmware_protocol_state": protocol_state,
     })
     try:
         write_json(run_dir / "provenance.json", provenance)
@@ -1623,7 +3125,7 @@ def _best_effort_finalize_setup_failure(
         (run_dir / "SUMMARY.md").write_text(
             make_summary(
                 metadata=metadata, status="failed", events=[], detections=[],
-                max_dropped=None, protocol_state=new_firmware_protocol_state(),
+                max_dropped=None, protocol_state=protocol_state,
             ),
             encoding="utf-8",
         )
@@ -1636,6 +3138,10 @@ def run_experiment(args: argparse.Namespace) -> int:
     port = resolve_port(args.port, ports)
     if not build_is_psd_live():
         raise SystemExit("postojeci build nije potvrđen kao ASD_PSD_LIVE; ne pokrecem run")
+    if args.research_telemetry_required and not build_has_research_telemetry():
+        raise SystemExit(
+            "--research-telemetry-required trazi build sa ASD_RESEARCH_TELEMETRY"
+        )
 
     if not args.ready:
         answer = input(
@@ -1658,6 +3164,7 @@ def run_experiment(args: argparse.Namespace) -> int:
         "fan_speed_or_voltage": args.fan_speed_or_voltage,
         "ambient": args.ambient,
         "operator_notes": args.notes,
+        "research_telemetry_required": bool(args.research_telemetry_required),
         "external_wav": str(Path(args.wav_path).resolve()) if args.wav_path else None,
         "external_wav_sha256_at_start": sha256_file(Path(args.wav_path)) if args.wav_path else None,
     }
@@ -1674,23 +3181,39 @@ def run_experiment(args: argparse.Namespace) -> int:
     events: list[dict[str, Any]] = []
     detections: list[dict[str, Any]] = []
     max_dropped: int | None = None
+    dropped_observed = False
+    guided_workflow_accepted = False
+    guided_workflow_pending = False
+    guided_capability_seen = False
     telemetry_counts = {"QUALITY": 0, "STATE": 0, "EVENT": 0,
                         "PRESENCE": 0, "TEMPORAL": 0,
-                        "SESSION": 0, "BUTTON": 0}
+                        "SESSION": 0, "BUTTON": 0, "PROFILESTORE": 0,
+                        "COMMISSION": 0, "PROFILE": 0,
+                        "FEATURE96": 0, "SUBSEG96": 0}
     last_firmware_state: str | None = None
     protocol_state = new_firmware_protocol_state()
+    research_state = new_research_telemetry_state(
+        required=bool(args.research_telemetry_required),
+    )
     drain_started: float | None = None
     finalize_requested_status: str | None = None
     finalize_drain_started: float | None = None
     last_serial_data_at: float | None = None
     current_condition = "unconfirmed"
     condition_confirmed = False
+    transition_window_pending = False
     status = "interrupted"
+    final_validity: dict[str, Any] | None = None
+    guided_report: dict[str, Any] | None = None
     started = time.monotonic()
 
-    event_fields = ["host_utc", "elapsed_s", "kind", "label", "note"]
+    event_fields = [
+        "host_utc", "elapsed_s", "firmware_session_index",
+        "kind", "label", "note",
+    ]
     det_fields = [
-        "host_utc", "elapsed_s", "condition", "condition_confirmed",
+        "host_utc", "elapsed_s", "firmware_session_index", "run_det_index",
+        "condition", "condition_confirmed", "transition_window",
         "protocol_valid", "window", "score", "lo", "threshold",
         "alarm", "total_alarm", "consecutive", "verdict", "level_dbfs", "compute_ms",
     ]
@@ -1751,6 +3274,16 @@ def run_experiment(args: argparse.Namespace) -> int:
         parse_error_writer.writeheader()
         operator_writer.writeheader()
 
+        def record_event(*, kind: str, label: str, note: str = "") -> dict[str, Any]:
+            """Attach every host event to the active firmware session (or run 0)."""
+            return add_event(
+                events, event_writer, event_handle, started=started,
+                kind=kind, label=label, note=note,
+                firmware_session_index=int(
+                    protocol_state.get("firmware_session_index", 0)
+                ),
+            )
+
         ser: Any | None = None
         commands: queue.Queue[str] = queue.Queue()
         command_file = Path(args.command_file).resolve() if args.command_file else None
@@ -1765,9 +3298,8 @@ def run_experiment(args: argparse.Namespace) -> int:
             ser = serial.Serial(port, args.baud, timeout=1)
             if not args.non_interactive:
                 threading.Thread(target=input_worker, args=(commands,), daemon=True).start()
-            add_event(
-                events, event_writer, event_handle, started=started, kind="session",
-                label="start",
+            record_event(
+                kind="session", label="start",
                 note="sigurnosna postavka potvrđena; operator condition=unconfirmed",
             )
             if not args.no_reset:
@@ -1777,9 +3309,9 @@ def run_experiment(args: argparse.Namespace) -> int:
                 ser.setRTS(False)
                 time.sleep(0.3)
                 ser.reset_input_buffer()
-                add_event(
-                    events, event_writer, event_handle, started=started, kind="device",
-                    label="reset", note="RTS reset; pocinje WAIT/CAL/DET",
+                record_event(
+                    kind="device", label="reset",
+                    note="RTS reset; pocinje WAIT/CAL/DET",
                 )
 
             print(f"artefakti: {run_dir}")
@@ -1793,10 +3325,16 @@ def run_experiment(args: argparse.Namespace) -> int:
                 if drain_started is not None:
                     drain_elapsed = now - drain_started
                     if terminal_drain_decision(protocol_state, drain_elapsed) == "timeout":
-                        add_event(
-                            events, event_writer, event_handle, started=started,
+                        timeout_reason = terminal_drain_timeout_reason(protocol_state)
+                        if protocol_state["invalid_status"] is None:
+                            protocol_state = _invalidate(
+                                protocol_state, "invalid_missing_telemetry",
+                                timeout_reason,
+                            )
+                            status = "invalid_missing_telemetry"
+                        record_event(
                             kind="protocol", label="terminal_drain_timeout",
-                            note=f"nije dobijen FLOW_STOPPED za {drain_elapsed:.3f} s",
+                            note=f"{timeout_reason}; elapsed={drain_elapsed:.3f} s",
                         )
                         break
                 elif finalize_drain_started is not None:
@@ -1805,8 +3343,7 @@ def run_experiment(args: argparse.Namespace) -> int:
                         now - finalize_drain_started, now - quiet_since,
                     ) == "complete":
                         status = str(finalize_requested_status)
-                        add_event(
-                            events, event_writer, event_handle, started=started,
+                        record_event(
                             kind="session", label="final_buffer_drain_complete",
                             note="buffered UART je procitan prije finalizacije",
                         )
@@ -1818,8 +3355,7 @@ def run_experiment(args: argparse.Namespace) -> int:
                     finalize_requested_status = "completed_time_limit"
                     finalize_drain_started = now
                     last_serial_data_at = now
-                    add_event(
-                        events, event_writer, event_handle, started=started,
+                    record_event(
                         kind="session", label="stop", note="istekao --max-seconds",
                     )
 
@@ -1838,48 +3374,54 @@ def run_experiment(args: argparse.Namespace) -> int:
                     verb, _, rest = command.partition(" ")
                     verb = verb.lower()
                     if verb == "stop":
-                        finalize_requested_status = (
-                            "completed_by_operator" if detections else "aborted_before_detection"
-                        )
+                        if detections:
+                            finalize_requested_status = "completed_by_operator"
+                        elif any(
+                            item.get("protocol_status") == "calibration_rejected"
+                            for item in protocol_session_records(protocol_state)
+                        ):
+                            # Host nije automatski prekinuo na K1: ostao je
+                            # spreman za novu sesiju. Ako operater ipak zavrsi
+                            # run bez DET-a, zatvoreni K1 ishod ostaje tacan
+                            # completion status, ali nikad nije fizicka metrika.
+                            finalize_requested_status = "completed_calibration_rejected"
+                        else:
+                            finalize_requested_status = "aborted_before_detection"
                         finalize_drain_started = time.monotonic()
                         last_serial_data_at = finalize_drain_started
-                        add_event(
-                            events, event_writer, event_handle, started=started,
+                        record_event(
                             kind="session", label="stop", note=rest,
                         )
                         break
                     if verb == "abort":
                         status = "aborted_by_operator"
-                        add_event(
-                            events, event_writer, event_handle, started=started,
+                        record_event(
                             kind="session", label="abort", note=rest,
                         )
                         break
-                    if verb in ("press", "hold"):
+                    if verb in ("press", "hold", "guided25"):
                         # Virtuelni taster: isti ulaz kao fizicki pritisak, samo
                         # preko konzole (firmware/main/asd_cmd.c). Postoji da bi
                         # se protokol mogao izvesti dok taster nije zalemljen.
                         # Uredjaj na pritisak odgovara `VBUTTON` pa `BUTTON`
                         # zapisom, tako da dokaz ostaje u telemetriji, a ne samo
                         # u host logu.
-                        wire = b"PRESS\n" if verb == "press" else b"HOLD\n"
+                        wire = {"press": b"PRESS\n", "hold": b"HOLD\n",
+                                "guided25": b"GUIDED25\n"}[verb]
                         try:
                             ser.write(wire)
                             ser.flush()
                         except serial.SerialException as exc:
                             print(f"slanje komande nije uspjelo: {exc}")
-                            add_event(
-                                events, event_writer, event_handle, started=started,
+                            record_event(
                                 kind="command_error", label=verb, note=str(exc),
                             )
                             continue
-                        add_event(
-                            events, event_writer, event_handle, started=started,
+                        record_event(
                             kind="virtual_button", label=verb, note=rest,
                         )
                     elif verb == "note" and rest:
-                        add_event(
-                            events, event_writer, event_handle, started=started,
+                        record_event(
                             kind="note", label="operator", note=rest,
                         )
                     elif verb == "condition" and rest:
@@ -1887,19 +3429,18 @@ def run_experiment(args: argparse.Namespace) -> int:
                             normalized, note = parse_condition_command(rest)
                         except ValueError as exc:
                             print(f"nevalidna condition komanda: {exc}")
-                            add_event(
-                                events, event_writer, event_handle, started=started,
+                            record_event(
                                 kind="command_error", label="condition", note=str(exc),
                             )
                             continue
                         current_condition = normalized
                         condition_confirmed = True
-                        add_event(
-                            events, event_writer, event_handle, started=started,
+                        transition_window_pending = True
+                        record_event(
                             kind="condition", label=current_condition, note=note,
                         )
                     else:
-                        print("nepoznata komanda; koristi press, hold, "
+                        print("nepoznata komanda; koristi press, hold, guided25, "
                               "condition, note ili stop")
                 if status == "aborted_by_operator":
                     break
@@ -1925,14 +3466,53 @@ def run_experiment(args: argparse.Namespace) -> int:
                 text_handle.flush()
                 print(line)
 
+                if VWORKFLOW_ACCEPTED_RE.search(line):
+                    guided_workflow_pending = True
+                guided_capability_seen = (
+                    guided_capability_seen or bool(GUIDED_CAPABILITY_RE.search(line)))
+
                 parsed = parse_serial_line(line)
                 invalid_before = protocol_state["invalid_status"]
-                if parsed and parsed["kind"] == "QUALITY":
+                if parsed and parsed["kind"] in {"FEATURE96", "SUBSEG96"}:
+                    telemetry_counts[parsed["kind"]] += 1
+                    research_consume_record(
+                        research_state, parsed,
+                        active_session=int(protocol_state.get("firmware_session_index", 0)),
+                        pending_det_quality=protocol_state.get("pending_det_quality"),
+                    )
+                elif (
+                    parsed and parsed["kind"] == "PARSE_ERROR"
+                    and parsed.get("record_kind") in {"FEATURE96", "SUBSEG96"}
+                ):
+                    research_consume_record(
+                        research_state, parsed,
+                        active_session=int(protocol_state.get("firmware_session_index", 0)),
+                    )
+                    parse_error_writer.writerow({
+                        "host_utc": host_utc,
+                        "elapsed_s": elapsed,
+                        "firmware_session_index": protocol_state.get(
+                            "firmware_session_index", 0,
+                        ),
+                        "record_kind": parsed["record_kind"],
+                        "reason": parsed["reason"],
+                        "raw_line": parsed["raw_line"],
+                    })
+                    parse_error_handle.flush()
+                elif parsed and parsed["kind"] == "QUALITY":
                     protocol_state = transition_firmware_protocol(protocol_state, parsed)
                     telemetry_counts["QUALITY"] += 1
+                    if protocol_state["invalid_status"] is None:
+                        research_expect_quality(
+                            research_state, parsed,
+                            session=int(protocol_state.get("firmware_session_index", 0)),
+                        )
                     row = {
                         "host_utc": host_utc,
                         "elapsed_s": elapsed,
+                        "firmware_session_index": protocol_state.get(
+                            "firmware_session_index", 0,
+                        ),
                         **{key: parsed[key] for key in QUALITY_FIELDS if key in parsed},
                     }
                     quality_writer.writerow(row)
@@ -1944,6 +3524,9 @@ def run_experiment(args: argparse.Namespace) -> int:
                     row = {
                         "host_utc": host_utc,
                         "elapsed_s": elapsed,
+                        "firmware_session_index": protocol_state.get(
+                            "firmware_session_index", 0,
+                        ),
                         **{key: parsed[key] for key in STATE_FIELDS if key in parsed},
                     }
                     state_writer.writerow(row)
@@ -1954,19 +3537,34 @@ def run_experiment(args: argparse.Namespace) -> int:
                     row = {
                         "host_utc": host_utc,
                         "elapsed_s": elapsed,
+                        "firmware_session_index": protocol_state.get(
+                            "firmware_session_index", 0,
+                        ),
                         **{key: parsed[key] for key in FIRMWARE_EVENT_FIELDS if key in parsed},
                     }
                     firmware_event_writer.writerow(row)
                     firmware_event_handle.flush()
                 elif parsed and parsed["kind"] in (
-                    "SESSION", "BUTTON", "PRESENCE", "TEMPORAL",
+                    "SESSION", "BUTTON", "PRESENCE", "TEMPORAL", "PROFILESTORE",
+                    "COMMISSION", "PROFILE",
                 ):
                     protocol_state = transition_firmware_protocol(protocol_state, parsed)
                     telemetry_counts[parsed["kind"]] += 1
+                    if parsed["kind"] == "SESSION" and parsed["action"] == "STARTED":
+                        guided_workflow_accepted = guided_workflow_pending
+                        guided_workflow_pending = False
+                        guided_capability_seen = False
+                        dropped_observed = False
+                        current_condition = "unconfirmed"
+                        condition_confirmed = False
+                        transition_window_pending = False
                     if parsed["kind"] in ("SESSION", "BUTTON"):
                         operator_writer.writerow({
                             "host_utc": host_utc,
                             "elapsed_s": elapsed,
+                            "firmware_session_index": protocol_state.get(
+                                "firmware_session_index", 0,
+                            ),
                             **{key: parsed[key] for key in OPERATOR_FIELDS
                                if key in parsed},
                             "kind": parsed["kind"],
@@ -1977,6 +3575,9 @@ def run_experiment(args: argparse.Namespace) -> int:
                     parse_error_writer.writerow({
                         "host_utc": host_utc,
                         "elapsed_s": elapsed,
+                        "firmware_session_index": protocol_state.get(
+                            "firmware_session_index", 0,
+                        ),
                         "record_kind": parsed["record_kind"],
                         "reason": parsed["reason"],
                         "raw_line": parsed["raw_line"],
@@ -1985,21 +3586,39 @@ def run_experiment(args: argparse.Namespace) -> int:
                 elif parsed and parsed["kind"] == "ADAPTTHR":
                     protocol_state = transition_firmware_protocol(protocol_state, parsed)
                 elif parsed and parsed["kind"] == "DROPPED":
+                    dropped_observed = True
                     dropped = int(parsed["dropped"])
                     max_dropped = dropped if max_dropped is None else max(max_dropped, dropped)
                 elif parsed and parsed["kind"] == "DET":
                     protocol_state = transition_firmware_protocol(protocol_state, parsed)
+                    if protocol_state["invalid_status"] is None:
+                        research_note_det(
+                            research_state, parsed,
+                            session=int(protocol_state.get("firmware_session_index", 0)),
+                        )
                     row = {
                         "host_utc": host_utc,
                         "elapsed_s": elapsed,
+                        "firmware_session_index": protocol_state.get(
+                            "firmware_session_index", 0,
+                        ),
+                        "run_det_index": protocol_state.get("run_det_records", 0),
                         "condition": current_condition,
                         "condition_confirmed": int(condition_confirmed),
+                        "transition_window": int(transition_window_pending),
                         "protocol_valid": int(protocol_state["invalid_status"] is None),
                         **{key: parsed[key] for key in det_fields if key in parsed},
                     }
                     detections.append(row)
                     det_writer.writerow(row)
                     det_handle.flush()
+                    transition_window_pending = False
+
+                # I validan K1 reject je terminalni drain. Ne prekidamo nakon
+                # STATE/FLOW_STOPPED para: firmware mora zatvoriti isti otvoreni
+                # SESSION sa ENDED, a čekanje je ograničeno timeoutom iznad.
+                if protocol_state["drain_required"] and drain_started is None:
+                    drain_started = time.monotonic()
 
                 if protocol_state["invalid_status"] is not None:
                     status = str(protocol_state["invalid_status"])
@@ -2011,26 +3630,25 @@ def run_experiment(args: argparse.Namespace) -> int:
                         parse_error_writer.writerow({
                             "host_utc": host_utc,
                             "elapsed_s": elapsed,
+                            "firmware_session_index": protocol_state.get(
+                                "firmware_session_index", 0,
+                            ),
                             "record_kind": parsed["kind"],
                             "reason": protocol_state["invalid_reason"],
                             "raw_line": line,
                         })
                         parse_error_handle.flush()
                     if newly_invalid:
-                        add_event(
-                            events, event_writer, event_handle, started=started,
+                        record_event(
                             kind="protocol", label=status,
                             note=str(protocol_state["invalid_reason"]),
                         )
                     if protocol_state["drain_required"]:
-                        if drain_started is None:
-                            drain_started = time.monotonic()
                         decision = terminal_drain_decision(
                             protocol_state, time.monotonic() - drain_started,
                         )
                         if decision == "complete":
-                            add_event(
-                                events, event_writer, event_handle, started=started,
+                            record_event(
                                 kind="protocol", label="terminal_drain_complete",
                                 note="terminal STATE/FLOW_STOPPED sacuvani",
                             )
@@ -2038,15 +3656,37 @@ def run_experiment(args: argparse.Namespace) -> int:
                         continue
                     break
 
+                if protocol_state["drain_required"]:
+                    decision = terminal_drain_decision(
+                        protocol_state, time.monotonic() - drain_started,
+                    )
+                    if decision != "complete":
+                        continue
+                    record_event(
+                        kind="protocol", label="terminal_drain_complete",
+                        note="terminal STATE/FLOW_STOPPED/SESSION ENDED sacuvani",
+                    )
+
+                if firmware_protocol_calibration_rejected(protocol_state):
+                    record_event(
+                        kind="calibration", label="rejected",
+                        note=(
+                            f"session={protocol_state['firmware_session_index']}; "
+                            "UNSTABLE_CALIBRATION; K1 loo_cv_above_max; "
+                            "host ostaje aktivan za novu sesiju"
+                        ),
+                    )
+                    protocol_state["drain_required"] = False
+                    drain_started = None
+                    continue
+
                 if "KALIBRACIJA:" in line:
-                    add_event(
-                        events, event_writer, event_handle, started=started,
+                    record_event(
                         kind="phase", label="calibration",
                         note="fan mora ostati u potvrđeno normalnom stanju",
                     )
                 if "DETEKCIJA RADI" in line:
-                    add_event(
-                        events, event_writer, event_handle, started=started,
+                    record_event(
                         kind="phase", label="detection",
                         note="firmware DET faza; operator condition i dalje nije potvrđen"
                         if not condition_confirmed else
@@ -2054,14 +3694,12 @@ def run_experiment(args: argparse.Namespace) -> int:
                     )
         except KeyboardInterrupt:
             status = "interrupted_by_operator"
-            add_event(
-                events, event_writer, event_handle, started=started,
+            record_event(
                 kind="session", label="interrupt", note="KeyboardInterrupt",
             )
         except Exception as exc:
             status = "failed"
-            add_event(
-                events, event_writer, event_handle, started=started,
+            record_event(
                 kind="session", label="failure", note=f"{type(exc).__name__}: {exc}",
             )
             raise
@@ -2073,14 +3711,21 @@ def run_experiment(args: argparse.Namespace) -> int:
                 except Exception as exc:
                     serial_close_error = exc
                     status = "failed"
-            valid_detections = [
+            condition_protocol_detections = [
                 row for row in detections
                 if int(row.get("condition_confirmed", 0)) == 1
                 and int(row.get("protocol_valid", 0)) == 1
+                and int(row.get("transition_window", 0)) == 0
             ]
             protocol_valid_detections = [
                 row for row in detections if int(row.get("protocol_valid", 0)) == 1
             ]
+            metadata["external_wav_sha256_at_end"] = (
+                sha256_file(Path(args.wav_path)) if args.wav_path else None
+            )
+            research_manifest = write_research_artifact(
+                run_dir, research_state, metadata=metadata,
+            )
             if status.startswith("completed"):
                 if (
                     not firmware_protocol_complete(protocol_state)
@@ -2088,15 +3733,25 @@ def run_experiment(args: argparse.Namespace) -> int:
                     status = "invalid_missing_telemetry"
                     protocol_state["invalid_status"] = status
                     protocol_state["invalid_reason"] = "session_completed_before_required_protocol"
-                elif protocol_state["det_records"] != len(protocol_valid_detections):
+                elif protocol_state.get("run_det_records", 0) != len(protocol_valid_detections):
                     status = "invalid_firmware_telemetry"
                     protocol_state["invalid_status"] = status
                     protocol_state["invalid_reason"] = "tracker_detection_csv_count_mismatch"
-                elif not valid_detections:
+                elif (
+                    firmware_calibration_source_accepted(protocol_state)
+                    and not condition_protocol_detections
+                ):
                     status = "invalid_no_confirmed_operator_condition"
-            metadata["external_wav_sha256_at_end"] = (
-                sha256_file(Path(args.wav_path)) if args.wav_path else None
+                elif (
+                    args.research_telemetry_required
+                    and not research_manifest["gate_passed"]
+                ):
+                    status = "invalid_research_telemetry"
+            final_validity = evaluate_run_validity(
+                status=status, detections=detections, protocol_state=protocol_state,
             )
+            metric_detections = final_validity["metric_detections"]
+            run_metrics = final_validity["run_metrics"]
             if serial_close_error is not None:
                 provenance["failure"] = (
                     f"{type(serial_close_error).__name__}: {serial_close_error}"
@@ -2107,10 +3762,33 @@ def run_experiment(args: argparse.Namespace) -> int:
                 "metadata": metadata,
                 "threshold": protocol_state["adapt_threshold"],
                 "det_window_count": len(detections),
-                "valid_det_window_count": len(valid_detections),
-                "alarm_window_count": sum(int(row["alarm"]) for row in valid_detections),
+                "run_det_records": final_validity["run_det_records"],
+                "run_quality_counts": protocol_state.get("run_quality_counts", {}),
+                "firmware_sessions": final_validity["sessions"],
+                "condition_protocol_det_window_count": len(condition_protocol_detections),
+                "valid_det_window_count": len(metric_detections),
+                "metrics_eligible_det_window_count": len(metric_detections),
+                "alarm_window_count": run_metrics["alarm_window_count"],
+                "alarm_entry_count": run_metrics["alarm_entries"],
+                "alarm_episode_count": run_metrics["alarm_episodes"],
+                "alarm_time_percent": run_metrics["alarm_time_percent"],
+                "recovery_latency_s": run_metrics["recovery_latency_s"],
+                "excluded_transition_window_count": sum(
+                    item["excluded_transition_windows"]
+                    for item in final_validity["sessions"]
+                ),
+                "physical_result_status": final_validity["result_status"],
+                "protocol_valid": final_validity["protocol_valid"],
+                "calibration_accepted": final_validity["calibration_accepted"],
+                "calibration_acceptance_reason": final_validity["calibration_acceptance_reason"],
+                "metrics_eligible": final_validity["metrics_eligible"],
+                "commissioning_policy": COMMISSIONING_POLICY_RECORD,
                 "max_dropped": max_dropped,
+                "dropped_observed": dropped_observed,
+                "guided_workflow_accepted": guided_workflow_accepted,
+                "guided_capability_seen": guided_capability_seen,
                 "firmware_telemetry_counts": telemetry_counts,
+                "research_telemetry": research_manifest,
                 "last_firmware_state": last_firmware_state,
                 "firmware_protocol_state": protocol_state,
             })
@@ -2123,6 +3801,16 @@ def run_experiment(args: argparse.Namespace) -> int:
                 ),
                 encoding="utf-8",
             )
+            if getattr(args, "guided_workflow", "none") == "guided25":
+                guided_report = evaluate_guided25_artifact(
+                    provenance=provenance,
+                    detections=detections,
+                    research_manifest=research_manifest,
+                    workflow_accepted=(guided_workflow_accepted and guided_capability_seen),
+                    dropped_observed=dropped_observed,
+                    events=events,
+                )
+                write_json(run_dir / "guided25_report.json", guided_report)
             if serial_close_error is not None:
                 raise serial_close_error
 
@@ -2132,8 +3820,13 @@ def run_experiment(args: argparse.Namespace) -> int:
         )
         raise stack.close_error
 
-    print(f"run zavrsen sa statusom {status}: {run_dir}")
-    return 0 if status.startswith("completed") and valid_detections else 1
+    assert final_validity is not None
+    print(
+        f"run zavrsen sa statusom {status}; "
+        f"fizicki rezultat={final_validity['result_status']}: {run_dir}"
+    )
+    return 0 if (final_validity["valid_result"] and
+                 (guided_report is None or guided_report["status"] == "PASS")) else 1
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -2143,6 +3836,13 @@ def build_parser() -> argparse.ArgumentParser:
     preflight = sub.add_parser("preflight", help="provjeri port i postojeci PSD build")
     preflight.add_argument("--output-dir", type=Path, default=DEFAULT_OUT)
     preflight.set_defaults(func=record_preflight)
+
+    recompute = sub.add_parser(
+        "recompute", help="napravi novi summary sidecar bez izmjene originalnog runa",
+    )
+    recompute.add_argument("--run-dir", type=Path, required=True)
+    recompute.add_argument("--output-name", default="SUMMARY.recomputed.md")
+    recompute.set_defaults(func=recompute_summary_command)
 
     run = sub.add_parser("run", help="snimi pravi fizicki eksperiment")
     run.add_argument("--port", default="auto")
@@ -2156,7 +3856,13 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--ambient", default="quiet")
     run.add_argument("--notes", default="")
     run.add_argument("--wav-path", default=None,
-                     help="opciona putanja eksternog paralelnog WAV snimka")
+                     help=("opciona veza ka WAV-u koji snima nezavisni recorder; "
+                           "ovaj alat ga ne snima"))
+    run.add_argument(
+        "--research-telemetry-required", action="store_true",
+        help=("fail-closed zahtijevaj FEATURE96 + pet SUBSEG96 zapisa za svaki "
+              "validni CAL/DET prozor"),
+    )
     run.add_argument("--output-dir", type=Path, default=DEFAULT_OUT)
     run.add_argument("--command-file", default=None,
                      help="opciona datoteka; alat cita komande koje se dopisuju tokom runa")
@@ -2166,6 +3872,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--non-interactive", action="store_true",
                      help="bez rucnih oznaka; obavezno kombinovati sa --max-seconds")
     run.add_argument("--max-seconds", type=float, default=None)
+    run.add_argument("--guided-workflow", choices=("none", "guided25"), default="none")
     run.set_defaults(func=run_experiment)
     return parser
 

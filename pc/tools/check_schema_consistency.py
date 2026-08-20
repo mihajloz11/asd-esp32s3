@@ -67,8 +67,9 @@ def main() -> int:
         problems.append("politika prisustva tvrdi da je koristila target anomalije")
 
     # --- politika vremenske odluke (Faza 4) ---
-    temporal = json.loads(read(CONFIG / "asd_temporal_policy_v1.json"))
+    temporal = json.loads(read(CONFIG / "asd_temporal_policy_v2.json"))
     chosen = temporal["policy"]
+    legacy_wire = temporal["legacy_wire_provenance"]
     schema_in_header = re.search(
         r'#define\s+ASD_TEMPORAL_POLICY\s+"([^"]+)"', temporal_header)
     if not schema_in_header or schema_in_header.group(1) != temporal["schema_version"]:
@@ -76,20 +77,20 @@ def main() -> int:
             f"schema vremenske politike: firmware "
             f"{schema_in_header.group(1) if schema_in_header else None}, "
             f"config {temporal['schema_version']}")
-    for macro, key in (
-        ("DEFAULT_MIN_CONSECUTIVE", "min_consecutive"),
-        ("DEFAULT_EWMA_ALPHA", "ewma_alpha"),
-        ("DEFAULT_ENTER_SCALE", "enter_scale"),
-        ("DEFAULT_EXIT_SCALE", "exit_scale"),
-        ("DEFAULT_FAST_SCALE", "fast_scale"),
+    for macro, key, expected in (
+        ("DEFAULT_MIN_CONSECUTIVE", "min_consecutive", chosen["min_consecutive"]),
+        ("DEFAULT_EWMA_ALPHA", "ewma_alpha", chosen["ewma_alpha"]),
+        ("DEFAULT_ENTER_SCALE", "legacy_enter_scale", legacy_wire["enter_scale"]),
+        ("DEFAULT_EXIT_SCALE", "legacy_exit_scale", legacy_wire["exit_scale"]),
+        ("DEFAULT_FAST_SCALE", "fast_scale", chosen["fast_scale"]),
     ):
         raw = define(temporal_source, macro)
         if raw is None:
             problems.append(f"nema {macro} u asd_temporal.c")
             continue
-        if abs(float(raw.rstrip("f")) - float(chosen[key])) > 1e-6:
-            problems.append(f"{key}: firmware {raw}, config {chosen[key]}")
-    if temporal.get("target_anomalies_used") is not False:
+        if abs(float(raw.rstrip("f")) - float(expected)) > 1e-6:
+            problems.append(f"{key}: firmware {raw}, config {expected}")
+    if temporal.get("target_anomalies_used_for_fit") is not False:
         problems.append("vremenska politika tvrdi da je koristila target anomalije")
 
     # --- politika kvaliteta (Faza 1) ---
@@ -97,12 +98,17 @@ def main() -> int:
     if quality.get("target_anomalies_used") is not False:
         problems.append("politika kvaliteta tvrdi da je koristila target anomalije")
 
-    # --- prag: ista formula na obje strane ---
+    # --- commissioning prag: isti preregistrovani kandidat na obje strane ---
     live = read(MAIN / "psd_live.c")
-    if define(live, "CAL_P_HI") != "0.90f" or define(live, "CAL_K_SIGMA") != "3.0f":
-        problems.append("formula praga u psd_live.c nije p90 / sredina+3sd")
-    if "CAL_P_HI = 0.90" not in read(ROOT / "pc" / "tools" / "derive_temporal_policy.py"):
-        problems.append("derive_temporal_policy.py ne koristi isti prag kao firmware")
+    if (define(live, "COMMISSION_ENTER_QUANTILE") != "0.99f" or
+            define(live, "COMMISSION_EXIT_QUANTILE") != "0.75f"):
+        problems.append("commissioning prag u psd_live.c nije p99/p75")
+    physical = read(ROOT / "pc" / "tools" / "physical_fan_experiment.py")
+    if "COMMISSION_ENTER_QUANTILE = 0.99" not in physical:
+        problems.append("physical_fan_experiment.py ne validira firmware p99")
+    laboratory = read(ROOT / "pc" / "tools" / "derive_commissioning_policy.py")
+    if '"empirical-p99_exit-p75", "percentile", 0.99' not in laboratory:
+        problems.append("PC commissioning manifest nema preregistrovani p99/p75")
 
     if problems:
         print("NESAGLASNOSTI:")
@@ -113,8 +119,8 @@ def main() -> int:
     print(f"  protokol            {firmware_protocol.group(1)}")
     print(f"  prisustvo           {presence['policy']['absent_margin_db']} dB / "
           f"{presence['policy']['min_consecutive_windows']} prozora")
-    print(f"  vremenska odluka    {chosen['rule']} "
-          f"(n={chosen['min_consecutive']}, izlaz {chosen['exit_scale']}x)")
+    print(f"  vremenska odluka    absolute_profile "
+          f"(n={chosen['min_consecutive']}, odvojeni enter/exit pragovi)")
     print("  sve politike        target_anomalies_used=false")
     return 0
 

@@ -1,6 +1,9 @@
 # Panel i virtuelni taster — eksperiment bez zalemljenog tastera i dioda
 
-**Datum:** 15.08.2026. · **Status:** implementirano i **provjereno na pločici**
+**Datum:** 15.08.2026, ažurirano 20.08.2026.
+
+**Status:** istorijski v1.3 panel/taster provjeren na pločici; trenutni
+v1.8/q1.5 softver host- i build-testiran, ali još nije ponovo flashovan.
 
 Firmware traži eksplicitnu operaterovu radnju za svako učenje (P10 — tiha
 rekalibracija bi naučila kvar kao normalu). Ta radnja je do sada mogla stići
@@ -55,7 +58,7 @@ virtuelni ostaje da čeka sljedeći.
 Čita se sa **oba porta** — native USB (COM3, VID 303A) i CH343 most na UART0
 (COM4) — direktno iz RX FIFO-a, bez instaliranja drajvera i bez VFS
 preusmjeravanja. TX put ostaje netaknut, jer od njega zavisi zaključani
-protokol `asd-quality-v1.3.0`.
+live protokol `asd-quality-v1.5.0`.
 
 ---
 
@@ -64,8 +67,8 @@ protokol `asd-quality-v1.3.0`.
 Na svaku promjenu režima lampice uređaj ispiše jedan red:
 
 ```
-FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0
-      learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.5.0 mode=READY state=CALIBRATED_NORMAL waiting=0
+      learning=0 learned=1 anomaly=0 hold=0 fault=0 green=on red=off
 ```
 
 | Fleg | 1 kad | Zelena | Crvena |
@@ -74,15 +77,23 @@ FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0
 | `learning` | uči (WAIT + CAL) | treperi 5 Hz | — |
 | `learned` | naučio, nadzire | stalno svijetli | — |
 | `anomaly` | **trajno odstupanje** | ugašena | svijetli |
+| `hold` | opažanje privremeno nepouzdano | spor puls | —, osim ako je alarm već aktivan |
 | `fault` | fail-closed stop | dupli bljesak | dupli bljesak |
 
 `learned` ostaje 1 i tokom alarma — centar je i dalje naučen; `anomaly` je ono
 što se mijenja.
 
-**Alarm kasni namjerno.** Traži **tri uzastopna prozora** iznad praga, dakle
-oko 30 s trajne promjene, i gasi se tek kad score padne ispod 0,7× praga
-(histereza). Jedan ili dva izolovana prozora ne pale ništa — to je zaštita od
-zalupljenih vrata i razgovora, ne kašnjenje koje treba popravljati.
+**Alarm kasni namjerno.** Traži **tri uzastopna pouzdana prozora** iznad
+apsolutnog `threshold_enter`, dakle oko 30 s trajne promjene, i gasi se tek
+ispod zasebnog apsolutnog `threshold_exit`. Ne postoji više skriveno pravilo
+`0,7× enter`. Jedan ili dva izolovana prozora ne pale alarm, ali to samo po
+sebi nije dokazana zaštita od razgovora.
+
+`OBSERVATION_HOLD` suspenduje izgradnju novog alarmnog niza, ne proglašava
+normalu i ne briše već aktivan alarm ili profil. Arhitektura i UI obrazac su
+implementirani, ali je numerička interference politika trenutno
+`DEVELOPMENT`, `enabled=false`; zato se HOLD ne smije prikazivati kao fizički
+potvrđen speech classifier.
 
 ### Zašto ovo ne može pokvariti mjerenje
 
@@ -107,7 +118,7 @@ Dvije stvari koje to drže na mjestu:
 ```
 
 Otvara `http://127.0.0.1:8772/`: dvije lampice koje titraju istim obrascem kao
-diode, pet flegova, dva dugmeta i posljednji `score / prag / uzastopnih`.
+diode, statusni flegovi, dva dugmeta i posljednji `score / prag / uzastopnih`.
 
 **Rezim 1 (`--port`)** — panel drži serijski port. Za bring-up i probe, kad
 `physical_fan_experiment.py` ne radi.
@@ -124,9 +135,11 @@ Klik u panelu tada radi isto što i otkucano `press` u konzoli alata.
 
 ---
 
-## 5. Provjereno na pločici, 15.08.2026
+## 5. Istorijski provjereno na pločici, 15.08.2026
 
 Flešovan build od 317 552 B na COM3 (native USB, `303A:1001`).
+Sljedeći redovi su istorijski dokaz tadašnjeg v1.3 wire toka, ne primjer
+aktuelnog live v1.4 ugovora.
 
 **Kratak pritisak** — `PRESS` poslat sa hosta:
 
@@ -142,8 +155,9 @@ WAIT 1/60 ...
 result=accepted`, sesija prekinuta, `mode=IDLE` u roku od 4 s. `ABORT` se
 konzumira na sljedećoj kontrolnoj tački toka, ne trenutno.
 
-Serijski ispis se nije pokvario ni u jednom trenutku — zaključani protokol je
-prošao kroz WAIT/CAL/DET kako treba.
+Serijski ispis se nije pokvario ni u jednom trenutku — tadašnji zaključani
+v1.3 protokol je prošao kroz WAIT/CAL/DET. To nije runtime dokaz za nove
+COMMISSION/PROFILE/PROFILESTORE, HOLD ili q1.5 zapise.
 
 ## 6. Vodič kroz run i pokretanje
 
@@ -154,7 +168,15 @@ pet prozora i oznaka **prije** promjene — više ne mogu promašiti.
 
 Sve se pokreće jednom komandom, [start_fan_run.py](../pc/tools/start_fan_run.py):
 podigne alat, sačeka run direktorij, zakači panel na njegov `serial.log` i odbije
-da krene ako stari panel još drži port.
+da krene ako stari panel još drži port. `--fan-id` i `--session-id` su obavezni;
+launcher nikada ne nasljeđuje istorijski `fan01` kao podrazumijevani uređaj.
+
+Panel prikazuje centralni K1 razlog i server-side odbija `/start` ako
+kalibracija nije prihvaćena; disabled dugme u browseru nije sigurnosna granica.
+`nan`/`inf` iz oštećene telemetrije nikada se ne zadržavaju kao brojevi u stanju:
+UI ostaje u `CAL_REJECTED`, pokazuje npr. `nonfinite_loo_cv`, a `/state` koristi
+strict standardni JSON (`allow_nan=False`). Novi početak učenja čisti prethodni
+`loo_cv`, prag, DET prikaz i odluku.
 
 ## 7. Šta još nije provjereno
 
@@ -166,3 +188,7 @@ da krene ako stari panel još drži port.
    puta su provjerena ponovnim puštanjem stvarno snimljene telemetrije kroz
    ispravljeni host i jediničnim testovima, ali ne i na ventilatoru koji radi —
    za to treba sljedeći fizički run.
+4. Browser panel nema zaseban dokaz stvarnog HOLD ulaza; firmware/operator
+   testovi pokrivaju obrazac, dok je numeric HOLD policy još isključen.
+5. NVS restore, cold/warm start, prekid napajanja i q1.5 bounded-audio terminalni
+   tok nisu provjereni sa ovim panelom na pločici.

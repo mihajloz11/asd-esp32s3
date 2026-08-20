@@ -1,5 +1,8 @@
 idf_component_register(
-    SRCS "app_main.c" "audio_i2s.c" "audio_quality_state.c" "asd_events.c"
+    SRCS "app_main.c" "audio_i2s.c" "audio_quality_state.c"
+         "asd_calibration_quality.c" "asd_profile_runtime.c"
+         "asd_profile_store.c" "asd_profile_nvs.c"
+         "asd_commissioning.c" "asd_interference.c" "asd_events.c"
          "asd_cmd.c" "asd_operator.c" "asd_temporal.c"
          "features_c.c" "calib_gamma.c" "tflm_infer.cc"
          "eval_mode.c" "mic_test.c" "ina226.c" "ina226_test.c" "live_capture.c" "live_adapt.c"
@@ -36,6 +39,12 @@ endif()
 # Samostalni PSD detektor (finalni model):  set ASD_PSD_LIVE=1  pa idf.py reconfigure build
 if(DEFINED ENV{ASD_PSD_LIVE})
     target_compile_definitions(${COMPONENT_LIB} PRIVATE ASD_PSD_LIVE)
+endif()
+
+# Razvojni 96+5x96 sidecar preko UART-a; finalni PSD model/feature nije izmijenjen.
+# Koristi samo uz ASD_PSD_LIVE: set ASD_RESEARCH_TELEMETRY=1
+if(DEFINED ENV{ASD_RESEARCH_TELEMETRY})
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE ASD_RESEARCH_TELEMETRY)
 endif()
 
 # PC<->uredjaj provjera PSD front-enda:  set ASD_PSD_VERIFY=1  pa idf.py reconfigure build

@@ -8,6 +8,12 @@ Ovo je prvi run u kojem INMP441 sluša stvarni ventilator, a cijela telemetrija
 prolazi kroz zaključani host bez ijedne odbačene linije. Sve prethodno u repou
 je zvučnik ili DCASE snimak.
 
+> **Korekcija tumačenja, 20.08.2026.** Ovaj istorijski v1.6/q1.3 run i njegov
+> `SUMMARY.md` ostaju netaknuti. Trenutni softver je v1.8/q1.5, ali još nije
+> fizički ponovljen. Broj `324/h` ispod je broj alarmnih prozora po satu
+> (`54/60 × 360`), ne broj alarmnih epizoda po satu. Papirić je bezbjedna,
+> kontrolisana promjena protoka i nije potvrđen stvarni kvar.
+
 > **Ime sesije je `verify-sw-02`, a ne `cold-start-07`.** Sesija je počela kao
 > provjera softvera poslije popravki, kalibracija je ispala najbolja tog dana
 > (`loo_cv` 0,307), pa je odlučeno da se mjerenje odradi na njoj umjesto da se
@@ -88,11 +94,15 @@ benchmarku (0,864) i pao na zvučniku (0,716).
 
 ```
 54 / 60 prozora normalnog rada iznad praga  =  90 %
-324 lažna alarma na sat (po prozoru)
+324 alarmna prozora na sat (nije broj epizoda/h)
 ```
 
 Rangiranje je skoro savršeno, a **politika praga je slomljena**. To su dvije
 različite stvari i ovaj run ih prvi put razdvaja mjerenjem.
+
+Tadašnji izvještaj nije imao sadašnji episode-aware obračun. Zato se 54 prozora
+ne smiju nazvati 54 epizode niti skalirati u `324 epizode/h`; uzastopni alarmni
+prozori pripadaju istoj alarmnoj epizodi dok se alarm ne ugasi.
 
 Šta bi prag trebalo da bude, izvedeno iz iste osnove:
 
@@ -143,14 +153,15 @@ traka vidi kao veliku udaljenost.
 
 | # | Posao | Zašto baš to |
 |---|---|---|
-| 1 | **Novo pravilo praga iz dužeg normal-only perioda** | jedina stavka koja stoji između 0,999 AUC i upotrebljivog uređaja |
-| 2 | Ponoviti sa **više ponavljanja papirića i razgovora** | 12 i 4 prozora su premalo za tvrdnju o otpornosti na buku |
-| 3 | Označavati prelazne prozore u firmveru, ne tek u analizi | granica uslova sistematski kvari po jedan prozor po bloku |
-| 4 | Host podrška za **više sesija po runu** | rekalibracija na zahtjev trenutno obara run ([panel doc](panel-i-virtuelni-taster.md), tačka 7) |
-| 5 | Drugi ventilator | jedini put do bilo kakve tvrdnje o generalizaciji |
+| 1 | **Novo pravilo praga iz dužeg normal-only perioda** | Arhitektura CENTER/DERIVE/VERIFY je implementirana; brojevi ostaju DEVELOPMENT do novog runa. |
+| 2 | Kratki, unaprijed ograničen readout papirića i razgovora | Najviše 3 + 2 bloka poslije freeze-a; mali uzorak je funkcionalna provjera, ne dokaz stope. |
+| 3 | Označavati prelazne prozore | Host sada čuva `transition_window` i izbacuje ga iz metrika; novi fizički run to tek treba potvrditi. |
+| 4 | Host podrška za **više sesija po runu** | Softverski završeno i replay-testirano; nije fizički ponovljeno. |
+| 5 | Drugi ventilator | I dalje jedini put do bilo kakve tvrdnje o generalizaciji. |
 
-Stavka 1 je najvažnija: model već zna šta je odstupanje, samo je crta povučena
-na pogrešnom mjestu.
+Stavka 1 ostaje najvažnija numerička provjera, ali nije jedina granica
+upotrebljivog uređaja: HOLD policy, novi flash/runtime, power-loss i kompletan
+hardver takođe ostaju otvoreni.
 
 ---
 
@@ -164,3 +175,9 @@ uslova) · `firmware_quality.csv` · `events.csv` (operaterske oznake) ·
 Prethodni runovi istog dana (`cold-start-03` do `-06`, `verify-sw-01`) su
 nevalidni i čuvaju se samo kao dokaz šest grešaka opisanih u
 [preregistraciji](preregistracija-fan01.md), sekcija 4b.
+
+Posebno, `cold-start-04` je u istorijskom `SUMMARY.md` pogrešno bio prikazan kao
+fizički validan jer tadašnja funkcija nije provjeravala K1. Centralni read-only
+recompute sada daje `calibration_rejected:loo_cv_above_max`,
+`protocol_valid=True`, `metrics_eligible=False`. Originalni run, SUMMARY i
+preregistrovana pravila K1–K6 nisu prepisani.

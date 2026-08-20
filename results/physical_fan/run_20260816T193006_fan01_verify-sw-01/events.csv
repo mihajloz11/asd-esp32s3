@@ -1,0 +1,8 @@
+host_utc,elapsed_s,kind,label,note
+2026-08-16T17:30:06.689+00:00,0.0,session,start,sigurnosna postavka potvrđena; operator condition=unconfirmed
+2026-08-16T17:30:07.141+00:00,0.453,device,reset,RTS reset; pocinje WAIT/CAL/DET
+2026-08-16T17:30:17.665+00:00,10.985,virtual_button,press,panel
+2026-08-16T17:30:33.050+00:00,26.36,phase,calibration,fan mora ostati u potvrđeno normalnom stanju
+2026-08-16T17:32:13.026+00:00,126.344,phase,detection,firmware DET faza; operator condition i dalje nije potvrđen
+2026-08-16T17:32:34.007+00:00,147.328,virtual_button,hold,panel
+2026-08-16T17:32:42.927+00:00,156.235,protocol,invalid_firmware_telemetry,STATE_chain_mismatch:expected_from=CALIBRATED_NORMAL:got=NO_MACHINE

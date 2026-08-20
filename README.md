@@ -3,25 +3,35 @@
 Nenadgledana detekcija anomalija zvuka mašina (DCASE 2026 Task 2) na ESP32-S3-WROOM-1
 N32R16V. Plan i metodologija: [plan-master-rada.md](plan-master-rada.md).
 
-## Gdje je projekat sada (14.08.2026)
+## Gdje je projekat sada (20.08.2026)
 
-Finalni firmware je projektovan i implementiran za samostalan rad. Predviđeni
-tok je: operater pritisne taster, uređaj koristi konfiguraciju `k=10` (oko 15 s
-`WAIT` + 10 validnih prozora po 10 s, ukupno oko 115 s) da nauči normalan rad,
-a lampica zatim pokaže da je nadzor aktivan. Logika tastera i LED signalizacije
-pokrivena je host testovima; fizički sastavljen interfejs sa zalemljenim tasterom
-i LED diodama još nije potvrđen na kompletnom hardveru. Alarm traži **tri
-uzastopna prozora** iznad praga (~30 s). Sintetički temporalni test potvrđuje da
-jedan ili dva izolovana score-prozora ne pale alarm; govor, zalupljena vrata i
-druge stvarne akustičke smetnje ostaju dio budućeg fizičkog protokola.
+Prvi fizički test ventilatora postoji i dokumentovan je u
+[rezultat-fan01-2026-08-16.md](docs/rezultat-fan01-2026-08-16.md). `psd_shape`
+je veoma dobro rangirao bezbjedno izazvanu promjenu protoka papirićem, ali tadašnji
+prag iz kratke kalibracije nije radio: 54/60 normalnih prozora bilo je iznad
+praga. Papirić nije potvrđen stvarni kvar, a broj `324/h` iz starog izvještaja
+znači alarmne **prozore** po satu, ne alarmne epizode po satu.
+
+Poslije FAN01 softver je preuređen u fail-closed tok
+`SETTLE → CENTER_LEARNING → COMMISSION_DERIVE → COMMISSION_VERIFY → MONITORING`.
+Centar, izvođenje praga i kasnija provjera sada su odvojeni; enter/exit su
+apsolutni pragovi. K1 i multi-session host su centralizovani, research build
+čuva `96 + 5×96` obilježja, audio čitanje je bounded, a NVS storage modul ima
+schema/fingerprint/generation/CRC. DEVELOPMENT policy je fail-closed RAM-only:
+ne učitava, ne čuva i ne emituje `PROFILESTORE` dok politika ne bude fizički
+potvrđena i zamrznuta. `OBSERVATION_HOLD` arhitektura postoji, ali
+je numerička interference politika namjerno isključena dok je ne potvrdi novi
+normal-only fizički test. Commissioning pragovi su zato i dalje
+**DEVELOPMENT/PENDING**, a ne proizvodno završeni brojevi.
 
 | | |
 |---|---|
-| Serijski protokol | `asd-quality-v1.3.0` · parser `physical-fan-v1.6.0` |
+| Serijski protokol | live `asd-quality-v1.5.0` · host `physical-fan-v1.8.0` + `physical-fan-artifacts-v1.8.0`; offline read ostaje zaključan na v1.6↔q1.3, v1.7↔q1.4 i v1.8↔q1.5 |
 | Model | `psd_shape`, 96 traka log-PSD, Mahalanobis; finalni `k=10`: AUC 0,856 (razvojno, 20 podjela); referentni PC `k=20`: AUC 0,867 (kanonski, 100 podjela) |
-| PC testovi | **274 passed**, uključujući PC↔C parity |
-| Na uređaju provjereno | kalibracija, DET faza, fail-closed odbijanja, `dropped=0` |
-| **Ostalo** | **šema · ventilator · demo** → [docs/PREOSTALO.md](docs/PREOSTALO.md) |
+| PC testovi | **423 passed** (20.08.2026), uključujući PC↔C, multi-session, research, commissioning/HOLD, strogi q1.5 live tok, audio i NVS ugovore |
+| Posljednji build | ESP-IDF 5.5.5 `ASD_PSD_LIVE`: **PASS**, 349 728 B; to nije flash/runtime dokaz |
+| Fizički dokaz | istorijski v1.6/q1.3 FAN01 run; trenutni v1.8/q1.5 nije flashovan niti fizički validiran |
+| **Ostalo** | **završiti elektroniku · zamrznuti normal-only politiku · kratak fizički run · power-loss/I2S runtime** → [docs/PREOSTALO.md](docs/PREOSTALO.md) |
 | Lemljenje | dvije ploče (uređaj + mjerna) → [docs/plan-dvije-plocice.md](docs/plan-dvije-plocice.md) · crteži [docs/sema-sklopa.pdf](docs/sema-sklopa.pdf) |
 
 Šta je urađeno i izmjereno, hronološki:
@@ -30,9 +40,10 @@ Putanja modela sa svim pokušajima i negativnim rezultatima:
 [docs/put-do-modela.md](docs/put-do-modela.md).
 Problemi i zamke (P1–P19): [docs/problemi-i-rjesenja.md](docs/problemi-i-rjesenja.md).
 
-> **Granica tvrdnje.** Nijedan rezultat u repozitorijumu nije mjeren na fizičkom
-> ventilatoru. Sve što piše „živo" je snimak pušten preko zvučnika i tako je i
-> označeno.
+> **Granica tvrdnje.** FAN01 je stvarni ventilator, ali papirić je kontrolisana
+> promjena protoka, ne potvrđen kvar. Novi v1.8/q1.5 softver je host- i
+> build-testiran; nije još flashovan, runtime/power-loss testiran niti potvrđen
+> novim fizičkim mjerenjem. Benchmark, zvučnik i build nisu fizička tačnost.
 
 ## Struktura
 

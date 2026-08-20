@@ -1,0 +1,2 @@
+host_utc,elapsed_s,record_kind,reason,raw_line
+2026-08-16T16:45:48.424+00:00,308.61,ADAPTTHR,ADAPTTHR_below_mean_plus_3sd,ADAPTTHR n=10 mean=285.661469 sd=149.634216 k=0 theta=0 p=0.9000 thr=734.564087 lo=0.000000 factory=0.000000

@@ -150,11 +150,11 @@ obrtaja i tako se piše.
 Jednom komandom — pokreće alat, sačeka run direktorij, pa na njega zakači panel:
 
 ```bash
-.venv\Scripts\python.exe pc\tools\start_fan_run.py --session-id cold-start-07 --montaza-potvrdio "ime, ventilator na punjacu, radi normalno, montaza bezbjedna"
+.venv\Scripts\python.exe pc\tools\start_fan_run.py --fan-id fan01 --session-id cold-start-07 --montaza-potvrdio "ime, ventilator na punjacu, radi normalno, montaza bezbjedna"
 ```
 
 `--montaza-potvrdio` zamjenjuje ono ručno `DA`: potvrdu daje čovjek koji gleda
-postavku, skripta je samo doslovno prenosi u `events.csv` i `provenance.json`.
+postavku, skripta je samo doslovno prenosi u `provenance.metadata.operator_notes`.
 Bez tog argumenta se ništa ne pokreće.
 
 Panel se javi na `http://127.0.0.1:8772/`. Odatle su tri klika:
