@@ -1,0 +1,2 @@
+host_utc,elapsed_s,protocol,from_state,to_state,reason
+2026-08-16T16:43:53.118+00:00,193.313,asd-quality-v1.3.0,NO_MACHINE,NO_MACHINE,BOOT_FAIL_CLOSED

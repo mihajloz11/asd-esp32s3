@@ -17,7 +17,7 @@
 #include "audio_quality_state.h"   /* ASD_QUALITY_PROTOCOL */
 
 #define CMD_TICK_MS   20   /* isti period kao UI task; komande su rijetke */
-#define CMD_MAX_LEN   16   /* najduža komanda je "PRESS" */
+#define CMD_MAX_LEN   16   /* najduža komanda je "GUIDED25" */
 
 /* Dva porta su dva NEZAVISNA toka i moraju imati dva odvojena bafera reda.
  *
@@ -35,6 +35,8 @@ typedef struct {
 } cmd_line_t;
 
 static _Atomic int pending_event = ASD_BTN_NONE;
+static _Atomic int pending_workflow = ASD_WORKFLOW_DEFAULT;
+static _Atomic int session_active;
 static cmd_line_t lines[SRC_COUNT];
 
 /* Provenijencija. Zaključani host parser ne prepoznaje `VBUTTON` i uredno ga
@@ -54,6 +56,13 @@ static void dispatch(const char *cmd) {
     } else if (strcmp(cmd, "HOLD") == 0) {
         atomic_store(&pending_event, ASD_BTN_LONG);
         emit_vbutton("LONG", "accepted");
+    } else if (strcmp(cmd, "GUIDED25") == 0) {
+        if (atomic_load(&session_active)) {
+            printf("VWORKFLOW mode=GUIDED25 result=busy_session\n");
+        } else {
+            atomic_store(&pending_workflow, ASD_WORKFLOW_GUIDED25);
+            printf("VWORKFLOW mode=GUIDED25 result=accepted\n");
+        }
     } else {
         emit_vbutton("NONE", "unknown_command");
     }
@@ -124,8 +133,26 @@ static void cmd_task(void *arg) {
 void asd_cmd_start(void) {
     memset(lines, 0, sizeof(lines));
     atomic_store(&pending_event, ASD_BTN_NONE);
+    atomic_store(&pending_workflow, ASD_WORKFLOW_DEFAULT);
+    atomic_store(&session_active, 0);
     /* 3 KB: task zove `printf` sa tri `%s` argumenta, isto kao UI task. */
     xTaskCreatePinnedToCore(cmd_task, "asd_cmd", 3072, NULL, 4, NULL, 0);
+}
+
+void asd_cmd_set_session_active(int active) {
+    atomic_store(&session_active, active ? 1 : 0);
+}
+
+asd_workflow_t asd_cmd_take_workflow(void) {
+    return (asd_workflow_t)atomic_exchange(&pending_workflow, ASD_WORKFLOW_DEFAULT);
+}
+
+asd_workflow_t asd_cmd_pending_workflow(void) {
+    return (asd_workflow_t)atomic_load(&pending_workflow);
+}
+
+const char *asd_cmd_workflow_name(asd_workflow_t workflow) {
+    return workflow == ASD_WORKFLOW_GUIDED25 ? "GUIDED25" : "DEFAULT";
 }
 
 asd_button_event_t asd_cmd_take_event(void) {

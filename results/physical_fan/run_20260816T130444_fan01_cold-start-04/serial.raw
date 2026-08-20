@@ -1,0 +1,460 @@
+I (1108) esp_psram: SPI SRAM memory test OK
+I (1117) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
+I (1117) cpu_start: Pro cpu start user code
+I (1117) cpu_start: cpu freq: 240000000 Hz
+I (1119) app_init: Application information:
+I (1123) app_init: Project name:     esp32s3_asd
+I (1127) app_init: App version:      on-device-verified-49-g35cc34f-
+I (1133) app_init: Compile time:     Aug 16 2026 12:58:32
+I (1139) app_init: ELF file SHA256:  a879eb9b8...
+I (1143) app_init: ESP-IDF:          v5.5.5-34-g21f3b71cbbf
+I (1148) efuse_init: Min chip rev:     v0.0
+I (1152) efuse_init: Max chip rev:     v0.99 
+I (1156) efuse_init: Chip rev:         v0.2
+I (1160) heap_init: Initializing. RAM available for dynamic allocation:
+I (1167) heap_init: At 3FCCFEF0 len 00019820 (102 KiB): RAM
+I (1172) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+I (1177) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+I (1182) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+I (1188) esp_psram: Adding pool of 16384K of PSRAM memory to heap allocator
+W (1195) spi_flash: Octal flash chip is using but dio mode is selected, will automatically switch to Octal mode
+I (1204) spi_flash: detected chip: mxic (opi)
+I (1208) spi_flash: flash io: opi_str
+I (1212) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1218) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1225) main_task: Started on CPU0
+I (1225) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+I (1235) main_task: Calling app_main()
+I (1235) asd: PSRAM: 16777216 B
+I (1245) asd: free heap: 16920679 B
+I (1245) asd: I2C idle: SDA=1 SCL=1
+I (1255) asd: I2C poslije probe: SDA=1 SCL=1
+E (1255) asd: INA226 nije pronadjen na adresama 0x40-0x4F
+W (1255) i2s_common: dma frame num is out of dma buffer size, limited to 1023
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+I (1935) psdlive: === SAMOSTALNI PSD DETEKTOR ===
+I (1935) psdlive: model: 96 traka, matrica 96x96 iz flesa, naucen na 990 normalnih snimaka ventilatora
+I (1945) psdlive: 1) pusti ventilator koji radi NORMALNO
+I (1955) psdlive: 2) pritisni taster ILI posalji PRESS sa konzole -> ucenje 10 x 10 s = 100 s, lampica treperi
+I (1965) psdlive: 3) lampica stalno svijetli = naucio; tek tada izazovi kvar
+I (1965) psdlive: pritisni taster (GPIO10) ili posalji PRESS da pocne ucenje
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 fault=0 green=flash_2s red=off
+VBUTTON protocol=asd-quality-v1.3.0 source=console event=SHORT result=accepted
+BUTTON protocol=asd-quality-v1.3.0 event=SHORT mode=IDLE command=START_LEARNING discards=0
+SESSION protocol=asd-quality-v1.3.0 action=STARTED source=BUTTON reason=OPERATOR_REQUEST discards_calibration=0
+STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+I (99005) psdlive: odbacen ustajali zvuk iz cekanja: 31104 uzoraka
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=1 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.811 dc=-0.933 peak=446 clipped=0 zeros=6 stuck=30 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 1/60 score=-45.81 spread=0.000 nivo=-45.8 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=2 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.709 dc=-4.132 peak=446 clipped=0 zeros=5 stuck=24 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 2/60 score=-45.71 spread=0.000 nivo=-45.7 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=3 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.481 dc=2.419 peak=448 clipped=0 zeros=7 stuck=19 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 3/60 score=-45.48 spread=0.000 nivo=-45.5 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=4 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.497 dc=0.594 peak=451 clipped=0 zeros=11 stuck=34 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 4/60 score=-45.50 spread=0.000 nivo=-45.5 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=5 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.681 dc=-4.875 peak=452 clipped=0 zeros=8 stuck=20 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 5/60 score=-45.68 spread=0.000 nivo=-45.7 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=6 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.710 dc=2.090 peak=452 clipped=0 zeros=13 stuck=28 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 6/60 score=-45.71 spread=0.000 nivo=-45.7 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=7 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.727 dc=1.635 peak=436 clipped=0 zeros=13 stuck=29 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 7/60 score=-45.73 spread=0.000 nivo=-45.7 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=8 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.873 dc=-1.751 peak=447 clipped=0 zeros=5 stuck=27 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 8/60 score=-45.87 spread=0.000 nivo=-45.9 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=9 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.059 dc=1.597 peak=464 clipped=0 zeros=10 stuck=30 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 9/60 score=-46.06 spread=0.000 nivo=-46.1 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=10 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.113 dc=-0.062 peak=432 clipped=0 zeros=13 stuck=25 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 10/60 score=-46.11 spread=0.000 nivo=-46.1 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=11 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.187 dc=-4.862 peak=455 clipped=0 zeros=15 stuck=24 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 11/60 score=-46.19 spread=0.000 nivo=-46.2 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=12 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.877 dc=1.493 peak=451 clipped=0 zeros=6 stuck=32 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 12/60 score=-45.88 spread=0.000 nivo=-45.9 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=13 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.767 dc=1.010 peak=458 clipped=0 zeros=6 stuck=33 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 13/60 score=-45.77 spread=0.000 nivo=-45.8 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=14 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.006 dc=-2.504 peak=434 clipped=0 zeros=9 stuck=26 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 14/60 score=-46.01 spread=0.000 nivo=-46.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=15 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.040 dc=0.975 peak=453 clipped=0 zeros=7 stuck=26 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 15/60 score=-46.04 spread=0.000 nivo=-46.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=16 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.023 dc=-1.085 peak=428 clipped=0 zeros=5 stuck=33 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 16/60 score=-46.02 spread=0.000 nivo=-46.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=17 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.248 dc=-1.215 peak=425 clipped=0 zeros=8 stuck=24 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 17/60 score=-46.25 spread=0.000 nivo=-46.2 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=18 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.145 dc=2.208 peak=440 clipped=0 zeros=10 stuck=26 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 18/60 score=-46.15 spread=0.000 nivo=-46.1 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=19 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.922 dc=-0.898 peak=476 clipped=0 zeros=8 stuck=30 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 19/60 score=-45.92 spread=0.000 nivo=-45.9 dBFS cujem
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=20 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.720 dc=-1.764 peak=440 clipped=0 zeros=8 stuck=23 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 20/60 score=-45.72 spread=0.000 nivo=-45.7 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=21 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-45.979 dc=0.658 peak=442 clipped=0 zeros=8 stuck=29 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 21/60 score=-45.98 spread=0.000 nivo=-46.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=22 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.024 dc=0.092 peak=454 clipped=0 zeros=8 stuck=31 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 22/60 score=-46.02 spread=0.000 nivo=-46.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=23 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.031 dc=-2.839 peak=477 clipped=0 zeros=8 stuck=24 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 23/60 score=-46.03 spread=0.000 nivo=-46.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=24 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.257 dc=2.302 peak=439 clipped=0 zeros=8 stuck=23 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 24/60 score=-46.26 spread=0.000 nivo=-46.3 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=25 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.322 dc=-3.008 peak=425 clipped=0 zeros=7 stuck=23 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 25/60 score=-46.32 spread=0.000 nivo=-46.3 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=26 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.189 dc=-0.068 peak=437 clipped=0 zeros=9 stuck=23 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 26/60 score=-46.19 spread=0.000 nivo=-46.2 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=27 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.095 dc=1.010 peak=454 clipped=0 zeros=10 stuck=27 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 27/60 score=-46.10 spread=0.000 nivo=-46.1 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=28 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.276 dc=-1.812 peak=427 clipped=0 zeros=8 stuck=30 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 28/60 score=-46.28 spread=0.000 nivo=-46.3 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=29 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.445 dc=2.113 peak=429 clipped=0 zeros=6 stuck=19 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 29/60 score=-46.44 spread=0.000 nivo=-46.4 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=30 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.520 dc=-3.004 peak=430 clipped=0 zeros=8 stuck=23 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 30/60 score=-46.52 spread=0.000 nivo=-46.5 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=31 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.510 dc=0.799 peak=450 clipped=0 zeros=8 stuck=26 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 31/60 score=-46.51 spread=0.000 nivo=-46.5 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=32 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.391 dc=-1.065 peak=433 clipped=0 zeros=13 stuck=26 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 32/60 score=-46.39 spread=0.000 nivo=-46.4 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=33 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.702 dc=0.881 peak=441 clipped=0 zeros=8 stuck=27 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 33/60 score=-46.70 spread=0.000 nivo=-46.7 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=34 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.625 dc=-1.053 peak=443 clipped=0 zeros=12 stuck=28 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 34/60 score=-46.62 spread=0.000 nivo=-46.6 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=35 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.691 dc=0.675 peak=421 clipped=0 zeros=8 stuck=25 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 35/60 score=-46.69 spread=0.000 nivo=-46.7 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=36 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.939 dc=-1.403 peak=413 clipped=0 zeros=8 stuck=32 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 36/60 score=-46.94 spread=0.000 nivo=-46.9 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=37 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.764 dc=0.043 peak=402 clipped=0 zeros=14 stuck=26 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 37/60 score=-46.76 spread=0.000 nivo=-46.8 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=38 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.873 dc=-3.272 peak=394 clipped=0 zeros=10 stuck=32 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 38/60 score=-46.87 spread=0.000 nivo=-46.9 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=39 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.612 dc=3.015 peak=426 clipped=0 zeros=9 stuck=32 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 39/60 score=-46.61 spread=0.000 nivo=-46.6 dBFS cujem
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=40 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.641 dc=-3.165 peak=402 clipped=0 zeros=8 stuck=27 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 40/60 score=-46.64 spread=0.000 nivo=-46.6 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=41 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.812 dc=1.607 peak=426 clipped=0 zeros=10 stuck=24 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 41/60 score=-46.81 spread=0.000 nivo=-46.8 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=42 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.916 dc=-1.018 peak=444 clipped=0 zeros=12 stuck=30 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 42/60 score=-46.92 spread=0.000 nivo=-46.9 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=43 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.042 dc=-1.549 peak=462 clipped=0 zeros=8 stuck=31 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 43/60 score=-47.04 spread=0.000 nivo=-47.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=44 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.167 dc=0.922 peak=412 clipped=0 zeros=8 stuck=14 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 44/60 score=-47.17 spread=0.000 nivo=-47.2 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=45 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.995 dc=-1.092 peak=407 clipped=0 zeros=8 stuck=20 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 45/60 score=-46.99 spread=0.000 nivo=-47.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=46 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.937 dc=0.416 peak=414 clipped=0 zeros=9 stuck=28 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 46/60 score=-46.94 spread=0.000 nivo=-46.9 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=47 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.970 dc=-0.668 peak=415 clipped=0 zeros=8 stuck=29 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 47/60 score=-46.97 spread=0.000 nivo=-47.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=48 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.947 dc=-0.330 peak=408 clipped=0 zeros=8 stuck=18 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 48/60 score=-46.95 spread=0.000 nivo=-46.9 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=49 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.899 dc=-1.431 peak=426 clipped=0 zeros=7 stuck=40 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 49/60 score=-46.90 spread=0.000 nivo=-46.9 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=50 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.051 dc=-2.519 peak=372 clipped=0 zeros=13 stuck=25 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 50/60 score=-47.05 spread=0.000 nivo=-47.1 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=51 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.075 dc=3.020 peak=414 clipped=0 zeros=10 stuck=19 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 51/60 score=-47.07 spread=0.000 nivo=-47.1 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=52 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.980 dc=-2.360 peak=422 clipped=0 zeros=9 stuck=30 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 52/60 score=-46.98 spread=0.000 nivo=-47.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=53 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.914 dc=1.338 peak=402 clipped=0 zeros=10 stuck=30 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 53/60 score=-46.91 spread=0.000 nivo=-46.9 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=54 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.071 dc=-1.273 peak=386 clipped=0 zeros=8 stuck=33 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 54/60 score=-47.07 spread=0.000 nivo=-47.1 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=55 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.054 dc=-1.450 peak=416 clipped=0 zeros=11 stuck=23 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 55/60 score=-47.05 spread=0.000 nivo=-47.1 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=56 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.950 dc=0.568 peak=408 clipped=0 zeros=7 stuck=19 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 56/60 score=-46.95 spread=0.000 nivo=-46.9 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=57 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.983 dc=-2.230 peak=420 clipped=0 zeros=11 stuck=25 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 57/60 score=-46.98 spread=0.000 nivo=-47.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=58 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.985 dc=3.127 peak=447 clipped=0 zeros=7 stuck=25 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 58/60 score=-46.99 spread=0.000 nivo=-47.0 dBFS cujem
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=59 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-46.995 dc=-3.119 peak=385 clipped=0 zeros=6 stuck=22 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 59/60 score=-47.00 spread=0.000 nivo=-47.0 dBFS cujem
+QUALITY protocol=asd-quality-v1.3.0 phase=WAIT index=60 total=60 result=OK metrics_valid=1 samples=4096 expected=4096 rms_dbfs=-47.076 dc=1.293 peak=424 clipped=0 zeros=11 stuck=25 dropped_delta=0 feature_valid=0 tonalness_valid=0 tonalness_proxy=0.000000 tonal_gate=not_computed
+WAIT 60/60 score=-47.08 spread=0.000 nivo=-47.1 dBFS cujem
+I (114335) psdlive: --- KALIBRACIJA: 10 klipova po 10 s ---
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=1 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.201 dc=-0.493 peak=484 clipped=0 zeros=369 stuck=1065 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.542780 tonal_gate=pending_normal_only
+CAL  1/10 score=0.00000 nivo=-47.2 dBFS racun=705 ms
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=2 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.257 dc=-0.376 peak=442 clipped=0 zeros=360 stuck=1130 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.515521 tonal_gate=pending_normal_only
+CAL  2/10 score=0.00000 nivo=-47.3 dBFS racun=705 ms
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=3 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.318 dc=-0.516 peak=425 clipped=0 zeros=340 stuck=1090 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.531713 tonal_gate=pending_normal_only
+CAL  3/10 score=0.00000 nivo=-47.3 dBFS racun=705 ms
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=4 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.363 dc=-0.400 peak=431 clipped=0 zeros=376 stuck=1065 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.515463 tonal_gate=pending_normal_only
+CAL  4/10 score=0.00000 nivo=-47.4 dBFS racun=705 ms
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=5 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.337 dc=-0.492 peak=437 clipped=0 zeros=389 stuck=1039 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.476893 tonal_gate=pending_normal_only
+CAL  5/10 score=0.00000 nivo=-47.3 dBFS racun=706 ms
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=6 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.342 dc=-0.462 peak=461 clipped=0 zeros=363 stuck=1053 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.309268 tonal_gate=pending_normal_only
+CAL  6/10 score=0.00000 nivo=-47.3 dBFS racun=705 ms
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=7 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.406 dc=-0.470 peak=443 clipped=0 zeros=386 stuck=1125 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.457959 tonal_gate=pending_normal_only
+CAL  7/10 score=0.00000 nivo=-47.4 dBFS racun=705 ms
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=8 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.427 dc=-0.495 peak=434 clipped=0 zeros=396 stuck=1153 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.437349 tonal_gate=pending_normal_only
+CAL  8/10 score=0.00000 nivo=-47.4 dBFS racun=705 ms
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=9 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.528 dc=-0.491 peak=409 clipped=0 zeros=396 stuck=1220 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.441757 tonal_gate=pending_normal_only
+CAL  9/10 score=0.00000 nivo=-47.5 dBFS racun=705 ms
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 fault=0 green=blink_5hz red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL index=10 total=10 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.639 dc=-0.449 peak=399 clipped=0 zeros=365 stuck=1163 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.453683 tonal_gate=pending_normal_only
+CAL 10/10 score=0.00000 nivo=-47.6 dBFS racun=705 ms
+QUALITY protocol=asd-quality-v1.3.0 phase=CAL_SUMMARY result=OBSERVED loo_mean=2197.673828 loo_sd=1379.123047 loo_cv=0.627538 loo_range=4470.653320 loo_gate=pending_normal_only
+I (214245) psdlive: --- kalibracija gotova (centar zamrznut) ---
+I (214245) psdlive: LOO score: mean=2197.67 sd=1379.12 min=434.65 max=4905.30
+I (214255) psdlive: referentni nivo masine: -47.38 dBFS (gate prisustva -58.38 dBFS)
+LOOALL 3779.108 1495.871 2957.340 1467.106 434.652 4905.305 748.551 1625.554 2539.161 2024.089
+I (214265) psdlive: PRAG = 6335.04 (p90 dao 3891.73, sredina+3sd dao 6335.04), alarm poslije 3 uzastopna prozora, gasi se ispod 4434.53
+ADAPTTHR n=10 mean=2197.673828 sd=1379.123047 k=0 theta=0 p=0.9000 thr=6335.04297 lo=0.000000 factory=0.000000
+I (214295) psdlive: racun po klipu: 705 ms (rezerva 14.2x), dropped=1515520
+PRESENCE protocol=asd-quality-v1.3.0 level_mean_dbfs=-47.3819466 margin_db=11 gate_dbfs=-58.3819466 min_consecutive=3
+TEMPORAL protocol=asd-quality-v1.3.0 policy=asd-temporal-policy-v1.0.0 min_consecutive=3 ewma_alpha=0 enter_scale=1 exit_scale=0.699999988 fast_scale=0
+STATE protocol=asd-quality-v1.3.0 from=NO_MACHINE to=CALIBRATED_NORMAL reason=CALIBRATION_ACCEPTED
+EVENT protocol=asd-quality-v1.3.0 type=CALIBRATION_ACCEPTED state=CALIBRATED_NORMAL phase=CAL reason=QUALITY_OK event=NONE capability=AVAILABLE level=DEVIATION
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+I (214355) psdlive: LAMPICA STALNO SVIJETLI = ucenje gotovo, nadzirem
+I (214365) psdlive: --- DETEKCIJA RADI. Sada izazovi kvar. ---
+I (214365) psdlive: zelena LED (GPIO2) svijetli = normalno; crvena (GPIO11) = ALARM
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=1 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.606 dc=-0.548 peak=422 clipped=0 zeros=361 stuck=1115 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.416351 tonal_gate=pending_normal_only
+DET 1 score=1877.80688 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-47.6 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=2 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.581 dc=-0.398 peak=428 clipped=0 zeros=311 stuck=1080 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.427646 tonal_gate=pending_normal_only
+DET 2 score=838.598511 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-47.6 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=3 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.625 dc=-0.477 peak=400 clipped=0 zeros=338 stuck=1123 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.405225 tonal_gate=pending_normal_only
+DET 3 score=905.53833 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-47.6 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=4 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.850 dc=-0.507 peak=384 clipped=0 zeros=378 stuck=1164 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.436506 tonal_gate=pending_normal_only
+DET 4 score=2874.74146 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-47.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=5 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.785 dc=-0.551 peak=393 clipped=0 zeros=357 stuck=1202 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.433900 tonal_gate=pending_normal_only
+DET 5 score=1430.66321 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-47.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=6 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.782 dc=-0.471 peak=427 clipped=0 zeros=371 stuck=1109 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.411531 tonal_gate=pending_normal_only
+DET 6 score=3553.76611 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-47.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=7 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.779 dc=-0.512 peak=398 clipped=0 zeros=393 stuck=1059 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.338161 tonal_gate=pending_normal_only
+DET 7 score=1580.80261 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-47.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=8 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.868 dc=-0.441 peak=394 clipped=0 zeros=415 stuck=1212 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.396550 tonal_gate=pending_normal_only
+DET 8 score=4549.57471 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-47.9 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=9 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.834 dc=-0.511 peak=418 clipped=0 zeros=390 stuck=1286 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.356873 tonal_gate=pending_normal_only
+DET 9 score=6318.34863 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 normal (uzastopnih=0 nivo=-47.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=10 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.830 dc=-0.548 peak=438 clipped=0 zeros=412 stuck=1275 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.234435 tonal_gate=pending_normal_only
+DET 10 score=12191.7031 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=1 nivo=-47.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=11 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.838 dc=-0.432 peak=389 clipped=0 zeros=400 stuck=1204 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.214907 tonal_gate=pending_normal_only
+DET 11 score=12806.7236 lo=0 hi=6335.04297 led=1 anom=0 total_anom=0 iznad praga (uzastopnih=2 nivo=-47.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=12 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.811 dc=-0.485 peak=415 clipped=0 zeros=404 stuck=1119 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.291428 tonal_gate=pending_normal_only
+DET 12 score=11454.5908 lo=0 hi=6335.04297 led=0 anom=1 total_anom=1 ALARM (uzastopnih=3 nivo=-47.8 dBFS racun=705 ms)
+STATE protocol=asd-quality-v1.3.0 from=CALIBRATED_NORMAL to=ANOMALY reason=THRESHOLD_PERSISTENCE
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+EVENT protocol=asd-quality-v1.3.0 type=ANOMALY_ENTERED state=ANOMALY phase=DET reason=THRESHOLD_PERSISTENCE event=UNKNOWN_CHANGE capability=AVAILABLE level=DEVIATION
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=13 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.807 dc=-0.487 peak=387 clipped=0 zeros=404 stuck=1152 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.340930 tonal_gate=pending_normal_only
+DET 13 score=8323.84961 lo=0 hi=6335.04297 led=0 anom=1 total_anom=2 ALARM (uzastopnih=3 nivo=-47.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=14 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.913 dc=-0.511 peak=1150 clipped=0 zeros=434 stuck=1108 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.235476 tonal_gate=pending_normal_only
+DET 14 score=2476.72656 lo=0 hi=6335.04297 led=1 anom=0 total_anom=2 normal (uzastopnih=0 nivo=-47.9 dBFS racun=705 ms)
+STATE protocol=asd-quality-v1.3.0 from=ANOMALY to=CALIBRATED_NORMAL reason=ALARM_CLEARED
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+EVENT protocol=asd-quality-v1.3.0 type=ANOMALY_CLEARED state=CALIBRATED_NORMAL phase=DET reason=ALARM_CLEARED event=NONE capability=AVAILABLE level=DEVIATION
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=15 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-46.878 dc=-0.474 peak=457 clipped=0 zeros=382 stuck=1099 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.332250 tonal_gate=pending_normal_only
+DET 15 score=10409.2529 lo=0 hi=6335.04297 led=1 anom=0 total_anom=2 iznad praga (uzastopnih=1 nivo=-46.9 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=16 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.184 dc=-0.503 peak=407 clipped=0 zeros=399 stuck=1192 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.341362 tonal_gate=pending_normal_only
+DET 16 score=12403.1299 lo=0 hi=6335.04297 led=1 anom=0 total_anom=2 iznad praga (uzastopnih=2 nivo=-47.2 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+FLAGS protocol=asd-quality-v1.3.0 mode=READY state=CALIBRATED_NORMAL waiting=0 learning=0 learned=1 anomaly=0 fault=0 green=on red=off
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=17 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.161 dc=-0.507 peak=451 clipped=0 zeros=398 stuck=1094 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.329336 tonal_gate=pending_normal_only
+DET 17 score=12726.5801 lo=0 hi=6335.04297 led=0 anom=1 total_anom=3 ALARM (uzastopnih=3 nivo=-47.2 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+STATE protocol=asd-quality-v1.3.0 from=CALIBRATED_NORMAL to=ANOMALY reason=THRESHOLD_PERSISTENCE
+EVENT protocol=asd-quality-v1.3.0 type=ANOMALY_ENTERED state=ANOMALY phase=DET reason=THRESHOLD_PERSISTENCE event=UNKNOWN_CHANGE capability=AVAILABLE level=DEVIATION
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=18 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.283 dc=-0.515 peak=421 clipped=0 zeros=393 stuck=1034 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.291843 tonal_gate=pending_normal_only
+DET 18 score=12523.1758 lo=0 hi=6335.04297 led=0 anom=1 total_anom=4 ALARM (uzastopnih=3 nivo=-47.3 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=19 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.302 dc=-0.472 peak=423 clipped=0 zeros=422 stuck=1028 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.381656 tonal_gate=pending_normal_only
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+DET 19 score=11475.4697 lo=0 hi=6335.04297 led=0 anom=1 total_anom=5 ALARM (uzastopnih=3 nivo=-47.3 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=20 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.405 dc=-0.461 peak=416 clipped=0 zeros=384 stuck=1028 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.314703 tonal_gate=pending_normal_only
+DET 20 score=12033.5586 lo=0 hi=6335.04297 led=0 anom=1 total_anom=6 ALARM (uzastopnih=3 nivo=-47.4 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=21 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.378 dc=-0.522 peak=431 clipped=0 zeros=408 stuck=1095 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.359710 tonal_gate=pending_normal_only
+DET 21 score=11240.0078 lo=0 hi=6335.04297 led=0 anom=1 total_anom=7 ALARM (uzastopnih=3 nivo=-47.4 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=22 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.446 dc=-0.426 peak=423 clipped=0 zeros=393 stuck=1074 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.285738 tonal_gate=pending_normal_only
+DET 22 score=12106.0137 lo=0 hi=6335.04297 led=0 anom=1 total_anom=8 ALARM (uzastopnih=3 nivo=-47.4 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=23 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.534 dc=-0.541 peak=419 clipped=0 zeros=415 stuck=1147 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.284129 tonal_gate=pending_normal_only
+DET 23 score=12275.873 lo=0 hi=6335.04297 led=0 anom=1 total_anom=9 ALARM (uzastopnih=3 nivo=-47.5 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=24 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.557 dc=-0.607 peak=420 clipped=0 zeros=377 stuck=1160 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.249663 tonal_gate=pending_normal_only
+DET 24 score=12430.4639 lo=0 hi=6335.04297 led=0 anom=1 total_anom=10 ALARM (uzastopnih=3 nivo=-47.6 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=25 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.621 dc=-0.403 peak=418 clipped=0 zeros=403 stuck=1171 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.182802 tonal_gate=pending_normal_only
+DET 25 score=12552.9961 lo=0 hi=6335.04297 led=0 anom=1 total_anom=11 ALARM (uzastopnih=3 nivo=-47.6 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=26 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.766 dc=-0.481 peak=418 clipped=0 zeros=423 stuck=1215 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.105009 tonal_gate=pending_normal_only
+DET 26 score=13468.667 lo=0 hi=6335.04297 led=0 anom=1 total_anom=12 ALARM (uzastopnih=3 nivo=-47.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=27 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.866 dc=-0.506 peak=417 clipped=0 zeros=444 stuck=1132 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.127043 tonal_gate=pending_normal_only
+DET 27 score=12798.291 lo=0 hi=6335.04297 led=0 anom=1 total_anom=13 ALARM (uzastopnih=3 nivo=-47.9 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=28 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.886 dc=-0.408 peak=407 clipped=0 zeros=435 stuck=1005 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.203202 tonal_gate=pending_normal_only
+DET 28 score=13221.1113 lo=0 hi=6335.04297 led=0 anom=1 total_anom=14 ALARM (uzastopnih=3 nivo=-47.9 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=29 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.943 dc=-0.509 peak=429 clipped=0 zeros=444 stuck=1112 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.130618 tonal_gate=pending_normal_only
+DET 29 score=12997.9385 lo=0 hi=6335.04297 led=0 anom=1 total_anom=15 ALARM (uzastopnih=3 nivo=-47.9 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=30 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.987 dc=-0.548 peak=430 clipped=0 zeros=432 stuck=1112 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.196122 tonal_gate=pending_normal_only
+DET 30 score=12960.1963 lo=0 hi=6335.04297 led=0 anom=1 total_anom=16 ALARM (uzastopnih=3 nivo=-48.0 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=31 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.088 dc=-0.443 peak=419 clipped=0 zeros=439 stuck=925 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.235250 tonal_gate=pending_normal_only
+DET 31 score=12840.208 lo=0 hi=6335.04297 led=0 anom=1 total_anom=17 ALARM (uzastopnih=3 nivo=-48.1 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=32 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.235 dc=-0.502 peak=424 clipped=0 zeros=448 stuck=978 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.205557 tonal_gate=pending_normal_only
+DET 32 score=13109.957 lo=0 hi=6335.04297 led=0 anom=1 total_anom=18 ALARM (uzastopnih=3 nivo=-48.2 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=33 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.165 dc=-0.550 peak=437 clipped=0 zeros=479 stuck=932 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.176033 tonal_gate=pending_normal_only
+DET 33 score=13715.8271 lo=0 hi=6335.04297 led=0 anom=1 total_anom=19 ALARM (uzastopnih=3 nivo=-48.2 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=34 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.000 dc=-0.496 peak=425 clipped=0 zeros=422 stuck=873 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.196920 tonal_gate=pending_normal_only
+DET 34 score=13327.8125 lo=0 hi=6335.04297 led=0 anom=1 total_anom=20 ALARM (uzastopnih=3 nivo=-48.0 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=35 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-47.999 dc=-0.472 peak=413 clipped=0 zeros=437 stuck=827 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.169020 tonal_gate=pending_normal_only
+DET 35 score=13195.001 lo=0 hi=6335.04297 led=0 anom=1 total_anom=21 ALARM (uzastopnih=3 nivo=-48.0 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=36 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.171 dc=-0.452 peak=409 clipped=0 zeros=422 stuck=895 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.152995 tonal_gate=pending_normal_only
+DET 36 score=13122.3574 lo=0 hi=6335.04297 led=0 anom=1 total_anom=22 ALARM (uzastopnih=3 nivo=-48.2 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=37 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.132 dc=-0.502 peak=408 clipped=0 zeros=435 stuck=793 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.182572 tonal_gate=pending_normal_only
+DET 37 score=13343.0078 lo=0 hi=6335.04297 led=0 anom=1 total_anom=23 ALARM (uzastopnih=3 nivo=-48.1 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=38 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.298 dc=-0.462 peak=400 clipped=0 zeros=480 stuck=751 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.167741 tonal_gate=pending_normal_only
+DET 38 score=12961.0508 lo=0 hi=6335.04297 led=0 anom=1 total_anom=24 ALARM (uzastopnih=3 nivo=-48.3 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=39 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.297 dc=-0.490 peak=405 clipped=0 zeros=489 stuck=812 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.194483 tonal_gate=pending_normal_only
+DET 39 score=12738.9668 lo=0 hi=6335.04297 led=0 anom=1 total_anom=25 ALARM (uzastopnih=3 nivo=-48.3 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=40 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.927 dc=-0.517 peak=420 clipped=0 zeros=490 stuck=1091 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.149355 tonal_gate=pending_normal_only
+DET 40 score=12679.4434 lo=0 hi=6335.04297 led=0 anom=1 total_anom=26 ALARM (uzastopnih=3 nivo=-48.9 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=41 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-49.393 dc=-0.453 peak=399 clipped=0 zeros=482 stuck=1056 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.168867 tonal_gate=pending_normal_only
+DET 41 score=13586.4482 lo=0 hi=6335.04297 led=0 anom=1 total_anom=27 ALARM (uzastopnih=3 nivo=-49.4 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=42 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-49.607 dc=-0.543 peak=362 clipped=0 zeros=550 stuck=1119 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.177290 tonal_gate=pending_normal_only
+DET 42 score=13099.4619 lo=0 hi=6335.04297 led=0 anom=1 total_anom=28 ALARM (uzastopnih=3 nivo=-49.6 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=43 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-49.752 dc=-0.462 peak=358 clipped=0 zeros=590 stuck=1126 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.164826 tonal_gate=pending_normal_only
+DET 43 score=13174.7168 lo=0 hi=6335.04297 led=0 anom=1 total_anom=29 ALARM (uzastopnih=3 nivo=-49.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=44 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-49.635 dc=-0.501 peak=354 clipped=0 zeros=560 stuck=1274 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.119202 tonal_gate=pending_normal_only
+DET 44 score=13091.5322 lo=0 hi=6335.04297 led=0 anom=1 total_anom=30 ALARM (uzastopnih=3 nivo=-49.6 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=45 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.796 dc=-0.486 peak=400 clipped=0 zeros=536 stuck=1162 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.234356 tonal_gate=pending_normal_only
+DET 45 score=13301.1035 lo=0 hi=6335.04297 led=0 anom=1 total_anom=31 ALARM (uzastopnih=3 nivo=-48.8 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=46 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-49.068 dc=-0.478 peak=391 clipped=0 zeros=522 stuck=1327 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.282300 tonal_gate=pending_normal_only
+DET 46 score=12507.5537 lo=0 hi=6335.04297 led=0 anom=1 total_anom=32 ALARM (uzastopnih=3 nivo=-49.1 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=47 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-49.041 dc=-0.555 peak=365 clipped=0 zeros=498 stuck=1266 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.286739 tonal_gate=pending_normal_only
+DET 47 score=12428.0967 lo=0 hi=6335.04297 led=0 anom=1 total_anom=33 ALARM (uzastopnih=3 nivo=-49.0 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=48 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-48.898 dc=-0.494 peak=372 clipped=0 zeros=457 stuck=1110 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.296677 tonal_gate=pending_normal_only
+DET 48 score=12512.043 lo=0 hi=6335.04297 led=0 anom=1 total_anom=34 ALARM (uzastopnih=3 nivo=-48.9 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=49 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-49.392 dc=-0.472 peak=361 clipped=0 zeros=528 stuck=1195 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.301573 tonal_gate=pending_normal_only
+DET 49 score=12490.0215 lo=0 hi=6335.04297 led=0 anom=1 total_anom=35 ALARM (uzastopnih=3 nivo=-49.4 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=50 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-49.554 dc=-0.491 peak=357 clipped=0 zeros=535 stuck=1247 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.271455 tonal_gate=pending_normal_only
+DET 50 score=12540.5996 lo=0 hi=6335.04297 led=0 anom=1 total_anom=36 ALARM (uzastopnih=3 nivo=-49.6 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=51 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-49.686 dc=-0.507 peak=357 clipped=0 zeros=573 stuck=1209 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.254843 tonal_gate=pending_normal_only
+DET 51 score=12252.0371 lo=0 hi=6335.04297 led=0 anom=1 total_anom=37 ALARM (uzastopnih=3 nivo=-49.7 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+QUALITY protocol=asd-quality-v1.3.0 phase=DET index=52 total=0 result=OK metrics_valid=1 samples=159744 expected=159744 rms_dbfs=-49.573 dc=-0.478 peak=380 clipped=0 zeros=594 stuck=1116 dropped_delta=0 feature_valid=1 tonalness_valid=1 tonalness_proxy=4.270253 tonal_gate=pending_normal_only
+DET 52 score=12552.3926 lo=0 hi=6335.04297 led=0 anom=1 total_anom=38 ALARM (uzastopnih=3 nivo=-49.6 dBFS racun=705 ms)
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on
+FLAGS protocol=asd-quality-v1.3.0 mode=ALARM state=ANOMALY waiting=0 learning=0 learned=1 anomaly=1 fault=0 green=off red=on

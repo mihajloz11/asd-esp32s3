@@ -62,7 +62,8 @@ def lib(tmp_path_factory: pytest.TempPathFactory):
                                          ctypes.POINTER(Policy)]
     handle.asd_temporal_reset.argtypes = [ctypes.POINTER(Detector)]
     handle.asd_temporal_update.argtypes = [ctypes.POINTER(Detector),
-                                           ctypes.c_float, ctypes.c_float]
+                                           ctypes.c_float, ctypes.c_float,
+                                           ctypes.c_float]
     handle.asd_temporal_update.restype = ctypes.c_int
     return handle
 
@@ -77,8 +78,20 @@ def make(lib, rule: Rule) -> Detector:
 
 def c_sequence(lib, rule: Rule, scores, threshold: float) -> list[int]:
     det = make(lib, rule)
-    return [lib.asd_temporal_update(ctypes.byref(det), float(s), threshold)
+    enter = threshold * rule.enter_scale
+    exit_threshold = threshold * rule.exit_scale
+    if exit_threshold >= enter:
+        exit_threshold = enter * (1.0 - 1.0e-6)
+    return [lib.asd_temporal_update(
+                ctypes.byref(det), float(s), enter, exit_threshold)
             for s in scores]
+
+
+def temporal_update(lib, det: Detector, score: float,
+                    enter: float = 100.0, exit_threshold: float = 70.0) -> int:
+    return lib.asd_temporal_update(
+        ctypes.byref(det), score, enter, exit_threshold,
+    )
 
 
 # --- politika mora odgovarati onome sto je izvedeno -------------------------
@@ -148,10 +161,10 @@ def test_c_matches_python_on_the_shipped_policy_and_a_sustained_shift(lib):
 def test_three_consecutive_windows_are_required(lib):
     rule = Rule("shipped", min_consecutive=3, exit_scale=0.7)
     det = make(lib, rule)
-    out = [lib.asd_temporal_update(ctypes.byref(det), s, 100.0)
+    out = [temporal_update(lib, det, s)
            for s in (150.0, 150.0)]
     assert out == [0, 0]
-    assert lib.asd_temporal_update(ctypes.byref(det), 150.0, 100.0) == 1
+    assert temporal_update(lib, det, 150.0) == 1
 
 
 def test_single_window_spike_never_alarms(lib):
@@ -159,13 +172,13 @@ def test_single_window_spike_never_alarms(lib):
     rule = Rule("shipped", min_consecutive=3, exit_scale=0.7)
     det = make(lib, rule)
     for score in (10.0, 10.0, 99999.0, 10.0, 10.0, 10.0):
-        assert lib.asd_temporal_update(ctypes.byref(det), score, 100.0) == 0
+        assert temporal_update(lib, det, score) == 0
 
 
 def test_two_window_spike_never_alarms(lib):
     rule = Rule("shipped", min_consecutive=3, exit_scale=0.7)
     det = make(lib, rule)
-    out = [lib.asd_temporal_update(ctypes.byref(det), s, 100.0)
+    out = [temporal_update(lib, det, s)
            for s in (10.0, 5000.0, 5000.0, 10.0, 10.0)]
     assert out == [0, 0, 0, 0, 0]
 
@@ -175,7 +188,7 @@ def test_score_exactly_at_threshold_is_normal(lib):
     rule = Rule("shipped", min_consecutive=3, exit_scale=0.7)
     det = make(lib, rule)
     for _ in range(10):
-        assert lib.asd_temporal_update(ctypes.byref(det), 100.0, 100.0) == 0
+        assert temporal_update(lib, det, 100.0) == 0
 
 
 def test_hysteresis_holds_the_alarm_between_the_two_thresholds(lib):
@@ -183,13 +196,13 @@ def test_hysteresis_holds_the_alarm_between_the_two_thresholds(lib):
     rule = Rule("shipped", min_consecutive=3, exit_scale=0.7)
     det = make(lib, rule)
     for _ in range(3):
-        lib.asd_temporal_update(ctypes.byref(det), 150.0, 100.0)
+        temporal_update(lib, det, 150.0)
     assert det.active == 1
     # 0,7 * 100 = 70: izmedju izlaznog i ulaznog praga alarm OSTAJE
     for score in (95.0, 80.0, 71.0):
-        assert lib.asd_temporal_update(ctypes.byref(det), score, 100.0) == 1
+        assert temporal_update(lib, det, score) == 1
     # tek ispod izlaznog praga se gasi
-    assert lib.asd_temporal_update(ctypes.byref(det), 69.0, 100.0) == 0
+    assert temporal_update(lib, det, 69.0) == 0
 
 
 def test_baseline_without_hysteresis_would_flicker(lib):
@@ -207,7 +220,7 @@ def test_reset_clears_dynamics_but_keeps_policy(lib):
     rule = Rule("shipped", min_consecutive=3, exit_scale=0.7)
     det = make(lib, rule)
     for _ in range(3):
-        lib.asd_temporal_update(ctypes.byref(det), 150.0, 100.0)
+        temporal_update(lib, det, 150.0)
     assert det.active == 1
     lib.asd_temporal_reset(ctypes.byref(det))
     assert det.active == 0 and det.run == 0
@@ -218,18 +231,19 @@ def test_nonfinite_or_nonpositive_threshold_is_fail_closed(lib):
     rule = Rule("shipped", min_consecutive=3, exit_scale=0.7)
     det = make(lib, rule)
     for _ in range(3):
-        lib.asd_temporal_update(ctypes.byref(det), 150.0, 100.0)
+        temporal_update(lib, det, 150.0)
     assert det.active == 1
-    assert lib.asd_temporal_update(ctypes.byref(det), float("nan"), 100.0) == 0
+    assert temporal_update(lib, det, float("nan")) == 0
     assert det.active == 0
     for _ in range(3):
-        lib.asd_temporal_update(ctypes.byref(det), 150.0, 100.0)
-    assert lib.asd_temporal_update(ctypes.byref(det), 150.0, 0.0) == 0
-    assert lib.asd_temporal_update(ctypes.byref(det), 150.0, float("inf")) == 0
+        temporal_update(lib, det, 150.0)
+    assert temporal_update(lib, det, 150.0, enter=0.0, exit_threshold=-1.0) == 0
+    assert temporal_update(lib, det, 150.0, enter=float("inf")) == 0
+    assert temporal_update(lib, det, 150.0, enter=100.0, exit_threshold=100.0) == 0
 
 
 def test_null_detector_is_fail_closed(lib):
-    assert lib.asd_temporal_update(None, 999.0, 1.0) == 0
+    assert lib.asd_temporal_update(None, 999.0, 2.0, 1.0) == 0
     lib.asd_temporal_reset(None)
 
 
@@ -238,7 +252,7 @@ def test_min_consecutive_is_clamped_to_at_least_one(lib):
     policy = Policy(0, 0.0, 1.0, 0.7, 0.0, 0.0, 0.0)
     lib.asd_temporal_init(ctypes.byref(det), ctypes.byref(policy))
     assert det.policy.min_consecutive == 1
-    assert lib.asd_temporal_update(ctypes.byref(det), 150.0, 100.0) == 1
+    assert temporal_update(lib, det, 150.0) == 1
 
 
 def test_default_init_uses_the_shipped_policy(lib):
