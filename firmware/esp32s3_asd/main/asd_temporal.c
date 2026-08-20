@@ -55,12 +55,15 @@ void asd_temporal_suspend(asd_temporal_t *det) {
      * nivo hijerarhije preuzima odluku. */
 }
 
-int asd_temporal_update(asd_temporal_t *det, float score, float threshold) {
+int asd_temporal_update(asd_temporal_t *det, float score,
+                        float threshold_enter, float threshold_exit) {
     if (!det) return 0;
     /* Fail-closed: bez konačnog score-a i pozitivnog praga odluka se ne donosi,
      * a tekuće stanje se ne zadržava — pozivalac (asd_events.c) je već odbio
      * nekonačne vrijednosti na nivou zdravlja senzora. */
-    if (!isfinite(score) || !isfinite(threshold) || threshold <= 0.0f) {
+    if (!isfinite(score) || !isfinite(threshold_enter) ||
+        !isfinite(threshold_exit) ||
+        !(threshold_exit > 0.0f && threshold_exit < threshold_enter)) {
         asd_temporal_reset(det);
         return 0;
     }
@@ -75,18 +78,15 @@ int asd_temporal_update(asd_temporal_t *det, float score, float threshold) {
         statistic = det->ewma;
     }
     if (det->policy.cusum_h > 0.0f) {
-        float step = (score / threshold - 1.0f) - det->policy.cusum_k;
+        float step = (score / threshold_enter - 1.0f) - det->policy.cusum_k;
         det->cusum = det->cusum + step;
         if (det->cusum < 0.0f) det->cusum = 0.0f;
     }
 
-    float enter = threshold * det->policy.enter_scale;
-    float leave = threshold * det->policy.exit_scale;
-
     if (det->active) {
         /* Histereza: iz alarma se izlazi tek ispod NIŽEG praga. Bez toga
          * score koji visi oko praga pali i gasi alarm iz prozora u prozor. */
-        if (statistic <= leave) {
+        if (statistic <= threshold_exit) {
             det->active = 0;
             det->run = 0;
             det->cusum = 0.0f;
@@ -94,12 +94,12 @@ int asd_temporal_update(asd_temporal_t *det, float score, float threshold) {
     } else {
         /* Strogo veće, isto kao ranije u psd_live.c: score tačno na pragu je
          * normalan. */
-        det->run = statistic > enter ? det->run + 1 : 0;
+        det->run = statistic > threshold_enter ? det->run + 1 : 0;
         int fired = det->run >= det->policy.min_consecutive;
         if (det->policy.cusum_h > 0.0f && det->cusum > det->policy.cusum_h)
             fired = 1;
         if (det->policy.fast_scale > 0.0f &&
-            score > threshold * det->policy.fast_scale)
+            score > threshold_enter * det->policy.fast_scale)
             fired = 1;
         if (fired) det->active = 1;
     }

@@ -18,18 +18,21 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 MAIN = ROOT / "firmware" / "esp32s3_asd" / "main"
 SRC = [MAIN / "asd_operator.c", MAIN / "asd_events.c",
-       MAIN / "audio_quality_state.c", MAIN / "asd_temporal.c"]
+       MAIN / "audio_quality_state.c", MAIN / "asd_temporal.c",
+       MAIN / "asd_interference.c"]
 
 # asd_flow_stage_t
 STAGE_IDLE, STAGE_LEARNING, STAGE_MONITORING = range(3)
 # asd_ui_mode_t
 UI_IDLE, UI_LEARNING, UI_READY, UI_ALARM, UI_FAULT = range(5)
+UI_HOLD = 5
 # asd_button_event_t
 BTN_NONE, BTN_SHORT, BTN_LONG = range(3)
 # asd_ui_command_t
 CMD_NONE, CMD_START, CMD_ABORT = range(3)
 # asd_state_t
 NO_MACHINE, CAL_REJECTED, CALIBRATED_NORMAL, ANOMALY, SENSOR_ERROR, RECAL_REQUIRED = range(6)
+OBSERVATION_HOLD = 6
 
 ALL_STATES = [NO_MACHINE, CAL_REJECTED, CALIBRATED_NORMAL, ANOMALY,
               SENSOR_ERROR, RECAL_REQUIRED]
@@ -401,3 +404,14 @@ def test_alarm_leds_are_unambiguous_against_ready(lib):
                 lib.asd_alarm_level(UI_READY, t)) == (1, 0)
         assert (lib.asd_indicator_level(UI_ALARM, t),
                 lib.asd_alarm_level(UI_ALARM, t)) == (0, 1)
+
+
+def test_observation_hold_has_own_ui_and_requires_long_relearn(lib):
+    assert lib.asd_ui_mode(STAGE_MONITORING, OBSERVATION_HOLD) == UI_HOLD
+    assert lib.asd_ui_mode_name(UI_HOLD) == b"OBSERVATION_HOLD"
+    assert lib.asd_indicator_level(UI_HOLD, 0) == 1
+    assert lib.asd_indicator_level(UI_HOLD, 500) == 0
+    assert lib.asd_alarm_level(UI_HOLD, 0) == 0
+    assert lib.asd_ui_command(UI_HOLD, BTN_SHORT) == CMD_NONE
+    assert lib.asd_ui_command(UI_HOLD, BTN_LONG) == CMD_START
+    assert lib.asd_ui_command_discards_calibration(UI_HOLD, CMD_START) == 1

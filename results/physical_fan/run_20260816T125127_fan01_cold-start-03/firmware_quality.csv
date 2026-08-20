@@ -1,0 +1,2 @@
+host_utc,elapsed_s,protocol,phase,index,total,result,metrics_valid,feature_valid,samples,expected,rms_dbfs,dc,peak,clipped,zeros,stuck,dropped_delta,tonalness_proxy,tonalness_valid,tonal_gate,loo_mean,loo_sd,loo_cv,loo_range,loo_gate
+2026-08-16T10:55:44.536+00:00,256.547,asd-quality-v1.3.0,WAIT,1,60,DROPPED_SAMPLES,1,0,4096,4096,-68.181,-0.621,45,0,125,300,1024,0.0,0,not_computed,,,,,

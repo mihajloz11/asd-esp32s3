@@ -5,6 +5,15 @@
 #define ASD_PSD_MODEL_DATA_H
 
 #define ASD_PSD_MODEL_DIM 96
+#define ASD_PSD_MODEL_FINGERPRINT_SIZE 32
+#define ASD_PSD_MODEL_FINGERPRINT_HEX "7bfbd3eeca1caca074562f6e01f6b374237dcea5c1d2cc097df079d68d9d15fe"
+
+static const unsigned char asd_psd_model_fingerprint[ASD_PSD_MODEL_FINGERPRINT_SIZE] = {
+    0x7b, 0xfb, 0xd3, 0xee, 0xca, 0x1c, 0xac, 0xa0,
+    0x74, 0x56, 0x2f, 0x6e, 0x01, 0xf6, 0xb3, 0x74,
+    0x23, 0x7d, 0xce, 0xa5, 0xc1, 0xd2, 0xcc, 0x09,
+    0x7d, 0xf0, 0x79, 0xd6, 0x8d, 0x9d, 0x15, 0xfe
+};
 
 static const float asd_psd_norm_mean[96] = {
     -12.7365236f, -12.7365236f, 1.48837101f, -12.7365236f, -12.7365236f, 1.45023489f, -12.7365236f, 1.45263135f,

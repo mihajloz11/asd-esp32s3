@@ -1,0 +1,3 @@
+host_utc,elapsed_s,protocol,kind,action,source,reason,discards_calibration,event,mode,command,discards
+2026-08-16T17:33:54.060+00:00,11.031,asd-quality-v1.3.0,BUTTON,,,,,SHORT,IDLE,START_LEARNING,0
+2026-08-16T17:33:54.068+00:00,11.047,asd-quality-v1.3.0,SESSION,STARTED,BUTTON,OPERATOR_REQUEST,0,,,,

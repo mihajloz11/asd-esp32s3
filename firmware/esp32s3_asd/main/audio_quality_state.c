@@ -149,6 +149,8 @@ asd_state_t asd_quality_reject_state(asd_quality_reason_t reason,
         case ASD_QUALITY_STUCK_SIGNAL:
         case ASD_QUALITY_DROPPED_SAMPLES:
         case ASD_QUALITY_INVALID_ARGUMENT:
+        case ASD_QUALITY_AUDIO_TIMEOUT:
+        case ASD_QUALITY_AUDIO_READ_ERROR:
         default:
             return ASD_STATE_SENSOR_ERROR;
     }
@@ -165,6 +167,8 @@ const char *asd_quality_reason_name(asd_quality_reason_t reason) {
         case ASD_QUALITY_CLIPPING: return "CLIPPING";
         case ASD_QUALITY_DROPPED_SAMPLES: return "DROPPED_SAMPLES";
         case ASD_QUALITY_INVALID_ARGUMENT: return "INVALID_ARGUMENT";
+        case ASD_QUALITY_AUDIO_TIMEOUT: return "AUDIO_TIMEOUT";
+        case ASD_QUALITY_AUDIO_READ_ERROR: return "AUDIO_READ_ERROR";
         default: return "UNKNOWN_REASON";
     }
 }
@@ -177,6 +181,7 @@ const char *asd_state_name(asd_state_t state) {
         case ASD_STATE_ANOMALY: return "ANOMALY";
         case ASD_STATE_SENSOR_ERROR: return "SENSOR_ERROR";
         case ASD_STATE_RECALIBRATION_REQUIRED: return "RECALIBRATION_REQUIRED";
+        case ASD_STATE_OBSERVATION_HOLD: return "OBSERVATION_HOLD";
         default: return "SENSOR_ERROR";
     }
 }

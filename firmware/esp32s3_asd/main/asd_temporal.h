@@ -34,13 +34,14 @@
 extern "C" {
 #endif
 
-#define ASD_TEMPORAL_POLICY "asd-temporal-policy-v1.0.0"
+#define ASD_TEMPORAL_POLICY "asd-temporal-policy-v2.0.0-development"
+#define ASD_TEMPORAL_POLICY_ID 0x54505632u
 
 typedef struct {
     int min_consecutive;   /* uzastopnih prozora iznad ulaznog praga */
     float ewma_alpha;      /* 0 = isključen (izmjereno gorim, vidi zaglavlje) */
-    float enter_scale;     /* ulazni prag = prag * enter_scale */
-    float exit_scale;      /* izlazni prag = prag * exit_scale; < enter = histereza */
+    float enter_scale;     /* legacy provenance only; update() ga ne koristi */
+    float exit_scale;      /* legacy provenance only; update() ga ne koristi */
     float cusum_k;         /* 0 = isključen */
     float cusum_h;
     float fast_scale;      /* 0 = isključen; jedan ekstreman prozor pali odmah */
@@ -76,7 +77,8 @@ void asd_temporal_suspend(asd_temporal_t *det);
  *
  * Mora dati IDENTIČAN niz kao `run_rule()` u `derive_temporal_policy.py` na
  * istim ulazima; `pc/tests/test_asd_temporal_c.py` to i provjerava. */
-int asd_temporal_update(asd_temporal_t *det, float score, float threshold);
+int asd_temporal_update(asd_temporal_t *det, float score,
+                        float threshold_enter, float threshold_exit);
 
 #ifdef __cplusplus
 }

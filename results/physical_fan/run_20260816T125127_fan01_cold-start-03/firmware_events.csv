@@ -1,0 +1,2 @@
+host_utc,elapsed_s,protocol,type,state,phase,reason,event,capability,level
+2026-08-16T10:55:44.576+00:00,256.594,asd-quality-v1.3.0,FLOW_STOPPED,SENSOR_ERROR,WAIT,DROPPED_SAMPLES,SENSOR_FAULT,AVAILABLE,SENSOR_HEALTH

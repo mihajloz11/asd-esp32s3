@@ -14,10 +14,9 @@
 extern "C" {
 #endif
 
-/* v1.3.0 (13.08.2026): `EVENT` nosi i semantiku Faze 2 — `event`, `capability`
- * i `level`; dodani su zapisi `SESSION` i `BUTTON` za operaterski tok. Polja
- * `QUALITY`, `STATE` i `DET` su nepromijenjena. */
-#define ASD_QUALITY_PROTOCOL "asd-quality-v1.3.0"
+/* v1.5.0: bounded audio consumer razlikuje timeout od I2S/ring greške. */
+#define ASD_QUALITY_PROTOCOL "asd-quality-v1.5.0"
+#define ASD_QUALITY_POLICY_ID 0x51555631u
 
 typedef enum {
     ASD_QUALITY_OK = 0,
@@ -28,7 +27,9 @@ typedef enum {
     ASD_QUALITY_INSUFFICIENT_LEVEL,
     ASD_QUALITY_CLIPPING,
     ASD_QUALITY_DROPPED_SAMPLES,
-    ASD_QUALITY_INVALID_ARGUMENT
+    ASD_QUALITY_INVALID_ARGUMENT,
+    ASD_QUALITY_AUDIO_TIMEOUT,
+    ASD_QUALITY_AUDIO_READ_ERROR
 } asd_quality_reason_t;
 
 typedef enum {
@@ -37,7 +38,8 @@ typedef enum {
     ASD_STATE_CALIBRATED_NORMAL,
     ASD_STATE_ANOMALY,
     ASD_STATE_SENSOR_ERROR,
-    ASD_STATE_RECALIBRATION_REQUIRED
+    ASD_STATE_RECALIBRATION_REQUIRED,
+    ASD_STATE_OBSERVATION_HOLD
 } asd_state_t;
 
 typedef enum {
