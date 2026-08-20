@@ -99,8 +99,13 @@ jobs:
                firmware/esp32s3_asd/main/psd_live.c ; then
             echo "::error::centar se pomjera u toku detekcije"; fail=1
           fi
-          # prag izveden iz target anomalija
-          if grep -n "target_anomal" pc/config/*.json | grep -v 'target_anomalies_used": false' ; then
+          # Prag izveden iz target anomalija. Dva imena kljuca su oba ispravna i
+          # oba se provjeravaju: starije politike (presence, quality, temporal v1)
+          # nose `target_anomalies_used`, a od Faze 4 novije nose precizniji
+          # `target_anomalies_used_for_fit`, jer target anomalija smije da se
+          # otvori kao readout poslije provjere, ali nikad da udje u fit.
+          # Vrijednost mora biti `false` u oba slucaja; `true` pada.
+          if grep -n "target_anomal" pc/config/*.json | grep -vE 'target_anomalies_used(_for_fit)?": false' ; then
             echo "::error::politika tvrdi da koristi target anomalije"; fail=1
           fi
           exit $fail
