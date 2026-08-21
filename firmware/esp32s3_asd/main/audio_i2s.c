@@ -205,7 +205,16 @@ size_t audio_read(int16_t *dst, size_t n_samples) {
  *
  * Prazni se NA POCETKU SESIJE, ne u toku: odbaceni uzorci tokom mjerenja su i
  * dalje kvar senzora i i dalje ruse tok. Ovo samo kaze da ono sto je palo prije
- * nego sto je mjerenje pocelo nije dokaz ni o cemu. */
+ * nego sto je mjerenje pocelo nije dokaz ni o cemu.
+ *
+ * Iz istog razloga se ovdje nulira i `dropped`. FLAGS taj brojac objavljuje, a
+ * host ga na `SESSION action=STARTED` ocekuje kao nulu i mjeri samo ono sto
+ * padne TOKOM sesije (pc/tests/test_guided25_workflow.py::
+ * test_session_started_resets_stale_guided_evidence). Kumulativni brojac od
+ * boota je tu nespojiv: dok uredjaj ceka pritisak niko ne cita ring, pa
+ * `dropped` raste 16000 uzoraka/s (izmjereno 21.08.2026: 10.272.768 poslije
+ * nekoliko minuta cekanja) i guided25 verdikt bi uvijek pao na
+ * `missing_or_nonzero_DROPPED`. */
 size_t audio_flush(void) {
     size_t flushed = 0;
     for (;;) {
@@ -216,6 +225,7 @@ size_t audio_flush(void) {
         flushed += item_size / sizeof(int16_t);
         vRingbufferReturnItem(ring, p);
     }
+    dropped = 0;
     return flushed;
 }
 
