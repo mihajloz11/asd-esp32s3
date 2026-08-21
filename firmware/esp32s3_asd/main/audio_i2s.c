@@ -55,9 +55,14 @@ static void capture_task(void *arg) {
     static int16_t pcm[READ_CHUNK];
     size_t nbytes;
     while (1) {
+        /* i2s_channel_read prima timeout u MILISEKUNDAMA, ne u tickovima.
+         * pdMS_TO_TICKS(250) na 100 Hz ticku = 25, sto je driver citao kao
+         * 25 ms — krace od jednog DMA deskriptora (1023 uzorka ~ 64 ms), pa je
+         * svako citanje isticalo prije prvog bloka i ring je ostajao prazan
+         * (izmjereno 21.08.2026: dropped=0 kroz cijeli run, level_dbfs=-999). */
         esp_err_t read_error = i2s_channel_read(
             rx_chan, raw, sizeof(raw), &nbytes,
-            pdMS_TO_TICKS(AUDIO_I2S_CAPTURE_WAIT_MS));
+            AUDIO_I2S_CAPTURE_WAIT_MS);
         if (read_error == ESP_ERR_TIMEOUT) {
             last_error = read_error;
             timeout_count++;
