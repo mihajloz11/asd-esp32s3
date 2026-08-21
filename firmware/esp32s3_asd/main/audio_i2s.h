@@ -38,7 +38,9 @@ size_t audio_read(int16_t *dst, size_t n_samples);
  * sesije, da nakupljeno čekanje ne padne na teret prvog mjernog bloka. */
 size_t audio_flush(void);
 
-/* Broj dropovanih uzoraka od starta (dijagnostika DMA overruna, rizik C4). */
+/* Broj dropovanih uzoraka od pocetka tekuce sesije, tj. od zadnjeg
+ * audio_flush() (dijagnostika DMA overruna, rizik C4). Nije kumulativan od
+ * boota: cekanje na pritisak nije mjerenje i ne ulazi u ovaj brojac. */
 uint32_t audio_dropped_samples(void);
 
 /* Max |x| sirovog 32-bitnog I2S slota (prije shifta u 16 bita) od zadnjeg

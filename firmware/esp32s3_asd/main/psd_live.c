@@ -380,6 +380,12 @@ static void wait_for_start(asd_state_t state) {
              PIN_BUTTON);
     for (;;) {
         if (take_command() == ASD_UI_CMD_START_LEARNING) return;
+        /* Prazni ring i dok se ceka. Capture task radi neprekidno, pa bi bez
+         * ovoga ring (2 s) bio pun poslije dvije sekunde i `dropped` bi rastao
+         * 16000 uzoraka/s cijelo vrijeme cekanja. Prelivanje dok niko ne mjeri
+         * nije kvar senzora, ali panel prije armiranja trazi `dropped=0`
+         * (asd_panel.py, arm_ready) pa se GUIDED25 ne bi mogao ni pokrenuti. */
+        (void)audio_flush();
         vTaskDelay(pdMS_TO_TICKS(UI_TICK_MS));
     }
 }
@@ -594,14 +600,6 @@ static asd_state_t run_session(unsigned session_index,
     emit_commissioning(&commissioning, "STARTED", 0,
                        commissioning.policy.max_settle_windows,
                        0, 0.0f, NAN, NAN, NAN);
-
-    /* Baci sve sto se nakupilo dok je uredjaj cekao pritisak. Bez ovoga prvi
-     * WAIT blok naslijedi `dropped` iz cijelog perioda cekanja i fail-closed
-     * obori sesiju u SENSOR_ERROR. Vidi audio_flush() u audio_i2s.c. */
-    size_t stale = audio_flush();
-    if (stale)
-        ESP_LOGI(TAG, "odbacen ustajali zvuk iz cekanja: %u uzoraka",
-                 (unsigned)stale);
 
     /* SETTLE uses only level, tonalness, feature drift and quality.  Its API
      * has no score argument, so a pre-center Mahalanobis call cannot be added
@@ -1198,6 +1196,15 @@ void psd_live_run(void) {
         asd_workflow_t workflow = use_persisted_profile
             ? ASD_WORKFLOW_DEFAULT : asd_cmd_take_workflow();
         asd_cmd_set_session_active(1);
+        /* Baci sve sto se nakupilo dok je uredjaj cekao pritisak, i nuliraj
+         * `dropped`. Mora PRIJE `emit_session("STARTED")`: host na tom zapisu
+         * resetuje svoj `max_dropped`, pa svaki sljedeci FLAGS -- ukljucujuci
+         * onaj koji UI task posalje cim mode postane LEARNING -- vec mora
+         * nositi brojac ove sesije. Vidi audio_flush() u audio_i2s.c. */
+        size_t stale = audio_flush();
+        if (stale)
+            ESP_LOGI(TAG, "odbacen ustajali zvuk iz cekanja: %u uzoraka",
+                     (unsigned)stale);
         emit_session("STARTED", use_persisted_profile ? "FIRMWARE" : "BUTTON",
                      use_persisted_profile ? "PROFILE_RESTORED" : "OPERATOR_REQUEST",
                      state == ASD_STATE_CALIBRATED_NORMAL ||
