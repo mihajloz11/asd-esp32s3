@@ -8,11 +8,15 @@ postavku, a učenje počinje tek poslije klika u dashboardu.
 ## Najkraći put
 
 1. Priključi ploču i provjeri da se pojavila kao `COM3`.
-2. Zatvori eventualni stari preview/dashboard PowerShell prozor.
-3. Dvaput klikni `POKRENI-GUIDED25.cmd` u korijenu projekta.
-4. Izaberi `2`, prihvati ponuđeni `fan02` ili unesi svoj ID, unesi pokušaj
+2. Ako je ploča već nešto radila od zadnjeg uključenja, **isključi je i vrati
+   USB**. Stanje uređaja preživljava otvaranje porta: poslije prekinutog ili
+   odbijenog pokušaja ploča ostaje u `FAULT`/`CALIBRATION_REJECTED`, a
+   preflight tada uredno odbija start sa `nedostaje 'mode=IDLE'`.
+3. Zatvori eventualni stari preview/dashboard PowerShell prozor.
+4. Dvaput klikni `POKRENI-GUIDED25.cmd` u korijenu projekta.
+5. Izaberi `2`, prihvati ponuđeni `fan02` ili unesi svoj ID, unesi pokušaj
    `1`, `2` ili `3`, pa upiši `DA` tek nakon svoje provjere montaže.
-5. Ne zatvaraj PowerShell prozor. On je glavni host proces i u njemu se odmah
+6. Ne zatvaraj PowerShell prozor. On je glavni host proces i u njemu se odmah
    snimaju logovi. Browser se otvara automatski na `http://127.0.0.1:8772/`.
 
 Prije pokretanja launcher otvara COM port samo za read-only provjeru i zahtijeva
@@ -73,9 +77,21 @@ GUIDED25 sam dodaje `--research-telemetry-required` i zaključani
   počneš i **Potvrdi END faze** neposredno prije kraja odbrojavanja.
 - Ako nešto nije urađeno tačno po uputstvu, klikni **Prekini i sačuvaj**.
 
-Planirani najgori tok traje `22:50`; hard stop je `25:00`. Ne ponavljaj pokušaj
-zbog lošeg rezultata, nego samo zbog zapisane tehničke/proceduralne greške.
-Ukupno su dozvoljena najviše tri pokušaja.
+Planirani najgori tok traje `22:50`; hard stop je `25:00`. Izmjereno trajanje
+jednog prozora je `9,981 s`, pa sa WAIT fazom najgori tok stvarno iznosi
+`23:03` — rezerva do hard stopa je oko dva minuta. Zato poslije poruke da je
+kalibracija gotova odmah klikni **2. Kreni sa mjerenjem** i ne oklijevaj sa
+potvrdama faza. Ne ponavljaj pokušaj zbog lošeg rezultata, nego samo zbog
+zapisane tehničke/proceduralne greške. Ukupno su dozvoljena najviše tri
+pokušaja.
+
+Jedan ishod nije kvar ni greška operatera. `threshold_enter` je `p99` od 44
+DERIVE prozora, što za taj broj prozora ispada tačno **najveći** izmjereni
+skor, a `VERIFY` zatim ne dozvoljava nijedan prozor iznad njega. Ako su DERIVE
+i VERIFY prozori uzorci iste normalne distribucije, kalibracija padne na
+`VERIFY_NORMAL_REJECT` kad god globalni maksimum svih 66 prozora padne u
+VERIFY dio — dakle u oko `22/66 = 33%` pokušaja. To je svojstvo praga, ne
+kvar; zapiši ga i ponovi pokušaj.
 
 ## Gdje su logovi
 
