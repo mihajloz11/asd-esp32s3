@@ -31,6 +31,23 @@
 
 static const char *TAG = "psdlive";
 
+/* Jedan protokolarni red mora stici na UART neprekinut.
+ *
+ * ESP-IDF ostavlja `stdout` bez baferovanja, pa svaka konverzija odlazi na UART
+ * zasebnim upisom. `emit_research_vector` jedan FEATURE96/SUBSEG96 red ispisuje
+ * kroz 98 poziva, a UI task u međuvremenu emituje FLAGS iz svog konteksta.
+ * Izmjereno u runu 22.08.2026: FLAGS se zalijepio usred niza brojeva, host
+ * parser je u istom redu vidio dva `protocol=` i odbio ga kao
+ * `duplicate_key:protocol` — 64 takva reda, pa je cijeli run pao na
+ * `invalid_research_telemetry` iako je i kalibracija i detekcija radila.
+ *
+ * `flockfile` uzima isti FILE lock koji koristi i `printf` iz drugih taskova i
+ * `ESP_LOGx` (koji ide preko `vprintf` na isti `stdout`), pa se pod njim ne
+ * moze umetnuti ni jedan ni drugi. Zakljucava se cijeli red, ne pojedinacni
+ * poziv. */
+#define EMIT_BEGIN() flockfile(stdout)
+#define EMIT_END()   funlockfile(stdout)
+
 #define DIM            ASD_PSD_MODEL_DIM        /* 96 */
 #define HOP            ASD_PSD_HOP              /* 4096 uzoraka = 256 ms */
 #define HOPS_PER_CLIP  39                       /* 39 x 4096 = 159 744 ~ 10 s */
@@ -83,6 +100,7 @@ static void emit_research_vector(const char *kind, unsigned session,
                                  float score, float level_dbfs,
                                  float tonalness) {
     uint32_t hash = research_feature_fnv1a(values);
+    EMIT_BEGIN();
     if (group == 0) {
         printf("%s protocol=%s session=%u phase=%s window=%d "
                "window_start_ms=%llu window_end_ms=%llu score=%.9g "
@@ -102,6 +120,7 @@ static void emit_research_vector(const char *kind, unsigned session,
     for (int i = 0; i < ASD_PSD_BANDS; i++)
         printf(i == 0 ? "%.9g" : ",%.9g", values[i]);
     printf("\n");
+    EMIT_END();
 }
 
 static void emit_research_window(unsigned session, const char *phase,
@@ -816,9 +835,12 @@ static asd_state_t run_session(unsigned session_index,
              mean, sd, sorted[0], sorted[N_CAL - 1]);
     ESP_LOGI(TAG, "referentni nivo masine: %.2f dBFS (gate prisustva %.2f dBFS)",
              cal_level_mean, cal_level_mean - presence.absent_margin_db);
+    /* Drugi red koji se sastavlja iz vise poziva; vidi EMIT_BEGIN. */
+    EMIT_BEGIN();
     printf("LOOALL");
     for (int i = 0; i < N_CAL; i++) printf(" %.3f", loo[i]);
     printf("\n");
+    EMIT_END();
     if (commissioning.policy.derive_windows > MAX_COMMISSION_WINDOWS ||
         commissioning.policy.verify_windows > MAX_COMMISSION_WINDOWS)
         return stop_commissioning(state, NULL);
