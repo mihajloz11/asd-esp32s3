@@ -310,6 +310,63 @@ def test_verify_failure_never_repairs_thresholds(lib) -> None:
     assert (profile.threshold_enter, profile.threshold_exit, list(profile.center)) == before
 
 
+def reach_verify(lib, policy: Policy, *, enter: float, exit_: float) -> tuple:
+    """Dovede tok do VERIFY faze sa zadatim zamrznutim pragovima."""
+    flow = reach_center(lib, policy)
+    profile = Profile()
+    center = (ctypes.c_float * 96)(*[0.0] * 96)
+    for now in (4, 5):
+        lib.asd_commission_record_center(ctypes.byref(flow), now, 1)
+    lib.asd_commission_commit_center(
+        ctypes.byref(flow), 6, ctypes.byref(profile), center, -30.0, 2.0, 1,
+    )
+    for now in (7, 8):
+        lib.asd_commission_record_derive(ctypes.byref(flow), now, 4.0, 1)
+    assert lib.asd_commission_freeze_thresholds(
+        ctypes.byref(flow), 9, ctypes.byref(profile), enter, exit_,
+    ) == 1
+    return flow, profile
+
+
+def test_verify_needs_min_consecutive_not_a_single_high_window(lib) -> None:
+    """Jedan ili dva prozora iznad praga ne otvaraju epizodu.
+
+    `verify_alarm_windows` raste samo dok je `verify_active`, a taj se pali tek
+    na `verify_min_consecutive` UZASTOPNIH prozora iznad `threshold_enter`.
+    Bez ovoga se `max_verify_alarm_windows = 0` lako procita kao "nijedan
+    prozor ne smije preci prag", sto bi za GUIDED25 politiku (prag = maksimum
+    44 DERIVE skora) davalo dramaticno vecu procjenu rizika nego sto jeste.
+    """
+    policy = small_policy(lib, verify_min=3)
+    policy.verify_windows = 9
+    enter, exit_ = 10.0, 5.0
+
+    # Dva iznad, jedan ispod, pa opet dva iznad: nijedna epizoda se ne otvara.
+    flow, profile = reach_verify(lib, policy, enter=enter, exit_=exit_)
+    pattern = [20.0, 20.0, 1.0, 20.0, 20.0, 1.0, 1.0, 1.0, 1.0]
+    for offset, score in enumerate(pattern):
+        assert lib.asd_commission_record_verify(
+            ctypes.byref(flow), 10 + offset, ctypes.byref(profile), score, 1,
+        ) == 1
+    assert flow.verify_episodes == 0
+    assert flow.verify_alarm_windows == 0
+    assert (flow.phase, flow.reject_reason) == (MONITORING, REJECT_NONE)
+    assert profile.valid == 1
+
+    # Tri uzastopna iznad praga otvaraju epizodu. Odbijanje se ne prijavljuje
+    # odmah nego tek kad se VERIFY faza napuni (asd_commissioning.c:248), pa
+    # se i ovdje dovrsi svih `verify_windows` prozora.
+    flow, profile = reach_verify(lib, policy, enter=enter, exit_=exit_)
+    pattern = [1.0, 20.0, 20.0, 20.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    for offset, score in enumerate(pattern):
+        lib.asd_commission_record_verify(
+            ctypes.byref(flow), 10 + offset, ctypes.byref(profile), score, 1,
+        )
+    assert flow.verify_episodes == 1
+    assert (flow.phase, flow.reject_reason) == (REJECTED, REJECT_VERIFY)
+    assert profile.valid == 0
+
+
 def test_operator_abort_is_terminal_and_settle_api_has_no_score(lib) -> None:
     header = (MAIN / "asd_commissioning.h").read_text(encoding="utf-8")
     declaration = header.split("asd_commission_observe_settle", 1)[1].split(");", 1)[0]
