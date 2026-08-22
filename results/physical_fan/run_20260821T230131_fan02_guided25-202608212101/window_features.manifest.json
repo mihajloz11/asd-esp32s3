@@ -1,0 +1,18 @@
+{
+  "schema_version": "asd-research-artifacts-v1.0.0",
+  "wire_protocol_version": "asd-research-v1.0.0",
+  "required": true,
+  "enabled": false,
+  "artifact_valid": false,
+  "gate_passed": false,
+  "expected_window_count": 0,
+  "complete_window_count": 0,
+  "feature_record_count": 0,
+  "subsegment_record_count": 0,
+  "errors": [
+    "required_research_telemetry_missing"
+  ],
+  "npz": null,
+  "external_wav": null,
+  "pcm_per_det": false
+}

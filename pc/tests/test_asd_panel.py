@@ -292,3 +292,70 @@ def test_panel_rejects_nonfinite_calibration_without_storing_or_emitting_it(
     assert b"NaN" not in encoded
     assert b"Infinity" not in encoded
     assert json.loads(encoded)["calibration_acceptance_reason"] == "nonfinite_loo_cv"
+
+
+def test_research_line_intact_separates_whole_lines_from_interleaved_ones() -> None:
+    whole = (
+        "FEATURE96 protocol=asd-research-v1.0.0 session=1 phase=DET window=3 "
+        "dims=4 fnv1a=0 values=1,2,3,4")
+    glued = whole.replace("3,4", "3FLAGS protocol=asd-quality-v1.5.0 mode=DETECT")
+    assert panel.research_line_intact(whole)
+    assert not panel.research_line_intact(glued)
+    assert not panel.research_line_intact(whole.replace(",3,4", ""))
+
+
+def test_interleaved_research_line_never_counts_as_a_received_record() -> None:
+    state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25")
+    whole = (
+        "SUBSEG96 protocol=asd-research-v1.0.0 session=1 phase=DET window=3 "
+        "group=1 segments=8 dims=4 fnv1a=0 values=1,2,3,4")
+    state.feed(whole)
+    state.feed(whole.replace("3,4", "3FLAGS protocol=asd-quality-v1.5.0 mode=DETECT"))
+
+    assert state.research_counts["SUBSEG96"] == 1
+    assert state.research_errors == 1
+    assert state.research_error_example is not None
+    assert any("pokvarenih research redova: 1" in reason
+               for reason in state.guided_result()["reasons"])
+
+
+def test_session_start_clears_research_errors_of_the_previous_attempt() -> None:
+    state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25")
+    state.research_errors = 5
+    state.research_error_example = "stari pokusaj"
+
+    state.feed("SESSION protocol=asd-quality-v1.5.0 action=STARTED source=BUTTON "
+               "reason=OPERATOR_REQUEST discards_calibration=0")
+
+    assert state.research_errors == 0
+    assert state.research_error_example is None
+
+
+def test_panel_asks_for_the_confirmation_that_is_actually_due(tmp_path) -> None:
+    state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25",
+                             report_dir=tmp_path)
+    state.stage = "RUN"; state.phase_index = 1
+    link = RecordingLink(); conductor = panel.Conductor(state, link)
+
+    due = state._confirmation_status(1)
+    assert (due["confirm_required"], due["confirm_done"]) == (20, 0)
+    assert due["confirm_next_edge"] == "start" and due["confirm_missed"] == []
+    conductor.confirm("start")
+    assert state._confirmation_status(1)["confirm_next_edge"] == "end"
+    conductor.confirm("end")
+    assert state._confirmation_status(1)["confirm_next_edge"] is None
+    # Normalna osnova se ne potvrdjuje, pa nikad ne moze biti propustena.
+    assert state._confirmation_status(5)["confirm_missed"] == [2, 3, 4]
+    state.stage = "DONE"
+    assert state._confirmation_status(-1)["confirm_missed"] == list(range(2, 11))
+
+
+def test_snapshot_carries_confirmation_and_research_integrity_to_the_page() -> None:
+    state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25")
+
+    snapshot = state.snapshot()
+
+    for key in ("confirm_required", "confirm_done", "confirm_next_edge",
+                "confirm_missed", "confirm_phase_edges", "research_errors"):
+        assert key in snapshot
+    json.dumps(snapshot, allow_nan=False)

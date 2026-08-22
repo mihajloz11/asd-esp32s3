@@ -1,0 +1,4 @@
+host_utc,elapsed_s,firmware_session_index,protocol,kind,action,source,reason,discards_calibration,event,mode,command,discards
+2026-08-21T21:03:05.160+00:00,92.203,0,asd-quality-v1.5.0,BUTTON,,,,,SHORT,IDLE,START_LEARNING,0
+2026-08-21T21:03:05.170+00:00,92.203,1,asd-quality-v1.5.0,SESSION,STARTED,BUTTON,OPERATOR_REQUEST,0,,,,
+2026-08-21T21:03:05.219+00:00,92.266,1,asd-quality-v1.5.0,BUTTON,,,,,SHORT,LEARNING,NONE,0
