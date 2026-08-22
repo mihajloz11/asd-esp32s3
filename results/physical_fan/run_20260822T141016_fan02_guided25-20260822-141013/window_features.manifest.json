@@ -1,0 +1,218 @@
+{
+  "schema_version": "asd-research-artifacts-v1.0.0",
+  "wire_protocol_version": "asd-research-v1.0.0",
+  "required": true,
+  "enabled": true,
+  "artifact_valid": false,
+  "gate_passed": false,
+  "expected_window_count": 75,
+  "complete_window_count": 12,
+  "feature_record_count": 59,
+  "subsegment_record_count": 328,
+  "errors": [
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "FEATURE96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "SUBSEG96:duplicate_key:protocol",
+    "missing_FEATURE96:(1, 'CAL', 7)",
+    "missing_FEATURE96:(1, 'CAL', 8)",
+    "missing_SUBSEG96:(1, 'CAL', 9):groups=[1]",
+    "missing_SUBSEG96:(1, 'CAL', 10):groups=[1]",
+    "missing_FEATURE96:(1, 'DET', 1)",
+    "missing_SUBSEG96:(1, 'DET', 3):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 4):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 5):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 6):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 7):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 8):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 9):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 10):groups=[3]",
+    "missing_SUBSEG96:(1, 'DET', 11):groups=[3]",
+    "missing_SUBSEG96:(1, 'DET', 12):groups=[4]",
+    "missing_SUBSEG96:(1, 'DET', 13):groups=[4]",
+    "missing_SUBSEG96:(1, 'DET', 14):groups=[4]",
+    "missing_SUBSEG96:(1, 'DET', 15):groups=[4]",
+    "missing_SUBSEG96:(1, 'DET', 16):groups=[4]",
+    "missing_SUBSEG96:(1, 'DET', 17):groups=[5]",
+    "missing_SUBSEG96:(1, 'DET', 18):groups=[5]",
+    "missing_SUBSEG96:(1, 'DET', 20):groups=[5]",
+    "missing_FEATURE96:(1, 'DET', 22)",
+    "missing_FEATURE96:(1, 'DET', 23)",
+    "missing_FEATURE96:(1, 'DET', 24)",
+    "missing_SUBSEG96:(1, 'DET', 25):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 26):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 27):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 28):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 29):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 30):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 31):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 32):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 33):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 34):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 35):groups=[3]",
+    "missing_SUBSEG96:(1, 'DET', 36):groups=[3]",
+    "missing_SUBSEG96:(1, 'DET', 38):groups=[4]",
+    "missing_SUBSEG96:(1, 'DET', 39):groups=[4]",
+    "missing_SUBSEG96:(1, 'DET', 40):groups=[4]",
+    "missing_SUBSEG96:(1, 'DET', 41):groups=[4]",
+    "missing_SUBSEG96:(1, 'DET', 42):groups=[4]",
+    "missing_SUBSEG96:(1, 'DET', 43):groups=[5]",
+    "missing_SUBSEG96:(1, 'DET', 44):groups=[5]",
+    "missing_FEATURE96:(1, 'DET', 45)",
+    "missing_FEATURE96:(1, 'DET', 46)",
+    "missing_FEATURE96:(1, 'DET', 47)",
+    "missing_FEATURE96:(1, 'DET', 48)",
+    "missing_FEATURE96:(1, 'DET', 49)",
+    "missing_SUBSEG96:(1, 'DET', 50):groups=[1]",
+    "missing_FEATURE96:(1, 'DET', 52)",
+    "missing_FEATURE96:(1, 'DET', 53)",
+    "missing_FEATURE96:(1, 'DET', 55)",
+    "missing_FEATURE96:(1, 'DET', 56)",
+    "missing_FEATURE96:(1, 'DET', 57)",
+    "missing_SUBSEG96:(1, 'DET', 58):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 59):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 60):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 61):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 62):groups=[1]",
+    "missing_SUBSEG96:(1, 'DET', 63):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 64):groups=[2]",
+    "missing_SUBSEG96:(1, 'DET', 65):groups=[2]"
+  ],
+  "npz": {
+    "path": "window_features.npz",
+    "sha256": "3a266aa7197e52c4dea3a7f28523f1b7c628906eaca81809a74d9d5f82cd778b",
+    "arrays": {
+      "firmware_session_index": {
+        "shape": [
+          12
+        ],
+        "dtype": "int32"
+      },
+      "phase": {
+        "shape": [
+          12
+        ],
+        "dtype": "<U3"
+      },
+      "window": {
+        "shape": [
+          12
+        ],
+        "dtype": "int32"
+      },
+      "window_start_ms": {
+        "shape": [
+          12
+        ],
+        "dtype": "uint64"
+      },
+      "window_end_ms": {
+        "shape": [
+          12
+        ],
+        "dtype": "uint64"
+      },
+      "score": {
+        "shape": [
+          12
+        ],
+        "dtype": "float32"
+      },
+      "level_dbfs": {
+        "shape": [
+          12
+        ],
+        "dtype": "float32"
+      },
+      "tonalness_proxy": {
+        "shape": [
+          12
+        ],
+        "dtype": "float32"
+      },
+      "feature96": {
+        "shape": [
+          12,
+          96
+        ],
+        "dtype": "float32"
+      },
+      "subseg96": {
+        "shape": [
+          12,
+          5,
+          96
+        ],
+        "dtype": "float32"
+      },
+      "subseg_welch_segments": {
+        "shape": [
+          12,
+          5
+        ],
+        "dtype": "int32"
+      }
+    }
+  },
+  "external_wav": null,
+  "pcm_per_det": false
+}

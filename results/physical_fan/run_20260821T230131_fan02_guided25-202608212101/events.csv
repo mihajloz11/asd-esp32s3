@@ -1,0 +1,8 @@
+host_utc,elapsed_s,firmware_session_index,kind,label,note
+2026-08-21T21:01:32.975+00:00,0.016,0,session,start,sigurnosna postavka potvrđena; operator condition=unconfirmed
+2026-08-21T21:01:33.427+00:00,0.469,0,device,reset,RTS reset; pocinje WAIT/CAL/DET
+2026-08-21T21:03:05.124+00:00,92.156,0,virtual_button,guided25,panel
+2026-08-21T21:03:05.126+00:00,92.172,0,virtual_button,press,panel
+2026-08-21T21:03:05.127+00:00,92.172,0,virtual_button,guided25,panel
+2026-08-21T21:03:05.146+00:00,92.187,0,virtual_button,press,panel
+2026-08-21T21:03:07.245+00:00,94.281,1,protocol,invalid_firmware_telemetry,terminal_STATE_reason_unknown

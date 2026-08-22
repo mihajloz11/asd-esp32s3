@@ -87,6 +87,29 @@ LOGGED_RECORDS = {"VBUTTON", "BUTTON", "SESSION", "STATE", "EVENT", "ADAPTTHR"}
 LOO_CV_GATE = MAX_LOO_CV
 
 
+RESEARCH_DIMS_RE = re.compile(r"\bdims=(?P<dims>\d+)\b")
+
+
+def research_line_intact(line: str) -> bool:
+    """Da li je FEATURE96/SUBSEG96 red stigao cio i sam.
+
+    Firmware ga sastavlja iz 98 `printf` poziva (`emit_research_vector`), pa je
+    22.08.2026 FLAGS iz UI taska upao usred niza brojeva. Host je u istom redu
+    vidio dva `protocol=` i odbio 126 zapisa -- ali tek pri finalizaciji, 27
+    minuta kasnije. Provjeravaju se bas ta dva traga: tacno jedan `protocol=` i
+    onoliko vrijednosti koliko sam red tvrdi u `dims=`.
+    """
+    if line.count("protocol=") != 1:
+        return False
+    match = RESEARCH_DIMS_RE.search(line)
+    if match is None:
+        return False
+    _, separator, values = line.partition(" values=")
+    if not separator or not values:
+        return False
+    return values.count(",") + 1 == int(match.group("dims"))
+
+
 def finite_float_or_none(value: str | float | None) -> float | None:
     """Parse UI telemetry without ever retaining a JSON-nonfinite float."""
     try:
@@ -174,6 +197,8 @@ class PanelState:
         self.session_started_at: float | None = None
         self.profile_counts: tuple[int, int] | None = None
         self.research_counts = {"FEATURE96": 0, "SUBSEG96": 0}
+        self.research_errors = 0
+        self.research_error_example: str | None = None
         self.max_dropped = 0
         self.dropped_observed = False
         self.invalid_reason: str | None = None
@@ -214,6 +239,8 @@ class PanelState:
                 self.calibration_acceptance_reason = "missing_cal_summary"
                 self.profile_counts = None
                 self.research_counts = {"FEATURE96": 0, "SUBSEG96": 0}
+                self.research_errors = 0
+                self.research_error_example = None
                 self.max_dropped = 0
                 self.dropped_observed = False
                 self.invalid_reason = None
@@ -238,7 +265,17 @@ class PanelState:
                 self._log(line)
             token = line.split(" ", 1)[0]
             if token in self.research_counts:
-                self.research_counts[token] += 1
+                if research_line_intact(line):
+                    self.research_counts[token] += 1
+                else:
+                    # Run 22.08.2026: FLAGS se zalijepio usred FEATURE96 reda,
+                    # host je odbio 126 zapisa i cio run pao na
+                    # `invalid_research_telemetry` -- ali tek na kraju, poslije
+                    # 27 minuta. Panel isto mora da vidi odmah, dok se pokusaj
+                    # jos moze prekinuti i ponoviti.
+                    self.research_errors += 1
+                    if self.research_error_example is None:
+                        self.research_error_example = line[:180]
                 return
             dm = DROPPED_RE.match(line)
             if dm:
@@ -405,6 +442,8 @@ class PanelState:
                 "workflow_result": self.workflow_result,
                 "profile_counts": self.profile_counts,
                 "research_counts": dict(self.research_counts),
+                "research_errors": self.research_errors,
+                "research_error_example": self.research_error_example,
                 "max_dropped": self.max_dropped,
                 "dropped_observed": self.dropped_observed,
                 "deadline_remaining": None if self.session_started_at is None else max(
@@ -412,8 +451,48 @@ class PanelState:
                              (time.monotonic() - self.session_started_at))),
                 "confirmed_phases": sorted(self.confirmed_phases),
                 "operator_confirmations": list(self.operator_confirmations),
+                **self._confirmation_status(index),
                 "final_result": self.final_result,
             }
+
+    def _confirmation_status(self, active_index: int) -> dict:
+        """Sta operater jos mora da klikne; poziva se pod `self.lock`.
+
+        Potvrde su jedini dokaz da se fizicka radnja stvarno desila, pa ih
+        `evaluate_guided25_artifact` trazi tacno dvadeset i tacnim redom. Run
+        22.08.2026 ih je imao nula: panel ih je nudio kao dva obicna dugmeta
+        medju sedam, a nijedan ekran nije rekao da bez njih mjerenje ne vazi.
+        """
+        required = [index for index, phase in enumerate(self.plan)
+                    if phase[1] != "normal_baseline"]
+        edges: dict[int, set[str]] = {}
+        for item in self.operator_confirmations:
+            edges.setdefault(int(item["phase_index"]), set()).add(str(item["edge"]))
+        next_edge = None
+        if self.stage == "RUN" and active_index in required:
+            done = edges.get(active_index, set())
+            if "start" not in done:
+                next_edge = "start"
+            elif "end" not in done:
+                next_edge = "end"
+        # Faza koja je prosla bez oba klika se vise ne moze potvrditi, pa je run
+        # vec pao; operater to mora vidjeti odmah, a ne iz reporta na kraju.
+        missed: list[int] = []
+        if self.stage in {"RUN", "DONE"}:
+            limit = active_index if self.stage == "RUN" else len(self.plan)
+            if limit < 0:
+                limit = 0
+            missed = [index for index in required
+                      if index < limit and len(edges.get(index, set())) < 2]
+        return {
+            "confirm_required": 2 * len(required),
+            "confirm_done": len(self.operator_confirmations),
+            "confirm_next_edge": next_edge,
+            "confirm_missed": missed,
+            "confirm_phase_edges": {
+                str(index): sorted(edges.get(index, set())) for index in required
+            },
+        }
 
     def guided_preflight(self) -> tuple[bool, list[str]]:
         reasons = []
@@ -466,6 +545,8 @@ class PanelState:
         if self.max_dropped != 0: reasons.append("dropped_samples nije nula")
         if self.invalid_reason: reasons.append(self.invalid_reason)
         if not all(self.research_counts.values()): reasons.append("nedostaje research telemetrija")
+        if self.research_errors:
+            reasons.append(f"pokvarenih research redova: {self.research_errors}")
         papers = [s for p, s in zip(self.plan, self.phase_stats) if p[1].startswith("airflow_change_paper_")]
         passing = sum(s["alarm_episodes"] >= 1 and s["max_consecutive"] >= 3 for s in papers)
         if passing < 2: reasons.append(f"papiric prosao {passing}/3 blokova; potrebno 2/3")
@@ -805,10 +886,27 @@ PAGE = """<!doctype html>
      color:#7d8896;max-height:150px;overflow:auto;margin:0}
  .foot{color:#5c636d;font-size:12px;margin-top:9px}
  .warn{color:#ff8e8e}.ok{color:#7ee2a4}
+ .alert{border-radius:10px;padding:11px 15px;margin-bottom:12px;font-size:13px;
+        background:#43201f;border:1px solid #6d2f2d;color:#ffb3b3}
+ .alert.soft{background:#3b3320;border-color:#6b5a2c;color:#ffd79a}
+ .alert b{display:block;font-size:14.5px;margin-bottom:3px}
+ #deadline{font-size:12.5px;color:#5c636d;margin-top:4px}
+ #deadline.warn{color:#ff8e8e;font-weight:600}
+ #confirm.need{border:1px solid #2f6feb}
+ #confirm.miss{border:1px solid #6d2f2d}
+ .crow{display:flex;align-items:baseline;gap:10px;margin-bottom:7px}
+ .crow span{font-size:12px;color:#8b949e;letter-spacing:.08em;text-transform:uppercase}
+ .crow b{margin-left:auto;font-size:21px;font-variant-numeric:tabular-nums}
+ #c-next{font-size:17px;font-weight:600;margin-bottom:12px;line-height:1.35}
+ button.need{background:#2f6feb;color:#fff;animation:need 1.2s ease-in-out infinite}
+ @keyframes need{50%{opacity:.5}}
+ ol li i{font-style:normal;width:13px;color:#5c636d}
 </style>
 <div class="wrap">
  <h1>ASD panel &mdash; vodic kroz run</h1>
  <div class="sub" id="source">&nbsp;</div>
+
+ <div id="alerts"></div>
 
  <div class="card" id="banner">
   <div id="phase">&mdash;</div>
@@ -816,6 +914,16 @@ PAGE = """<!doctype html>
   <div id="clock">--:--</div>
   <div id="total">&nbsp;</div>
   <div class="bar"><i id="bar"></i></div>
+  <div id="deadline">&nbsp;</div>
+ </div>
+
+ <div class="card" id="confirm">
+  <div class="crow"><span>potvrde faza</span><b id="c-count">&mdash;</b></div>
+  <div id="c-next">Potvrde se traze tek kad mjerenje krene.</div>
+  <div class="btns">
+   <button id="btn-cs" onclick="post('confirm-start')">POTVRDI START faze</button>
+   <button id="btn-ce" onclick="post('confirm-end')">POTVRDI END faze</button>
+  </div>
  </div>
 
  <div class="card lamps">
@@ -837,8 +945,6 @@ PAGE = """<!doctype html>
   <button onclick="post('arm-physical')">1B. Armiraj, pa kratko pritisni fizicki taster</button>
   <button class="go" id="gobtn" onclick="post('start')">2. Kreni sa mjerenjem</button>
   <button onclick="post('hold')">Virtuelni DUGI pritisak — ponovi kalibraciju</button>
-  <button onclick="post('confirm-start')">Potvrdi START faze</button>
-  <button onclick="post('confirm-end')">Potvrdi END faze</button>
   <button onclick="post('abort')">Prekini i sacuvaj</button>
  </div>
 
@@ -908,14 +1014,47 @@ function renderPlan(s){
     ol.innerHTML = '';
     s.phases.forEach(p => {
       const li = document.createElement('li');
-      li.innerHTML = '<span>'+p.name+'</span><b>'+mmss(p.seconds)+'</b>';
+      li.innerHTML = '<i></i><span>'+p.name+'</span><b>'+mmss(p.seconds)+'</b>';
       ol.appendChild(li);
     });
     ol.dataset.n = s.phases.length;
   }
+  const edges = s.confirm_phase_edges || {};
   [...ol.children].forEach((li, i) => {
     li.className = s.phase_index < 0 ? '' :
       (i < s.phase_index ? 'done' : (i === s.phase_index ? 'now' : ''));
+    const mark = li.querySelector('i');
+    if (!mark) return;
+    const required = Object.prototype.hasOwnProperty.call(edges, String(i));
+    const done = required ? edges[String(i)].length : 0;
+    const passed = s.phase_index > i || s.stage === 'DONE';
+    mark.textContent = !required ? '' :
+      (done === 2 ? 'OK' : (passed ? 'X' : (done === 1 ? '.' : '')));
+    mark.style.color = done === 2 ? '#7ee2a4'
+      : (required && passed ? '#ff8e8e' : '#5c636d');
+  });
+}
+
+/* Alarm u ovim fazama obara run, i sprjecava novi ULAZAK u alarm u sljedecoj
+   papiric fazi -- tako su 22.08.2026 propala dva od tri papiric bloka. */
+function alarmForbidden(condition){
+  return !condition.startsWith('airflow_change');
+}
+
+function renderAlerts(items){
+  const box = document.getElementById('alerts');
+  const signature = items.map(a => a[0]).join('|');
+  if (box.dataset.sig === signature) return;
+  box.dataset.sig = signature;
+  box.innerHTML = '';
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'alert' + (item[2] ? ' soft' : '');
+    const title = document.createElement('b');
+    title.textContent = item[0];
+    div.appendChild(title);
+    div.appendChild(document.createTextNode(item[1]));
+    box.appendChild(div);
   });
 }
 
@@ -935,6 +1074,57 @@ function poll(){
     chip('c-learned',  flags.learned  === '1');
     chip('c-anomaly',  flags.anomaly  === '1', true);
     chip('c-fault',    flags.fault    === '1', true);
+
+    /* Potvrde faza. Bez kompletnog niza run pada bez obzira na mjerenje, pa
+       panel mora da trazi bas onaj klik koji je na redu, a ne da nudi dva
+       dugmeta medju sedam kao 22.08.2026. */
+    const need = s.confirm_next_edge;
+    const missed = s.confirm_missed || [];
+    document.getElementById('c-count').textContent =
+      (s.confirm_done || 0) + '/' + (s.confirm_required || 0);
+    const bs = document.getElementById('btn-cs');
+    const be = document.getElementById('btn-ce');
+    bs.disabled = need !== 'start';
+    be.disabled = need !== 'end';
+    bs.className = need === 'start' ? 'need' : '';
+    be.className = need === 'end' ? 'need' : '';
+    document.getElementById('confirm').className = 'card'
+      + (need ? ' need' : '') + (missed.length ? ' miss' : '');
+    document.getElementById('c-next').textContent =
+      need === 'start' ? 'Radnju iz ove faze si upravo poceo: klikni POTVRDI START.'
+      : need === 'end' ? 'Drzi radnju do kraja odbrojavanja, pa klikni POTVRDI END.'
+      : (s.stage === 'RUN' ? 'Ova faza je potvrdjena. Cekaj sljedecu.'
+                           : 'Potvrde se traze tek kad mjerenje krene.');
+
+    const alerts = [];
+    if (s.research_errors > 0)
+      alerts.push(['RESEARCH TELEMETRIJA JE POKVARENA (' + s.research_errors + ' redova)',
+        'Host ce ovaj run odbiti kao invalid_research_telemetry bez obzira na '
+        + 'mjerenje. Klikni "Prekini i sacuvaj" i ponovi pokusaj.', false]);
+    if (missed.length)
+      alerts.push(['PROPUSTENE POTVRDE: faza ' + missed.map(i => i + 1).join(', '),
+        'Faza koja je prosla bez START i END potvrde se vise ne moze potvrditi, '
+        + 'pa je run vec pao. Prekini i ponovi pokusaj.', false]);
+    if (s.stage === 'RUN' && s.phase_index >= 0 && flags.anomaly === '1'
+        && alarmForbidden(s.phases[s.phase_index].condition))
+      alerts.push(['UREDJAJ JE JOS U ALARMU',
+        'U ovoj fazi alarm obara run, a dok traje, sljedeci papiric nema u sta '
+        + 'da udje pa se ne broji. Skloni papiric I ruku i odmakni se korak.', true]);
+    if (s.stage === 'READY_TO_GO')
+      alerts.push(['KALIBRACIJA JE GOTOVA -- KLIKNI "2. KRENI SA MJERENJEM"',
+        'Hard stop tece od pocetka sesije, ne od pocetka mjerenja. 22.08.2026 je '
+        + 'ovdje potroseno 126 s, a do hard stopa je ostalo svega 30 s.', true]);
+    if (s.deadline_remaining !== null && s.deadline_remaining < 180)
+      alerts.push(['HARD STOP ZA ' + mmss(s.deadline_remaining),
+        'Poslije toga se run automatski prekida i pokusaj je potrosen.',
+        s.deadline_remaining >= 60]);
+    renderAlerts(alerts);
+
+    const dl = document.getElementById('deadline');
+    dl.textContent = s.deadline_remaining === null ? ''
+      : 'hard stop za ' + mmss(s.deadline_remaining);
+    dl.className = (s.deadline_remaining !== null && s.deadline_remaining < 180)
+      ? 'warn' : '';
 
     const b = document.getElementById('banner');
     const ph = document.getElementById('phase');
@@ -1012,6 +1202,7 @@ function poll(){
       !(s.calibration_accepted && s.stage === 'READY_TO_GO');
     if(s.read_only_preview){
       document.querySelectorAll('button').forEach(button => button.disabled = true);
+      bs.className = ''; be.className = '';
       if(s.stage === 'IDLE'){
         ph.textContent = 'PREGLED DASHBOARDA';
         wh.textContent = 'Read-only: tasteri su prikazani, ali su aktivni tek u pravom runu.';
