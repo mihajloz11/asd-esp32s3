@@ -1,6 +1,6 @@
 # Šta je ostalo poslije FAN01
 
-**Ažurirano:** 20.08.2026.
+**Ažurirano:** 22.08.2026. (sadržaj od 20.08.2026, osvježen broj PC testova)
 
 **Live ugovor:** `physical-fan-v1.8.0` / `physical-fan-artifacts-v1.8.0` ↔ `asd-quality-v1.5.0`
 
@@ -30,7 +30,10 @@ kvar. Detalji: [rezultat-fan01-2026-08-16.md](rezultat-fan01-2026-08-16.md).
   radi load/save;
 - backward offline read v1.6/q1.3 i v1.7/q1.4 uz novi v1.8/q1.5 par.
 
-PC suite 20.08.2026. daje `423 passed`. ESP-IDF 5.5.5 `ASD_PSD_LIVE`
+PC suite 22.08.2026. daje `444 passed, 5 skipped`; pet preskočenih traže
+raspakovan DCASE `fan` skup, pa ih mašina sa `data/` vrti kao `449 passed`.
+Raniji `423 passed` iz ovog dokumenta bio je broj prije posljednjih komitova.
+ESP-IDF 5.5.5 `ASD_PSD_LIVE`
 reconfigure build je PASS; bin je 349 728 B. To su softverski dokazi, ne dokaz
 flasha ili rada na fizičkom ventilatoru.
 

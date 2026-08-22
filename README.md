@@ -28,7 +28,7 @@ normal-only fizički test. Commissioning pragovi su zato i dalje
 |---|---|
 | Serijski protokol | live `asd-quality-v1.5.0` · host `physical-fan-v1.8.0` + `physical-fan-artifacts-v1.8.0`; offline read ostaje zaključan na v1.6↔q1.3, v1.7↔q1.4 i v1.8↔q1.5 |
 | Model | `psd_shape`, 96 traka log-PSD, Mahalanobis; finalni `k=10`: AUC 0,856 (razvojno, 20 podjela); referentni PC `k=20`: AUC 0,867 (kanonski, 100 podjela) |
-| PC testovi | **423 passed** (20.08.2026), uključujući PC↔C, multi-session, research, commissioning/HOLD, strogi q1.5 live tok, audio i NVS ugovore |
+| PC testovi | **444 passed, 5 skipped** (22.08.2026; preskočeni traže raspakovan DCASE `fan` skup — sa njim 449 passed), uključujući PC↔C, multi-session, research, commissioning/HOLD, strogi q1.5 live tok, audio i NVS ugovore |
 | Posljednji build | ESP-IDF 5.5.5 `ASD_PSD_LIVE`: **PASS**, 349 728 B; to nije flash/runtime dokaz |
 | Fizički dokaz | istorijski v1.6/q1.3 FAN01 run; trenutni v1.8/q1.5 nije flashovan niti fizički validiran |
 | **Ostalo** | **završiti elektroniku · zamrznuti normal-only politiku · kratak fizički run · power-loss/I2S runtime** → [docs/PREOSTALO.md](docs/PREOSTALO.md) |
@@ -39,6 +39,9 @@ normal-only fizički test. Commissioning pragovi su zato i dalje
 Putanja modela sa svim pokušajima i negativnim rezultatima:
 [docs/put-do-modela.md](docs/put-do-modela.md).
 Problemi i zamke (P1–P19): [docs/problemi-i-rjesenja.md](docs/problemi-i-rjesenja.md).
+Mapa cijele dokumentacije, sa oznakom šta je aktuelno a šta istorijsko:
+[docs/INDEKS.md](docs/INDEKS.md). Kontekst i pravila rada na projektu:
+[KONTEKST.md](KONTEKST.md).
 
 > **Granica tvrdnje.** FAN01 je stvarni ventilator, ali papirić je kontrolisana
 > promjena protoka, ne potvrđen kvar. Novi v1.8/q1.5 softver je host- i
