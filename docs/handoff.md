@@ -1,4 +1,4 @@
-# Predaja stanja — ASD na ESP32-S3 (ažurirano 20.08.2026)
+# Predaja stanja — ASD na ESP32-S3 (ažurirano 22.08.2026)
 
 Sažetak za nastavak rada u novoj sesiji. Detalji: [dnevnik-projekta.md](dnevnik-projekta.md),
 [problemi-i-rjesenja.md](problemi-i-rjesenja.md), [model-poboljsanje.md](model-poboljsanje.md).
@@ -8,8 +8,11 @@ Nepromenjivi cilj i kriterij uspjeha zapisani su u
 ventilatora, kratka lokalna kalibracija novog ventilatora i zatim potpuno
 samostalan dvostrani detektor na ESP32-S3, uz istraživački cilj AUC >= 0,80.
 
-> **Počni od [PLAN.md](PLAN.md)** — tamo je stanje, šta je dokazano a šta nije,
-> nalazi vanjske revizije i redoslijed rada. Ovaj dokument je detalj.
+> **Počni od [PREOSTALO.md](PREOSTALO.md)** — to je jedini aktuelni spisak
+> preostalog rada. Kontekst i pravila rada na projektu su u
+> [`../KONTEKST.md`](../KONTEKST.md), mapa cijele dokumentacije u
+> [INDEKS.md](INDEKS.md). `PLAN.md` je istorijski snimak od 09.08.2026. i više
+> nije redoslijed rada. Ovaj dokument je detalj.
 
 Finalni izbor modela, rezervna alternativa i kriteriji prihvatanja na
 hardveru: [odluka-finalni-model.md](odluka-finalni-model.md).
@@ -33,7 +36,8 @@ Otpornost na buku okoline (koraci, razgovor) i dvomikrofonski pristup:
   je namjerno RAM-only i ne radi NVS load/save.
 - `OBSERVATION_HOLD` je implementirana arhitektura, ali interference policy je
   `enabled=false` dok normal-only podaci ne zamrznu numeričku granicu.
-- PC suite 20.08. prolazi sa `423 passed`; ESP-IDF 5.5.5 `ASD_PSD_LIVE` build
+- PC suite 22.08. prolazi sa `444 passed, 5 skipped` (pet preskočenih traže
+  raspakovan DCASE `fan` skup; sa njim je `449 passed`); ESP-IDF 5.5.5 `ASD_PSD_LIVE` build
   prolazi, bin je 349 728 B. Taj build još nije flashovan niti potvrđen na
   pločici; I2S prekid i potvrda da DEVELOPMENT restart traži relearn ostaju
   fizički testovi. Restore/power-loss dolaze tek nakon frozen policy bumpa.
@@ -71,14 +75,21 @@ VBS prema [šemi povezivanja](sema-povezivanja.md).
 ⚠️ Pri svakoj promjeni moda **obavezan `idf.py reconfigure`** — `if(DEFINED ENV{...})`
 se evaluira samo pri konfiguraciji, inače build tiho ostane u starom modu (P2).
 
-| Env var | Šta radi |
-|---|---|
-| (bez flega) | živi ASD rad, score svakih 10 s |
-| `ASD_MIC_TEST` | mjerač nivoa 8 s + snimak 5 s + WAV na PC |
-| `ASD_LIVE_CAPTURE` | klip + score na uređaju + snimak → `live_compare.py` |
-| `ASD_LIVE_ADAPT` | čekanje da se soba umiri → kalibracija → neprekidna detekcija |
-| `ASD_EVAL_MODE` | klipovi sa flash particije |
-| `ASD_INA_TEST` | I2C dijagnostika (mapa pinova, bit-bang scan) |
+Spisak je usklađen sa `firmware/esp32s3_asd/main/CMakeLists.txt` 22.08.2026.
+
+| Env var | Šta radi | Stanje |
+|---|---|---|
+| `ASD_PSD_LIVE` | samostalni PSD detektor: settle → commissioning → monitoring | **finalni mod** |
+| `ASD_RESEARCH_TELEMETRY` | `96 + 5×96` sidecar preko UART-a, samo uz `ASD_PSD_LIVE` | razvojni |
+| `ASD_PSD_VERIFY` | PC↔uređaj parity PSD front-enda | provjera |
+| `ASD_MIC_TEST` | mjerač nivoa 8 s + snimak 5 s + WAV na PC | bring-up |
+| `ASD_INA_TEST` | I2C dijagnostika (mapa pinova, bit-bang scan) | bring-up |
+| `ASD_EVAL_MODE` | klipovi sa flash particije | istorijski |
+| `ASD_LIVE_CAPTURE` | klip + score na uređaju + snimak → `live_compare.py` | istorijski |
+| `ASD_LIVE_ADAPT` | čekanje da se soba umiri → kalibracija → detekcija | istorijski |
+
+Istorijski modovi se čuvaju zbog ranijih mjerenja, ne uvoze se u finalni tok i
+nisu uzor za novi kod (CI antipattern kapija ih zato namjerno ne obuhvata).
 
 PC alati u `pc/tools/`: `mic_capture.py`, `live_compare.py`, `live_monitor.py`
 (živi grafik na `localhost:8770`), `progress.py` (praćenje eksperimenta na 8771).
@@ -216,13 +227,16 @@ izmjereni, PC↔uređaj zatvoren na živom mikrofonu.)*
 
 ## Zamke koje su već koštale vremena
 
-Puna lista u [problemi-i-rjesenja.md](problemi-i-rjesenja.md) (P1–P12). Najskuplje:
+Puna lista u [problemi-i-rjesenja.md](problemi-i-rjesenja.md) (P1–P19). Najskuplje:
 
 - **P2** promjena build moda bez `reconfigure` — build tiho ostane u starom modu
 - **P4** task watchdog upisuje tekst usred base64 toka → pokvaren WAV
 - **P5** alat je snimio neispravan WAV uprkos neuspjeloj provjeri
 - **P10** kalibracija tri puta naučila ventilator laptopa kao normalno stanje
 - **P11** jednostrani prag propušta pola promjena
+- **P15** tranzijent pri uključenju mikrofona ruši prolaz u prvom bloku
+- **P17** prag se između dvije kalibracije razlikovao 16×
+- **P19** sopstveno računanje na laptopu kontaminiralo probu lažnih alarma
 - Curenje u mjerenju: kovarijansa učena i ocjenjivana na istim klipovima → 0,96
   umjesto 0,758. Uvijek razdvojiti korpus za učenje od skupa za ocjenu.
 - `git add -A` je pokupio 1,2 GB keša featura; sad u `.gitignore`

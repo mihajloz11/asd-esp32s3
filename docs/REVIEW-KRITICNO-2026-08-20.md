@@ -154,3 +154,9 @@ Na trenutnom `HEAD`-u je 20.08.2026. pokrenuto:
 
 Rezultat: **449 passed**. Zeleni testovi potvrđuju softverske ugovore i zatvorene
 aritmetičke/specifikacijske nalaze; ne zamjenjuju novi fizički test ventilatora.
+
+> **Dopuna 22.08.2026.** Tih `449` je broj na mašini sa raspakovanim DCASE `fan`
+> skupom u `data/`. Bez skupa isti commit daje **`444 passed, 5 skipped`** — pet
+> testova u `test_features_c.py` i `test_psd_features_c.py` traže stvarne klipove
+> i tada se preskaču, ne padaju. Oba broja opisuju isto stanje koda; razlika je
+> samo prisustvo skupa. Provjereno ponovnim pokretanjem suite-a na `730c2f4`.
