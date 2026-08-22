@@ -34,6 +34,9 @@
 | [P17](#p17) | 14.08 | kalibracija / prag | Prag se između dvije kalibracije razlikuje 16× | **otvoreno** |
 | [P18](#p18) | 14.08 | vremenska odluka | EWMA i CUSUM propuštaju baš onu buku koju je trebalo da filtriraju | riješeno (odbačeni mjerenjem) |
 | [P19](#p19) | 14.08 | mjerenje | Sopstveno računanje na laptopu kontaminiralo probu lažnih alarma | riješeno (metodološka pouka) |
+| [P20](#p20) | 22.08 | UART / protokol | FLAGS iz drugog taska upada usred FEATURE96 reda | riješeno u kodu, **nije fizički potvrđeno** |
+| [P21](#p21) | 22.08 | operaterski tok | Run traži 20 potvrda faza, a panel ih nije tražio | riješeno (panel vodi klik po klik) |
+| [P22](#p22) | 22.08 | protokol mjerenja | Alarm iz prvog papirića progutao sljedeća dva bloka | djelimično (panel upozorava; trajanje oporavka otvoreno) |
 
 ---
 
@@ -885,6 +888,126 @@ ide nivo po prozoru i eksplicitna napomena da broj nije čist.
 ([P17](#p17)) je izveden iz **ukrštene** provjere — isti prozori, oba praga — pa
 ga promjena u sobi ne dodiruje. Kontaminiran je samo apsolutni broj lažnih
 alarma iz tog prolaza.
+
+---
+
+<a name="p20"></a>
+## P20 — FLAGS iz drugog taska upada usred FEATURE96 reda
+
+**Datum:** 22.08.2026 · **Oblast:** UART / protokol · **Status:** riješeno u kodu,
+**nije fizički potvrđeno** (build 3f80a42a, još nije flashovan)
+
+**Simptom.** Prvi GUIDED25 run koji je stigao do kraja pao je na
+`invalid_research_telemetry`. Kalibracija je prošla (K1 `accepted`), detekcija je
+radila svih 65 prozora, ali je od očekivanih **75 prozora ostalo kompletnih 12**:
+`feature_record_count` 59/75, `subsegment_record_count` 328/375, 126 grešaka u
+manifestu, sve `duplicate_key:protocol`.
+
+**Kako je nađen.** `firmware_parse_errors.csv` čuva sirov red. U njemu se vidi
+tačno mjesto prekida — niz brojeva se prekine na 28. vrijednosti i odmah nastavi
+sa `FLAGS protocol=asd-quality-v1.5.0 ...`, pa host u istom redu vidi dva
+`protocol=` i odbija ga.
+
+**Uzrok.** ESP-IDF ostavlja `stdout` bez baferovanja, pa svaka konverzija odlazi
+na UART zasebnim upisom. `emit_research_vector` jedan red ispisuje kroz **98**
+`printf` poziva (zaglavlje + 96 vrijednosti + novi red), a UI task u tom prozoru
+emituje `FLAGS` iz svog konteksta. Isti obrazac kao [P4](#p4), samo je tamo
+watchdog upisivao tekst usred base64 toka.
+
+**Rješenje.** `flockfile(stdout)`/`funlockfile(stdout)` oko dva mjesta koja red
+sastavljaju iz više poziva — `emit_research_vector` i `LOOALL`. Isti FILE lock
+uzimaju `printf` iz drugih taskova i `ESP_LOGx` preko `vprintf`, pa se pod njim
+ne može umetnuti ni jedan ni drugi. Potvrđeno da u ovom buildu svi taskovi dijele
+isti `FILE`: `CONFIG_LIBC_NEWLIB=y`, a `esp_reent_init` svakom tasku postavlja
+`_REENT_STDOUT(r) = _REENT_STDOUT(_GLOBAL_REENT)`.
+
+Ostali `emit_*` pozivi se **ne** diraju: svaki je jedan `printf`, koji newlib
+zaključava interno. Potvrda iz istog runa — nijedna od 63 greške nije na kratkom
+redu (`FLAGS`, `QUALITY`, `DET`, `COMMISSION`), sve su na dugim research redovima.
+
+**Zašto se to nije vidjelo ranije.** Panel je research redove brojao po prvom
+tokenu, a pokvaren red i dalje počinje sa `FEATURE96` — pa su brojači izgledali
+uredno dok je host odbijao svaki drugi zapis. Panel sada provjerava da red ima
+tačno jedan `protocol=` i onoliko vrijednosti koliko sam tvrdi u `dims=`
+(`research_line_intact`). Reprodukovano nad `serial.log` tog runa: panel dobija
+`FEATURE96 59`, `SUBSEG96 328`, `research_errors 63` — identično hostu — a **prvu
+grešku vidi u 282. redu loga, tj. oko 293 s**, umjesto poslije 27 minuta.
+
+**Ostaje.** `esp_rom_printf` (panic, task watchdog) ne uzima ovaj lock. To se ne
+može zaključati odavde i ostaje poznat rizik pri padu.
+
+---
+
+<a name="p21"></a>
+## P21 — Run traži 20 potvrda faza, a panel ih nije tražio
+
+**Datum:** 22.08.2026 · **Oblast:** operaterski tok · **Status:** riješeno
+
+**Simptom.** `guided25_report.json` je pao i na
+`operator_confirmations_missing_fake_or_out_of_order`. U `events.csv` tog runa
+nema nijedne `guided25_confirm` bilješke.
+
+**Uzrok.** `evaluate_guided25_artifact` traži **tačno dvadeset** potvrda —
+`start` i `end` za svaku fazu osim normalne osnove — i to u redu, sa host
+vremenom koje se poklapa. Panel ih je nudio kao dva obična dugmeta među sedam,
+bez brojača, bez oznake koja je potvrda na redu i bez ijedne poruke da run bez
+njih ne vrijedi. Operater koji drži papirić uz usis nema kako da pogodi da mu
+nedostaje klik.
+
+**Rješenje.** Panel sada vodi potvrde umjesto da ih samo dozvoljava:
+
+- zasebna kartica odmah ispod uputstva faze, sa brojačem `n/20`;
+- aktivno je samo dugme koje je stvarno na redu (`confirm_next_edge`), drugo je
+  onemogućeno — isti redoslijed koji server već provjerava, sada i vidljiv;
+- faza koja je prošla bez oba klika se više ne može potvrditi, pa panel odmah
+  ispisuje `PROPUSTENE POTVRDE` i kaže da se pokušaj prekine, umjesto da se
+  dovrši mrtav run;
+- spisak faza dobija oznaku `OK` / `X` po potvrdi.
+
+**Dokaz.** `pc/tests/test_asd_panel.py::test_panel_asks_for_the_confirmation_that_is_actually_due`
+i `::test_snapshot_carries_confirmation_and_research_integrity_to_the_page`.
+
+---
+
+<a name="p22"></a>
+## P22 — Alarm iz prvog papirića progutao sljedeća dva bloka
+
+**Datum:** 22.08.2026 · **Oblast:** protokol mjerenja · **Status:** djelimično
+
+**Simptom.** `paper_blocks_passed: 1/3`, uz `alarm_or_carried_alarm` u sva tri
+oporavka. Papirić je svaki put jasno podigao skor, ali su blokovi 2 i 3 pali.
+
+**Uzrok.** Blok se ocjenjuje po **ulasku** u alarm, a ulaska nema ako uređaj iz
+prethodnog alarma nije izašao. `firmware_states.csv` pokazuje samo dva
+`ANOMALY_ENTERED` u cijelom runu: alarm je ušao u `1192,8 s` (papirić 1) i
+izašao tek u `1432,4 s` (oporavak 3) — **239,6 s neprekidno**, preko papirića 2 i 3.
+
+Izlaz ide na `threshold_exit`, koji je `p75` od 44 DERIVE prozora i tog runa je
+bio `824` (uz `threshold_enter` = `p99` = `4374`). Izmjereni skorovi:
+
+| faza | skorovi |
+|---|---|
+| normalna osnova | 201 – 602 |
+| oporavak 1 | 1924, 1282, 1413, 1002 |
+| oporavak 2 | 1030, 968, 1432, 1396 |
+| oporavak 3 | 1104, **752**, 622, 452 |
+| oporavak poslije govora | 534, 538, 434, 468 |
+
+Oporavci 1 i 2 su stajali dvostruko iznad normalne osnove i iznad `threshold_exit`;
+tek kad je skor pao na `752` alarm je nestao u istom prozoru. Oporavak 3 i
+oporavak poslije govora, kad se operater stvarno odmakao, padaju odmah. Dakle
+akustičko stanje **jeste** bilo podignuto — ruka i papirić su ostajali u blizini
+— a ne da je prag pogrešan.
+
+**Rješenje koje je urađeno.** Panel u fazi u kojoj alarm obara run i dalje traje
+ispisuje `UREDJAJ JE JOS U ALARMU` i kaže da sljedeći papirić neće imati u šta
+da uđe. Ranije je operater imao samo crvenu lampicu, bez posljedice napisane uz nju.
+
+**Šta ostaje otvoreno.** Oporavak u GUIDED25 traje `50 s` (4 mjerena prozora);
+stariji `full` plan je za istu fazu imao `90 s`. Produženje na `90 s` bi ukupan
+najgori tok podiglo sa `1370 s` na `1490 s`, uz hard stop `1500 s` — što ne
+ostavlja ništa operateru. Odluka se **ne** donosi poslije rezultata; ako se
+mijenja, mijenja se uz bump verzije politike i novi preregistrovani retest.
 
 ---
 

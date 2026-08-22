@@ -5,6 +5,33 @@ launcher pokreće host snimanje, obaveznu research telemetriju, dashboard i sve
 artefakte. Nijedna komanda ispod sama ne pokreće ventilator; operater potvrđuje
 postavku, a učenje počinje tek poslije klika u dashboardu.
 
+## Obavezno prije narednog runa: flashuj popravku
+
+Run 22.08.2026 je pao na `invalid_research_telemetry` zbog [P20](problemi-i-rjesenja.md#p20)
+— `FLAGS` iz UI taska je upadao usred `FEATURE96` reda. Popravka je u kodu i
+build je čist, ali **ploča je i dalje sa starim firmverom**. Bez flasha se isti
+kvar ponavlja.
+
+```powershell
+$env:ASD_PSD_LIVE = "1"; $env:ASD_RESEARCH_TELEMETRY = "1"
+. "$HOME\esp\esp-idf\export.ps1"
+Set-Location "$HOME\Desktop\master new\firmware\esp32s3_asd"
+idf.py reconfigure
+idf.py build
+idf.py -p COM3 flash
+```
+
+`reconfigure` nije opcion — bez njega build tiho ostane u starom modu ([P2](problemi-i-rjesenja.md#p2)).
+Poslije flasha provjeri da preflight vidi novi bin:
+
+```powershell
+Set-Location "$HOME\Desktop\master new"
+.\POKRENI-GUIDED25.cmd preflight
+```
+
+Očekivani SHA-256 builda sa popravkom je `3f80a42a...`; ako preflight ispiše
+stari heš, flash nije prošao.
+
 ## Najkraći put
 
 1. Priključi ploču i provjeri da se pojavila kao `COM3`.
@@ -73,9 +100,41 @@ GUIDED25 sam dodaje `--research-telemetry-required` i zaključani
 - Sa zalemljenim tasterom: klikni **1B. Armiraj**, pa kratko pritisni taster.
 - Tokom SETTLE/CENTER/DERIVE/VERIFY ne prilazi i ne pričaj.
 - Kad piše da je kalibracija gotova, klikni **2. Kreni sa mjerenjem**.
-- Za svaku prikazanu aktivnu fazu klikni **Potvrdi START faze** kada radnju
-  počneš i **Potvrdi END faze** neposredno prije kraja odbrojavanja.
+- Potvrde faza sada vodi sam panel. Ispod uputstva stoji kartica
+  **POTVRDE FAZA** sa brojačem `n/20`; aktivno je samo ono dugme koje je na
+  redu, a drugo je onemogućeno. Klikni **POTVRDI START** čim radnju počneš i
+  **POTVRDI END** neposredno prije kraja odbrojavanja.
 - Ako nešto nije urađeno tačno po uputstvu, klikni **Prekini i sačuvaj**.
+
+### Crvene poruke na vrhu panela
+
+Panel sada sam prijavljuje ono što run obara, dok se pokušaj još može prekinuti:
+
+| Poruka | Šta znači | Šta uraditi |
+|---|---|---|
+| `RESEARCH TELEMETRIJA JE POKVARENA` | Bar jedan `FEATURE96`/`SUBSEG96` red je stigao isprepletan; host će run odbiti kao `invalid_research_telemetry` | Odmah **Prekini i sačuvaj**, provjeri da je flashovan build sa [P20](problemi-i-rjesenja.md#p20) popravkom, pa ponovi pokušaj |
+| `PROPUSTENE POTVRDE` | Faza je prošla bez `START` i `END` klika i više se ne može potvrditi | Run je već pao; prekini i ponovi |
+| `UREDJAJ JE JOS U ALARMU` | U tekućoj fazi alarm obara run, a dok traje, sljedeći papirić nema u šta da uđe | Skloni papirić **i ruku**, odmakni se korak, sačekaj da poruka nestane |
+| `KALIBRACIJA JE GOTOVA — KLIKNI "2. KRENI SA MJERENJEM"` | Hard stop teče, a mjerenje još nije počelo | Klikni odmah; vidi budžet ispod |
+| `HARD STOP ZA mm:ss` | Manje od tri minuta do automatskog prekida | Ne oklijevaj sa potvrdama |
+
+### Budžet vremena — 22.08. je preživio sa 30 s rezerve
+
+Hard stop od `1500 s` teče od **početka sesije** (pritisak tastera), ne od
+početka mjerenja. Izmjereno u runu 22.08.2026:
+
+| Dionica | Trajanje |
+|---|---|
+| taster → početak kalibracije (WAIT/settle) | `55 s` |
+| commissioning (CENTER + DERIVE + VERIFY) | `759 s` |
+| **čekanje da operater klikne „Kreni sa mjerenjem"** | **`126 s`** |
+| plan od 11 faza | `530 s` |
+| ukupno | `1470 s` od `1500 s` |
+
+Najgori dozvoljeni commissioning je `840 s`, a plan je fiksnih `530 s` — znači
+operateru za odluku ostaje najviše oko `130 s`, a potrošeno je `126 s`. Prošlo je
+samo zato što se ploča tog puta ustalila prije roka. Klikni čim se pojavi poruka
+da je kalibracija gotova.
 
 ### Naučeno iz runa 22.08.2026 (`paper_blocks_passed: 1/3`)
 

@@ -1,0 +1,20 @@
+host_utc,elapsed_s,firmware_session_index,kind,label,note
+2026-08-22T12:10:16.484+00:00,0.032,0,session,start,sigurnosna postavka potvrđena; operator condition=unconfirmed
+2026-08-22T12:10:16.936+00:00,0.485,0,device,reset,RTS reset; pocinje WAIT/CAL/DET
+2026-08-22T12:13:04.782+00:00,168.344,0,virtual_button,guided25,panel
+2026-08-22T12:13:04.785+00:00,168.344,0,virtual_button,press,panel
+2026-08-22T12:14:00.101+00:00,223.657,1,phase,calibration,fan mora ostati u potvrđeno normalnom stanju
+2026-08-22T12:26:39.007+00:00,982.563,1,phase,detection,firmware DET faza; operator condition i dalje nije potvrđen
+2026-08-22T12:28:45.157+00:00,1108.719,1,condition,normal_baseline,Normalna osnova: Miruj i ne pricaj.
+2026-08-22T12:29:35.220+00:00,1158.782,1,condition,airflow_change_paper_1,"Papiric 1: Drzi papiric uz usis, bez dodira ventilatora."
+2026-08-22T12:30:24.613+00:00,1208.172,1,condition,recovery_normal_1,Oporavak 1: Skloni papiric i ruku; tisina.
+2026-08-22T12:31:14.634+00:00,1258.188,1,condition,airflow_change_paper_2,Papiric 2: Ponovi isti polozaj papirica.
+2026-08-22T12:32:04.705+00:00,1308.266,1,condition,recovery_normal_2,Oporavak 2: Skloni papiric i ruku; tisina.
+2026-08-22T12:32:54.752+00:00,1358.313,1,condition,airflow_change_paper_3,Papiric 3: Treci put ponovi isti polozaj.
+2026-08-22T12:33:44.783+00:00,1408.344,1,condition,recovery_normal_3,Oporavak 3: Skloni papiric i ruku; tisina.
+2026-08-22T12:34:35.233+00:00,1458.782,1,condition,ambient_speech,Razgovor: Pricaj normalno sa oznacenog mjesta.
+2026-08-22T12:35:25.113+00:00,1508.672,1,condition,recovery_after_speech,Oporavak poslije govora: Prestani da pricas; tisina.
+2026-08-22T12:36:15.098+00:00,1558.657,1,condition,ambient_door,Vrata: Jednom normalno otvori i zatvori vrata; ne lupaj.
+2026-08-22T12:36:45.133+00:00,1588.688,1,condition,final_recovery,Zavrsni oporavak: Miruj i ostavi ventilator da radi normalno.
+2026-08-22T12:37:35.182+00:00,1638.735,1,session,stop,kraj plana
+2026-08-22T12:37:35.307+00:00,1638.86,1,session,final_buffer_drain_complete,buffered UART je procitan prije finalizacije
