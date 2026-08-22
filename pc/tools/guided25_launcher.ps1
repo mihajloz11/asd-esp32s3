@@ -52,16 +52,30 @@ function Get-LiveFlags([string]$PortName) {
     $serial.RtsEnable = $false
     try {
         $serial.Open()
-        $deadline = [DateTime]::UtcNow.AddSeconds(8)
+        # Prvi red poslije Open() zna da bude pola reda zateceno u baferu, a
+        # samo otvaranje porta ume da resetuje plocu pa se ESP-ROM banner
+        # zalijepi usred FLAGS reda. Zato: baci bafer, preskoci prvi red i
+        # prihvati samo red koji je poceo poslije stvarnog prelaza reda.
+        $serial.DiscardInBuffer()
+        $skippedFirst = $false
+        $deadline = [DateTime]::UtcNow.AddSeconds(20)
         while ([DateTime]::UtcNow -lt $deadline) {
+            $line = $null
             try {
                 $line = $serial.ReadLine().Trim()
-                if ($line.StartsWith("FLAGS ")) { return $line }
             } catch [System.TimeoutException] {
                 # FLAGS se ponavlja svakih pet sekundi; nastavi do ukupnog roka.
+                $line = $null
             }
+            if ([string]::IsNullOrEmpty($line)) { continue }
+            if (-not $skippedFirst) { $skippedFirst = $true; continue }
+            if (-not $line.StartsWith("FLAGS ")) { continue }
+            # Odsjecen red se poznaje po drugom FLAGS-u ili po ESP-ROM banneru.
+            if ($line.IndexOf("FLAGS", 1) -ge 0) { continue }
+            if ($line.Contains("ESP-ROM")) { continue }
+            return $line
         }
-        throw "Nema FLAGS telemetrije sa $PortName u roku od 8 s."
+        throw "Nema kompletne FLAGS telemetrije sa $PortName u roku od 20 s."
     } finally {
         if ($serial.IsOpen) { $serial.Close() }
         $serial.Dispose()
