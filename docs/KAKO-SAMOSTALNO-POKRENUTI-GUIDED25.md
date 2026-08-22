@@ -77,6 +77,52 @@ GUIDED25 sam dodaje `--research-telemetry-required` i zaključani
   počneš i **Potvrdi END faze** neposredno prije kraja odbrojavanja.
 - Ako nešto nije urađeno tačno po uputstvu, klikni **Prekini i sačuvaj**.
 
+### Naučeno iz runa 22.08.2026 (`paper_blocks_passed: 1/3`)
+
+Tri stvari su tada oborile run, a nijedna nije bila kvar uređaja.
+
+**Potvrde faza nisu opcione.** Tog runa ih je bilo nula, a traži se tačno
+dvadeset: `Potvrdi START` i `Potvrdi END` za svaku fazu **osim normalne
+osnove**. Bez kompletnog niza, tačnim redoslijedom, run pada na
+`operator_confirmations_missing_fake_or_out_of_order` bez obzira na mjerenje.
+
+**Papirić blok se ocjenjuje po ULASKU u alarm, ne po jačini.** Traže se tri
+uzastopna prozora iznad praga i bar jedan prelaz iz normalnog stanja u alarm
+unutar te faze. Blokovi se međusobno **ne** porede, pa papirić ne mora svaki put
+biti isti po jačini ni po frekvenciji. Ali ako uređaj još nije izašao iz
+prethodnog alarma, novog ulaska nema i blok ne prolazi — tako su 22.08. papirići
+2 i 3 propali unutar alarma koji je trajao od papirića 1 do oporavka 3.
+
+**Oporavak je gotov tek kad uređaj to kaže.** Izlaz iz alarma ide na
+`threshold_exit`, koji je tog runa bio `824` uz `threshold_enter` `4374`. Dok je
+papir bio u blizini, skor je stajao na `1002–1924` i alarm se držao; čim je
+papir stvarno sklonjen, skor je pao na `752` i alarm je nestao. Zato: skloni
+papirić **i ruku**, sačekaj da `ANOMALIJA` indikator na panelu prestane da
+svijetli, pa tek onda potvrdi kraj oporavka.
+
+### Šta ambijentalne faze stvarno mjere
+
+Izmjereni skorovi tog runa, uz prag `4374`:
+
+| Uslov | Skor |
+|---|---|
+| Normalan rad | `500–1100` |
+| Papirić | `10073` |
+| Govor | `21162` |
+| Vrata | `73319` |
+
+Detektor je jednoklasni: uči šta je normalan spektar ventilatora i prijavljuje
+sve što je od njega daleko. Ne traži da smetnja bude stalna ni jednolična —
+govor preko cijelog prozora od deset sekundi doda energiju u trake u kojima
+ventilator nema ništa, pa vektor odlazi dalje od centra nego kod papirića.
+
+Gate koji bi smetnju razlikovao od kvara postoji (`asd_interference.c`), ali mu
+je politika namjerno isključena (`enabled = 0`, pragovi `0.0`) dok se ne izvedu
+iz fizičkih normal-only podataka. Dok je tako, `ambient_speech` može oboriti
+run, i to je **izmjereno ograničenje jednog mikrofona**, ne kvar. Govori tiše i
+dalje od mikrofona nego 22.08.; ako i tada padne, to je rezultat koji se
+prijavljuje, a ne popravlja štelovanjem pragova.
+
 Planirani najgori tok traje `22:50`; hard stop je `25:00`. Izmjereno trajanje
 jednog prozora je `9,981 s`, pa sa WAIT fazom najgori tok stvarno iznosi
 `23:03` — rezerva do hard stopa je oko dva minuta. Zato poslije poruke da je
