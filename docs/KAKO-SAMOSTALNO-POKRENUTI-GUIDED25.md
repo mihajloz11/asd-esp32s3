@@ -87,11 +87,21 @@ pokušaja.
 
 Jedan ishod nije kvar ni greška operatera. `threshold_enter` je `p99` od 44
 DERIVE prozora, što za taj broj prozora ispada tačno **najveći** izmjereni
-skor, a `VERIFY` zatim ne dozvoljava nijedan prozor iznad njega. Ako su DERIVE
-i VERIFY prozori uzorci iste normalne distribucije, kalibracija padne na
-`VERIFY_NORMAL_REJECT` kad god globalni maksimum svih 66 prozora padne u
-VERIFY dio — dakle u oko `22/66 = 33%` pokušaja. To je svojstvo praga, ne
-kvar; zapiši ga i ponovi pokušaj.
+skor. Ali `VERIFY` ne pada na jednom prozoru iznad njega: `verify_alarm_windows`
+raste tek kad se upali epizoda, a za to trebaju **tri uzastopna** prozora iznad
+praga (`verify_min_consecutive = 3`, `asd_commissioning.c:236` i `:246`).
+
+Simulirano nad tačnom replikom te logike, `400.000` pokušaja: ako su prozori
+nezavisni uzorci iste distribucije, `VERIFY_NORMAL_REJECT` pada u `0,12%`
+pokušaja. Susjedni prozori sa istog ventilatora ipak nisu nezavisni, a rizik
+na to jako reaguje — `0,98%` pri `rho=0,3`, `4,8%` pri `rho=0,6` i `15,4%` pri
+`rho=0,85`. Iz DET skorova run-a 16.08. lag-1 autokorelacija normalnih prozora
+ispada `0,49`, ali iz samo pet uzastopnih normalnih prozora, što je premalo za
+pouzdanu procjenu. Realan opseg je zato **oko jedan do pet posto**, sa
+značajnom nesigurnošću dok se ne dobije duži normalni blok sa ploče.
+
+Ako se ipak desi, zapiši `VERIFY_NORMAL_REJECT` i ponovi pokušaj — to je
+svojstvo praga, ne kvar uređaja.
 
 ## Gdje su logovi
 
