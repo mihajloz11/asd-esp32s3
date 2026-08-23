@@ -1,0 +1,2 @@
+host_utc,elapsed_s,firmware_session_index,protocol,type,state,phase,reason,event,capability,level
+2026-08-23T11:45:38.766+00:00,187.938,1,asd-quality-v1.5.0,FLOW_STOPPED,CALIBRATION_REJECTED,CAL,UNSTABLE_CALIBRATION,NONE,AVAILABLE,DEVIATION
