@@ -1,6 +1,9 @@
 /* Vidi asd_events.h. */
 #include "asd_events.h"
 
+/* Alarm koji traje se broji ovdje, a ne u pozivaocu, da bi bio pokriven istim
+ * host testovima kao i ostatak odluke. */
+
 #include <math.h>
 #include <string.h>
 
@@ -176,6 +179,21 @@ static asd_decision_t finish(asd_decision_ctx_t *ctx, asd_state_t previous,
     out.state_changed = (next != previous);
     out.observation_hold = 0;
     out.hold_warning = 0;
+
+    /* Trajanje alarma se mjeri centralno, da nijedna grana ne moze zaboraviti
+     * da resetuje brojac kad se uredjaj vrati u normalu. */
+    out.sustained_anomaly = 0;
+    if (next == ASD_STATE_ANOMALY) {
+        if (ctx->anomaly_windows < UINT32_MAX) ctx->anomaly_windows++;
+        if (ctx->anomaly_windows >= ASD_SUSTAINED_ANOMALY_WINDOWS &&
+            !ctx->sustained_reported) {
+            ctx->sustained_reported = 1;
+            out.sustained_anomaly = 1;
+        }
+    } else {
+        ctx->anomaly_windows = 0u;
+        ctx->sustained_reported = 0;
+    }
     return out;
 }
 

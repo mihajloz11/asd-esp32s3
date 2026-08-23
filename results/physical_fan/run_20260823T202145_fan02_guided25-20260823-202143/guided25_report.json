@@ -1,0 +1,20 @@
+{
+  "schema_version": "asd-guided25-v1.0.0-development",
+  "status": "FAIL",
+  "failures": [
+    "research_pairs_or_checksum_invalid",
+    "operator_confirmations_missing_fake_or_out_of_order",
+    "alarm_or_carried_alarm:recovery_normal_1",
+    "alarm_or_carried_alarm:recovery_normal_2",
+    "alarm_or_carried_alarm:recovery_normal_3",
+    "alarm_or_carried_alarm:ambient_speech",
+    "alarm_or_carried_alarm:recovery_after_speech",
+    "alarm_or_carried_alarm:ambient_door",
+    "alarm_or_carried_alarm:final_recovery",
+    "paper_blocks_passed:1/3"
+  ],
+  "paper_blocks_passed": 1,
+  "evaluated_det_windows": 43,
+  "research_manifest_sha256": "f330953b9352172ebfb66663427263c5753e7822d1445405eb054aa021f57250",
+  "note": "Observed single-microphone noise tolerance; the disabled interference policy means this is not proof of a HOLD classifier."
+}

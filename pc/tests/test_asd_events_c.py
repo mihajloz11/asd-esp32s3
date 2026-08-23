@@ -95,6 +95,7 @@ class Temporal(ctypes.Structure):
 class InterferencePolicy(ctypes.Structure):
     _fields_ = [("enabled", ctypes.c_int),
                 ("developmental", ctypes.c_int),
+                ("use_tonalness_delta", ctypes.c_int),
                 ("max_abs_tonalness_delta", ctypes.c_float),
                 ("max_subsegment_instability", ctypes.c_float),
                 ("long_hold_windows", ctypes.c_uint32)]
@@ -110,6 +111,8 @@ class Interference(ctypes.Structure):
 class Ctx(ctypes.Structure):
     _fields_ = [("state", ctypes.c_int),
                 ("absent_run", ctypes.c_int),
+                ("anomaly_windows", ctypes.c_uint32),
+                ("sustained_reported", ctypes.c_int),
                 ("temporal", Temporal),
                 ("interference", Interference),
                 ("policy", Policy)]
@@ -122,7 +125,8 @@ class Decision(ctypes.Structure):
                 ("flow_stop", ctypes.c_int),
                 ("state_changed", ctypes.c_int),
                 ("observation_hold", ctypes.c_int),
-                ("hold_warning", ctypes.c_int)]
+                ("hold_warning", ctypes.c_int),
+                ("sustained_anomaly", ctypes.c_int)]
 
 
 @pytest.fixture(scope="module")
@@ -561,7 +565,7 @@ def test_sensor_fault_fully_resets_the_detector(lib):
 # --- Faza 6: observation HOLD ----------------------------------------------
 
 def enable_interference(lib, ctx, *, long_hold=3):
-    policy = InterferencePolicy(1, 1, 1.0, 0.5, long_hold)
+    policy = InterferencePolicy(1, 1, 1, 1.0, 0.5, long_hold)
     lib.asd_decision_set_interference_policy(
         ctypes.byref(ctx), ctypes.byref(policy),
     )

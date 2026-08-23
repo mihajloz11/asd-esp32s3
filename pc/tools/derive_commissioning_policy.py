@@ -66,6 +66,20 @@ class ThresholdSpec:
 
 
 THRESHOLD_SPECS: tuple[ThresholdSpec, ...] = (
+    # Pravilo koje firmver koristi od 23.08.2026. Ulaz je nepromijenjen (p99);
+    # izlaz je podignut sa p75 na p95, uz ogranicenja `max(p50)` odozdo i
+    # `0,5 * enter` odozgo koja zive u `psd_live.c` jer ih ovaj laboratorijski
+    # opis ne izrazava.
+    #
+    # Razlog je izmjeren, ne pretpostavljen: run 23.08.2026 je imao enter 6341 i
+    # exit 341, a najtisi ispravan DET prozor 463 -- alarm iz prvog papirica se
+    # nikad nije ugasio i sljedeca dva bloka nisu imala u sta da udju. p75 znaci
+    # da cetvrtina ispravnih prozora stoji IZNAD izlaza. Izvedeno iskljucivo iz
+    # normal-only DERIVE raspodjele; nijedna ciljna anomalija nije otvorena.
+    ThresholdSpec(
+        "empirical-p99_exit-p95-clamped", "percentile", 0.99,
+        "percentile", 0.95,
+    ),
     ThresholdSpec(
         "empirical-p99_exit-p75", "percentile", 0.99,
         "percentile", 0.75,
