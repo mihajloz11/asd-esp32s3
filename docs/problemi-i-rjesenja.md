@@ -1026,6 +1026,7 @@ kapiju `max_loo_cv = 0,6`:
 | 22.08. 16:29 | `1,956` | firmware `CAL_SUMMARY` |
 | 23.08. 13:42 | `1,258` | firmware `CAL_SUMMARY` |
 | 23.08. provjera | `1,52` | host rekonstrukcija; sirov log je prepisan |
+| 23.08. 19:56 | `1,666` | firmware `CAL_SUMMARY`, **operater van sobe** |
 
 Za poređenje, run 22.08.2026 koji je **prošao**: `loo_mean 211,9`, `loo_sd 64,6`,
 `loo_cv 0,305`.
@@ -1038,15 +1039,17 @@ Rekonstrukcija se poklapa sa firmverom — `mean 876,2` / `sd 1714,0` naspram
 `876,17` / `1713,97`.
 
 **Uzrok.** Devet od deset klipova je uvijek uredno; strada **tačno jedan**, i
-uvijek na istoj traci — **traka 30, ~66 Hz**:
+uvijek u istom uskom pojasu — **trake 30–32, `66–75 Hz`**:
 
-| pokušaj | najgori klip | njegov `loo` | udio trake 66 Hz |
+| pokušaj | najgori klip | njegov `loo` | koja traka ga nosi |
 |---|---|---|---|
-| 22.08. 16:29 | 10 | `5731` | `39 %` (uz 141 Hz `16 %`) |
-| 23.08. 13:42 | 6 | `1385` | `75 %` |
-| 23.08. provjera | 2 | `1911` | `66 %` |
+| 22.08. 16:29 | 10 | `5731` | 66 Hz `39 %` (uz 141 Hz `16 %`) |
+| 23.08. 13:42 | 6 | `1385` | 66 Hz `75 %` |
+| 23.08. provjera | 2 | `1911` | 66 Hz `66 %` |
+| 23.08. 19:56 | 10 | `2023` | 75 Hz `37 %` (uz 182 Hz `9 %`) |
 
-Ostali klipovi u istim snimcima su `90–470`. Rasipanje same trake 30 kroz deset
+Ostali klipovi u istim snimcima su `90–470`, a u pokušaju bez operatera u sobi
+`106–255` — najčvršće izmjereno. Rasipanje same trake 30 kroz deset
 klipova: `0,08 dB` u snimku koji bi prošao, `0,23–0,33 dB` u odbijenima. Dakle
 dovoljan je **jedan skok od oko +0,7 dB u jednoj od 96 traka** da `loo_cv`
 pređe kapiju.
@@ -1056,19 +1059,45 @@ ventilatorima, a u toj traci ima vrlo malu varijansu. Mahalanobis zato tamo
 kažnjava nesrazmjerno. To je isti mehanizam kao [P17](#p17) — mala promjena u
 uskoj dimenziji daje veliku promjenu skora.
 
-**Šta je 66 Hz.** Odgovara rotacionoj frekvenciji ventilatora (~4000 o/min).
-Pobuda je **kratkotrajna i strukturno prenesena**, ne stalna: identifikovana su
-dva izvora, oba van akustičkog puta mikrofon–ventilator — pomjeranje operatera
-u stolici (prenos kroz pod i sto) i voda kroz instalacije susjednog stana.
-Oba daju jedan događaj na red veličine sto sekundi, što je tačno jedan
-kalibracioni klip.
+**Šta je 66–75 Hz.** Odgovara rotacionoj frekvenciji ventilatora
+(~4000 o/min), pa se pobuda tu i sprega.
+
+**Nije operater.** Pokušaj 23.08. 19:56 je pušten sa operaterom u drugoj
+prostoriji. Devet klipova je tada bilo čvršće nego u ijednom ranijem snimku
+(`106–255`), ali je deseti svejedno otišao na `2023`. Ranija atribucija na
+pomjeranje u stolici time **otpada kao nužni uzrok** — prisustvo operatera širi
+osnovno rasipanje, ali ne pravi ovaj ispad.
+
+**Nije ni udarac.** Razlaganje tog klipa po pet podsegmenata od 2 s pokazuje da
+pobuda **raste kroz osam sekundi i traje do kraja klipa**, umjesto da se pojavi
+i nestane:
+
+| podsegment | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| 75 Hz | `+0,26` | `-0,02` | `+0,60` | `+1,07` | `+0,98` |
+| 182 Hz | `+0,26` | `+0,24` | `+0,47` | `+0,58` | `+0,99` |
+
+Miran klip iz istog snimka ostaje unutar `±0,2` u obje trake. Dakle nešto se
+**upalilo i nastavilo da radi** — pumpa, kompresor, voda, lift — i doprlo kroz
+konstrukciju, a ne kroz vazduh.
 
 **Šta je urađeno.** Ništa na pragovima — `max_loo_cv = 0,6` ostaje. Dodat je
 `pc/tools/diag_calibration_loo.py` da se sljedeći pad ne rješava naslijepo.
-Postupak: kalibracija se pušta samo kad je zgrada mirna, operater sjedi na
-mjernom mjestu i **ne dodiruje laptop niti se pomjera** tokom prva ~4 minuta
-(SETTLE + WAIT + 10 klipova). Prije trošenja GUIDED25 pokušaja pušta se jeftina
-provjera koja ide samo do kalibracije i ne troši pokušaj.
+
+Postupak koji odsad važi:
+
+- kalibracija se pušta kad je zgrada mirna, a ne kad je operateru zgodno;
+- pločica i mikrofon idu na **mekanu podlogu**, ne direktno na sto — put smetnje
+  je strukturni, pa se prekida na tom mjestu, dok zvuk ventilatora kroz vazduh
+  ostaje netaknut;
+- prije trošenja GUIDED25 pokušaja pušta se jeftina provjera koja ide samo do
+  kalibracije (~4 min) i ne troši pokušaj.
+
+**Koliko je to lutrija.** Sva četiri odbijena pokušaja imala su tačno jedan
+pogođen klip, što daje vjerovatnoću pogotka po klipu oko `0,1`. Čist niz od
+deset klipova ima onda oko `35 %` šanse — što se slaže sa tim da je run
+22.08.2026 prošao sa `loo_cv 0,305`. Ponavljanje samo po sebi ima smisla; meka
+podloga treba da tu šansu digne.
 
 **Šta ostaje otvoreno.** Da jedan prozor od deset, sa odstupanjem od `0,7 dB` u
 jednoj traci, obara cijelu kalibraciju — to je svojstvo Mahalanobisa sa stranom
