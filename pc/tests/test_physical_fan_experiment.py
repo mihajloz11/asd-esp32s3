@@ -2810,3 +2810,43 @@ def test_serial_timeout_is_not_reassigned_when_unchanged() -> None:
     assert ser.reconfigures == 1
     assert physical.apply_serial_timeout(ser, 0.05) is False
     assert ser.reconfigures == 1
+
+
+def test_drain_waits_for_a_research_package_that_is_still_arriving() -> None:
+    """Tisina izmedju redova jednog paketa nije kraj prenosa.
+
+    Izmjereno 23.08.2026: paket je 7507 bajta = 652 ms na 115200 baud, a razmak
+    izmedju njegovih redova ide do 141 ms -- vise od FINAL_BUFFER_QUIET_S. Bez
+    ovoga je posljednji DET prozor ostajao bez grupa 4 i 5 i cio run je padao na
+    `research_pairs_or_checksum_invalid` uz ispravno mjerenje.
+    """
+    # Zatvoren paket: tisina od 100 ms i dalje zatvara drenazu.
+    assert physical.final_buffer_drain_decision(0.2, 0.15) == "complete"
+    # Otvoren paket: ista tisina se ignorise dok paket ne stigne.
+    assert physical.final_buffer_drain_decision(
+        0.2, 0.15, package_open=True) == "continue"
+    assert physical.final_buffer_drain_decision(
+        0.7, 0.15, package_open=True) == "continue"
+    # Cekanje je ograniceno; nepotpun paket se poslije toga i dalje odbija.
+    assert physical.final_buffer_drain_decision(
+        physical.FINAL_BUFFER_OPEN_PACKAGE_TIMEOUT_S, 0.0,
+        package_open=True) == "complete"
+    assert (physical.FINAL_BUFFER_OPEN_PACKAGE_TIMEOUT_S
+            > physical.FINAL_BUFFER_DRAIN_TIMEOUT_S)
+
+
+def test_research_package_open_sees_exactly_the_unfinished_window() -> None:
+    key = (1, "DET", 55)
+    state = {"expected": {key: {}}, "packages": {}}
+    assert physical.research_package_open(state) is True
+
+    state["packages"][key] = {"feature": {"values": []},
+                              "groups": {index: {} for index in range(1, 5)}}
+    assert physical.research_package_open(state) is True
+
+    state["packages"][key]["groups"][5] = {}
+    assert physical.research_package_open(state) is False
+
+    state["packages"][key]["feature"] = None
+    assert physical.research_package_open(state) is True
+    assert physical.research_package_open(None) is False

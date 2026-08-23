@@ -222,6 +222,22 @@ PCM_LEVEL_ABS_TOL = 1.0
 TERMINAL_DRAIN_TIMEOUT_S = 2.5
 FINAL_BUFFER_DRAIN_TIMEOUT_S = 0.50
 FINAL_BUFFER_QUIET_S = 0.10
+# Koliko se najduze ceka kad je research paket ostao otvoren.
+#
+# Izmjereno 23.08.2026 nad `run_20260823T202145`: jedan paket je 1 FEATURE96
+# (1337 B) + 5 SUBSEG96 (1234 B) = 7507 bajta, sto je 652 ms na 115200 baud --
+# vise od cijelog `FINAL_BUFFER_DRAIN_TIMEOUT_S`. Gore od toga, razmak IZMEDJU
+# redova istog paketa ide do 141 ms, a `FINAL_BUFFER_QUIET_S` je 100 ms, pa je
+# drenaza kraj paketa tumacila kao kraj prenosa.
+#
+# Posljedica je bila da posljednjem DET prozoru fale grupe 4 i 5, pa manifest
+# javi `complete 64 / expected 65` i cio run padne na
+# `research_pairs_or_checksum_invalid` iako je mjerenje bilo ispravno. To nije
+# bilo pitanje srece nego aritmetike: 500 ms budzeta za 652 ms prenosa.
+#
+# Ovo NE slabi dokaz -- ne prihvata se nepotpun paket, nego se dovrsi citanje
+# onoga sto je uredjaj vec poslao, i to ograniceno.
+FINAL_BUFFER_OPEN_PACKAGE_TIMEOUT_S = 3.0
 TERMINAL_FIRMWARE_STATES = {
     "SENSOR_ERROR", "CALIBRATION_REJECTED", "RECALIBRATION_REQUIRED",
 }
@@ -1650,7 +1666,33 @@ def terminal_drain_timeout_reason(state: dict[str, Any]) -> str:
     return "terminal_drain_timeout:incomplete_terminal_pair"
 
 
-def final_buffer_drain_decision(elapsed_s: float, quiet_s: float) -> str:
+def research_package_open(state: dict[str, Any] | None) -> bool:
+    """Da li je bar jedan najavljeni research prozor jos nedovrsen.
+
+    Prozor se najavljuje `QUALITY ... result=OK feature_valid=1`, pa tek onda
+    stize FEATURE96 i pet SUBSEG96 redova. Izmedju najave i posljednje grupe
+    paket je otvoren i tisina na liniji ne znaci kraj prenosa.
+    """
+    if not state:
+        return False
+    packages = state.get("packages", {})
+    for key in state.get("expected", {}):
+        package = packages.get(key)
+        if package is None:
+            return True
+        if package.get("feature") is None or len(package.get("groups", {})) < 5:
+            return True
+    return False
+
+
+def final_buffer_drain_decision(
+    elapsed_s: float, quiet_s: float, *, package_open: bool = False,
+) -> str:
+    if package_open:
+        # Tisina se ne smije tumaciti kao kraj dok paket nije zatvoren; ceka se
+        # ograniceno, pa se svejedno finalizuje i nepotpun paket obara run.
+        return ("complete" if elapsed_s >= FINAL_BUFFER_OPEN_PACKAGE_TIMEOUT_S
+                else "continue")
     if elapsed_s >= FINAL_BUFFER_DRAIN_TIMEOUT_S or quiet_s >= FINAL_BUFFER_QUIET_S:
         return "complete"
     return "continue"
@@ -3339,13 +3381,18 @@ def run_experiment(args: argparse.Namespace) -> int:
                         break
                 elif finalize_drain_started is not None:
                     quiet_since = last_serial_data_at or finalize_drain_started
+                    package_open = research_package_open(research_state)
                     if final_buffer_drain_decision(
                         now - finalize_drain_started, now - quiet_since,
+                        package_open=package_open,
                     ) == "complete":
                         status = str(finalize_requested_status)
+                        drained = now - finalize_drain_started
                         record_event(
                             kind="session", label="final_buffer_drain_complete",
-                            note="buffered UART je procitan prije finalizacije",
+                            note=("buffered UART je procitan prije finalizacije; "
+                                  f"trajanje={drained:.3f} s; "
+                                  f"paket_jos_otvoren={int(package_open)}"),
                         )
                         break
                 if (
