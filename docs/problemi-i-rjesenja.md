@@ -37,6 +37,7 @@
 | [P20](#p20) | 22.08 | UART / protokol | FLAGS iz drugog taska upada usred FEATURE96 reda | riješeno u kodu, **nije fizički potvrđeno** |
 | [P21](#p21) | 22.08 | operaterski tok | Run traži 20 potvrda faza, a panel ih nije tražio | riješeno (panel vodi klik po klik) |
 | [P22](#p22) | 22.08 | protokol mjerenja | Alarm iz prvog papirića progutao sljedeća dva bloka | djelimično (panel upozorava; trajanje oporavka otvoreno) |
+| [P23](#p23) | 23.08 | kalibracija / postavka | Jedan klip od deset propadne na 66 Hz i obori K1 | uzrok izmjeren, **otvoreno** |
 
 ---
 
@@ -1008,6 +1009,72 @@ stariji `full` plan je za istu fazu imao `90 s`. Produženje na `90 s` bi ukupan
 najgori tok podiglo sa `1370 s` na `1490 s`, uz hard stop `1500 s` — što ne
 ostavlja ništa operateru. Odluka se **ne** donosi poslije rezultata; ako se
 mijenja, mijenja se uz bump verzije politike i novi preregistrovani retest.
+
+---
+
+<a name="p23"></a>
+## P23 — Jedan klip od deset propadne na 66 Hz i obori K1
+
+**Datum:** 23.08.2026 · **Oblast:** kalibracija / mjerna postavka · **Status:**
+uzrok izmjeren, **otvoreno** (nije eliminisan)
+
+**Simptom.** Tri kalibracije zaredom odbijene sa `UNSTABLE_CALIBRATION`, uz
+kapiju `max_loo_cv = 0,6`:
+
+| pokušaj | `loo_cv` | izvor |
+|---|---|---|
+| 22.08. 16:29 | `1,956` | firmware `CAL_SUMMARY` |
+| 23.08. 13:42 | `1,258` | firmware `CAL_SUMMARY` |
+| 23.08. provjera | `1,52` | host rekonstrukcija; sirov log je prepisan |
+
+Za poređenje, run 22.08.2026 koji je **prošao**: `loo_mean 211,9`, `loo_sd 64,6`,
+`loo_cv 0,305`.
+
+**Kako je nađen.** `CAL_SUMMARY` daje samo `mean/sd/cv/range` — ne kaže koji klip
+je kriv ni koja traka. Zato je K1 matematika ponovljena na hostu iz `FEATURE96`
+telemetrije (`pc/tools/diag_calibration_loo.py`), sa razlaganjem skora po
+trakama: doprinos trake je `delta_i * (P delta)_i` i sabira se tačno u skor.
+Rekonstrukcija se poklapa sa firmverom — `mean 876,2` / `sd 1714,0` naspram
+`876,17` / `1713,97`.
+
+**Uzrok.** Devet od deset klipova je uvijek uredno; strada **tačno jedan**, i
+uvijek na istoj traci — **traka 30, ~66 Hz**:
+
+| pokušaj | najgori klip | njegov `loo` | udio trake 66 Hz |
+|---|---|---|---|
+| 22.08. 16:29 | 10 | `5731` | `39 %` (uz 141 Hz `16 %`) |
+| 23.08. 13:42 | 6 | `1385` | `75 %` |
+| 23.08. provjera | 2 | `1911` | `66 %` |
+
+Ostali klipovi u istim snimcima su `90–470`. Rasipanje same trake 30 kroz deset
+klipova: `0,08 dB` u snimku koji bi prošao, `0,23–0,33 dB` u odbijenima. Dakle
+dovoljan je **jedan skok od oko +0,7 dB u jednoj od 96 traka** da `loo_cv`
+pređe kapiju.
+
+**Zašto je metrika toliko osjetljiva.** Kovarijansa je naučena na DCASE
+ventilatorima, a u toj traci ima vrlo malu varijansu. Mahalanobis zato tamo
+kažnjava nesrazmjerno. To je isti mehanizam kao [P17](#p17) — mala promjena u
+uskoj dimenziji daje veliku promjenu skora.
+
+**Šta je 66 Hz.** Odgovara rotacionoj frekvenciji ventilatora (~4000 o/min).
+Pobuda je **kratkotrajna i strukturno prenesena**, ne stalna: identifikovana su
+dva izvora, oba van akustičkog puta mikrofon–ventilator — pomjeranje operatera
+u stolici (prenos kroz pod i sto) i voda kroz instalacije susjednog stana.
+Oba daju jedan događaj na red veličine sto sekundi, što je tačno jedan
+kalibracioni klip.
+
+**Šta je urađeno.** Ništa na pragovima — `max_loo_cv = 0,6` ostaje. Dodat je
+`pc/tools/diag_calibration_loo.py` da se sljedeći pad ne rješava naslijepo.
+Postupak: kalibracija se pušta samo kad je zgrada mirna, operater sjedi na
+mjernom mjestu i **ne dodiruje laptop niti se pomjera** tokom prva ~4 minuta
+(SETTLE + WAIT + 10 klipova). Prije trošenja GUIDED25 pokušaja pušta se jeftina
+provjera koja ide samo do kalibracije i ne troši pokušaj.
+
+**Šta ostaje otvoreno.** Da jedan prozor od deset, sa odstupanjem od `0,7 dB` u
+jednoj traci, obara cijelu kalibraciju — to je svojstvo Mahalanobisa sa stranom
+kovarijansom, i tako se prijavljuje u radu kao ograničenje metode. Nije razlog
+da se kapija pomjeri; eventualna izmjena traži bump verzije politike i novi
+preregistrovani retest.
 
 ---
 
