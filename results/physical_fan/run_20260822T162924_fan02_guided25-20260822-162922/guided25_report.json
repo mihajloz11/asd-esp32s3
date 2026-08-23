@@ -1,0 +1,24 @@
+{
+  "schema_version": "asd-guided25-v1.0.0-development",
+  "status": "FAIL",
+  "failures": [
+    "k1_or_commissioning_not_accepted",
+    "operator_confirmations_missing_fake_or_out_of_order",
+    "too_few_windows:normal_baseline",
+    "too_few_windows:airflow_change_paper_1",
+    "too_few_windows:recovery_normal_1",
+    "too_few_windows:airflow_change_paper_2",
+    "too_few_windows:recovery_normal_2",
+    "too_few_windows:airflow_change_paper_3",
+    "too_few_windows:recovery_normal_3",
+    "too_few_windows:ambient_speech",
+    "too_few_windows:recovery_after_speech",
+    "too_few_windows:ambient_door",
+    "too_few_windows:final_recovery",
+    "paper_blocks_passed:0/3"
+  ],
+  "paper_blocks_passed": 0,
+  "evaluated_det_windows": 0,
+  "research_manifest_sha256": "3a78b6b8e813b46419cfa70decc9cc22355c28ac210f6c9d539611e0135ef1c3",
+  "note": "Observed single-microphone noise tolerance; the disabled interference policy means this is not proof of a HOLD classifier."
+}
