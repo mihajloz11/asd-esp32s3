@@ -1,0 +1,3 @@
+host_utc,elapsed_s,firmware_session_index,protocol,from_state,to_state,reason
+2026-08-23T11:43:02.902+00:00,32.063,1,asd-quality-v1.5.0,NO_MACHINE,NO_MACHINE,BOOT_FAIL_CLOSED
+2026-08-23T11:45:38.728+00:00,187.891,1,asd-quality-v1.5.0,NO_MACHINE,CALIBRATION_REJECTED,UNSTABLE_CALIBRATION
