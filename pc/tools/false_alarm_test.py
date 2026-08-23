@@ -144,7 +144,7 @@ def build_audio(speed: str, out_dir: Path) -> tuple[Path, Path, dict]:
 
 # --- serijski tok -----------------------------------------------------------
 
-PROTOCOL_VERSION = "asd-quality-v1.5.0"
+PROTOCOL_VERSION = "asd-quality-v1.6.0"
 
 THR_RE = re.compile(r"ADAPTTHR n=(\d+) mean=([-\d.eE+]+) sd=([-\d.eE+]+).*?thr=([-\d.eE+]+)")
 PRESENCE_RE = re.compile(
