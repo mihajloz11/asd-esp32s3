@@ -80,10 +80,21 @@ def evaluate_guided25_artifact(*, provenance: dict, detections: list[dict],
     if not research_ok:
         failures.append("research_pairs_or_checksum_invalid")
 
+    # POTVRDE VISE NISU KAPIJA, i to je namjerna izmjena od 23.08.2026.
+    #
+    # Klik u pretrazivacu nije nezavisan dokaz da se fizicka radnja desila --
+    # dokazuje samo da je neko kliknuo. Isto vazi za raspored: on je tvrdnja o
+    # namjeri. Vezati PASS/FAIL za nesto sto se ne moze provjeriti dodaje
+    # ceremoniju, ne strogost, a izmjereno je da kosta cijele runove: 23.08. je
+    # operater kliknuo START za svih deset faza, ali END ni za jednu, jer se END
+    # trazi dok obje ruke drze papiric uz ventilator.
+    #
+    # Sta OSTAJE strogo: potvrda koja POSTOJI mora biti vjerodostojna. Krivotvoren
+    # ili ispremjestan zapis i dalje obara run, jer je to lazan zapis, a ne
+    # nedostatak zapisa. Broj potvrda ide u izvjestaj kao `operator_marks`, pa se
+    # kvalitet dokaza vidi umjesto da se pretpostavlja.
     required_phases = [p["condition"] for p in GUIDED25["phases"]
                        if p["condition"] != "normal_baseline"]
-    expected_confirms = [(phase, edge) for phase in required_phases
-                         for edge in ("start", "end")]
     observed_confirms: list[tuple[str, str]] = []
     previous_confirmation_at: datetime | None = None
     confirmation_invalid = False
@@ -111,8 +122,25 @@ def evaluate_guided25_artifact(*, provenance: dict, detections: list[dict],
             confirmation_invalid = True
         previous_confirmation_at = persisted
         observed_confirms.append((match.group("phase"), match.group("edge")))
-    if confirmation_invalid or observed_confirms != expected_confirms:
-        failures.append("operator_confirmations_missing_fake_or_out_of_order")
+    marked_phases = {phase for phase, _ in observed_confirms}
+    order = {phase: index for index, phase in enumerate(required_phases)}
+    if marked_phases - set(required_phases):
+        confirmation_invalid = True            # oznaka za fazu koja ne postoji
+    else:
+        # Oznake smiju da nedostaju, ali ne smiju da idu unazad kroz plan, i
+        # nijedna faza ne smije poceti sa `end` -- to bi bio zapis o radnji koja
+        # nije zapoceta.
+        indices = [order[phase] for phase, _ in observed_confirms]
+        if any(later < earlier
+               for earlier, later in zip(indices, indices[1:])):
+            confirmation_invalid = True
+        first_edge: dict[str, str] = {}
+        for phase, edge in observed_confirms:
+            first_edge.setdefault(phase, edge)
+        if any(edge != "start" for edge in first_edge.values()):
+            confirmation_invalid = True
+    if confirmation_invalid:
+        failures.append("operator_confirmations_fake_or_out_of_order")
 
     rows = [row for row in detections
             if int(row.get("condition_confirmed", 0)) == 1
@@ -166,6 +194,7 @@ def evaluate_guided25_artifact(*, provenance: dict, detections: list[dict],
         "status": "FAIL" if failures else "PASS",
         "failures": failures,
         "paper_blocks_passed": paper_pass,
+        "operator_marks": f"{len(marked_phases)}/{len(required_phases)}",
         "evaluated_det_windows": len(rows),
         "research_manifest_sha256": sha or None,
         "note": ("Observed single-microphone noise tolerance; the disabled "

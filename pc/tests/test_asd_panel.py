@@ -338,12 +338,12 @@ def test_panel_asks_for_the_confirmation_that_is_actually_due(tmp_path) -> None:
     link = RecordingLink(); conductor = panel.Conductor(state, link)
 
     due = state._confirmation_status(1)
-    assert (due["confirm_required"], due["confirm_done"]) == (20, 0)
+    # Jedna oznaka po fazi, i to neobavezna: klik nije nezavisan dokaz radnje.
+    assert (due["confirm_required"], due["confirm_done"]) == (10, 0)
     assert due["confirm_next_edge"] == "start" and due["confirm_missed"] == []
     conductor.confirm("start")
-    assert state._confirmation_status(1)["confirm_next_edge"] == "end"
-    conductor.confirm("end")
-    assert state._confirmation_status(1)["confirm_next_edge"] is None
+    marked = state._confirmation_status(1)
+    assert marked["confirm_next_edge"] is None and marked["confirm_done"] == 1
     # Normalna osnova se ne potvrdjuje, pa nikad ne moze biti propustena.
     assert state._confirmation_status(5)["confirm_missed"] == [2, 3, 4]
     state.stage = "DONE"

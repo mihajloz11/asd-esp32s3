@@ -101,14 +101,37 @@ def main() -> int:
     # --- commissioning prag: isti preregistrovani kandidat na obje strane ---
     live = read(MAIN / "psd_live.c")
     if (define(live, "COMMISSION_ENTER_QUANTILE") != "0.99f" or
-            define(live, "COMMISSION_EXIT_QUANTILE") != "0.75f"):
-        problems.append("commissioning prag u psd_live.c nije p99/p75")
+            define(live, "COMMISSION_EXIT_QUANTILE") != "0.95f"):
+        problems.append("commissioning prag u psd_live.c nije p99/p95")
+    if (define(live, "COMMISSION_EXIT_MAX_FRACTION") != "0.5f" or
+            define(live, "COMMISSION_EXIT_FLOOR_QUANTILE") != "0.50f"):
+        problems.append("izlazni prag u psd_live.c nema ogranicenja p50/0.5*enter")
     physical = read(ROOT / "pc" / "tools" / "physical_fan_experiment.py")
     if "COMMISSION_ENTER_QUANTILE = 0.99" not in physical:
         problems.append("physical_fan_experiment.py ne validira firmware p99")
     laboratory = read(ROOT / "pc" / "tools" / "derive_commissioning_policy.py")
-    if '"empirical-p99_exit-p75", "percentile", 0.99' not in laboratory:
-        problems.append("PC commissioning manifest nema preregistrovani p99/p75")
+    if '"empirical-p99_exit-p95-clamped", "percentile", 0.99' not in laboratory:
+        problems.append("PC commissioning manifest nema registrovani p99/p95")
+
+    # --- kapija pouzdanosti: firmware i zamrznuta politika moraju se poklopiti ---
+    interference = json.loads(read(CONFIG / "asd_interference_policy_v2.json"))
+    if interference.get("target_anomalies_used_for_fit") is not False:
+        problems.append("interference politika tvrdi da je koristila target anomalije")
+    gate = read(MAIN / "asd_interference.c")
+    header = read(MAIN / "asd_interference.h")
+    if interference["schema_version"] not in header:
+        problems.append("asd_interference.h ne nosi verziju zamrznute politike")
+    numbers = interference["policy"]
+    for key, expected in (
+            ("enabled", "1"),
+            ("use_tonalness_delta", "0"),
+            ("long_hold_windows", f"{int(numbers['long_hold_windows'])}u")):
+        if f".{key} = {expected}," not in gate:
+            problems.append(f"interference {key}: firmware ne nosi {expected}")
+    for key in ("max_abs_tonalness_delta", "max_subsegment_instability"):
+        if f".{key} = {numbers[key]:.6f}f," not in gate:
+            problems.append(
+                f"interference {key}: firmware nije {numbers[key]:.6f}")
 
     if problems:
         print("NESAGLASNOSTI:")

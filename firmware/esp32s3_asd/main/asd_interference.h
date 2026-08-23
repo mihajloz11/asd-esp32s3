@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-#define ASD_INTERFERENCE_POLICY "asd-interference-policy-v1.0.0-development"
-#define ASD_INTERFERENCE_POLICY_ID 0x49505631u
+#define ASD_INTERFERENCE_POLICY "asd-interference-policy-v2.0.0-development"
+#define ASD_INTERFERENCE_POLICY_ID 0x49505632u
 
 typedef enum {
     ASD_INTERFERENCE_PASS = 0,
@@ -21,6 +21,13 @@ typedef enum {
 typedef struct {
     int enabled;
     int developmental;
+    /* Tonalnost je iskljucena iz odluke i to nije stelovanje brojke nego
+     * posljedica onoga sto mjeri: koliko se tonalni potpis prozora razlikuje od
+     * kalibracionog. Stvarna promjena na masini ga pomjeri isto kao i tudji
+     * zvuk, pa je to detektor PROMJENE -- a promjenu skor vec mjeri. Kapija
+     * pouzdanosti mora gledati nesto ortogonalno, a to je slaganje podsegmenata
+     * unutar istog prozora. Granica se svejedno cuva i biljezi. */
+    int use_tonalness_delta;
     float max_abs_tonalness_delta;
     float max_subsegment_instability;
     uint32_t long_hold_windows;
