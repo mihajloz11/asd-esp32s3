@@ -15,7 +15,10 @@ extern "C" {
 #endif
 
 /* v1.5.0: bounded audio consumer razlikuje timeout od I2S/ring greške. */
-#define ASD_QUALITY_PROTOCOL "asd-quality-v1.5.0"
+/* v1.6.0: DET red nosi `hold=`, a `OBSERVATION_HOLD` se pojavljuje kao
+ * stanje na zici. Do v1.5.0 je kapija pouzdanosti bila iskljucena, pa taj put
+ * nijedan host nikad nije vidio. */
+#define ASD_QUALITY_PROTOCOL "asd-quality-v1.6.0"
 #define ASD_QUALITY_POLICY_ID 0x51555631u
 
 typedef enum {

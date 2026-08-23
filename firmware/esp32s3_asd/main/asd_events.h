@@ -125,9 +125,12 @@ typedef struct {
     int state_changed;     /* 1 = state differs from the previous observation */
     int observation_hold;  /* unreliable single-mic observation; no diagnosis */
     int hold_warning;      /* hold exceeded the DEVELOPMENT inspection limit */
-    /* 1 tacno u prozoru u kojem alarm napuni dva minuta. Tvrdnja je o TRAJANJU,
-     * ne o uzroku: i dalje se emituje ASD_EVENT_UNKNOWN_CHANGE, jer jedan
-     * mikrofon bez f0 ne moze reci da je kvar mehanicki. */
+    /* 1 tacno u prozoru u kojem alarm napuni dva minuta MJERENOG vremena.
+     * Prozori koje je uredjaj sam proglasio nepouzdanim (OBSERVATION_HOLD) se
+     * ne broje -- tvrdnja o trajanju ne smije da se gradi od prozora za koje je
+     * receno da se ne mogu mjeriti. Tvrdnja je o TRAJANJU, ne o uzroku: i dalje
+     * se emituje ASD_EVENT_UNKNOWN_CHANGE, jer jedan mikrofon bez f0 ne moze
+     * reci da je kvar mehanicki. */
     int sustained_anomaly;
 } asd_decision_t;
 

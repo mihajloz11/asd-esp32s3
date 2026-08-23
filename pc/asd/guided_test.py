@@ -48,8 +48,8 @@ def evaluate_guided25_artifact(*, provenance: dict, detections: list[dict],
                                events: list[dict] | None = None) -> dict:
     """Fail-closed verdict from finalized host artifacts, never live UI state."""
     failures: list[str] = []
-    if provenance.get("quality_protocol_version") != "asd-quality-v1.5.0":
-        failures.append("quality_protocol_not_q1.5")
+    if provenance.get("quality_protocol_version") != "asd-quality-v1.6.0":
+        failures.append("quality_protocol_not_q1.6")
     if not workflow_accepted:
         failures.append("guided25_capability_not_accepted")
     if not provenance.get("protocol_valid"):
@@ -197,6 +197,8 @@ def evaluate_guided25_artifact(*, provenance: dict, detections: list[dict],
         "operator_marks": f"{len(marked_phases)}/{len(required_phases)}",
         "evaluated_det_windows": len(rows),
         "research_manifest_sha256": sha or None,
-        "note": ("Observed single-microphone noise tolerance; the disabled "
-                 "interference policy means this is not proof of a HOLD classifier."),
+        "note": ("Observed single-microphone noise tolerance. Granice kapije "
+                 "pouzdanosti su izvedene iz normal-only prozora "
+                 "(asd-interference-policy-v2.0.0-development); HOLD odbija "
+                 "nepouzdan prozor, ali ne tvrdi sta ga je izazvalo."),
     }

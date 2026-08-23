@@ -938,10 +938,19 @@ static asd_state_t run_session(unsigned session_index,
         derive_sorted, (int)commissioning.policy.derive_windows,
         COMMISSION_EXIT_FLOOR_QUANTILE);
     float exit_ceiling = COMMISSION_EXIT_MAX_FRACTION * threshold_enter;
-    if (isfinite(exit_floor) && threshold_exit < exit_floor)
-        threshold_exit = exit_floor;
+    /* Redoslijed je bitan: prvo plafon, pa pod. Obrnuto je pod mrtav kod, jer
+     * je p95 >= p50 za svaku raspodjelu, a plafon je onda mogao da gurne izlaz
+     * ispod medijane normale -- tacno kvar zbog kojeg je ovo i mijenjano. */
     if (isfinite(exit_ceiling) && threshold_exit > exit_ceiling)
         threshold_exit = exit_ceiling;
+    if (isfinite(exit_floor) && threshold_exit < exit_floor)
+        threshold_exit = exit_floor;
+    /* Ako pod prelazi plafon, raspodjela je toliko tijesna da histereza nema
+     * gdje da stane. To se ne rjesava tihim biranjem jedne granice nego
+     * odbijanjem kalibracije. */
+    if (isfinite(exit_floor) && isfinite(exit_ceiling) &&
+        exit_floor > exit_ceiling)
+        return stop_commissioning(state, &commissioning);
     if (!asd_commission_freeze_thresholds(
             &commissioning, now_ms(), &runtime_profile,
             threshold_enter, threshold_exit))
@@ -1109,8 +1118,10 @@ profile_ready:
          * ispisuje i sprovodi. */
         /* Do v2 je ovdje stajala tvrda nula, pa je kapija pouzdanosti bila
          * povezana ali slijepa. Sada dobija stvarnu mjeru iz istog prozora. */
+        /* NE sanira se u nulu: nula znaci "podsegmenti su savrseno slozni", pa
+         * bi pokvaren sidecar tiho PROSAO kapiju. `asd_decide` vec ima
+         * fail-closed granu za nekonacnu nestabilnost i ona mora da je vidi. */
         float instability = subsegment_instability(&window_sidecar);
-        if (!isfinite(instability) || instability < 0.0f) instability = 0.0f;
         asd_observation_t obs = {
             reason, ASD_PHASE_DET, metrics.rms_dbfs, s,
             tonalness - runtime_profile.tonalness_reference,
@@ -1124,9 +1135,13 @@ profile_ready:
 
         /* 9 significant digits round-trip a binary32 value, so the host can
          * independently verify score > threshold without decimal ambiguity. */
+        /* `hold=` postoji od q1.6.0. Bez njega host ne moze da reprodukuje
+         * `uzastopnih=0` u prozoru koji je kapija proglasila nepouzdanim, pa bi
+         * svaki HOLD prozor izgledao kao neslaganje sa firmverom. */
         printf("DET %d score=%.9g lo=0 hi=%.9g led=%d anom=%d total_anom=%d "
-               "%s (uzastopnih=%d nivo=%.1f dBFS racun=%lld ms)\n",
+               "hold=%d %s (uzastopnih=%d nivo=%.1f dBFS racun=%lld ms)\n",
                i, s, threshold_enter, !alarm, alarm, n_alarm,
+               decided.observation_hold,
                alarm ? "ALARM"
                      : (s > threshold_enter
                         ? "iznad praga" : "normal"),

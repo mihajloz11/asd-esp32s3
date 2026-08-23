@@ -154,9 +154,23 @@ asd_decision_level_t asd_level_for_quality_reject(asd_quality_reason_t reason) {
                                           : ASD_LEVEL_MACHINE_PRESENCE;
 }
 
+static asd_decision_t finish_measured(asd_decision_ctx_t *ctx,
+                                     asd_state_t previous, asd_state_t next,
+                                     asd_event_t event,
+                                     asd_decision_level_t level, int flow_stop,
+                                     int measured);
+
 static asd_decision_t finish(asd_decision_ctx_t *ctx, asd_state_t previous,
                              asd_state_t next, asd_event_t event,
                              asd_decision_level_t level, int flow_stop) {
+    return finish_measured(ctx, previous, next, event, level, flow_stop, 1);
+}
+
+static asd_decision_t finish_measured(asd_decision_ctx_t *ctx,
+                                     asd_state_t previous, asd_state_t next,
+                                     asd_event_t event,
+                                     asd_decision_level_t level, int flow_stop,
+                                     int measured) {
     asd_decision_t out;
     /* Tabela tranzicija je jedini autoritet. Ako bi odluka napravila nedozvoljen
      * prelaz, to je greška u ovom modulu, a fail-closed odgovor je SENSOR_ERROR
@@ -184,6 +198,9 @@ static asd_decision_t finish(asd_decision_ctx_t *ctx, asd_state_t previous,
      * da resetuje brojac kad se uredjaj vrati u normalu. */
     out.sustained_anomaly = 0;
     if (next == ASD_STATE_ANOMALY) {
+        /* Nemjeren prozor niti pomjera brojac niti ga brise: trajanje se
+         * pauzira dok se ne vrati pouzdano mjerenje. */
+        if (!measured) return out;
         if (ctx->anomaly_windows < UINT32_MAX) ctx->anomaly_windows++;
         if (ctx->anomaly_windows >= ASD_SUSTAINED_ANOMALY_WINDOWS &&
             !ctx->sustained_reported) {
@@ -306,8 +323,9 @@ asd_decision_t asd_decide(asd_decision_ctx_t *ctx,
         asd_state_t held_state = (ctx->temporal.active ||
                                   previous == ASD_STATE_ANOMALY)
             ? ASD_STATE_ANOMALY : ASD_STATE_OBSERVATION_HOLD;
-        asd_decision_t out = finish(ctx, previous, held_state, ASD_EVENT_NONE,
-                                    ASD_LEVEL_DEVIATION, 0);
+        asd_decision_t out = finish_measured(
+            ctx, previous, held_state, ASD_EVENT_NONE,
+            ASD_LEVEL_DEVIATION, 0, 0);
         out.observation_hold = 1;
         out.hold_warning = interference == ASD_INTERFERENCE_HOLD_WARNING;
         return out;

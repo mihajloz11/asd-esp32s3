@@ -186,7 +186,7 @@ def test_live_research_path_has_no_per_det_pcm_dump_and_preserves_pair_order() -
 def test_parse_det_line() -> None:
     parsed = physical.parse_serial_line(
         "DET 12 score=1234.50000 lo=0.00000 hi=900.25000 led=0 anom=1 "
-        "total_anom=3 ALARM (uzastopnih=4 nivo=-31.2 dBFS racun=704 ms)"
+        "total_anom=3 hold=0 ALARM (uzastopnih=4 nivo=-31.2 dBFS racun=704 ms)"
     )
     assert parsed == {
         "kind": "DET",
@@ -199,6 +199,7 @@ def test_parse_det_line() -> None:
         "total_alarm": 3,
         "verdict": "ALARM",
         "consecutive": 4,
+        "hold": 0,
         "level_dbfs": -31.2,
         "compute_ms": 704,
     }
@@ -281,13 +282,13 @@ def test_parse_quality_state_event_v1_telemetry() -> None:
 
 
 def test_quality_protocol_is_strict_and_operator_truth_is_separate() -> None:
-    assert physical.PROTOCOL_VERSION == "physical-fan-v1.8.0"
+    assert physical.PROTOCOL_VERSION == "physical-fan-v1.9.0"
     assert physical.LEGACY_READ_PROTOCOL_VERSIONS == frozenset({
-        "physical-fan-v1.6.0", "physical-fan-v1.7.0",
+        "physical-fan-v1.6.0", "physical-fan-v1.7.0", "physical-fan-v1.8.0",
     })
     assert physical.SUPPORTED_READ_PROTOCOL_VERSIONS == frozenset({
         "physical-fan-v1.6.0", "physical-fan-v1.7.0",
-        "physical-fan-v1.8.0",
+        "physical-fan-v1.8.0", "physical-fan-v1.9.0",
     })
     mismatch = physical.parse_serial_line(
         "STATE protocol=asd-quality-v0 from=NO_MACHINE to=ANOMALY reason=x"
@@ -670,7 +671,7 @@ def _handshake_state() -> dict:
 
 def test_literal_firmware_quality_replay_wait_and_reject_contract() -> None:
     wait_line = (
-            "QUALITY protocol=asd-quality-v1.5.0 phase=WAIT index=1 total=60 "
+            "QUALITY protocol=asd-quality-v1.6.0 phase=WAIT index=1 total=60 "
         "result=LOW_LEVEL_OBSERVATION metrics_valid=1 feature_valid=0 samples=4096 expected=4096 "
         "rms_dbfs=-70.000 dc=123.000 peak=200 clipped=0 zeros=0 stuck=0 "
         "dropped_delta=0 tonalness_valid=0 tonalness_proxy=0.000000 "
@@ -687,7 +688,7 @@ def test_literal_firmware_quality_replay_wait_and_reject_contract() -> None:
     for index in range(1, 61):
         state = physical.transition_firmware_protocol(state, _quality("WAIT", index))
     reject_line = (
-        "QUALITY protocol=asd-quality-v1.5.0 phase=CAL index=1 total=10 "
+        "QUALITY protocol=asd-quality-v1.6.0 phase=CAL index=1 total=10 "
         "result=CLIPPING metrics_valid=1 feature_valid=0 samples=159744 expected=159744 "
         "rms_dbfs=-10.000 dc=0.000 peak=32768 clipped=160 zeros=0 stuck=0 "
         "dropped_delta=0 tonalness_valid=0 tonalness_proxy=0.000000 "
@@ -917,7 +918,7 @@ def test_v14_host_rejects_threshold_or_acceptance_after_failed_k1() -> None:
 
 def test_literal_pcm_valid_feature_nonfinite_is_a_firmware_reject() -> None:
     line = (
-            "QUALITY protocol=asd-quality-v1.5.0 phase=DET index=1 total=0 "
+            "QUALITY protocol=asd-quality-v1.6.0 phase=DET index=1 total=0 "
         "result=NONFINITE metrics_valid=1 samples=159744 expected=159744 "
         "rms_dbfs=-30.000 dc=0.000 peak=1100 clipped=0 zeros=0 stuck=0 "
         "dropped_delta=0 feature_valid=0 tonalness_valid=0 "
@@ -1141,7 +1142,7 @@ def test_cold_start_04_recompute_rejects_k1_without_overwriting_original(
     assert validity["metrics_eligible"] is False
     assert validity["valid_result"] is False
     assert "Validan fizički rezultat: **NE**" in recomputed
-    assert "Protokol izvještaja: `physical-fan-v1.8.0`" in recomputed
+    assert "Protokol izvještaja: `physical-fan-v1.9.0`" in recomputed
     assert "Izvorni protokol artefakta: `physical-fan-v1.6.0`" in recomputed
     assert "Validnih DET prozora za metrike: 0" in recomputed
     assert "Condition+protocol validnih DET kandidata: 1" in recomputed
@@ -1169,6 +1170,7 @@ def test_offline_artifact_read_rejects_missing_or_unknown_protocol(
         ("physical-fan-v1.6.0", "asd-quality-v1.3.0"),
         ("physical-fan-v1.7.0", "asd-quality-v1.4.0"),
         ("physical-fan-v1.8.0", "asd-quality-v1.5.0"),
+        ("physical-fan-v1.9.0", "asd-quality-v1.6.0"),
     ],
 )
 def test_offline_artifact_read_accepts_only_explicit_contracts(
@@ -1241,13 +1243,14 @@ def test_phase2_provenance_hash_scope_is_explicit_even_for_future_files() -> Non
 def _det(
     *, window: int = 1, score: float = 1.0, threshold: float = 1.6,
     led: int = 1, alarm: int = 0, total_alarm: int = 0,
-    consecutive: int = 0, verdict: str = "normal",
+    consecutive: int = 0, verdict: str = "normal", hold: int = 0,
 ) -> dict:
     return {
         "kind": "DET", "window": window, "score": score,
         "lo": 0.0, "threshold": threshold, "led": led, "alarm": alarm,
         "total_alarm": total_alarm, "verdict": verdict,
-        "consecutive": consecutive, "level_dbfs": -30.0, "compute_ms": 700,
+        "consecutive": consecutive, "hold": hold,
+        "level_dbfs": -30.0, "compute_ms": 700,
     }
 
 
@@ -2002,13 +2005,13 @@ def test_stop_drains_buffered_terminal_telemetry_and_bad_condition_does_not_cras
     import serial
 
     lines = [
-            "SESSION protocol=asd-quality-v1.5.0 action=STARTED source=BUTTON "
+            "SESSION protocol=asd-quality-v1.6.0 action=STARTED source=BUTTON "
         "reason=OPERATOR_REQUEST discards_calibration=0\n",
-            "STATE protocol=asd-quality-v1.5.0 from=NO_MACHINE to=NO_MACHINE "
+            "STATE protocol=asd-quality-v1.6.0 from=NO_MACHINE to=NO_MACHINE "
         "reason=BOOT_FAIL_CLOSED\n",
-            "STATE protocol=asd-quality-v1.5.0 from=NO_MACHINE to=NO_MACHINE "
+            "STATE protocol=asd-quality-v1.6.0 from=NO_MACHINE to=NO_MACHINE "
         "reason=INSUFFICIENT_LEVEL\n",
-            "EVENT protocol=asd-quality-v1.5.0 type=FLOW_STOPPED state=NO_MACHINE "
+            "EVENT protocol=asd-quality-v1.6.0 type=FLOW_STOPPED state=NO_MACHINE "
         "phase=WAIT reason=INSUFFICIENT_LEVEL "
         "event=NONE capability=AVAILABLE level=MACHINE_PRESENCE\n",
     ]
@@ -2591,7 +2594,7 @@ def test_button_record_never_breaks_the_det_pair() -> None:
     state = physical.transition_firmware_protocol(state, _quality("DET", 1))
     assert state["pending_det_quality"] == 1
     button = physical.parse_serial_line(
-            "BUTTON protocol=asd-quality-v1.5.0 event=LONG mode=READY "
+            "BUTTON protocol=asd-quality-v1.6.0 event=LONG mode=READY "
         "command=START_LEARNING discards=1"
     )
     assert button["kind"] == "BUTTON"
@@ -2613,7 +2616,7 @@ def test_short_press_claiming_a_discard_is_a_protocol_error() -> None:
 
 def test_session_records_must_be_paired() -> None:
     started = physical.parse_serial_line(
-            "SESSION protocol=asd-quality-v1.5.0 action=STARTED source=BUTTON "
+            "SESSION protocol=asd-quality-v1.6.0 action=STARTED source=BUTTON "
         "reason=OPERATOR_REQUEST discards_calibration=0"
     )
     assert started["kind"] == "SESSION"
@@ -2624,7 +2627,7 @@ def test_session_records_must_be_paired() -> None:
         state, started)["invalid_reason"] == "SESSION_STARTED_twice"
 
     orphan = physical.parse_serial_line(
-        "SESSION protocol=asd-quality-v1.5.0 action=ENDED source=FIRMWARE "
+        "SESSION protocol=asd-quality-v1.6.0 action=ENDED source=FIRMWARE "
         "reason=NO_MACHINE discards_calibration=0"
     )
     out = physical.transition_firmware_protocol(
@@ -2753,13 +2756,13 @@ def test_operator_relearn_emits_aborted_then_ended() -> None:
     """
     state = physical.new_firmware_protocol_state()
     for line in (
-        "SESSION protocol=asd-quality-v1.5.0 action=STARTED source=BUTTON "
+        "SESSION protocol=asd-quality-v1.6.0 action=STARTED source=BUTTON "
         "reason=OPERATOR_REQUEST discards_calibration=0",
-        "STATE protocol=asd-quality-v1.5.0 from=NO_MACHINE to=NO_MACHINE "
+        "STATE protocol=asd-quality-v1.6.0 from=NO_MACHINE to=NO_MACHINE "
         "reason=BOOT_FAIL_CLOSED",
-        "SESSION protocol=asd-quality-v1.5.0 action=ABORTED source=BUTTON "
+        "SESSION protocol=asd-quality-v1.6.0 action=ABORTED source=BUTTON "
         "reason=OPERATOR_RELEARN discards_calibration=1",
-        "SESSION protocol=asd-quality-v1.5.0 action=ENDED source=FIRMWARE "
+        "SESSION protocol=asd-quality-v1.6.0 action=ENDED source=FIRMWARE "
         "reason=CALIBRATED_NORMAL discards_calibration=0",
     ):
         parsed = physical.parse_serial_line(line)
@@ -2772,7 +2775,7 @@ def test_operator_relearn_emits_aborted_then_ended() -> None:
 
     # Zatvaranje bez otvorene sesije i dalje mora pasti.
     orphan = physical.parse_serial_line(
-        "SESSION protocol=asd-quality-v1.5.0 action=ENDED source=FIRMWARE "
+        "SESSION protocol=asd-quality-v1.6.0 action=ENDED source=FIRMWARE "
         "reason=CALIBRATED_NORMAL discards_calibration=0"
     )
     state = physical.transition_firmware_protocol(state, orphan)
@@ -2850,3 +2853,99 @@ def test_research_package_open_sees_exactly_the_unfinished_window() -> None:
     state["packages"][key]["feature"] = None
     assert physical.research_package_open(state) is True
     assert physical.research_package_open(None) is False
+
+
+def test_hold_window_replays_without_looking_like_firmware_disagreement() -> None:
+    """Kapija pouzdanosti resetuje niz, i host to mora znati.
+
+    Kad gate vrati HOLD, `asd_temporal_suspend` postavlja `run = 0`, pa DET red
+    stampa `uzastopnih=0` iako je skor iznad enter praga. Do q1.6.0 je host
+    nezavisno racunao `deviation_run + 1` i takav prozor je obarao cio run kao
+    `consecutive_mismatch`. Zato DET red od q1.6.0 nosi `hold=`.
+    """
+    state = _ready_protocol_state()
+    state = physical.transition_firmware_protocol(state, _quality("DET", 1))
+    state = physical.transition_firmware_protocol(
+        state, _det(window=1, score=9.0, hold=1, consecutive=0,
+                    verdict="iznad praga"))
+    assert state["invalid_status"] is None, state["invalid_reason"]
+
+    # Prvi nemjerljiv prozor iz normale objavljuje HOLD kao stanje.
+    state = physical.transition_firmware_protocol(state, {
+        "kind": "STATE", "from_state": "CALIBRATED_NORMAL",
+        "to_state": "OBSERVATION_HOLD", "reason": "OBSERVATION_UNCERTAIN",
+    })
+    state = physical.transition_firmware_protocol(state, {
+        "kind": "EVENT", "type": "OBSERVATION_HOLD",
+        "state": "OBSERVATION_HOLD", "phase": "DET",
+        "reason": "OBSERVATION_UNCERTAIN",
+    })
+    assert state["invalid_status"] is None, state["invalid_reason"]
+    assert state["last_state"] == "OBSERVATION_HOLD"
+
+    # Povratak pouzdanog mjerenja vraca uredjaj u normalu.
+    state = physical.transition_firmware_protocol(state, _quality("DET", 2))
+    state = physical.transition_firmware_protocol(
+        state, _det(window=2, score=0.5, hold=0, consecutive=0))
+    state = physical.transition_firmware_protocol(state, {
+        "kind": "STATE", "from_state": "OBSERVATION_HOLD",
+        "to_state": "CALIBRATED_NORMAL", "reason": "OBSERVATION_RESUMED",
+    })
+    state = physical.transition_firmware_protocol(state, {
+        "kind": "EVENT", "type": "OBSERVATION_RESUMED",
+        "state": "CALIBRATED_NORMAL", "phase": "DET",
+        "reason": "OBSERVATION_RESUMED",
+    })
+    assert state["invalid_status"] is None, state["invalid_reason"]
+    assert state["last_state"] == "CALIBRATED_NORMAL"
+
+
+def test_hold_claimed_on_a_window_below_threshold_is_refused() -> None:
+    """Gate se pali samo kad je skor vec visok; drugacije je lazna tvrdnja."""
+    state = _ready_protocol_state()
+    state = physical.transition_firmware_protocol(state, _quality("DET", 1))
+    state = physical.transition_firmware_protocol(
+        state, _det(window=1, score=0.1, hold=1))
+    assert state["invalid_status"] == "invalid_firmware_telemetry"
+    assert "hold_on_window_below_enter" in str(state["invalid_reason"])
+
+
+def test_unpaired_notice_events_are_accepted_only_in_their_own_state() -> None:
+    """`ANOMALY_SUSTAINED` se javlja DOK alarm traje, pa nema upareni STATE."""
+    state = _state_waiting_for_anomaly_transition()
+    state = physical.transition_firmware_protocol(state, {
+        "kind": "STATE", "from_state": "CALIBRATED_NORMAL",
+        "to_state": "ANOMALY", "reason": "THRESHOLD_PERSISTENCE",
+    })
+    state = physical.transition_firmware_protocol(state, {
+        "kind": "EVENT", "type": "ANOMALY_ENTERED", "state": "ANOMALY",
+        "phase": "DET", "reason": "THRESHOLD_PERSISTENCE",
+    })
+    assert state["invalid_status"] is None, state["invalid_reason"]
+
+    accepted = physical.transition_firmware_protocol(dict(state), {
+        "kind": "EVENT", "type": "ANOMALY_SUSTAINED", "state": "ANOMALY",
+        "phase": "DET", "reason": "SUSTAINED_DEVIATION",
+    })
+    assert accepted["invalid_status"] is None, accepted["invalid_reason"]
+
+    # Isti dogadjaj koji tvrdi pogresno stanje je lazan zapis, ne propust.
+    refused = physical.transition_firmware_protocol(dict(state), {
+        "kind": "EVENT", "type": "ANOMALY_SUSTAINED",
+        "state": "CALIBRATED_NORMAL", "phase": "DET",
+        "reason": "SUSTAINED_DEVIATION",
+    })
+    assert refused["invalid_status"] == "invalid_firmware_telemetry"
+    assert "unpaired_EVENT_state_mismatch" in str(refused["invalid_reason"])
+
+
+def test_older_det_line_without_hold_still_parses() -> None:
+    """Istorijski runovi do q1.5.0 nemaju `hold=` i moraju ostati citljivi."""
+    parsed = physical.parse_serial_line(
+        "DET 7 score=2.0 lo=0 hi=1.6 led=0 anom=1 total_anom=1 "
+        "ALARM (uzastopnih=3 nivo=-30.0 dBFS racun=700 ms)"
+    )
+    assert parsed["kind"] == "DET"
+    assert parsed["hold"] == 0
+    assert parsed["consecutive"] == 3
+    assert "asd-quality-v1.5.0" in physical.LEGACY_PARSE_QUALITY_PROTOCOL_VERSIONS
