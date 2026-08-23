@@ -117,7 +117,7 @@ def test_http_guided25_virtual_and_physical_start_have_server_side_parity(tmp_pa
     def invoke(path: str) -> list[str]:
         state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25",
                                  report_dir=tmp_path)
-        state.feed("FLAGS protocol=asd-quality-v1.5.0 waiting=1 guided25_available=1 "
+        state.feed("FLAGS protocol=asd-quality-v1.6.0 waiting=1 guided25_available=1 "
                    "research_telemetry=1 profile_persistence_allowed=0 dropped=0")
         link = RecordingLink()
         conductor = panel.Conductor(state, link)
@@ -135,7 +135,7 @@ def test_http_guided25_virtual_and_physical_start_have_server_side_parity(tmp_pa
 def test_http_guided25_rejects_stale_or_wrong_firmware(tmp_path) -> None:
     state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25",
                              report_dir=tmp_path)
-    state.feed("FLAGS protocol=asd-quality-v1.5.0 waiting=1 guided25_available=0 "
+    state.feed("FLAGS protocol=asd-quality-v1.6.0 waiting=1 guided25_available=0 "
                "research_telemetry=1 profile_persistence_allowed=0 dropped=0")
     link = RecordingLink()
     conductor = panel.Conductor(state, link)
@@ -154,7 +154,7 @@ def test_monitoring_gate_rechecks_fresh_capability_and_dropped(tmp_path) -> None
     state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25",
                              report_dir=tmp_path)
     state.last_line_at = time.time() - 16
-    state.flags = {"protocol": "asd-quality-v1.5.0", "guided25_available": "1",
+    state.flags = {"protocol": "asd-quality-v1.6.0", "guided25_available": "1",
                    "learning": "0", "learned": "1"}
     state.workflow_result = "accepted"; state.calibration_accepted = True
     state.profile_counts = (44, 22); state.research_counts = {"FEATURE96": 1, "SUBSEG96": 5}
@@ -182,7 +182,7 @@ def test_retry_after_done_gets_new_generation_and_fresh_watchdog(tmp_path) -> No
     state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25",
                              report_dir=tmp_path)
     state.session_generation = 1; state.stage = "DONE"
-    state.flags = {"protocol": "asd-quality-v1.5.0", "guided25_available": "1",
+    state.flags = {"protocol": "asd-quality-v1.6.0", "guided25_available": "1",
                    "waiting": "1", "research_telemetry": "1",
                    "profile_persistence_allowed": "0"}
     state.last_line_at = time.time(); state.dropped_observed = True
@@ -190,7 +190,7 @@ def test_retry_after_done_gets_new_generation_and_fresh_watchdog(tmp_path) -> No
     conductor.stop_event.set()
     conductor.arm_guided25(virtual_start=False)
     state.pending_workflow_accepted = True
-    state.feed("SESSION protocol=asd-quality-v1.5.0 action=STARTED source=BUTTON "
+    state.feed("SESSION protocol=asd-quality-v1.6.0 action=STARTED source=BUTTON "
                "reason=OPERATOR_REQUEST discards_calibration=0")
     time.sleep(0.08)
     assert state.session_generation == 2 and state.stage == "CAL"
@@ -298,7 +298,7 @@ def test_research_line_intact_separates_whole_lines_from_interleaved_ones() -> N
     whole = (
         "FEATURE96 protocol=asd-research-v1.0.0 session=1 phase=DET window=3 "
         "dims=4 fnv1a=0 values=1,2,3,4")
-    glued = whole.replace("3,4", "3FLAGS protocol=asd-quality-v1.5.0 mode=DETECT")
+    glued = whole.replace("3,4", "3FLAGS protocol=asd-quality-v1.6.0 mode=DETECT")
     assert panel.research_line_intact(whole)
     assert not panel.research_line_intact(glued)
     assert not panel.research_line_intact(whole.replace(",3,4", ""))
@@ -310,7 +310,7 @@ def test_interleaved_research_line_never_counts_as_a_received_record() -> None:
         "SUBSEG96 protocol=asd-research-v1.0.0 session=1 phase=DET window=3 "
         "group=1 segments=8 dims=4 fnv1a=0 values=1,2,3,4")
     state.feed(whole)
-    state.feed(whole.replace("3,4", "3FLAGS protocol=asd-quality-v1.5.0 mode=DETECT"))
+    state.feed(whole.replace("3,4", "3FLAGS protocol=asd-quality-v1.6.0 mode=DETECT"))
 
     assert state.research_counts["SUBSEG96"] == 1
     assert state.research_errors == 1
@@ -324,7 +324,7 @@ def test_session_start_clears_research_errors_of_the_previous_attempt() -> None:
     state.research_errors = 5
     state.research_error_example = "stari pokusaj"
 
-    state.feed("SESSION protocol=asd-quality-v1.5.0 action=STARTED source=BUTTON "
+    state.feed("SESSION protocol=asd-quality-v1.6.0 action=STARTED source=BUTTON "
                "reason=OPERATOR_REQUEST discards_calibration=0")
 
     assert state.research_errors == 0

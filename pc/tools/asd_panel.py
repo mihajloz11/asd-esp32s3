@@ -497,7 +497,7 @@ class PanelState:
         if self.attempt > GUIDED25["acceptance"]["attempt_limit"]: reasons.append("dosegnut limit od 3 pokusaja")
         if self.last_line_at == 0 or time.time() - self.last_line_at > 15: reasons.append("nema svjeze telemetrije")
         if self.flags.get("guided25_available") != "1": reasons.append("firmware nema GUIDED25")
-        if self.flags.get("protocol") != "asd-quality-v1.5.0": reasons.append("pogresna firmware/protocol verzija")
+        if self.flags.get("protocol") != "asd-quality-v1.6.0": reasons.append("pogresna firmware/protocol verzija")
         if self.flags.get("research_telemetry") != "1": reasons.append("research telemetry build nije aktivan")
         if self.flags.get("profile_persistence_allowed") != "0": reasons.append("DEVELOPMENT storage gate nije zatvoren")
         if not self.dropped_observed: reasons.append("DROPPED zapis nije primljen")
@@ -512,8 +512,8 @@ class PanelState:
             reasons.append("pokusaj nije 1..3")
         if self.last_line_at == 0 or time.time() - self.last_line_at > 15:
             reasons.append("telemetrija nije svjeza")
-        if self.flags.get("protocol") != "asd-quality-v1.5.0":
-            reasons.append("nije q1.5")
+        if self.flags.get("protocol") != "asd-quality-v1.6.0":
+            reasons.append("nije q1.6")
         if self.flags.get("guided25_available") != "1":
             reasons.append("nema GUIDED25 capability")
         if self.flags.get("learning") == "1" or self.flags.get("learned") != "1":
@@ -534,7 +534,7 @@ class PanelState:
         reasons: list[str] = []
         inconclusive: list[str] = []
         if not self.calibration_accepted: reasons.append("K1 nije prihvacen")
-        if self.flags.get("protocol") != "asd-quality-v1.5.0": reasons.append("nije q1.5")
+        if self.flags.get("protocol") != "asd-quality-v1.6.0": reasons.append("nije q1.6")
         if self.flags.get("guided25_available") != "1": reasons.append("nema GUIDED25 capability")
         if self.workflow_result != "accepted": reasons.append("GUIDED25 nije prihvacen")
         if self.profile_counts != (44, 22): reasons.append("pogresan commissioning 44/22")

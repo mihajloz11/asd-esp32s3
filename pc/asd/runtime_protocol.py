@@ -11,7 +11,7 @@ from typing import Any
 from asd.guided_test import GUIDED25
 
 
-QUALITY_PROTOCOL = "asd-quality-v1.5.0"
+QUALITY_PROTOCOL = "asd-quality-v1.6.0"
 PROFILE_SCHEMA = "asd-runtime-profile-v1.0.0-development"
 _CONFIG = json.loads(
     (Path(__file__).resolve().parents[1] / "config" / "asd_commissioning_runtime_v1.json")

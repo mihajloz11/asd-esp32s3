@@ -43,7 +43,7 @@ def test_preflight_requires_fresh_idle_capable_firmware_and_artifact_dir(tmp_pat
                              report_dir=tmp_path, attempt=1)
     ok, reasons = state.guided_preflight()
     assert not ok and "nema svjeze telemetrije" in reasons
-    state.feed("FLAGS protocol=asd-quality-v1.5.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 "
+    state.feed("FLAGS protocol=asd-quality-v1.6.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 "
                "learned=0 anomaly=0 hold=0 fault=0 green=flash_2s red=off "
                "guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 "
                "profile_persistence_allowed=0 dropped=0")
@@ -53,7 +53,7 @@ def test_preflight_requires_fresh_idle_capable_firmware_and_artifact_dir(tmp_pat
 def test_attempt_four_is_server_side_rejected(tmp_path) -> None:
     state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25",
                              report_dir=tmp_path, attempt=4)
-    state.feed("FLAGS protocol=asd-quality-v1.5.0 waiting=1 guided25_available=1 "
+    state.feed("FLAGS protocol=asd-quality-v1.6.0 waiting=1 guided25_available=1 "
                "research_telemetry=1 profile_persistence_allowed=0 dropped=0")
     ok, reasons = state.guided_preflight()
     assert not ok and "dosegnut limit od 3 pokusaja" in reasons
@@ -65,7 +65,7 @@ def test_monitoring_start_requires_exact_44_22_and_research(tmp_path) -> None:
     state.stage = "READY_TO_GO"; state.loo_cv = 0.3
     state.profile_counts = (120, 60)
     state.research_counts = {"FEATURE96": 1, "SUBSEG96": 1}
-    state.flags = {"protocol": "asd-quality-v1.5.0", "guided25_available": "1",
+    state.flags = {"protocol": "asd-quality-v1.6.0", "guided25_available": "1",
                    "learning": "0", "learned": "1"}
     state.workflow_result = "accepted"; state.dropped_observed = True
     state.calibration_accepted = True; state.last_line_at = __import__("time").time()
@@ -124,7 +124,7 @@ def test_virtual_and_physical_start_share_press_path() -> None:
 
 def test_strict_runtime_registers_guided25_without_weakening_default() -> None:
     line = (
-        "COMMISSION protocol=asd-quality-v1.5.0 "
+        "COMMISSION protocol=asd-quality-v1.6.0 "
         "policy=asd-commissioning-policy-v1.0.0-development developmental=1 "
         "action=STARTED phase=SETTLE index=0 total=8 result=NONE "
         "score_valid=0 score=0 level_dbfs=0 tonalness_proxy=0 feature_drift=0"
@@ -137,7 +137,7 @@ def test_strict_runtime_registers_guided25_without_weakening_default() -> None:
 
 def test_literal_guided25_44_22_runtime_sequence_is_strictly_accepted() -> None:
     def commission(action, phase, index, total, score_valid=0):
-        return ("COMMISSION protocol=asd-quality-v1.5.0 "
+        return ("COMMISSION protocol=asd-quality-v1.6.0 "
                 "policy=asd-commissioning-policy-v1.0.0-development developmental=1 "
                 f"action={action} phase={phase} index={index} total={total} result=NONE "
                 f"score_valid={score_valid} score={1 if score_valid else 0} "
@@ -151,7 +151,7 @@ def test_literal_guided25_44_22_runtime_sequence_is_strictly_accepted() -> None:
         seq.feed(commission("WINDOW", "COMMISSION_DERIVE", index, 44, 1))
     for index in range(1, 23):
         seq.feed(commission("WINDOW", "MONITORING" if index == 22 else "COMMISSION_VERIFY", index, 22, 1))
-    seq.feed("PROFILE protocol=asd-quality-v1.5.0 schema=asd-runtime-profile-v1.0.0-development "
+    seq.feed("PROFILE protocol=asd-quality-v1.6.0 schema=asd-runtime-profile-v1.0.0-development "
              "policy=asd-commissioning-policy-v1.0.0-development developmental=1 valid=1 "
              "policy_version=1 policy_id=434d5631 center_windows=10 derive_windows=44 "
              "verify_windows=22 level_mean_dbfs=-40 tonalness_reference=5 "
@@ -161,7 +161,7 @@ def test_literal_guided25_44_22_runtime_sequence_is_strictly_accepted() -> None:
 
 def _finalized_fixture():
     provenance = {
-        "quality_protocol_version": "asd-quality-v1.5.0", "protocol_valid": True,
+        "quality_protocol_version": "asd-quality-v1.6.0", "protocol_valid": True,
         "calibration_accepted": True, "max_dropped": 0,
         "firmware_protocol_state": {"runtime_commissioning": {"policy": {
             "derive_windows": 44, "verify_windows": 22}}},
@@ -289,7 +289,7 @@ def test_session_started_resets_stale_guided_evidence(tmp_path) -> None:
     state.research_counts = {"FEATURE96": 7, "SUBSEG96": 35}
     state.dropped_observed = True; state.max_dropped = 9
     state.calibration_accepted = True; state.invalid_reason = "old"
-    state.feed("SESSION protocol=asd-quality-v1.5.0 action=STARTED source=BUTTON "
+    state.feed("SESSION protocol=asd-quality-v1.6.0 action=STARTED source=BUTTON "
                "reason=OPERATOR_REQUEST discards_calibration=0")
     assert state.workflow_result == "accepted"
     assert state.profile_counts is None and state.research_counts["FEATURE96"] == 0

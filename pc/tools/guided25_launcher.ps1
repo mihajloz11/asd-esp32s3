@@ -101,7 +101,7 @@ function Invoke-SoftwarePreflight {
     }
     $flags = Get-LiveFlags $Port
     $requiredFlags = @(
-        "protocol=asd-quality-v1.5.0",
+        "protocol=asd-quality-v1.6.0",
         "mode=IDLE",
         "waiting=1",
         "guided25_available=1",

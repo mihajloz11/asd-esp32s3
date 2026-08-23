@@ -60,27 +60,29 @@ from asd.runtime_protocol import (  # noqa: E402
 
 DEFAULT_OUT = ROOT / "results" / "physical_fan"
 FIRMWARE_DIR = ROOT / "firmware" / "esp32s3_asd"
-PROTOCOL_VERSION = "physical-fan-v1.8.0"
+PROTOCOL_VERSION = "physical-fan-v1.9.0"
 LEGACY_READ_PROTOCOL_VERSIONS = frozenset({
-    "physical-fan-v1.6.0", "physical-fan-v1.7.0",
+    "physical-fan-v1.6.0", "physical-fan-v1.7.0", "physical-fan-v1.8.0",
 })
 SUPPORTED_READ_PROTOCOL_VERSIONS = frozenset({
     PROTOCOL_VERSION,
     *LEGACY_READ_PROTOCOL_VERSIONS,
 })
-QUALITY_PROTOCOL_VERSION = "asd-quality-v1.5.0"
-LEGACY_PARSE_QUALITY_PROTOCOL_VERSIONS = frozenset({"asd-quality-v1.4.0"})
+QUALITY_PROTOCOL_VERSION = "asd-quality-v1.6.0"
+LEGACY_PARSE_QUALITY_PROTOCOL_VERSIONS = frozenset({
+    "asd-quality-v1.4.0", "asd-quality-v1.5.0",
+})
 SUPPORTED_PARSE_QUALITY_PROTOCOL_VERSIONS = frozenset({
     QUALITY_PROTOCOL_VERSION, *LEGACY_PARSE_QUALITY_PROTOCOL_VERSIONS,
 })
-ARTIFACT_CONTRACT_VERSION = "physical-fan-artifacts-v1.8.0"
+ARTIFACT_CONTRACT_VERSION = "physical-fan-artifacts-v1.9.0"
 RESEARCH_PROTOCOL_VERSION = "asd-research-v1.0.0"
 RESEARCH_ARTIFACT_SCHEMA_VERSION = "asd-research-artifacts-v1.0.0"
 RESEARCH_DIMS = 96
 RESEARCH_GROUP_SEGMENTS = (8, 8, 8, 7, 7)
 VWORKFLOW_ACCEPTED_RE = re.compile(r"\bVWORKFLOW\s+mode=GUIDED25\s+result=accepted\b")
 GUIDED_CAPABILITY_RE = re.compile(
-    r"\bFLAGS\s+protocol=asd-quality-v1\.5\.0\b.*\bguided25_available=1\b")
+    r"\bFLAGS\s+protocol=asd-quality-v1\.6\.0\b.*\bguided25_available=1\b")
 PROFILE_STORE_SCHEMA_VERSION = "asd-profile-v1.0.0"
 PSD_MODEL_FINGERPRINT_HEX = (
     "7bfbd3eeca1caca074562f6e01f6b374237dcea5c1d2cc097df079d68d9d15fe"
@@ -91,15 +93,17 @@ PROFILE_POLICY_IDS = {
     "quality_policy_id": 0x51555631,
     "commissioning_policy_id": 0x434D5631,
     "temporal_policy_id": 0x54505632,
-    "interference_policy_id": 0x49505631,
+    "interference_policy_id": 0x49505632,
 }
 ARTIFACT_QUALITY_PROTOCOL_PAIRS = {
     "physical-fan-v1.6.0": "asd-quality-v1.3.0",
     "physical-fan-v1.7.0": "asd-quality-v1.4.0",
+    "physical-fan-v1.8.0": "asd-quality-v1.5.0",
     PROTOCOL_VERSION: QUALITY_PROTOCOL_VERSION,
 }
 ARTIFACT_CONTRACT_VERSIONS = {
     "physical-fan-v1.7.0": "physical-fan-artifacts-v1.7.0",
+    "physical-fan-v1.8.0": "physical-fan-artifacts-v1.8.0",
     PROTOCOL_VERSION: ARTIFACT_CONTRACT_VERSION,
 }
 CAL_SUMMARY_DECIMALS = 6
@@ -243,6 +247,16 @@ TERMINAL_FIRMWARE_STATES = {
 }
 FIRMWARE_STATES = TERMINAL_FIRMWARE_STATES | {
     "NO_MACHINE", "CALIBRATED_NORMAL", "ANOMALY",
+    # Od q1.6.0: prozor koji je kapija pouzdanosti proglasila nemjerljivim.
+    # Nije dijagnoza ambijentalne buke i ne gasi aktivan alarm.
+    "OBSERVATION_HOLD",
+}
+# Dogadjaji koji po prirodi nemaju upareni STATE red: javljaju se DOK stanje
+# stoji, a ne kad se mijenja. Host ih prihvata samo ako se slazu sa stanjem u
+# kojem uredjaj vec jeste.
+UNPAIRED_EVENT_STATES = {
+    "OBSERVATION_HOLD_WARNING": {"OBSERVATION_HOLD", "ANOMALY"},
+    "ANOMALY_SUSTAINED": {"ANOMALY"},
 }
 QUALITY_REJECT_RESULTS = {
     "SHORT_READ", "NONFINITE", "STUCK_SIGNAL", "LOW_LEVEL_OBSERVATION",
@@ -265,6 +279,8 @@ DET_RE = re.compile(
     r"score=(?P<score>\S+)\s+lo=(?P<lo>\S+)\s+"
     r"hi=(?P<threshold>\S+)\s+led=(?P<led>\S+)\s+"
     r"anom=(?P<alarm>\S+)\s+total_anom=(?P<total_alarm>\S+)\s+"
+    # `hold=` postoji od q1.6.0; stariji runovi se i dalje citaju bez njega.
+    r"(?:hold=(?P<hold>[01])\s+)?"
     r"(?P<verdict>.*?)\s+\(uzastopnih=(?P<consecutive>\d+)\s+"
     r"nivo=(?P<level_dbfs>\S+)\s+dBFS\s+"
     r"racun=(?P<compute_ms>\d+)\s+ms\)$"
@@ -859,6 +875,9 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
                 "total_alarm": int(row["total_alarm"]),
                 "verdict": row["verdict"].strip(),
                 "consecutive": int(row["consecutive"]),
+                # Stariji runovi (do q1.5.0) nemaju `hold=`; tamo je 0 tacno,
+                # jer je kapija pouzdanosti tada bila iskljucena.
+                "hold": int(row["hold"] or 0),
                 "level_dbfs": float(row["level_dbfs"]),
                 "compute_ms": int(row["compute_ms"]),
             }
@@ -1955,7 +1974,15 @@ def _det_semantic_error(state: dict[str, Any], record: dict[str, Any]) -> str | 
     over = float(record["score"]) > enter
 
     if present:
-        if state["anomaly_active"]:
+        if int(record.get("hold", 0)):
+            # Kapija je prozor proglasila nemjerljivim: niz se prekida
+            # (`asd_temporal_suspend` postavlja run = 0), a aktivan alarm se NE
+            # gasi -- HOLD nije dokaz da je masina u redu.
+            if not over:
+                return "hold_on_window_below_enter_threshold"
+            expected_consecutive = 0
+            expected_anomaly = state["anomaly_active"]
+        elif state["anomaly_active"]:
             expected_anomaly = float(record["score"]) > leave
             expected_consecutive = 0 if not expected_anomaly else state["deviation_run"]
         else:
@@ -2719,6 +2746,19 @@ def transition_firmware_protocol(
             )
             state["terminal_event_seen"] = True
             return state
+        allowed_states = UNPAIRED_EVENT_STATES.get(str(record.get("type", "")))
+        if allowed_states is not None:
+            # `OBSERVATION_HOLD_WARNING` i `ANOMALY_SUSTAINED` se javljaju DOK
+            # stanje stoji, pa po prirodi nemaju upareni STATE red. Prihvataju se
+            # samo ako tvrde bas ono stanje u kojem uredjaj vec jeste.
+            if (str(record.get("state")) == str(state["last_state"])
+                    and str(record.get("state")) in allowed_states):
+                return state
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                f"unpaired_EVENT_state_mismatch:{record.get('type')}:"
+                f"{record.get('state')}:last={state['last_state']}",
+            )
         return _invalidate(state, "invalid_firmware_telemetry", "unknown_or_unpaired_EVENT")
     elif kind == "DET":
         if not firmware_protocol_ready(state):
@@ -2759,6 +2799,48 @@ def transition_firmware_protocol(
                     "event": {
                         "type": "PRESENCE_LOST", "state": "NO_MACHINE",
                         "phase": "DET", "reason": "PRESENCE_LOST",
+                    },
+                }
+            elif int(record.get("hold", 0)) and state["last_state"] == "CALIBRATED_NORMAL":
+                # Prvi nemjerljiv prozor iz normale objavljuje HOLD. Ako alarm
+                # vec traje, firmware ostaje u ANOMALY i ne emituje nista.
+                state["expected_state_transition"] = {
+                    "state": {
+                        "from_state": "CALIBRATED_NORMAL",
+                        "to_state": "OBSERVATION_HOLD",
+                        "reason": "OBSERVATION_UNCERTAIN",
+                    },
+                    "event": {
+                        "type": "OBSERVATION_HOLD", "state": "OBSERVATION_HOLD",
+                        "phase": "DET", "reason": "OBSERVATION_UNCERTAIN",
+                    },
+                }
+            elif (state["last_state"] == "OBSERVATION_HOLD"
+                  and not int(record.get("hold", 0)) and record["alarm"] == 0
+                  and record["consecutive"] == 0):
+                # Pouzdano mjerenje se vratilo i nije u usponu ka alarmu.
+                state["expected_state_transition"] = {
+                    "state": {
+                        "from_state": "OBSERVATION_HOLD",
+                        "to_state": "CALIBRATED_NORMAL",
+                        "reason": "OBSERVATION_RESUMED",
+                    },
+                    "event": {
+                        "type": "OBSERVATION_RESUMED", "state": "CALIBRATED_NORMAL",
+                        "phase": "DET", "reason": "OBSERVATION_RESUMED",
+                    },
+                }
+            elif (state["last_state"] == "OBSERVATION_HOLD" and record["alarm"] == 1):
+                # Iz HOLD-a se u alarm ulazi tek poslije tri pouzdana prozora;
+                # dotle uredjaj ostaje u HOLD i ne emituje prelaz.
+                state["expected_state_transition"] = {
+                    "state": {
+                        "from_state": "OBSERVATION_HOLD", "to_state": "ANOMALY",
+                        "reason": "THRESHOLD_PERSISTENCE",
+                    },
+                    "event": {
+                        "type": "ANOMALY_ENTERED", "state": "ANOMALY",
+                        "phase": "DET", "reason": "THRESHOLD_PERSISTENCE",
                     },
                 }
             elif state["last_state"] == "CALIBRATED_NORMAL" and record["alarm"] == 1:
@@ -3083,6 +3165,10 @@ def recompute_run_summary(run_dir: Path) -> tuple[str, dict[str, Any]]:
             row.setdefault("firmware_session_index", "1")
             row.setdefault("run_det_index", str(run_index))
             row.setdefault("transition_window", "0")
+    for row in detections:
+        # Do q1.5.0 kapija pouzdanosti nije postojala, pa je 0 tacno, a ne
+        # pretpostavka.
+        row.setdefault("hold", "0")
     events = _read_csv_rows(run_dir / "events.csv")
     for event in events:
         event["elapsed_s"] = float(event["elapsed_s"])
@@ -3257,7 +3343,8 @@ def run_experiment(args: argparse.Namespace) -> int:
         "host_utc", "elapsed_s", "firmware_session_index", "run_det_index",
         "condition", "condition_confirmed", "transition_window",
         "protocol_valid", "window", "score", "lo", "threshold",
-        "alarm", "total_alarm", "consecutive", "verdict", "level_dbfs", "compute_ms",
+        "alarm", "total_alarm", "consecutive", "hold", "verdict",
+        "level_dbfs", "compute_ms",
     ]
 
     stack = AuditedExitStack()
