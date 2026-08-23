@@ -456,12 +456,12 @@ class PanelState:
             }
 
     def _confirmation_status(self, active_index: int) -> dict:
-        """Sta operater jos mora da klikne; poziva se pod `self.lock`.
+        """Koja oznaka je na redu; poziva se pod `self.lock`.
 
-        Potvrde su jedini dokaz da se fizicka radnja stvarno desila, pa ih
-        `evaluate_guided25_artifact` trazi tacno dvadeset i tacnim redom. Run
-        22.08.2026 ih je imao nula: panel ih je nudio kao dva obicna dugmeta
-        medju sedam, a nijedan ekran nije rekao da bez njih mjerenje ne vazi.
+        Oznake su od 23.08.2026 **neobavezne**: klik nije nezavisan dokaz da se
+        radnja desila, pa ne moze biti kapija. Ono sto ostaje strogo je da
+        oznaka koja postoji bude vjerodostojna -- server i dalje odbija oznaku
+        van reda ili van tekuce faze, jer bi to bio lazan zapis.
         """
         required = [index for index, phase in enumerate(self.plan)
                     if phase[1] != "normal_baseline"]
@@ -470,11 +470,8 @@ class PanelState:
             edges.setdefault(int(item["phase_index"]), set()).add(str(item["edge"]))
         next_edge = None
         if self.stage == "RUN" and active_index in required:
-            done = edges.get(active_index, set())
-            if "start" not in done:
+            if "start" not in edges.get(active_index, set()):
                 next_edge = "start"
-            elif "end" not in done:
-                next_edge = "end"
         # Faza koja je prosla bez oba klika se vise ne moze potvrditi, pa je run
         # vec pao; operater to mora vidjeti odmah, a ne iz reporta na kraju.
         missed: list[int] = []
@@ -483,10 +480,10 @@ class PanelState:
             if limit < 0:
                 limit = 0
             missed = [index for index in required
-                      if index < limit and len(edges.get(index, set())) < 2]
+                      if index < limit and not edges.get(index)]
         return {
-            "confirm_required": 2 * len(required),
-            "confirm_done": len(self.operator_confirmations),
+            "confirm_required": len(required),
+            "confirm_done": len(self.confirmed_phases),
             "confirm_next_edge": next_edge,
             "confirm_missed": missed,
             "confirm_phase_edges": {
@@ -559,10 +556,6 @@ class PanelState:
                          cond == "final_recovery" or cond.startswith("ambient_"))
             if forbidden and (stats["alarm_episodes"] or stats["alarm_windows"]):
                 reasons.append(f"alarm ili prenesen alarm u {cond}")
-        required = {index for index, phase in enumerate(self.plan)
-                    if phase[1] != "normal_baseline"}
-        if not required.issubset(self.confirmed_phases):
-            reasons.append("nisu potvrdjeni START/END svih obaveznih faza")
         status = "FAIL" if reasons else ("INCONCLUSIVE" if inconclusive else "PASS")
         return {"schema_version": GUIDED25["schema_version"], "status": status,
                 "reasons": reasons, "inconclusive": inconclusive,
@@ -830,7 +823,10 @@ class Conductor:
             record = {"phase_index": index, "phase": phase, "edge": edge,
                       "host_utc": utc}
             self.state.operator_confirmations.append(record)
-            if edge == "end":
+            # Faza vazi za oznacenu cim je START zapisan. END je ostao u
+            # protokolu radi starijih runova, ali se vise ne trazi: 23.08.2026
+            # je izmjereno da se ne moze kliknuti dok obje ruke drze papiric.
+            if edge == "start":
                 self.state.confirmed_phases.add(index)
         return self.link.send_raw(
             f"note guided25_confirm phase={phase} edge={edge} host_utc={utc}")
@@ -918,11 +914,10 @@ PAGE = """<!doctype html>
  </div>
 
  <div class="card" id="confirm">
-  <div class="crow"><span>potvrde faza</span><b id="c-count">&mdash;</b></div>
-  <div id="c-next">Potvrde se traze tek kad mjerenje krene.</div>
+  <div class="crow"><span>oznake faza (neobavezno)</span><b id="c-count">&mdash;</b></div>
+  <div id="c-next">Oznake se nude tek kad mjerenje krene.</div>
   <div class="btns">
-   <button id="btn-cs" onclick="post('confirm-start')">POTVRDI START faze</button>
-   <button id="btn-ce" onclick="post('confirm-end')">POTVRDI END faze</button>
+   <button id="btn-cs" onclick="post('confirm-start')">OZNACI DA SI POCEO OVU FAZU</button>
   </div>
  </div>
 
@@ -1083,18 +1078,13 @@ function poll(){
     document.getElementById('c-count').textContent =
       (s.confirm_done || 0) + '/' + (s.confirm_required || 0);
     const bs = document.getElementById('btn-cs');
-    const be = document.getElementById('btn-ce');
     bs.disabled = need !== 'start';
-    be.disabled = need !== 'end';
     bs.className = need === 'start' ? 'need' : '';
-    be.className = need === 'end' ? 'need' : '';
-    document.getElementById('confirm').className = 'card'
-      + (need ? ' need' : '') + (missed.length ? ' miss' : '');
+    document.getElementById('confirm').className = 'card' + (need ? ' need' : '');
     document.getElementById('c-next').textContent =
-      need === 'start' ? 'Radnju iz ove faze si upravo poceo: klikni POTVRDI START.'
-      : need === 'end' ? 'Drzi radnju do kraja odbrojavanja, pa klikni POTVRDI END.'
-      : (s.stage === 'RUN' ? 'Ova faza je potvrdjena. Cekaj sljedecu.'
-                           : 'Potvrde se traze tek kad mjerenje krene.');
+      need === 'start' ? 'Ako stignes, oznaci da si poceo ovu fazu. Run ne pada ako ne stignes.'
+      : (s.stage === 'RUN' ? 'Faza je oznacena. Radi svoj posao.'
+                           : 'Oznake se nude tek kad mjerenje krene.');
 
     const alerts = [];
     if (s.research_errors > 0)
@@ -1102,9 +1092,9 @@ function poll(){
         'Host ce ovaj run odbiti kao invalid_research_telemetry bez obzira na '
         + 'mjerenje. Klikni "Prekini i sacuvaj" i ponovi pokusaj.', false]);
     if (missed.length)
-      alerts.push(['PROPUSTENE POTVRDE: faza ' + missed.map(i => i + 1).join(', '),
-        'Faza koja je prosla bez START i END potvrde se vise ne moze potvrditi, '
-        + 'pa je run vec pao. Prekini i ponovi pokusaj.', false]);
+      alerts.push(['neoznacene faze: ' + missed.map(i => i + 1).join(', '),
+        'Samo zapis, run zbog toga NE pada. Oznake su neobavezne otkad je '
+        + 'izmjereno da se ne mogu kliknuti dok obje ruke drze papiric.', true]);
     if (s.stage === 'RUN' && s.phase_index >= 0 && flags.anomaly === '1'
         && alarmForbidden(s.phases[s.phase_index].condition))
       alerts.push(['UREDJAJ JE JOS U ALARMU',
@@ -1202,7 +1192,7 @@ function poll(){
       !(s.calibration_accepted && s.stage === 'READY_TO_GO');
     if(s.read_only_preview){
       document.querySelectorAll('button').forEach(button => button.disabled = true);
-      bs.className = ''; be.className = '';
+      bs.className = '';
       if(s.stage === 'IDLE'){
         ph.textContent = 'PREGLED DASHBOARDA';
         wh.textContent = 'Read-only: tasteri su prikazani, ali su aktivni tek u pravom runu.';

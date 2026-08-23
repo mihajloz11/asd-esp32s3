@@ -101,9 +101,17 @@ typedef struct {
  *
  * Odstupanje više ne broji ovaj modul nego `asd_temporal.c` (Faza 4): tamo
  * živi i histereza, i tamo je izmjereno zašto EWMA i CUSUM nisu uzeti. */
+/* Koliko uzastopnih alarmnih prozora znaci da odstupanje nije prolazno.
+ * 12 x 10 s = dva minuta. Ovo NIJE prag detekcije izveden iz podataka nego
+ * pogonska odluka kada odstupanje prestaje da bude epizoda i postaje stanje
+ * koje trazi covjeka. Zato je konstanta, a ne kalibrisana brojka. */
+#define ASD_SUSTAINED_ANOMALY_WINDOWS 12u
+
 typedef struct {
     asd_state_t state;
     int absent_run;
+    uint32_t anomaly_windows;
+    int sustained_reported;
     asd_temporal_t temporal;
     asd_interference_t interference;
     asd_presence_policy_t policy;
@@ -117,6 +125,10 @@ typedef struct {
     int state_changed;     /* 1 = state differs from the previous observation */
     int observation_hold;  /* unreliable single-mic observation; no diagnosis */
     int hold_warning;      /* hold exceeded the DEVELOPMENT inspection limit */
+    /* 1 tacno u prozoru u kojem alarm napuni dva minuta. Tvrdnja je o TRAJANJU,
+     * ne o uzroku: i dalje se emituje ASD_EVENT_UNKNOWN_CHANGE, jer jedan
+     * mikrofon bez f0 ne moze reci da je kvar mehanicki. */
+    int sustained_anomaly;
 } asd_decision_t;
 
 void asd_decision_init(asd_decision_ctx_t *ctx,

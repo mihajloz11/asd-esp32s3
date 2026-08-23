@@ -1,0 +1,24 @@
+guided25 panel
+press panel
+condition normal_baseline Normalna osnova: Miruj i ne pricaj.
+condition airflow_change_paper_1 Papiric 1: Drzi papiric uz usis, bez dodira ventilatora.
+note guided25_confirm phase=airflow_change_paper_1 edge=start host_utc=2026-08-23T18:36:56.842+00:00
+condition recovery_normal_1 Oporavak 1: Skloni papiric i ruku; tisina.
+note guided25_confirm phase=recovery_normal_1 edge=start host_utc=2026-08-23T18:37:49.035+00:00
+condition airflow_change_paper_2 Papiric 2: Ponovi isti polozaj papirica.
+note guided25_confirm phase=airflow_change_paper_2 edge=start host_utc=2026-08-23T18:38:37.510+00:00
+condition recovery_normal_2 Oporavak 2: Skloni papiric i ruku; tisina.
+note guided25_confirm phase=recovery_normal_2 edge=start host_utc=2026-08-23T18:39:28.794+00:00
+condition airflow_change_paper_3 Papiric 3: Treci put ponovi isti polozaj.
+note guided25_confirm phase=airflow_change_paper_3 edge=start host_utc=2026-08-23T18:40:17.947+00:00
+condition recovery_normal_3 Oporavak 3: Skloni papiric i ruku; tisina.
+note guided25_confirm phase=recovery_normal_3 edge=start host_utc=2026-08-23T18:41:08.079+00:00
+condition ambient_speech Razgovor: Pricaj normalno sa oznacenog mjesta.
+note guided25_confirm phase=ambient_speech edge=start host_utc=2026-08-23T18:41:58.472+00:00
+condition recovery_after_speech Oporavak poslije govora: Prestani da pricas; tisina.
+note guided25_confirm phase=recovery_after_speech edge=start host_utc=2026-08-23T18:42:47.335+00:00
+condition ambient_door Vrata: Jednom normalno otvori i zatvori vrata; ne lupaj.
+note guided25_confirm phase=ambient_door edge=start host_utc=2026-08-23T18:43:36.383+00:00
+condition final_recovery Zavrsni oporavak: Miruj i ostavi ventilator da radi normalno.
+note guided25_confirm phase=final_recovery edge=start host_utc=2026-08-23T18:44:06.500+00:00
+stop kraj plana

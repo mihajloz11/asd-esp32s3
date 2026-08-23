@@ -227,15 +227,47 @@ def test_finalized_report_rejects_active_or_carried_alarm_during_speech() -> Non
     assert "alarm_or_carried_alarm:ambient_speech" in result["failures"]
 
 
-def test_finalized_report_rejects_missing_fake_or_out_of_order_confirmation() -> None:
+def test_missing_operator_marks_are_recorded_but_do_not_fail_the_run() -> None:
+    """Klik nije nezavisan dokaz radnje, pa njegovo odsustvo ne obara mjerenje.
+
+    23.08.2026 je operater kliknuo START za svih deset faza i nijedan END, jer
+    se END trazi dok obje ruke drze papiric uz ventilator. Run je tada pao na
+    ceremoniji, a ne na mjerenju.
+    """
     provenance, manifest, rows, events = _finalized_fixture()
-    fake = [{**events[0], "note": events[0]["note"].replace("edge=start", "edge=end")},
-            *events[1:]]
-    for broken in (events[:-1], list(reversed(events)), fake):
+    starts = [item for item in events if "edge=start" in item["note"]]
+
+    for partial in ([], starts, events[:-1]):
+        result = guided.evaluate_guided25_artifact(
+            provenance=provenance, detections=rows, research_manifest=manifest,
+            workflow_accepted=True, dropped_observed=True, events=partial)
+        assert "operator_confirmations_fake_or_out_of_order" not in result["failures"]
+        assert result["status"] == "PASS"
+
+    empty = guided.evaluate_guided25_artifact(
+        provenance=provenance, detections=rows, research_manifest=manifest,
+        workflow_accepted=True, dropped_observed=True, events=[])
+    assert empty["operator_marks"] == "0/10"
+    marked = guided.evaluate_guided25_artifact(
+        provenance=provenance, detections=rows, research_manifest=manifest,
+        workflow_accepted=True, dropped_observed=True, events=starts)
+    assert marked["operator_marks"] == "10/10"
+
+
+def test_falsified_or_reordered_operator_marks_still_fail_the_run() -> None:
+    """Nedostatak zapisa je dozvoljen; lazan zapis nije."""
+    provenance, manifest, rows, events = _finalized_fixture()
+    end_first = [{**events[0],
+                  "note": events[0]["note"].replace("edge=start", "edge=end")},
+                 *events[1:]]
+    unknown = [{**events[0],
+                "note": events[0]["note"].replace(
+                    "phase=airflow_change_paper_1", "phase=izmisljena_faza")}]
+    for broken in (list(reversed(events)), end_first, unknown):
         result = guided.evaluate_guided25_artifact(
             provenance=provenance, detections=rows, research_manifest=manifest,
             workflow_accepted=True, dropped_observed=True, events=broken)
-        assert "operator_confirmations_missing_fake_or_out_of_order" in result["failures"]
+        assert "operator_confirmations_fake_or_out_of_order" in result["failures"]
 
 
 def test_paper_high_run_is_local_not_carried_firmware_consecutive() -> None:

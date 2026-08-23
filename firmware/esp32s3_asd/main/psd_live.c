@@ -62,7 +62,24 @@ static const char *TAG = "psdlive";
  * moze proizvesti n=3 alarmnu epizodu; vremenski kasniji VERIFY i dalje mora
  * nezavisno proci nulti episode/alarm-window/chatter gate. */
 #define COMMISSION_ENTER_QUANTILE 0.99f
-#define COMMISSION_EXIT_QUANTILE  0.75f
+/* Izlaz iz alarma je 23.08.2026 podignut sa p75 na p95 DERIVE raspodjele, i to
+ * iskljucivo iz normal-only podataka -- nijedan papiric, govor ni vrata nisu
+ * gledani. Razlog je izmjeren: run tog dana je imao enter 6341 i exit 341, a
+ * najtisi normalan DET prozor je bio 463, pa se alarm iz prvog papirica NIKAD
+ * nije ugasio i sljedeca dva bloka nisu imala u sta da udju.
+ *
+ * p75 znaci da cetvrtina ispravnih prozora stoji IZNAD izlaza, pa i najmanji
+ * pomak okruzenja izmedju kalibracije i mjerenja zakljuca alarm zauvijek. p95
+ * znaci da se 95 % ispravnih prozora vraca u normalu prvim prozorom.
+ *
+ * Simetrija je namjerno asimetricna: ulaz trazi TRI uzastopna prozora iznad
+ * enter praga, a izlaz jedan ispod exit praga. Zato visi izlaz ne pravi
+ * treperenje -- povratak u alarm i dalje kosta tri prozora. */
+#define COMMISSION_EXIT_QUANTILE  0.95f
+/* Histereza ne smije da se skupi: izlaz nikad iznad ove frakcije ulaza. */
+#define COMMISSION_EXIT_MAX_FRACTION 0.5f
+/* Ni da propadne ispod medijane normale, jer bi povratak bio nemoguc. */
+#define COMMISSION_EXIT_FLOOR_QUANTILE 0.50f
 #define SCORE_NEGATIVE_TOL 1.0e-3f
 #define MAX_COMMISSION_WINDOWS 128
 
@@ -75,9 +92,14 @@ static float center[DIM];
 static float feature[DIM];
 static asd_quality_policy_t quality_policy;
 
+/* Pet podsegmenata istog prozora. Od v2 se racunaju UVIJEK, ne samo u
+ * razvojnom buildu: iz njih zivi `subsegment_instability`, jedina velicina
+ * kojom kapija pouzdanosti razlikuje trajnu promjenu na masini od tudjeg zvuka.
+ * Ne kostaju nove FFT-ove -- grupe su particija istih Welch segmenata. */
+static asd_psd_sidecar_t window_sidecar;
+
 #ifdef ASD_RESEARCH_TELEMETRY
 #define ASD_RESEARCH_PROTOCOL "asd-research-v1.0.0"
-static asd_psd_sidecar_t research_sidecar;
 static uint64_t research_window_start_ms;
 static uint64_t research_window_end_ms;
 
@@ -128,12 +150,12 @@ static void emit_research_window(unsigned session, const char *phase,
                                  float score, float level_dbfs,
                                  float tonalness) {
     emit_research_vector("FEATURE96", session, phase, window, 0,
-                         research_sidecar.segments, final_feature,
+                         window_sidecar.segments, final_feature,
                          score, level_dbfs, tonalness);
     for (int group = 0; group < ASD_PSD_SIDECAR_GROUPS; group++)
         emit_research_vector("SUBSEG96", session, phase, window, group + 1,
-                             research_sidecar.group_segments[group],
-                             research_sidecar.group_feature[group],
+                             window_sidecar.group_segments[group],
+                             window_sidecar.group_feature[group],
                              score, level_dbfs, tonalness);
 }
 #endif
@@ -442,10 +464,8 @@ static asd_quality_reason_t capture_clip(float *out_feature,
 
 #ifdef ASD_RESEARCH_TELEMETRY
     research_window_start_ms = (uint64_t)(esp_timer_get_time() / 1000);
-    asd_psd_stream_reset_sidecar();
-#else
-    asd_psd_stream_reset();
 #endif
+    asd_psd_stream_reset_sidecar();
     int64_t t_comp = 0;
     uint32_t dropped_before = audio_dropped_samples();
     asd_quality_accumulator_t acc;
@@ -478,11 +498,7 @@ static asd_quality_reason_t capture_clip(float *out_feature,
     research_window_end_ms = (uint64_t)(esp_timer_get_time() / 1000);
 #endif
     int64_t a = esp_timer_get_time();
-#ifdef ASD_RESEARCH_TELEMETRY
-    int segments = asd_psd_stream_finish_sidecar(out_feature, &research_sidecar);
-#else
-    int segments = asd_psd_stream_finish(out_feature);
-#endif
+    int segments = asd_psd_stream_finish_sidecar(out_feature, &window_sidecar);
     t_comp += esp_timer_get_time() - a;
 
     asd_quality_finish(&acc, audio_dropped_samples(), quality);
@@ -493,6 +509,36 @@ static asd_quality_reason_t capture_clip(float *out_feature,
         return ASD_QUALITY_NONFINITE;
     if (feature_valid) *feature_valid = 1;
     return ASD_QUALITY_OK;
+}
+
+/* Koliko se pet podsegmenata istog prozora medjusobno ne slazu, u
+ * normalizovanim jedinicama modela:
+ *
+ *   z_g[d] = (grupa_g[d] - norm_mean[d]) / norm_std[d]
+ *   instability = mean_d( std_g( z_g[d] ) )
+ *
+ * Trajna promjena na masini izgleda isto kroz cijeli prozor pa su podsegmenti
+ * slozni; govor, vrata i koraci nisu. Isti izraz racuna i
+ * `pc/tools/derive_interference_policy.py`, pa su granica i mjera u istim
+ * jedinicama. Populaciona sd (dijeli se sa G), da se poklopi sa numpy.std. */
+static float subsegment_instability(const asd_psd_sidecar_t *sidecar) {
+    if (!sidecar) return NAN;
+    float total = 0.0f;
+    for (int d = 0; d < DIM; d++) {
+        float z[ASD_PSD_SIDECAR_GROUPS];
+        float mean = 0.0f;
+        for (int g = 0; g < ASD_PSD_SIDECAR_GROUPS; g++) {
+            z[g] = (sidecar->group_feature[g][d] - asd_psd_norm_mean[d]) /
+                   asd_psd_norm_std[d];
+            mean += z[g];
+        }
+        mean /= (float)ASD_PSD_SIDECAR_GROUPS;
+        float variance = 0.0f;
+        for (int g = 0; g < ASD_PSD_SIDECAR_GROUPS; g++)
+            variance += (z[g] - mean) * (z[g] - mean);
+        total += sqrtf(variance / (float)ASD_PSD_SIDECAR_GROUPS);
+    }
+    return total / (float)DIM;
 }
 
 static float score_with_center(const float *feat, const float *c) {
@@ -886,6 +932,16 @@ static asd_state_t run_session(unsigned session_index,
     threshold_exit = percentile_higher(
         derive_sorted, (int)commissioning.policy.derive_windows,
         COMMISSION_EXIT_QUANTILE);
+    memcpy(derive_sorted, derive_scores,
+           commissioning.policy.derive_windows * sizeof(float));
+    float exit_floor = percentile_higher(
+        derive_sorted, (int)commissioning.policy.derive_windows,
+        COMMISSION_EXIT_FLOOR_QUANTILE);
+    float exit_ceiling = COMMISSION_EXIT_MAX_FRACTION * threshold_enter;
+    if (isfinite(exit_floor) && threshold_exit < exit_floor)
+        threshold_exit = exit_floor;
+    if (isfinite(exit_ceiling) && threshold_exit > exit_ceiling)
+        threshold_exit = exit_ceiling;
     if (!asd_commission_freeze_thresholds(
             &commissioning, now_ms(), &runtime_profile,
             threshold_enter, threshold_exit))
@@ -1051,10 +1107,14 @@ profile_ready:
          * prisustvo masine -> rezim -> odstupanje) i oba brojaca zive u
          * `asd_events.c` i pokriveni su host testovima; ovdje se rezultat samo
          * ispisuje i sprovodi. */
+        /* Do v2 je ovdje stajala tvrda nula, pa je kapija pouzdanosti bila
+         * povezana ali slijepa. Sada dobija stvarnu mjeru iz istog prozora. */
+        float instability = subsegment_instability(&window_sidecar);
+        if (!isfinite(instability) || instability < 0.0f) instability = 0.0f;
         asd_observation_t obs = {
             reason, ASD_PHASE_DET, metrics.rms_dbfs, s,
             tonalness - runtime_profile.tonalness_reference,
-            0.0f,
+            instability,
         };
         asd_decision_t decided = asd_decide(&decision, &calibration, &obs);
         int alarm = decided.state == ASD_STATE_ANOMALY;
@@ -1106,6 +1166,13 @@ profile_ready:
         if (decided.hold_warning)
             emit_event("OBSERVATION_HOLD_WARNING", decided.state, "DET",
                        "LONG_OBSERVATION_HOLD", ASD_EVENT_NONE,
+                       ASD_LEVEL_DEVIATION);
+        /* Odstupanje koje traje dva minuta vise nije epizoda. Tvrdnja je i
+         * dalje o trajanju, ne o uzroku -- dogadjaj ostaje UNKNOWN_CHANGE, jer
+         * jedan mikrofon bez f0 ne moze reci da je kvar mehanicki. */
+        if (decided.sustained_anomaly)
+            emit_event("ANOMALY_SUSTAINED", decided.state, "DET",
+                       "SUSTAINED_DEVIATION", decided.event,
                        ASD_LEVEL_DEVIATION);
         if (decided.flow_stop) {
             /* `reason` je ime događaja iz zaključane taksonomije Faze 2 —

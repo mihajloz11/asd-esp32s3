@@ -4,14 +4,21 @@
 #include <string.h>
 
 asd_interference_policy_t asd_interference_default_policy(void) {
-    /* Numeric boundaries stay disabled until normal-only physical validation.
-     * Baseline detection therefore remains available and no unsupported
-     * one-microphone diagnosis is invented. */
+    /* Granice su izvedene 23.08.2026 iz 18 normal-only prozora jednog runa
+     * (10 CAL + 8 DET pod uslovima `normal_baseline`/`final_recovery`), pravilom
+     * `max(normal) * 1,25`. Nijedan papiric, govor ni vrata nisu otvoreni u
+     * izvodjenju -- vidi `pc/tools/derive_interference_policy.py` i
+     * `pc/config/asd_interference_policy_v2.json`.
+     *
+     * Nezavisan readout POSLIJE zamrzavanja, medijana nestabilnosti po uslovu:
+     * normalno 0,85 - papiric 0,94/1,06/1,09 - govor 1,89 - vrata 1,89.
+     * Granica 1,40 je pala izmedju papirica i smetnje, a nije birana da padne. */
     asd_interference_policy_t policy = {
-        .enabled = 0,
+        .enabled = 1,
         .developmental = 1,
-        .max_abs_tonalness_delta = 0.0f,
-        .max_subsegment_instability = 0.0f,
+        .use_tonalness_delta = 0,
+        .max_abs_tonalness_delta = 0.547454f,
+        .max_subsegment_instability = 1.400175f,
         .long_hold_windows = 6u,
     };
     return policy;
@@ -20,6 +27,10 @@ asd_interference_policy_t asd_interference_default_policy(void) {
 static int policy_valid(const asd_interference_policy_t *policy) {
     if (!policy || policy->long_hold_windows == 0u) return 0;
     if (!policy->enabled) return 1;
+    /* Ukljucena politika mora imati bar jedan kriterijum, inace bi tiho
+     * propustala sve i izgledala kao da radi. */
+    if (!policy->use_tonalness_delta &&
+        !(policy->max_subsegment_instability > 0.0f)) return 0;
     return isfinite(policy->max_abs_tonalness_delta) &&
            policy->max_abs_tonalness_delta >= 0.0f &&
            isfinite(policy->max_subsegment_instability) &&
@@ -53,7 +64,8 @@ asd_interference_result_t asd_interference_update(
         return ASD_INTERFERENCE_PASS;
     }
     int unreliable =
-        fabsf(obs->tonalness_delta) > gate->policy.max_abs_tonalness_delta ||
+        (gate->policy.use_tonalness_delta &&
+         fabsf(obs->tonalness_delta) > gate->policy.max_abs_tonalness_delta) ||
         obs->subsegment_instability > gate->policy.max_subsegment_instability;
     if (!unreliable) {
         /* The next stable high window starts a fresh temporal run. */

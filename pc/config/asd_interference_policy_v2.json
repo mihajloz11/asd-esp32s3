@@ -1,0 +1,59 @@
+{
+  "schema_version": "asd-interference-policy-v2.0.0-development",
+  "developmental": true,
+  "numeric_status": "derived_from_normal_only_windows",
+  "target_anomalies_used_for_fit": false,
+  "public_state": "OBSERVATION_HOLD",
+  "forbidden_single_microphone_diagnosis": "AMBIENT_NOISE",
+  "policy": {
+    "enabled": true,
+    "use_tonalness_delta": false,
+    "max_abs_tonalness_delta": 0.547454,
+    "max_subsegment_instability": 1.400175,
+    "long_hold_windows": 6
+  },
+  "derivation": {
+    "normal_conditions_admitted": [
+      "normal_baseline",
+      "final_recovery"
+    ],
+    "quantile": 99.0,
+    "margin": 1.25,
+    "windows_used": 18,
+    "sources": [
+      {
+        "log": "run_20260823T202145_fan02_guided25-20260823-202143",
+        "windows": 18,
+        "tonalness_reference": 3.535445
+      }
+    ],
+    "abs_tonalness_delta": {
+      "name": "abs_tonalness_delta",
+      "count": 18,
+      "median": 0.02065,
+      "p90": 0.376759,
+      "p99": 0.429581,
+      "max": 0.437963,
+      "rule": "max(normal) * margin",
+      "threshold": 0.547454
+    },
+    "subsegment_instability": {
+      "name": "subsegment_instability",
+      "count": 18,
+      "median": 0.849716,
+      "p90": 0.924271,
+      "p99": 1.090694,
+      "max": 1.12014,
+      "rule": "max(normal) * margin",
+      "threshold": 1.400175
+    }
+  },
+  "semantics": {
+    "hold_suspends_alarm_buildup": true,
+    "hold_clears_active_alarm": false,
+    "hold_changes_profile": false,
+    "stable_high_after_hold_starts_fresh_run": true,
+    "long_hold_is_warning_not_normal": true
+  },
+  "change_rule": "Granice se izvode iskljucivo iz normal-only prozora. Ciljne anomalije se ne otvaraju; svaka izmjena trazi bump verzije i novi preregistrovani retest."
+}

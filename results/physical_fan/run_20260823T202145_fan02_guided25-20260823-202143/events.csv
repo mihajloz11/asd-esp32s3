@@ -1,0 +1,30 @@
+host_utc,elapsed_s,firmware_session_index,kind,label,note
+2026-08-23T18:21:45.954+00:00,0.016,0,session,start,sigurnosna postavka potvrđena; operator condition=unconfirmed
+2026-08-23T18:21:46.406+00:00,0.454,0,device,reset,RTS reset; pocinje WAIT/CAL/DET
+2026-08-23T18:22:12.959+00:00,27.016,0,virtual_button,guided25,panel
+2026-08-23T18:22:12.975+00:00,27.032,0,virtual_button,press,panel
+2026-08-23T18:23:08.269+00:00,82.329,1,phase,calibration,fan mora ostati u potvrđeno normalnom stanju
+2026-08-23T18:35:47.176+00:00,841.235,1,phase,detection,firmware DET faza; operator condition i dalje nije potvrđen
+2026-08-23T18:36:06.191+00:00,860.25,1,condition,normal_baseline,Normalna osnova: Miruj i ne pricaj.
+2026-08-23T18:36:56.282+00:00,910.344,1,condition,airflow_change_paper_1,"Papiric 1: Drzi papiric uz usis, bez dodira ventilatora."
+2026-08-23T18:36:56.916+00:00,910.969,1,note,operator,guided25_confirm phase=airflow_change_paper_1 edge=start host_utc=2026-08-23T18:36:56.842+00:00
+2026-08-23T18:37:45.980+00:00,960.032,1,condition,recovery_normal_1,Oporavak 1: Skloni papiric i ruku; tisina.
+2026-08-23T18:37:49.561+00:00,963.61,1,note,operator,guided25_confirm phase=recovery_normal_1 edge=start host_utc=2026-08-23T18:37:49.035+00:00
+2026-08-23T18:38:36.056+00:00,1010.11,1,condition,airflow_change_paper_2,Papiric 2: Ponovi isti polozaj papirica.
+2026-08-23T18:38:38.493+00:00,1012.547,1,note,operator,guided25_confirm phase=airflow_change_paper_2 edge=start host_utc=2026-08-23T18:38:37.510+00:00
+2026-08-23T18:39:26.103+00:00,1060.157,1,condition,recovery_normal_2,Oporavak 2: Skloni papiric i ruku; tisina.
+2026-08-23T18:39:29.436+00:00,1063.485,1,note,operator,guided25_confirm phase=recovery_normal_2 edge=start host_utc=2026-08-23T18:39:28.794+00:00
+2026-08-23T18:40:16.174+00:00,1110.235,1,condition,airflow_change_paper_3,Papiric 3: Treci put ponovi isti polozaj.
+2026-08-23T18:40:18.306+00:00,1112.36,1,note,operator,guided25_confirm phase=airflow_change_paper_3 edge=start host_utc=2026-08-23T18:40:17.947+00:00
+2026-08-23T18:41:06.251+00:00,1160.313,1,condition,recovery_normal_3,Oporavak 3: Skloni papiric i ruku; tisina.
+2026-08-23T18:41:08.244+00:00,1162.297,1,note,operator,guided25_confirm phase=recovery_normal_3 edge=start host_utc=2026-08-23T18:41:08.079+00:00
+2026-08-23T18:41:56.301+00:00,1210.36,1,condition,ambient_speech,Razgovor: Pricaj normalno sa oznacenog mjesta.
+2026-08-23T18:41:59.275+00:00,1213.329,1,note,operator,guided25_confirm phase=ambient_speech edge=start host_utc=2026-08-23T18:41:58.472+00:00
+2026-08-23T18:42:46.324+00:00,1260.375,1,condition,recovery_after_speech,Oporavak poslije govora: Prestani da pricas; tisina.
+2026-08-23T18:42:48.304+00:00,1262.36,1,note,operator,guided25_confirm phase=recovery_after_speech edge=start host_utc=2026-08-23T18:42:47.335+00:00
+2026-08-23T18:43:36.268+00:00,1310.329,1,condition,ambient_door,Vrata: Jednom normalno otvori i zatvori vrata; ne lupaj.
+2026-08-23T18:43:36.410+00:00,1310.469,1,note,operator,guided25_confirm phase=ambient_door edge=start host_utc=2026-08-23T18:43:36.383+00:00
+2026-08-23T18:44:06.254+00:00,1340.313,1,condition,final_recovery,Zavrsni oporavak: Miruj i ostavi ventilator da radi normalno.
+2026-08-23T18:44:06.505+00:00,1340.563,1,note,operator,guided25_confirm phase=final_recovery edge=start host_utc=2026-08-23T18:44:06.500+00:00
+2026-08-23T18:44:56.189+00:00,1390.25,1,session,stop,kraj plana
+2026-08-23T18:44:56.708+00:00,1390.766,1,session,final_buffer_drain_complete,buffered UART je procitan prije finalizacije

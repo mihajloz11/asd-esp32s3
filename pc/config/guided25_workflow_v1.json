@@ -1,5 +1,5 @@
 {
-  "schema_version": "asd-guided25-v1.0.0-development",
+  "schema_version": "asd-guided25-v1.1.0-development",
   "developmental": true,
   "hard_deadline_seconds": 1500,
   "firmware_mode": "GUIDED25",
@@ -11,17 +11,72 @@
     "verify_windows": 22
   },
   "phases": [
-    {"name":"Normalna osnova","condition":"normal_baseline","seconds":50,"prompt":"Miruj i ne pricaj."},
-    {"name":"Papiric 1","condition":"airflow_change_paper_1","seconds":50,"prompt":"Drzi papiric uz usis, bez dodira ventilatora."},
-    {"name":"Oporavak 1","condition":"recovery_normal_1","seconds":50,"prompt":"Skloni papiric i ruku; tisina."},
-    {"name":"Papiric 2","condition":"airflow_change_paper_2","seconds":50,"prompt":"Ponovi isti polozaj papirica."},
-    {"name":"Oporavak 2","condition":"recovery_normal_2","seconds":50,"prompt":"Skloni papiric i ruku; tisina."},
-    {"name":"Papiric 3","condition":"airflow_change_paper_3","seconds":50,"prompt":"Treci put ponovi isti polozaj."},
-    {"name":"Oporavak 3","condition":"recovery_normal_3","seconds":50,"prompt":"Skloni papiric i ruku; tisina."},
-    {"name":"Razgovor","condition":"ambient_speech","seconds":50,"prompt":"Pricaj normalno sa oznacenog mjesta."},
-    {"name":"Oporavak poslije govora","condition":"recovery_after_speech","seconds":50,"prompt":"Prestani da pricas; tisina."},
-    {"name":"Vrata","condition":"ambient_door","seconds":30,"prompt":"Jednom normalno otvori i zatvori vrata; ne lupaj."},
-    {"name":"Zavrsni oporavak","condition":"final_recovery","seconds":50,"prompt":"Miruj i ostavi ventilator da radi normalno."}
+    {
+      "name": "Normalna osnova",
+      "condition": "normal_baseline",
+      "seconds": 50,
+      "prompt": "Miruj i ne pricaj."
+    },
+    {
+      "name": "Papiric 1",
+      "condition": "airflow_change_paper_1",
+      "seconds": 50,
+      "prompt": "Drzi papiric uz usis, bez dodira ventilatora."
+    },
+    {
+      "name": "Oporavak 1",
+      "condition": "recovery_normal_1",
+      "seconds": 50,
+      "prompt": "Skloni papiric i ruku; tisina."
+    },
+    {
+      "name": "Papiric 2",
+      "condition": "airflow_change_paper_2",
+      "seconds": 50,
+      "prompt": "Ponovi isti polozaj papirica."
+    },
+    {
+      "name": "Oporavak 2",
+      "condition": "recovery_normal_2",
+      "seconds": 50,
+      "prompt": "Skloni papiric i ruku; tisina."
+    },
+    {
+      "name": "Papiric 3",
+      "condition": "airflow_change_paper_3",
+      "seconds": 50,
+      "prompt": "Treci put ponovi isti polozaj."
+    },
+    {
+      "name": "Oporavak 3",
+      "condition": "recovery_normal_3",
+      "seconds": 50,
+      "prompt": "Skloni papiric i ruku; tisina."
+    },
+    {
+      "name": "Razgovor",
+      "condition": "ambient_speech",
+      "seconds": 50,
+      "prompt": "Pricaj normalno sa oznacenog mjesta."
+    },
+    {
+      "name": "Oporavak poslije govora",
+      "condition": "recovery_after_speech",
+      "seconds": 50,
+      "prompt": "Prestani da pricas; tisina."
+    },
+    {
+      "name": "Vrata",
+      "condition": "ambient_door",
+      "seconds": 30,
+      "prompt": "Jednom normalno otvori i zatvori vrata; ne lupaj."
+    },
+    {
+      "name": "Zavrsni oporavak",
+      "condition": "final_recovery",
+      "seconds": 50,
+      "prompt": "Miruj i ostavi ventilator da radi normalno."
+    }
   ],
   "acceptance": {
     "paper_blocks_required": 2,
@@ -41,5 +96,12 @@
     "max_dropped_samples": 0,
     "research_telemetry_required": true,
     "attempt_limit": 3
+  },
+  "operator_marks": {
+    "required_for_pass": false,
+    "one_per_phase": true,
+    "edge": "start",
+    "rationale": "Klik nije nezavisan dokaz fizicke radnje, pa ne moze biti kapija. Potvrda koja postoji mora biti vjerodostojna i u redoslijedu; krivotvoren zapis i dalje obara run.",
+    "changed": "2026-08-23"
   }
 }
