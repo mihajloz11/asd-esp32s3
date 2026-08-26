@@ -4,29 +4,50 @@
 #include <string.h>
 
 asd_interference_policy_t asd_interference_default_policy(void) {
-    /* Granice su izvedene 23.08.2026 iz 18 normal-only prozora jednog runa
-     * (10 CAL + 8 DET pod uslovima `normal_baseline`/`final_recovery`), pravilom
-     * `max(normal) * 1,25`. Nijedan papiric, govor ni vrata nisu otvoreni u
-     * izvodjenju -- vidi `pc/tools/derive_interference_policy.py` i
-     * `pc/config/asd_interference_policy_v2.json`.
-     *
-     * Nezavisan readout POSLIJE zamrzavanja, medijana nestabilnosti po uslovu:
-     * normalno 0,85 - papiric 0,94/1,06/1,09 - govor 1,89 - vrata 1,89.
-     * Granica 1,40 je pala izmedju papirica i smetnje, a nije birana da padne. */
+    /* V2 je prenijela apsolutnu granicu 1,400175 iz jednog polozaja mikrofona.
+     * U novom polozaju je vec cisti CAL dostigao 1,465162, pa je gate mjerio
+     * setap umjesto pouzdanosti prozora. V3 zadrzava isto unaprijed zadato
+     * normal-only pravilo `max(CAL normal) * 1,25`, ali apsolutnu brojku izvodi
+     * ponovo u svakoj sesiji. Papiric, govor i vrata ne ulaze u fit. */
     asd_interference_policy_t policy = {
         .enabled = 1,
         .developmental = 1,
         .use_tonalness_delta = 0,
         .max_abs_tonalness_delta = 0.547454f,
-        .max_subsegment_instability = 1.400175f,
+        .normal_max_multiplier = 1.250000f,
+        .calibration_min_windows = 10u,
+        .max_subsegment_instability = 0.0f,
         .long_hold_windows = 6u,
     };
     return policy;
 }
 
+int asd_interference_calibrate_normal(
+    asd_interference_policy_t *policy,
+    float normal_max_subsegment_instability,
+    uint32_t normal_windows) {
+    if (!policy || !policy->enabled ||
+        normal_windows < policy->calibration_min_windows ||
+        !isfinite(normal_max_subsegment_instability) ||
+        !(normal_max_subsegment_instability > 0.0f) ||
+        !isfinite(policy->normal_max_multiplier) ||
+        !(policy->normal_max_multiplier > 1.0f))
+        return 0;
+    float threshold = normal_max_subsegment_instability *
+        policy->normal_max_multiplier;
+    if (!isfinite(threshold) || !(threshold > normal_max_subsegment_instability))
+        return 0;
+    policy->max_subsegment_instability = threshold;
+    return 1;
+}
+
 static int policy_valid(const asd_interference_policy_t *policy) {
     if (!policy || policy->long_hold_windows == 0u) return 0;
     if (!policy->enabled) return 1;
+    if (
+        policy->calibration_min_windows == 0u ||
+        !isfinite(policy->normal_max_multiplier) ||
+        !(policy->normal_max_multiplier > 1.0f)) return 0;
     /* Ukljucena politika mora imati bar jedan kriterijum, inace bi tiho
      * propustala sve i izgledala kao da radi. */
     if (!policy->use_tonalness_delta &&

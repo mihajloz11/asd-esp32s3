@@ -2,6 +2,7 @@
   "schema_version": "asd-guided25-v1.1.0-development",
   "developmental": true,
   "hard_deadline_seconds": 1500,
+  "monitoring_start_guard_seconds": 20,
   "firmware_mode": "GUIDED25",
   "window_seconds": 10,
   "commissioning": {
@@ -96,12 +97,5 @@
     "max_dropped_samples": 0,
     "research_telemetry_required": true,
     "attempt_limit": 3
-  },
-  "operator_marks": {
-    "required_for_pass": false,
-    "one_per_phase": true,
-    "edge": "start",
-    "rationale": "Klik nije nezavisan dokaz fizicke radnje, pa ne moze biti kapija. Potvrda koja postoji mora biti vjerodostojna i u redoslijedu; krivotvoren zapis i dalje obara run.",
-    "changed": "2026-08-23"
   }
 }

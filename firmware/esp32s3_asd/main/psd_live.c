@@ -600,6 +600,8 @@ static asd_state_t run_session(unsigned session_index,
     asd_decision_ctx_t decision;
     asd_presence_policy_t presence = asd_presence_default_policy();
     asd_decision_init(&decision, &presence);
+    asd_interference_policy_t interference_policy =
+        asd_interference_default_policy();
     asd_calibration_t calibration = {0, NAN, NAN, NAN};
     asd_profile_runtime_t runtime_profile;
     asd_profile_runtime_clear(&runtime_profile);
@@ -618,6 +620,8 @@ static asd_state_t run_session(unsigned session_index,
     float threshold_exit = NAN;
     float derive_mean = NAN;
     float derive_sd = NAN;
+    float cal_instability_max = 0.0f;
+    uint32_t cal_instability_windows = 0u;
     if (!restored && !asd_commission_start(&commissioning, now_ms()))
         return stop_commissioning(state, &commissioning);
 
@@ -771,12 +775,25 @@ static asd_state_t run_session(unsigned session_index,
         cal_level_sum += metrics.rms_dbfs;
         float tonalness = reason == ASD_QUALITY_OK
             ? feature_tonalness_proxy(cal_feat[i]) : NAN;
+        float instability = reason == ASD_QUALITY_OK
+            ? subsegment_instability(&window_sidecar) : NAN;
         if (reason == ASD_QUALITY_OK && !clamp_nonnegative_score(&tonalness)) {
             reason = ASD_QUALITY_NONFINITE;
             feature_valid = 0;
             tonalness = NAN;
         }
-        if (reason == ASD_QUALITY_OK) cal_tonalness_sum += tonalness;
+        if (reason == ASD_QUALITY_OK &&
+            (!isfinite(instability) || instability < 0.0f)) {
+            reason = ASD_QUALITY_NONFINITE;
+            feature_valid = 0;
+            instability = NAN;
+        }
+        if (reason == ASD_QUALITY_OK) {
+            cal_tonalness_sum += tonalness;
+            if (instability > cal_instability_max)
+                cal_instability_max = instability;
+            cal_instability_windows++;
+        }
         emit_quality("CAL", i + 1, N_CAL, &metrics, reason,
                      feature_valid, tonalness);
         printf("CAL %2d/%d score=0.00000 nivo=%.1f dBFS racun=%lld ms\n",
@@ -865,6 +882,16 @@ static asd_state_t run_session(unsigned session_index,
         return stop_flow("CAL", ASD_PHASE_CAL, state, ASD_QUALITY_NONFINITE);
     if (calibration_reason != ASD_CALIBRATION_QUALITY_ACCEPTED)
         return stop_flow("CAL", ASD_PHASE_CAL, state, ASD_QUALITY_INVALID_ARGUMENT);
+
+    /* HOLD skala se fituje ovdje i samo ovdje: iz deset prihvacenih CAL
+     * normal-only prozora ove sesije. V3 nikad ne vidi papiric, govor, vrata
+     * niti DET oznaku uslova. Ako nema punog normalnog skupa, nema ni DET-a. */
+    if (!asd_interference_calibrate_normal(
+            &interference_policy, cal_instability_max,
+            cal_instability_windows))
+        return stop_flow("CAL", ASD_PHASE_CAL, state,
+                         ASD_QUALITY_INVALID_ARGUMENT);
+    asd_decision_set_interference_policy(&decision, &interference_policy);
 
     cal_level_mean = cal_level_sum / (float)N_CAL;
     float cal_tonalness_reference = cal_tonalness_sum / (float)N_CAL;
@@ -1064,6 +1091,18 @@ profile_ready:
            temporal.ewma_alpha, temporal.enter_scale, temporal.exit_scale,
            temporal.fast_scale, runtime_profile.threshold_enter,
            runtime_profile.threshold_exit);
+    /* Host i panel moraju vidjeti tacno iz kojih normal-only podataka je
+     * izvedena sesijska HOLD granica; DET ne smije zavisiti od skrivene
+     * apsolutne konstante. */
+    printf("INTERFERENCE protocol=%s policy=%s source=CAL_NORMAL_ONLY "
+           "normal_windows=%lu normal_max=%.9g multiplier=%.9g "
+           "threshold=%.9g use_tonalness_delta=%d long_hold_windows=%lu\n",
+           ASD_QUALITY_PROTOCOL, ASD_INTERFERENCE_POLICY,
+           (unsigned long)cal_instability_windows, cal_instability_max,
+           interference_policy.normal_max_multiplier,
+           interference_policy.max_subsegment_instability,
+           interference_policy.use_tonalness_delta,
+           (unsigned long)interference_policy.long_hold_windows);
 
     /* Kalibracija je prihvaćena: od sada Faza 2 ima referentni nivo i prag, pa
      * `asd_decide()` može ocjenjivati i prisustvo i odstupanje. */

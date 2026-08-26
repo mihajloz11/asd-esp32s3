@@ -1,0 +1,18 @@
+host_utc,elapsed_s,firmware_session_index,kind,label,note
+2026-08-26T14:24:41.881+00:00,0.0,0,session,start,sigurnosna postavka potvrđena; operator condition=unconfirmed
+2026-08-26T14:24:42.332+00:00,0.453,0,device,reset,RTS reset; pocinje WAIT/CAL/DET
+2026-08-26T14:25:14.905+00:00,33.031,0,virtual_button,guided25,panel
+2026-08-26T14:25:14.921+00:00,33.047,0,virtual_button,press,panel
+2026-08-26T14:26:10.208+00:00,88.328,1,phase,calibration,fan mora ostati u potvrđeno normalnom stanju
+2026-08-26T14:38:49.111+00:00,847.234,1,phase,detection,firmware DET faza; operator condition i dalje nije potvrđen
+2026-08-26T14:42:25.745+00:00,1063.875,1,condition,normal_baseline,Normalna osnova: Miruj i ne pricaj.
+2026-08-26T14:43:15.573+00:00,1113.703,1,condition,airflow_change_paper_1,"Papiric 1: Drzi papiric uz usis, bez dodira ventilatora."
+2026-08-26T14:44:05.710+00:00,1163.843,1,condition,recovery_normal_1,Oporavak 1: Skloni papiric i ruku; tisina.
+2026-08-26T14:44:55.515+00:00,1213.64,1,condition,airflow_change_paper_2,Papiric 2: Ponovi isti polozaj papirica.
+2026-08-26T14:45:45.455+00:00,1263.578,1,condition,recovery_normal_2,Oporavak 2: Skloni papiric i ruku; tisina.
+2026-08-26T14:46:35.336+00:00,1313.468,1,condition,airflow_change_paper_3,Papiric 3: Treci put ponovi isti polozaj.
+2026-08-26T14:47:25.375+00:00,1363.5,1,condition,recovery_normal_3,Oporavak 3: Skloni papiric i ruku; tisina.
+2026-08-26T14:48:16.160+00:00,1414.281,1,condition,ambient_speech,Razgovor: Pricaj normalno sa oznacenog mjesta.
+2026-08-26T14:49:06.194+00:00,1464.328,1,condition,recovery_after_speech,Oporavak poslije govora: Prestani da pricas; tisina.
+2026-08-26T14:49:56.083+00:00,1514.203,1,condition,ambient_door,Vrata: Jednom normalno otvori i zatvori vrata; ne lupaj.
+2026-08-26T14:50:15.986+00:00,1534.109,1,session,abort,guided25_hard_deadline

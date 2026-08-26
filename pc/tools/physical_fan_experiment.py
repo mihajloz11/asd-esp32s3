@@ -93,7 +93,7 @@ PROFILE_POLICY_IDS = {
     "quality_policy_id": 0x51555631,
     "commissioning_policy_id": 0x434D5631,
     "temporal_policy_id": 0x54505632,
-    "interference_policy_id": 0x49505632,
+    "interference_policy_id": 0x49505633,
 }
 ARTIFACT_QUALITY_PROTOCOL_PAIRS = {
     "physical-fan-v1.6.0": "asd-quality-v1.3.0",
@@ -142,7 +142,7 @@ RELEVANT_FILES = (
     ROOT / "pc" / "config" / "asd_presence_policy_v1.json",
     ROOT / "pc" / "config" / "asd_commissioning_policy_v1.json",
     ROOT / "pc" / "config" / "asd_temporal_policy_v2.json",
-    ROOT / "pc" / "config" / "asd_interference_policy_v1.json",
+    ROOT / "pc" / "config" / "asd_interference_policy_v3.json",
     ROOT / "pc" / "asd" / "commissioning_policy.py",
     FIRMWARE_DIR / "main" / "asd_interference.c",
     FIRMWARE_DIR / "main" / "asd_interference.h",
@@ -161,13 +161,19 @@ TEMPORAL_POLICY_RECORD = json.loads(
 )
 TEMPORAL_POLICY = TEMPORAL_POLICY_RECORD["policy"]
 TEMPORAL_WIRE_PROVENANCE = TEMPORAL_POLICY_RECORD["legacy_wire_provenance"]
+INTERFERENCE_POLICY_RECORD = json.loads(
+    (ROOT / "pc" / "config" / "asd_interference_policy_v3.json").read_text(
+        encoding="utf-8"
+    )
+)
+INTERFERENCE_POLICY = INTERFERENCE_POLICY_RECORD["policy"]
 LEGACY_TEMPORAL_POLICY_RECORD = json.loads(
     (ROOT / "pc" / "config" / "asd_temporal_policy_v1.json").read_text(encoding="utf-8")
 )
 LEGACY_TEMPORAL_POLICY = LEGACY_TEMPORAL_POLICY_RECORD["policy"]
 
 ASCII_RECORD_RE = re.compile(
-    r"\b(?P<kind>QUALITY|STATE|EVENT|PRESENCE|TEMPORAL|SESSION|BUTTON|PROFILESTORE)"
+    r"\b(?P<kind>QUALITY|STATE|EVENT|PRESENCE|TEMPORAL|INTERFERENCE|SESSION|BUTTON|PROFILESTORE)"
     r"(?:\s+(?P<body>.*))?$"
 )
 KEY_VALUE_RE = re.compile(r"(?P<key>[A-Za-z_][A-Za-z0-9_]*)=(?P<value>\S+)")
@@ -547,6 +553,33 @@ def _vocabulary_error(kind: str, parsed: dict[str, Any]) -> str | None:
         expected_gate = parsed["level_mean_dbfs"] - parsed["margin_db"]
         if not math.isclose(parsed["gate_dbfs"], expected_gate, abs_tol=1e-4):
             return "presence_gate_inconsistent"
+    elif kind == "INTERFERENCE":
+        policy = INTERFERENCE_POLICY
+        if parsed["policy"] != INTERFERENCE_POLICY_RECORD["schema_version"]:
+            return "interference_policy_schema_mismatch"
+        if parsed["source"] != "CAL_NORMAL_ONLY":
+            return "interference_non_normal_source"
+        if parsed["normal_windows"] != int(policy["calibration_min_windows"]):
+            return "interference_normal_window_count_mismatch"
+        if parsed["use_tonalness_delta"] != int(bool(policy["use_tonalness_delta"])):
+            return "interference_tonalness_policy_mismatch"
+        if parsed["long_hold_windows"] != int(policy["long_hold_windows"]):
+            return "interference_long_hold_policy_mismatch"
+        for field in ("normal_max", "multiplier", "threshold"):
+            if not math.isfinite(float(parsed[field])):
+                return f"nonfinite_field:INTERFERENCE:{field}"
+        if parsed["normal_max"] <= 0.0:
+            return "interference_nonpositive_normal_max"
+        if not math.isclose(
+            parsed["multiplier"], float(policy["normal_max_multiplier"]),
+            rel_tol=1e-6, abs_tol=1e-6,
+        ):
+            return "interference_multiplier_off_policy"
+        if not math.isclose(
+            parsed["threshold"], parsed["normal_max"] * parsed["multiplier"],
+            rel_tol=1e-6, abs_tol=1e-6,
+        ):
+            return "interference_threshold_not_normal_only_rule"
     elif kind == "PROFILESTORE":
         if parsed["schema"] != PROFILE_STORE_SCHEMA_VERSION:
             return "profile_store_schema_mismatch"
@@ -745,6 +778,7 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
             "quality_policy_id", "commissioning_policy_id",
             "temporal_policy_id", "interference_policy_id",
             "verify_alarm_windows", "verify_episodes", "verify_chatter",
+            "normal_windows", "use_tonalness_delta", "long_hold_windows",
         }
         float_fields = {
             "rms_dbfs", "dc", "tonalness_proxy", "loo_mean", "loo_sd",
@@ -752,6 +786,7 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
             "ewma_alpha", "enter_scale", "exit_scale", "fast_scale",
             "threshold_enter", "threshold_exit", "derive_mean", "derive_sd",
             "verify_alarm_time_percent",
+            "normal_max", "multiplier", "threshold",
         }
         parsed: dict[str, Any] = {"kind": kind, "protocol": values.pop("protocol")}
         try:
@@ -811,6 +846,12 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
                 required |= {
                     "threshold_mode", "threshold_enter", "threshold_exit",
                 }
+        elif kind == "INTERFERENCE":
+            required = {
+                "protocol", "policy", "source", "normal_windows",
+                "normal_max", "multiplier", "threshold",
+                "use_tonalness_delta", "long_hold_windows",
+            }
         elif kind == "SESSION":
             required = {"protocol", "action", "source", "reason",
                         "discards_calibration"}
@@ -1249,6 +1290,12 @@ def new_session_protocol_state(*, firmware_session_index: int = 0) -> dict[str, 
         "temporal_threshold_mode": None,
         "temporal_threshold_enter": None,
         "temporal_threshold_exit": None,
+        "interference_seen": False,
+        "interference_source": None,
+        "interference_normal_windows": None,
+        "interference_normal_max": None,
+        "interference_multiplier": None,
+        "interference_threshold": None,
         "absent_run": 0,
         "deviation_run": 0,
         "anomaly_active": False,
@@ -2029,7 +2076,7 @@ def transition_firmware_protocol(
 
     kind = record.get("kind")
     if (
-        kind in {"QUALITY", "STATE", "EVENT", "PRESENCE", "TEMPORAL",
+        kind in {"QUALITY", "STATE", "EVENT", "PRESENCE", "TEMPORAL", "INTERFERENCE",
                  "SESSION", "BUTTON", "PROFILESTORE", "COMMISSION", "PROFILE"}
         and record.get("protocol") not in {None, QUALITY_PROTOCOL_VERSION}
     ):
@@ -2086,7 +2133,7 @@ def transition_firmware_protocol(
     if kind == "BUTTON":
         return state
 
-    if kind in {"QUALITY", "ADAPTTHR", "TEMPORAL", "PRESENCE", "DET",
+    if kind in {"QUALITY", "ADAPTTHR", "TEMPORAL", "PRESENCE", "INTERFERENCE", "DET",
                 "EVENT", "PROFILESTORE", "COMMISSION", "PROFILE"}:
         if not state.get("session_started", False):
             return _invalidate(
@@ -2427,6 +2474,26 @@ def transition_firmware_protocol(
         state["presence_seen"] = True
         state["presence_gate_dbfs"] = float(record["gate_dbfs"])
         state["presence_min_consecutive"] = int(record["min_consecutive"])
+    elif kind == "INTERFERENCE":
+        if state["interference_seen"]:
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "duplicate_INTERFERENCE",
+            )
+        if not state["temporal_seen"]:
+            return _invalidate(
+                state, "invalid_missing_telemetry", "INTERFERENCE_before_TEMPORAL",
+            )
+        if state["calibration_accepted_state"] or state["calibration_accepted_event"]:
+            return _invalidate(
+                state, "invalid_firmware_telemetry",
+                "INTERFERENCE_after_calibration_acceptance",
+            )
+        state["interference_seen"] = True
+        state["interference_source"] = str(record["source"])
+        state["interference_normal_windows"] = int(record["normal_windows"])
+        state["interference_normal_max"] = float(record["normal_max"])
+        state["interference_multiplier"] = float(record["multiplier"])
+        state["interference_threshold"] = float(record["threshold"])
     elif kind == "SESSION":
         action = str(record["action"])
         if action == "STARTED":
@@ -3314,7 +3381,7 @@ def run_experiment(args: argparse.Namespace) -> int:
     guided_workflow_pending = False
     guided_capability_seen = False
     telemetry_counts = {"QUALITY": 0, "STATE": 0, "EVENT": 0,
-                        "PRESENCE": 0, "TEMPORAL": 0,
+                        "PRESENCE": 0, "TEMPORAL": 0, "INTERFERENCE": 0,
                         "SESSION": 0, "BUTTON": 0, "PROFILESTORE": 0,
                         "COMMISSION": 0, "PROFILE": 0,
                         "FEATURE96": 0, "SUBSEG96": 0}
@@ -3679,7 +3746,7 @@ def run_experiment(args: argparse.Namespace) -> int:
                     firmware_event_writer.writerow(row)
                     firmware_event_handle.flush()
                 elif parsed and parsed["kind"] in (
-                    "SESSION", "BUTTON", "PRESENCE", "TEMPORAL", "PROFILESTORE",
+                    "SESSION", "BUTTON", "PRESENCE", "TEMPORAL", "INTERFERENCE", "PROFILESTORE",
                     "COMMISSION", "PROFILE",
                 ):
                     protocol_state = transition_firmware_protocol(protocol_state, parsed)

@@ -97,6 +97,8 @@ class InterferencePolicy(ctypes.Structure):
                 ("developmental", ctypes.c_int),
                 ("use_tonalness_delta", ctypes.c_int),
                 ("max_abs_tonalness_delta", ctypes.c_float),
+                ("normal_max_multiplier", ctypes.c_float),
+                ("calibration_min_windows", ctypes.c_uint32),
                 ("max_subsegment_instability", ctypes.c_float),
                 ("long_hold_windows", ctypes.c_uint32)]
 
@@ -170,6 +172,13 @@ def make_ctx(lib, margin=11.0, n_consec=3, state=CALIBRATED_NORMAL,
     ctx = Ctx()
     policy = Policy(margin, n_consec)
     lib.asd_decision_init(ctypes.byref(ctx), ctypes.byref(policy))
+    # Produkcijski psd_live ovo radi tek nakon 10 CAL normal-only prozora.
+    # Hijerarhijski unit testovi ne izvode cijeli commissioning, pa dobijaju
+    # eksplicitno kalibrisanu, inace validnu politiku.
+    interference = InterferencePolicy(1, 1, 0, 1.0, 1.25, 10, 0.5, 6)
+    lib.asd_decision_set_interference_policy(
+        ctypes.byref(ctx), ctypes.byref(interference),
+    )
     if temporal_n is not None:
         ctx.temporal.policy.min_consecutive = temporal_n
     ctx.state = state
@@ -565,7 +574,7 @@ def test_sensor_fault_fully_resets_the_detector(lib):
 # --- Faza 6: observation HOLD ----------------------------------------------
 
 def enable_interference(lib, ctx, *, long_hold=3):
-    policy = InterferencePolicy(1, 1, 1, 1.0, 0.5, long_hold)
+    policy = InterferencePolicy(1, 1, 1, 1.0, 1.25, 10, 0.5, long_hold)
     lib.asd_decision_set_interference_policy(
         ctypes.byref(ctx), ctypes.byref(policy),
     )
