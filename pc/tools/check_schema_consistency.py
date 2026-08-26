@@ -114,7 +114,7 @@ def main() -> int:
         problems.append("PC commissioning manifest nema registrovani p99/p95")
 
     # --- kapija pouzdanosti: firmware i zamrznuta politika moraju se poklopiti ---
-    interference = json.loads(read(CONFIG / "asd_interference_policy_v2.json"))
+    interference = json.loads(read(CONFIG / "asd_interference_policy_v3.json"))
     if interference.get("target_anomalies_used_for_fit") is not False:
         problems.append("interference politika tvrdi da je koristila target anomalije")
     gate = read(MAIN / "asd_interference.c")
@@ -125,13 +125,18 @@ def main() -> int:
     for key, expected in (
             ("enabled", "1"),
             ("use_tonalness_delta", "0"),
+            ("calibration_min_windows", f"{int(numbers['calibration_min_windows'])}u"),
             ("long_hold_windows", f"{int(numbers['long_hold_windows'])}u")):
         if f".{key} = {expected}," not in gate:
             problems.append(f"interference {key}: firmware ne nosi {expected}")
-    for key in ("max_abs_tonalness_delta", "max_subsegment_instability"):
+    for key in ("max_abs_tonalness_delta", "normal_max_multiplier"):
         if f".{key} = {numbers[key]:.6f}f," not in gate:
             problems.append(
                 f"interference {key}: firmware nije {numbers[key]:.6f}")
+    if ".max_subsegment_instability = 0.0f," not in gate:
+        problems.append("interference runtime prag nije fail-closed prije CAL-a")
+    if "asd_interference_calibrate_normal" not in gate:
+        problems.append("interference prag se ne izvodi iz sesijskog CAL-a")
 
     if problems:
         print("NESAGLASNOSTI:")

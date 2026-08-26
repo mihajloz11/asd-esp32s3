@@ -1,0 +1,12 @@
+{
+  "schema_version": "asd-guided25-v1.1.0-development",
+  "status": "FAIL",
+  "failures": [
+    "too_few_windows:final_recovery",
+    "paper_blocks_passed:0/3"
+  ],
+  "paper_blocks_passed": 0,
+  "evaluated_det_windows": 37,
+  "research_manifest_sha256": "4ab0d2f1928901008020235ba382817d870edd59872f62005803e4e01695228b",
+  "note": "Observed single-microphone noise tolerance. Granice kapije pouzdanosti su izvedene iz normal-only prozora (asd-interference-policy-v2.0.0-development); HOLD odbija nepouzdan prozor, ali ne tvrdi sta ga je izazvalo."
+}

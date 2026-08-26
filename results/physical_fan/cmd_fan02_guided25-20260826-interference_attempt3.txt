@@ -1,0 +1,13 @@
+guided25 panel
+press panel
+condition normal_baseline Normalna osnova: Miruj i ne pricaj.
+condition airflow_change_paper_1 Papiric 1: Drzi papiric uz usis, bez dodira ventilatora.
+condition recovery_normal_1 Oporavak 1: Skloni papiric i ruku; tisina.
+condition airflow_change_paper_2 Papiric 2: Ponovi isti polozaj papirica.
+condition recovery_normal_2 Oporavak 2: Skloni papiric i ruku; tisina.
+condition airflow_change_paper_3 Papiric 3: Treci put ponovi isti polozaj.
+condition recovery_normal_3 Oporavak 3: Skloni papiric i ruku; tisina.
+condition ambient_speech Razgovor: Pricaj normalno sa oznacenog mjesta.
+condition recovery_after_speech Oporavak poslije govora: Prestani da pricas; tisina.
+condition ambient_door Vrata: Jednom normalno otvori i zatvori vrata; ne lupaj.
+abort guided25_hard_deadline

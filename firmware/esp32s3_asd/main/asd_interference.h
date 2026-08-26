@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-#define ASD_INTERFERENCE_POLICY "asd-interference-policy-v2.0.0-development"
-#define ASD_INTERFERENCE_POLICY_ID 0x49505632u
+#define ASD_INTERFERENCE_POLICY "asd-interference-policy-v3.0.0-development"
+#define ASD_INTERFERENCE_POLICY_ID 0x49505633u
 
 typedef enum {
     ASD_INTERFERENCE_PASS = 0,
@@ -29,6 +29,10 @@ typedef struct {
      * unutar istog prozora. Granica se svejedno cuva i biljezi. */
     int use_tonalness_delta;
     float max_abs_tonalness_delta;
+    /* V3 ne prenosi apsolutnu granicu iz drugog polozaja mikrofona. Svaka
+     * sesija je izvodi iz svojih prihvacenih CAL normal-only prozora. */
+    float normal_max_multiplier;
+    uint32_t calibration_min_windows;
     float max_subsegment_instability;
     uint32_t long_hold_windows;
 } asd_interference_policy_t;
@@ -48,6 +52,10 @@ typedef struct {
 } asd_interference_t;
 
 asd_interference_policy_t asd_interference_default_policy(void);
+int asd_interference_calibrate_normal(
+    asd_interference_policy_t *policy,
+    float normal_max_subsegment_instability,
+    uint32_t normal_windows);
 void asd_interference_init(asd_interference_t *gate,
                            const asd_interference_policy_t *policy);
 void asd_interference_reset(asd_interference_t *gate);

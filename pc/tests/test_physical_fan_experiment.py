@@ -577,6 +577,38 @@ def _temporal_line(
     )
 
 
+def _interference_line(
+    *, normal_max: float = 1.4651615, multiplier: float = 1.25,
+    threshold: float | None = None,
+) -> str:
+    policy = physical.INTERFERENCE_POLICY
+    if threshold is None:
+        threshold = normal_max * multiplier
+    return (
+        f"INTERFERENCE protocol={physical.QUALITY_PROTOCOL_VERSION} "
+        f"policy={physical.INTERFERENCE_POLICY_RECORD['schema_version']} "
+        "source=CAL_NORMAL_ONLY "
+        f"normal_windows={policy['calibration_min_windows']} "
+        f"normal_max={normal_max:.9g} multiplier={multiplier:.9g} "
+        f"threshold={threshold:.9g} "
+        f"use_tonalness_delta={int(bool(policy['use_tonalness_delta']))} "
+        f"long_hold_windows={policy['long_hold_windows']}"
+    )
+
+
+def test_runtime_interference_threshold_is_auditable_normal_only_record() -> None:
+    record = physical.parse_serial_line(_interference_line())
+    assert record is not None and record["kind"] == "INTERFERENCE"
+    assert record["source"] == "CAL_NORMAL_ONLY"
+    assert record["threshold"] == pytest.approx(
+        record["normal_max"] * record["multiplier"], rel=1e-6,
+    )
+
+    bad = physical.parse_serial_line(_interference_line(threshold=1.4))
+    assert bad is not None and bad["kind"] == "PARSE_ERROR"
+    assert bad["reason"] == "interference_threshold_not_normal_only_rule"
+
+
 @pytest.mark.parametrize(
     ("line", "reason"),
     [
@@ -644,6 +676,9 @@ def _ready_protocol_state() -> dict:
     state = physical.transition_firmware_protocol(state, _adapt())
     state = physical.transition_firmware_protocol(state, _presence())
     state = physical.transition_firmware_protocol(state, _temporal())
+    interference = physical.parse_serial_line(_interference_line())
+    assert interference is not None and interference["kind"] == "INTERFERENCE"
+    state = physical.transition_firmware_protocol(state, interference)
     state = physical.transition_firmware_protocol(state, {
         "kind": "STATE", "from_state": "NO_MACHINE",
         "to_state": "CALIBRATED_NORMAL", "reason": "CALIBRATION_ACCEPTED",
@@ -1234,7 +1269,7 @@ def test_phase2_provenance_hash_scope_is_explicit_even_for_future_files() -> Non
         "pc/config/asd_commissioning_policy_v1.json",
         "firmware/esp32s3_asd/main/asd_calibration_quality.c",
         "firmware/esp32s3_asd/main/asd_calibration_quality.h",
-        "pc/config/asd_interference_policy_v1.json",
+        "pc/config/asd_interference_policy_v3.json",
         "firmware/esp32s3_asd/main/asd_interference.c",
         "firmware/esp32s3_asd/main/asd_interference.h",
     } <= relative

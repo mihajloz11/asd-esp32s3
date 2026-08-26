@@ -36,6 +36,9 @@ def test_schedule_is_preregistered_and_under_hard_25_minute_deadline() -> None:
     }
     assert p["worst_case_seconds"] == 1370
     assert p["worst_case_seconds"] <= 1380 < p["hard_deadline_seconds"] == 1500
+    assert p["guarded_worst_case_seconds"] == (
+        p["worst_case_seconds"] + p["monitoring_start_guard_seconds"]
+    )
 
 
 def test_preflight_requires_fresh_idle_capable_firmware_and_artifact_dir(tmp_path) -> None:
@@ -163,8 +166,12 @@ def _finalized_fixture():
     provenance = {
         "quality_protocol_version": "asd-quality-v1.6.0", "protocol_valid": True,
         "calibration_accepted": True, "max_dropped": 0,
-        "firmware_protocol_state": {"runtime_commissioning": {"policy": {
-            "derive_windows": 44, "verify_windows": 22}}},
+        "firmware_protocol_state": {
+            "interference_seen": True,
+            "interference_source": "CAL_NORMAL_ONLY",
+            "runtime_commissioning": {"policy": {
+                "derive_windows": 44, "verify_windows": 22}},
+        },
     }
     manifest = {
         "artifact_valid": True, "errors": [], "expected_window_count": 100,
@@ -227,47 +234,16 @@ def test_finalized_report_rejects_active_or_carried_alarm_during_speech() -> Non
     assert "alarm_or_carried_alarm:ambient_speech" in result["failures"]
 
 
-def test_missing_operator_marks_are_recorded_but_do_not_fail_the_run() -> None:
-    """Klik nije nezavisan dokaz radnje, pa njegovo odsustvo ne obara mjerenje.
-
-    23.08.2026 je operater kliknuo START za svih deset faza i nijedan END, jer
-    se END trazi dok obje ruke drze papiric uz ventilator. Run je tada pao na
-    ceremoniji, a ne na mjerenju.
-    """
+def test_operator_click_annotations_are_ignored_by_the_automated_schedule() -> None:
+    """Raspored faza je hostov automatski vremenski zapis, ne unos operatera."""
     provenance, manifest, rows, events = _finalized_fixture()
     starts = [item for item in events if "edge=start" in item["note"]]
 
-    for partial in ([], starts, events[:-1]):
+    for partial in ([], starts, events[:-1], list(reversed(events))):
         result = guided.evaluate_guided25_artifact(
             provenance=provenance, detections=rows, research_manifest=manifest,
             workflow_accepted=True, dropped_observed=True, events=partial)
-        assert "operator_confirmations_fake_or_out_of_order" not in result["failures"]
         assert result["status"] == "PASS"
-
-    empty = guided.evaluate_guided25_artifact(
-        provenance=provenance, detections=rows, research_manifest=manifest,
-        workflow_accepted=True, dropped_observed=True, events=[])
-    assert empty["operator_marks"] == "0/10"
-    marked = guided.evaluate_guided25_artifact(
-        provenance=provenance, detections=rows, research_manifest=manifest,
-        workflow_accepted=True, dropped_observed=True, events=starts)
-    assert marked["operator_marks"] == "10/10"
-
-
-def test_falsified_or_reordered_operator_marks_still_fail_the_run() -> None:
-    """Nedostatak zapisa je dozvoljen; lazan zapis nije."""
-    provenance, manifest, rows, events = _finalized_fixture()
-    end_first = [{**events[0],
-                  "note": events[0]["note"].replace("edge=start", "edge=end")},
-                 *events[1:]]
-    unknown = [{**events[0],
-                "note": events[0]["note"].replace(
-                    "phase=airflow_change_paper_1", "phase=izmisljena_faza")}]
-    for broken in (list(reversed(events)), end_first, unknown):
-        result = guided.evaluate_guided25_artifact(
-            provenance=provenance, detections=rows, research_manifest=manifest,
-            workflow_accepted=True, dropped_observed=True, events=broken)
-        assert "operator_confirmations_fake_or_out_of_order" in result["failures"]
 
 
 def test_paper_high_run_is_local_not_carried_firmware_consecutive() -> None:

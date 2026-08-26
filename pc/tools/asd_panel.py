@@ -42,7 +42,6 @@ import sys
 import threading
 import time
 import webbrowser
-from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -67,6 +66,7 @@ WAIT_RE = re.compile(r"\bWAIT\s+(?P<index>\d+)/(?P<total>\d+)")
 CAL_RE = re.compile(r"\bCAL\s+(?P<index>\d+)/(?P<total>\d+)")
 SUMMARY_RE = re.compile(r"phase=CAL_SUMMARY\b.*?\bloo_cv=(?P<loo_cv>\S+)")
 ADAPT_RE = re.compile(r"\bADAPTTHR\b.*?\bthr=(?P<thr>\S+)")
+INTERFERENCE_RE = re.compile(r"^INTERFERENCE\b(?P<body>.*)$")
 KV_RE = re.compile(r"(?P<key>[A-Za-z_][A-Za-z0-9_]*)=(?P<value>\S+)")
 PROFILE_RE = re.compile(r"^PROFILE\b.*?derive_windows=(?P<derive>\d+)\s+verify_windows=(?P<verify>\d+)")
 SESSION_START_RE = re.compile(r"^SESSION\b.*?action=STARTED\b")
@@ -80,7 +80,16 @@ LOG_LINES = 12
 
 # Sto se pokazuje u logu panela. WAIT/CAL/QUALITY se namjerno preskacu -- ima ih
 # stotine po sesiji i izgurali bi ono zbog cega se log i gleda.
-LOGGED_RECORDS = {"VBUTTON", "BUTTON", "SESSION", "STATE", "EVENT", "ADAPTTHR"}
+LOGGED_RECORDS = {
+    "VBUTTON", "BUTTON", "SESSION", "STATE", "EVENT", "ADAPTTHR",
+    "INTERFERENCE",
+}
+
+INTERFERENCE_POLICY = json.loads(
+    (PC_DIR / "config" / "asd_interference_policy_v3.json").read_text(
+        encoding="utf-8"
+    )
+)
 
 # Jedini numericki izvor je verzionisana commissioning politika. Panel ovaj
 # gate sprovodi server-side; browser je samo prikaz iste odluke.
@@ -183,6 +192,8 @@ class PanelState:
         self.cal_progress = ""
         self.loo_cv: float | None = None
         self.threshold: float | None = None
+        self.interference_threshold: float | None = None
+        self.interference_calibrated = False
         self.calibration_accepted = False
         self.calibration_acceptance_reason = "missing_cal_summary"
         self.started_at: float | None = None
@@ -202,7 +213,6 @@ class PanelState:
         self.max_dropped = 0
         self.dropped_observed = False
         self.invalid_reason: str | None = None
-        self.confirmed_phases: set[int] = set()
         self.phase_stats = [
             {"alarm_episodes": 0, "alarm_windows": 0, "det_windows": 0,
              "max_consecutive": 0, "hold_windows": 0}
@@ -210,7 +220,6 @@ class PanelState:
         ]
         self.final_result: dict | None = None
         self.session_generation = 0
-        self.operator_confirmations: list[dict[str, str | int]] = []
 
     # --- ulazni tok -------------------------------------------------------
     def feed(self, line: str) -> None:
@@ -235,6 +244,8 @@ class PanelState:
                 self.pending_workflow_accepted = False
                 self.loo_cv = None
                 self.threshold = None
+                self.interference_threshold = None
+                self.interference_calibrated = False
                 self.calibration_accepted = False
                 self.calibration_acceptance_reason = "missing_cal_summary"
                 self.profile_counts = None
@@ -244,7 +255,6 @@ class PanelState:
                 self.max_dropped = 0
                 self.dropped_observed = False
                 self.invalid_reason = None
-                self.confirmed_phases.clear()
                 self.phase_stats = [
                     {"alarm_episodes": 0, "alarm_windows": 0, "det_windows": 0,
                      "max_consecutive": 0, "hold_windows": 0}
@@ -255,7 +265,6 @@ class PanelState:
                 self.started_at = None
                 self.phase_index = -1
                 self.final_result = None
-                self.operator_confirmations = []
                 self.session_started_at = time.monotonic()
                 self._log(line)
                 return
@@ -358,6 +367,48 @@ class PanelState:
                 self._log(line)
                 return
 
+            interference = INTERFERENCE_RE.match(line)
+            if interference:
+                fields = {
+                    match.group("key"): match.group("value")
+                    for match in KV_RE.finditer(interference.group("body"))
+                }
+                policy = INTERFERENCE_POLICY["policy"]
+                normal_max = finite_float_or_none(fields.get("normal_max"))
+                multiplier = finite_float_or_none(fields.get("multiplier"))
+                threshold = finite_float_or_none(fields.get("threshold"))
+                try:
+                    normal_windows = int(fields.get("normal_windows", "-1"))
+                    use_tonalness = int(fields.get("use_tonalness_delta", "-1"))
+                    long_hold = int(fields.get("long_hold_windows", "-1"))
+                except ValueError:
+                    normal_windows = use_tonalness = long_hold = -1
+                valid = bool(
+                    fields.get("protocol") == "asd-quality-v1.6.0"
+                    and fields.get("policy") == INTERFERENCE_POLICY["schema_version"]
+                    and fields.get("source") == "CAL_NORMAL_ONLY"
+                    and normal_windows == int(policy["calibration_min_windows"])
+                    and use_tonalness == int(bool(policy["use_tonalness_delta"]))
+                    and long_hold == int(policy["long_hold_windows"])
+                    and normal_max is not None and normal_max > 0.0
+                    and multiplier is not None
+                    and math.isclose(
+                        multiplier, float(policy["normal_max_multiplier"]),
+                        rel_tol=1e-6, abs_tol=1e-6,
+                    )
+                    and threshold is not None
+                    and math.isclose(
+                        threshold, normal_max * multiplier,
+                        rel_tol=1e-6, abs_tol=1e-6,
+                    )
+                )
+                self.interference_calibrated = valid
+                self.interference_threshold = threshold if valid else None
+                if not valid:
+                    self.invalid_reason = "invalid_INTERFERENCE_normal_only_calibration"
+                self._log(line)
+                return
+
             det = DET_RE.match(line)
             if det:
                 self.det = det.groupdict()
@@ -412,6 +463,13 @@ class PanelState:
                 self.phase_at(elapsed) if elapsed is not None else (-1, 0.0)
             )
             total = sum(item[2] for item in self.plan)
+            deadline_remaining = None if self.session_started_at is None else max(
+                0.0, GUIDED25["hard_deadline_seconds"] -
+                (time.monotonic() - self.session_started_at)
+            )
+            monitoring_required = total + int(
+                GUIDED25["monitoring_start_guard_seconds"]
+            )
             phases = [
                 {"name": name, "condition": cond, "seconds": secs, "what": what}
                 for name, cond, secs, what in self.plan
@@ -429,6 +487,8 @@ class PanelState:
                 "calibration_accepted": self.calibration_accepted,
                 "calibration_acceptance_reason": self.calibration_acceptance_reason,
                 "threshold": self.threshold,
+                "interference_threshold": self.interference_threshold,
+                "interference_calibrated": self.interference_calibrated,
                 "phases": phases,
                 "phase_index": index,
                 "phase_remaining": round(remaining),
@@ -446,50 +506,16 @@ class PanelState:
                 "research_error_example": self.research_error_example,
                 "max_dropped": self.max_dropped,
                 "dropped_observed": self.dropped_observed,
-                "deadline_remaining": None if self.session_started_at is None else max(
-                    0, round(GUIDED25["hard_deadline_seconds"] -
-                             (time.monotonic() - self.session_started_at))),
-                "confirmed_phases": sorted(self.confirmed_phases),
-                "operator_confirmations": list(self.operator_confirmations),
-                **self._confirmation_status(index),
+                "deadline_remaining": (
+                    None if deadline_remaining is None else round(deadline_remaining)
+                ),
+                "monitoring_required_seconds": monitoring_required,
+                "monitoring_start_allowed": bool(
+                    deadline_remaining is not None
+                    and deadline_remaining >= monitoring_required
+                ),
                 "final_result": self.final_result,
             }
-
-    def _confirmation_status(self, active_index: int) -> dict:
-        """Koja oznaka je na redu; poziva se pod `self.lock`.
-
-        Oznake su od 23.08.2026 **neobavezne**: klik nije nezavisan dokaz da se
-        radnja desila, pa ne moze biti kapija. Ono sto ostaje strogo je da
-        oznaka koja postoji bude vjerodostojna -- server i dalje odbija oznaku
-        van reda ili van tekuce faze, jer bi to bio lazan zapis.
-        """
-        required = [index for index, phase in enumerate(self.plan)
-                    if phase[1] != "normal_baseline"]
-        edges: dict[int, set[str]] = {}
-        for item in self.operator_confirmations:
-            edges.setdefault(int(item["phase_index"]), set()).add(str(item["edge"]))
-        next_edge = None
-        if self.stage == "RUN" and active_index in required:
-            if "start" not in edges.get(active_index, set()):
-                next_edge = "start"
-        # Faza koja je prosla bez oba klika se vise ne moze potvrditi, pa je run
-        # vec pao; operater to mora vidjeti odmah, a ne iz reporta na kraju.
-        missed: list[int] = []
-        if self.stage in {"RUN", "DONE"}:
-            limit = active_index if self.stage == "RUN" else len(self.plan)
-            if limit < 0:
-                limit = 0
-            missed = [index for index in required
-                      if index < limit and not edges.get(index)]
-        return {
-            "confirm_required": len(required),
-            "confirm_done": len(self.confirmed_phases),
-            "confirm_next_edge": next_edge,
-            "confirm_missed": missed,
-            "confirm_phase_edges": {
-                str(index): sorted(edges.get(index, set())) for index in required
-            },
-        }
 
     def guided_preflight(self) -> tuple[bool, list[str]]:
         reasons = []
@@ -524,10 +550,26 @@ class PanelState:
             reasons.append("DROPPED=0 nije potvrdjen")
         if not self.calibration_accepted:
             reasons.append("K1 nije prihvacen")
+        if not self.interference_calibrated:
+            reasons.append("HOLD prag nije izveden iz CAL normal-only prozora")
         if self.profile_counts != (44, 22):
             reasons.append("firmware nije potvrdio GUIDED25 44/22")
         if not all(self.research_counts.values()):
             reasons.append("nedostaje FEATURE96/SUBSEG96 telemetrija")
+        if self.session_started_at is None:
+            reasons.append("sesijski hard-stop tajmer nije pokrenut")
+        else:
+            remaining = GUIDED25["hard_deadline_seconds"] - (
+                time.monotonic() - self.session_started_at
+            )
+            required = sum(item[2] for item in self.plan) + int(
+                GUIDED25["monitoring_start_guard_seconds"]
+            )
+            if remaining < required:
+                reasons.append(
+                    f"nema dovoljno vremena: ostalo {max(0, round(remaining))}s, "
+                    f"potrebno najmanje {required}s"
+                )
         return not reasons, reasons
 
     def guided_result(self) -> dict:
@@ -803,35 +845,6 @@ class Conductor:
                 sent = index
             time.sleep(0.2)
 
-    def confirm(self, edge: str) -> str:
-        if edge not in {"start", "end"}:
-            raise CalibrationGateError("nepoznata potvrda")
-        with self.state.lock:
-            index = self.state.phase_index
-            if self.state.stage != "RUN" or not 0 <= index < len(self.state.plan):
-                raise CalibrationGateError("nema aktivne faze")
-            phase = self.state.plan[index][1]
-            existing = [item for item in self.state.operator_confirmations
-                        if item["phase_index"] == index]
-            if any(item["edge"] == edge for item in existing):
-                raise CalibrationGateError("potvrda je single-use")
-            if edge == "end" and not any(item["edge"] == "start" for item in existing):
-                raise CalibrationGateError("END prije START potvrde nije dozvoljen")
-            if edge == "start" and existing:
-                raise CalibrationGateError("START nije prvi događaj faze")
-            utc = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
-            record = {"phase_index": index, "phase": phase, "edge": edge,
-                      "host_utc": utc}
-            self.state.operator_confirmations.append(record)
-            # Faza vazi za oznacenu cim je START zapisan. END je ostao u
-            # protokolu radi starijih runova, ali se vise ne trazi: 23.08.2026
-            # je izmjereno da se ne moze kliknuti dok obje ruke drze papiric.
-            if edge == "start":
-                self.state.confirmed_phases.add(index)
-        return self.link.send_raw(
-            f"note guided25_confirm phase={phase} edge={edge} host_utc={utc}")
-
-
 PAGE = """<!doctype html>
 <meta charset="utf-8"><title>ASD panel</title>
 <style>
@@ -888,14 +901,6 @@ PAGE = """<!doctype html>
  .alert b{display:block;font-size:14.5px;margin-bottom:3px}
  #deadline{font-size:12.5px;color:#5c636d;margin-top:4px}
  #deadline.warn{color:#ff8e8e;font-weight:600}
- #confirm.need{border:1px solid #2f6feb}
- #confirm.miss{border:1px solid #6d2f2d}
- .crow{display:flex;align-items:baseline;gap:10px;margin-bottom:7px}
- .crow span{font-size:12px;color:#8b949e;letter-spacing:.08em;text-transform:uppercase}
- .crow b{margin-left:auto;font-size:21px;font-variant-numeric:tabular-nums}
- #c-next{font-size:17px;font-weight:600;margin-bottom:12px;line-height:1.35}
- button.need{background:#2f6feb;color:#fff;animation:need 1.2s ease-in-out infinite}
- @keyframes need{50%{opacity:.5}}
  ol li i{font-style:normal;width:13px;color:#5c636d}
 </style>
 <div class="wrap">
@@ -911,14 +916,6 @@ PAGE = """<!doctype html>
   <div id="total">&nbsp;</div>
   <div class="bar"><i id="bar"></i></div>
   <div id="deadline">&nbsp;</div>
- </div>
-
- <div class="card" id="confirm">
-  <div class="crow"><span>oznake faza (neobavezno)</span><b id="c-count">&mdash;</b></div>
-  <div id="c-next">Oznake se nude tek kad mjerenje krene.</div>
-  <div class="btns">
-   <button id="btn-cs" onclick="post('confirm-start')">OZNACI DA SI POCEO OVU FAZU</button>
-  </div>
  </div>
 
  <div class="card lamps">
@@ -1014,19 +1011,12 @@ function renderPlan(s){
     });
     ol.dataset.n = s.phases.length;
   }
-  const edges = s.confirm_phase_edges || {};
   [...ol.children].forEach((li, i) => {
     li.className = s.phase_index < 0 ? '' :
       (i < s.phase_index ? 'done' : (i === s.phase_index ? 'now' : ''));
     const mark = li.querySelector('i');
     if (!mark) return;
-    const required = Object.prototype.hasOwnProperty.call(edges, String(i));
-    const done = required ? edges[String(i)].length : 0;
-    const passed = s.phase_index > i || s.stage === 'DONE';
-    mark.textContent = !required ? '' :
-      (done === 2 ? 'OK' : (passed ? 'X' : (done === 1 ? '.' : '')));
-    mark.style.color = done === 2 ? '#7ee2a4'
-      : (required && passed ? '#ff8e8e' : '#5c636d');
+    mark.textContent = '';
   });
 }
 
@@ -1070,40 +1060,29 @@ function poll(){
     chip('c-anomaly',  flags.anomaly  === '1', true);
     chip('c-fault',    flags.fault    === '1', true);
 
-    /* Potvrde faza. Bez kompletnog niza run pada bez obzira na mjerenje, pa
-       panel mora da trazi bas onaj klik koji je na redu, a ne da nudi dva
-       dugmeta medju sedam kao 22.08.2026. */
-    const need = s.confirm_next_edge;
-    const missed = s.confirm_missed || [];
-    document.getElementById('c-count').textContent =
-      (s.confirm_done || 0) + '/' + (s.confirm_required || 0);
-    const bs = document.getElementById('btn-cs');
-    bs.disabled = need !== 'start';
-    bs.className = need === 'start' ? 'need' : '';
-    document.getElementById('confirm').className = 'card' + (need ? ' need' : '');
-    document.getElementById('c-next').textContent =
-      need === 'start' ? 'Ako stignes, oznaci da si poceo ovu fazu. Run ne pada ako ne stignes.'
-      : (s.stage === 'RUN' ? 'Faza je oznacena. Radi svoj posao.'
-                           : 'Oznake se nude tek kad mjerenje krene.');
-
     const alerts = [];
     if (s.research_errors > 0)
       alerts.push(['RESEARCH TELEMETRIJA JE POKVARENA (' + s.research_errors + ' redova)',
         'Host ce ovaj run odbiti kao invalid_research_telemetry bez obzira na '
         + 'mjerenje. Klikni "Prekini i sacuvaj" i ponovi pokusaj.', false]);
-    if (missed.length)
-      alerts.push(['neoznacene faze: ' + missed.map(i => i + 1).join(', '),
-        'Samo zapis, run zbog toga NE pada. Oznake su neobavezne otkad je '
-        + 'izmjereno da se ne mogu kliknuti dok obje ruke drze papiric.', true]);
     if (s.stage === 'RUN' && s.phase_index >= 0 && flags.anomaly === '1'
         && alarmForbidden(s.phases[s.phase_index].condition))
       alerts.push(['UREDJAJ JE JOS U ALARMU',
         'U ovoj fazi alarm obara run, a dok traje, sljedeci papiric nema u sta '
         + 'da udje pa se ne broji. Skloni papiric I ruku i odmakni se korak.', true]);
-    if (s.stage === 'READY_TO_GO')
+    if (s.stage === 'READY_TO_GO' && s.monitoring_start_allowed)
       alerts.push(['KALIBRACIJA JE GOTOVA -- KLIKNI "2. KRENI SA MJERENJEM"',
-        'Hard stop tece od pocetka sesije, ne od pocetka mjerenja. 22.08.2026 je '
-        + 'ovdje potroseno 126 s, a do hard stopa je ostalo svega 30 s.', true]);
+        'Server je potvrdio da cijeli plan i sigurnosna rezerva jos staju u '
+        + 'hard stop. Nemoj cekati.', true]);
+    if (s.stage === 'READY_TO_GO' && !s.monitoring_start_allowed)
+      alerts.push(['START JE BLOKIRAN -- CIJELI PLAN VISE NE STAJE U HARD STOP',
+        'Ostalo je ' + mmss(s.deadline_remaining) + ', a treba najmanje '
+        + mmss(s.monitoring_required_seconds) + '. Prekini i sacuvaj; panel '
+        + 'nece pustiti nepotpun run.', false]);
+    if (!s.interference_calibrated && s.stage === 'READY_TO_GO')
+      alerts.push(['HOLD PRAG NIJE POTVRDJEN',
+        'Nedostaje validan INTERFERENCE zapis izveden iz 10 CAL normal-only '
+        + 'prozora. Mjerenje je server-side blokirano.', false]);
     if (s.deadline_remaining !== null && s.deadline_remaining < 180)
       alerts.push(['HARD STOP ZA ' + mmss(s.deadline_remaining),
         'Poslije toga se run automatski prekida i pokusaj je potrosen.',
@@ -1153,7 +1132,9 @@ function poll(){
       document.getElementById('bar').style.width = '0';
     } else if (s.stage === 'READY_TO_GO'){
       ph.textContent = 'KALIBRACIJA GOTOVA';
-      wh.textContent = 'K1 je prošao. Možeš pokrenuti mjerenje.';
+      wh.textContent = s.monitoring_start_allowed
+        ? 'K1 i normal-only HOLD prag su prošli. Možeš pokrenuti mjerenje.'
+        : 'Cijeli plan više ne staje u hard stop. Start je blokiran.';
       document.getElementById('clock').textContent = '00:00';
       document.getElementById('total').textContent = '';
       document.getElementById('bar').style.width = '0';
@@ -1189,10 +1170,10 @@ function poll(){
     document.getElementById('d-thr').textContent =
       s.threshold === null ? '—' : s.threshold.toFixed(1);
     document.getElementById('gobtn').disabled =
-      !(s.calibration_accepted && s.stage === 'READY_TO_GO');
+      !(s.calibration_accepted && s.interference_calibrated
+        && s.monitoring_start_allowed && s.stage === 'READY_TO_GO');
     if(s.read_only_preview){
       document.querySelectorAll('button').forEach(button => button.disabled = true);
-      bs.className = '';
       if(s.stage === 'IDLE'){
         ph.textContent = 'PREGLED DASHBOARDA';
         wh.textContent = 'Read-only: tasteri su prikazani, ali su aktivni tek u pravom runu.';
@@ -1265,8 +1246,6 @@ def make_handler(state: PanelState, link, conductor: Conductor,
                 elif verb in ("arm-virtual", "arm-physical"):
                     message = conductor.arm_guided25(
                         virtual_start=verb == "arm-virtual")
-                elif verb in ("confirm-start", "confirm-end"):
-                    message = conductor.confirm(verb.removeprefix("confirm-"))
                 elif verb == "abort":
                     message = conductor.abort()
                 elif verb == "pause":
