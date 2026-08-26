@@ -200,24 +200,6 @@ def test_retry_after_done_gets_new_generation_and_fresh_watchdog(tmp_path) -> No
     conductor.stop_event.set()
 
 
-def test_confirmations_are_single_use_and_bound_to_current_phase_order(tmp_path) -> None:
-    state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25",
-                             report_dir=tmp_path)
-    state.stage = "RUN"; state.phase_index = 1
-    link = RecordingLink(); conductor = panel.Conductor(state, link)
-    with pytest.raises(panel.CalibrationGateError, match="END prije START"):
-        conductor.confirm("end")
-    conductor.confirm("start")
-    with pytest.raises(panel.CalibrationGateError, match="single-use"):
-        conductor.confirm("start")
-    conductor.confirm("end")
-    with pytest.raises(panel.CalibrationGateError, match="single-use"):
-        conductor.confirm("end")
-    assert len(state.operator_confirmations) == 2
-    assert "phase=airflow_change_paper_1 edge=start" in link.lines[0]
-    assert "phase=airflow_change_paper_1 edge=end" in link.lines[1]
-
-
 def test_post_rejects_bad_origin_host_or_csrf() -> None:
     state = panel.PanelState(panel.PLANS["short"])
     link = RecordingLink(); conductor = panel.Conductor(state, link)
@@ -331,31 +313,68 @@ def test_session_start_clears_research_errors_of_the_previous_attempt() -> None:
     assert state.research_error_example is None
 
 
-def test_panel_asks_for_the_confirmation_that_is_actually_due(tmp_path) -> None:
-    state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25",
-                             report_dir=tmp_path)
-    state.stage = "RUN"; state.phase_index = 1
-    link = RecordingLink(); conductor = panel.Conductor(state, link)
-
-    due = state._confirmation_status(1)
-    # Jedna oznaka po fazi, i to neobavezna: klik nije nezavisan dokaz radnje.
-    assert (due["confirm_required"], due["confirm_done"]) == (10, 0)
-    assert due["confirm_next_edge"] == "start" and due["confirm_missed"] == []
-    conductor.confirm("start")
-    marked = state._confirmation_status(1)
-    assert marked["confirm_next_edge"] is None and marked["confirm_done"] == 1
-    # Normalna osnova se ne potvrdjuje, pa nikad ne moze biti propustena.
-    assert state._confirmation_status(5)["confirm_missed"] == [2, 3, 4]
-    state.stage = "DONE"
-    assert state._confirmation_status(-1)["confirm_missed"] == list(range(2, 11))
-
-
-def test_snapshot_carries_confirmation_and_research_integrity_to_the_page() -> None:
+def test_snapshot_carries_research_integrity_without_operator_marks_to_the_page() -> None:
     state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25")
 
     snapshot = state.snapshot()
 
-    for key in ("confirm_required", "confirm_done", "confirm_next_edge",
-                "confirm_missed", "confirm_phase_edges", "research_errors"):
+    for key in ("research_errors", "research_counts", "deadline_remaining"):
         assert key in snapshot
+    assert "operator_confirmations" not in snapshot
+    assert "confirm_required" not in snapshot
     json.dumps(snapshot, allow_nan=False)
+
+
+def _ready_guided_state(tmp_path) -> panel.PanelState:
+    state = panel.PanelState(
+        panel.PLANS["guided25"], workflow="guided25", report_dir=tmp_path,
+    )
+    state.stage = "READY_TO_GO"
+    state.loo_cv = 0.3
+    state.calibration_accepted = True
+    state.interference_calibrated = True
+    state.interference_threshold = 1.8
+    state.profile_counts = (44, 22)
+    state.research_counts = {"FEATURE96": 1, "SUBSEG96": 5}
+    state.flags = {
+        "protocol": "asd-quality-v1.6.0", "guided25_available": "1",
+        "learning": "0", "learned": "1",
+    }
+    state.workflow_result = "accepted"
+    state.dropped_observed = True
+    state.max_dropped = 0
+    state.last_line_at = __import__("time").time()
+    return state
+
+
+def test_monitoring_start_gate_requires_runtime_normal_only_hold_threshold(tmp_path) -> None:
+    state = _ready_guided_state(tmp_path)
+    state.session_started_at = __import__("time").monotonic()
+    state.interference_calibrated = False
+    ok, reasons = state.guided_monitoring_gate()
+    assert not ok
+    assert "HOLD prag nije izveden" in "; ".join(reasons)
+
+
+def test_monitoring_start_gate_hard_stops_when_whole_plan_no_longer_fits(tmp_path) -> None:
+    state = _ready_guided_state(tmp_path)
+    required = sum(item[2] for item in state.plan) + int(
+        panel.GUIDED25["monitoring_start_guard_seconds"]
+    )
+    elapsed = panel.GUIDED25["hard_deadline_seconds"] - (required - 1)
+    state.session_started_at = __import__("time").monotonic() - elapsed
+
+    ok, reasons = state.guided_monitoring_gate()
+
+    assert not ok
+    assert "nema dovoljno vremena" in "; ".join(reasons)
+    snapshot = state.snapshot()
+    assert snapshot["monitoring_start_allowed"] is False
+
+
+def test_monitoring_start_gate_accepts_full_plan_plus_guard(tmp_path) -> None:
+    state = _ready_guided_state(tmp_path)
+    state.session_started_at = __import__("time").monotonic()
+    ok, reasons = state.guided_monitoring_gate()
+    assert ok, reasons
+    assert state.snapshot()["monitoring_start_allowed"] is True

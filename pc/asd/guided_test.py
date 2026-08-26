@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import json
-import re
-from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,11 +19,15 @@ def load_guided25() -> dict:
         )
     )
     total = worst_commissioning + sum(int(p["seconds"]) for p in phases)
-    if total > int(policy["hard_deadline_seconds"]):
-        raise ValueError(f"guided25 schedule is {total}s, over hard deadline")
+    guarded_total = total + int(policy["monitoring_start_guard_seconds"])
+    if guarded_total > int(policy["hard_deadline_seconds"]):
+        raise ValueError(
+            f"guided25 guarded schedule is {guarded_total}s, over hard deadline"
+        )
     if [p["condition"] for p in phases] != list(dict.fromkeys(p["condition"] for p in phases)):
         raise ValueError("guided25 condition labels must be unique")
     policy["worst_case_seconds"] = total
+    policy["guarded_worst_case_seconds"] = guarded_total
     return policy
 
 
@@ -34,11 +36,6 @@ GUIDED25_PLAN = [
     (p["name"], p["condition"], int(p["seconds"]), p["prompt"])
     for p in GUIDED25["phases"]
 ]
-
-
-CONFIRM_RE = re.compile(
-    r"^guided25_confirm phase=(?P<phase>[A-Za-z0-9._-]+) "
-    r"edge=(?P<edge>start|end) host_utc=(?P<utc>\S+)$")
 
 
 def evaluate_guided25_artifact(*, provenance: dict, detections: list[dict],
@@ -61,6 +58,11 @@ def evaluate_guided25_artifact(*, provenance: dict, detections: list[dict],
 
     runtime = provenance.get("firmware_protocol_state", {}).get(
         "runtime_commissioning", {})
+    firmware_state = provenance.get("firmware_protocol_state", {})
+    if not firmware_state.get("interference_seen", False):
+        failures.append("missing_runtime_normal_only_interference_threshold")
+    elif firmware_state.get("interference_source") != "CAL_NORMAL_ONLY":
+        failures.append("interference_threshold_not_from_cal_normal_only")
     policy = runtime.get("policy") or {}
     if (int(policy.get("derive_windows", -1)), int(policy.get("verify_windows", -1))) != (44, 22):
         failures.append("commissioning_not_registered_44_22")
@@ -79,68 +81,6 @@ def evaluate_guided25_artifact(*, provenance: dict, detections: list[dict],
     )
     if not research_ok:
         failures.append("research_pairs_or_checksum_invalid")
-
-    # POTVRDE VISE NISU KAPIJA, i to je namjerna izmjena od 23.08.2026.
-    #
-    # Klik u pretrazivacu nije nezavisan dokaz da se fizicka radnja desila --
-    # dokazuje samo da je neko kliknuo. Isto vazi za raspored: on je tvrdnja o
-    # namjeri. Vezati PASS/FAIL za nesto sto se ne moze provjeriti dodaje
-    # ceremoniju, ne strogost, a izmjereno je da kosta cijele runove: 23.08. je
-    # operater kliknuo START za svih deset faza, ali END ni za jednu, jer se END
-    # trazi dok obje ruke drze papiric uz ventilator.
-    #
-    # Sta OSTAJE strogo: potvrda koja POSTOJI mora biti vjerodostojna. Krivotvoren
-    # ili ispremjestan zapis i dalje obara run, jer je to lazan zapis, a ne
-    # nedostatak zapisa. Broj potvrda ide u izvjestaj kao `operator_marks`, pa se
-    # kvalitet dokaza vidi umjesto da se pretpostavlja.
-    required_phases = [p["condition"] for p in GUIDED25["phases"]
-                       if p["condition"] != "normal_baseline"]
-    observed_confirms: list[tuple[str, str]] = []
-    previous_confirmation_at: datetime | None = None
-    confirmation_invalid = False
-    for event in events or []:
-        if event.get("kind") != "note":
-            continue
-        note = str(event.get("note", ""))
-        if not note.startswith("guided25_confirm "):
-            continue
-        match = CONFIRM_RE.fullmatch(note)
-        if not match:
-            confirmation_invalid = True
-            continue
-        try:
-            claimed = datetime.fromisoformat(match.group("utc"))
-            persisted = datetime.fromisoformat(str(event["host_utc"]))
-        except (KeyError, ValueError):
-            confirmation_invalid = True
-            continue
-        if claimed.tzinfo is None or persisted.tzinfo is None or persisted < claimed:
-            confirmation_invalid = True
-        if (persisted - claimed).total_seconds() > 5.0:
-            confirmation_invalid = True
-        if previous_confirmation_at is not None and persisted <= previous_confirmation_at:
-            confirmation_invalid = True
-        previous_confirmation_at = persisted
-        observed_confirms.append((match.group("phase"), match.group("edge")))
-    marked_phases = {phase for phase, _ in observed_confirms}
-    order = {phase: index for index, phase in enumerate(required_phases)}
-    if marked_phases - set(required_phases):
-        confirmation_invalid = True            # oznaka za fazu koja ne postoji
-    else:
-        # Oznake smiju da nedostaju, ali ne smiju da idu unazad kroz plan, i
-        # nijedna faza ne smije poceti sa `end` -- to bi bio zapis o radnji koja
-        # nije zapoceta.
-        indices = [order[phase] for phase, _ in observed_confirms]
-        if any(later < earlier
-               for earlier, later in zip(indices, indices[1:])):
-            confirmation_invalid = True
-        first_edge: dict[str, str] = {}
-        for phase, edge in observed_confirms:
-            first_edge.setdefault(phase, edge)
-        if any(edge != "start" for edge in first_edge.values()):
-            confirmation_invalid = True
-    if confirmation_invalid:
-        failures.append("operator_confirmations_fake_or_out_of_order")
 
     rows = [row for row in detections
             if int(row.get("condition_confirmed", 0)) == 1
@@ -194,11 +134,11 @@ def evaluate_guided25_artifact(*, provenance: dict, detections: list[dict],
         "status": "FAIL" if failures else "PASS",
         "failures": failures,
         "paper_blocks_passed": paper_pass,
-        "operator_marks": f"{len(marked_phases)}/{len(required_phases)}",
         "evaluated_det_windows": len(rows),
         "research_manifest_sha256": sha or None,
         "note": ("Observed single-microphone noise tolerance. Granice kapije "
                  "pouzdanosti su izvedene iz normal-only prozora "
-                 "(asd-interference-policy-v2.0.0-development); HOLD odbija "
+                 "(asd-interference-policy-v3.0.0-development); prag se po "
+                 "sesiji izvodi samo iz CAL normal-only prozora. HOLD odbija "
                  "nepouzdan prozor, ali ne tvrdi sta ga je izazvalo."),
     }

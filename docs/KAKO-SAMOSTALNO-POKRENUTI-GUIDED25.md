@@ -7,10 +7,9 @@ postavku, a učenje počinje tek poslije klika u dashboardu.
 
 ## Obavezno prije narednog runa: flashuj popravku
 
-Run 22.08.2026 je pao na `invalid_research_telemetry` zbog [P20](problemi-i-rjesenja.md#p20)
-— `FLAGS` iz UI taska je upadao usred `FEATURE96` reda. Popravka je u kodu i
-build je čist, ali **ploča je i dalje sa starim firmverom**. Bez flasha se isti
-kvar ponavlja.
+Ploča je 26.08.2026 flešovana buildom koji sadrži P20 telemetrijsku popravku,
+normal-only sesijsku HOLD kalibraciju v3 i hard-stop start-gate. Ako se poslije
+izmjene koda pravi novi build, `reconfigure` i flash su ponovo obavezni.
 
 ```powershell
 $env:ASD_PSD_LIVE = "1"; $env:ASD_RESEARCH_TELEMETRY = "1"
@@ -29,8 +28,9 @@ Set-Location "$HOME\Desktop\master new"
 .\POKRENI-GUIDED25.cmd preflight
 ```
 
-Očekivani SHA-256 builda sa popravkom je `3f80a42a...`; ako preflight ispiše
-stari heš, flash nije prošao.
+SHA-256 trenutno flešovanog builda je
+`A1778C599A3E2154D960C197AA34E891531688137A657C01A5D16A1ED5718D17`;
+ako preflight ispiše drugi heš, source/build i ploča više nisu isti dokaz.
 
 ## Najkraći put
 
@@ -100,10 +100,12 @@ GUIDED25 sam dodaje `--research-telemetry-required` i zaključani
 - Sa zalemljenim tasterom: klikni **1B. Armiraj**, pa kratko pritisni taster.
 - Tokom SETTLE/CENTER/DERIVE/VERIFY ne prilazi i ne pričaj.
 - Kad piše da je kalibracija gotova, klikni **2. Kreni sa mjerenjem**.
-- Potvrde faza sada vodi sam panel. Ispod uputstva stoji kartica
-  **POTVRDE FAZA** sa brojačem `n/20`; aktivno je samo ono dugme koje je na
-  redu, a drugo je onemogućeno. Klikni **POTVRDI START** čim radnju počneš i
-  **POTVRDI END** neposredno prije kraja odbrojavanja.
+- Dugme ostaje server-side blokirano ako nema validnog
+  `INTERFERENCE ... source=CAL_NORMAL_ONLY` zapisa ili ako cijeli plan + 20 s
+  rezerve više ne mogu stati u hard stop. To nije upozorenje koje se može
+  preskočiti.
+- Panel sam vremenski označava svaki uslov i prikazuje odbrojavanje. Ne klikći
+  START/END unutar faza: radi radnju u tačno prikazanom okviru.
 - Ako nešto nije urađeno tačno po uputstvu, klikni **Prekini i sačuvaj**.
 
 ### Crvene poruke na vrhu panela
@@ -140,10 +142,8 @@ da je kalibracija gotova.
 
 Tri stvari su tada oborile run, a nijedna nije bila kvar uređaja.
 
-**Potvrde faza nisu opcione.** Tog runa ih je bilo nula, a traži se tačno
-dvadeset: `Potvrdi START` i `Potvrdi END` za svaku fazu **osim normalne
-osnove**. Bez kompletnog niza, tačnim redoslijedom, run pada na
-`operator_confirmations_missing_fake_or_out_of_order` bez obzira na mjerenje.
+**Potvrde faza nisu dio testa.** Panel automatski vremenski označava uslove;
+jedini potreban ručni klik poslije početka kalibracije je **Kreni sa mjerenjem**.
 
 **Papirić blok se ocjenjuje po ULASKU u alarm, ne po jačini.** Traže se tri
 uzastopna prozora iznad praga i bar jedan prelaz iz normalnog stanja u alarm
@@ -185,10 +185,11 @@ prijavljuje, a ne popravlja štelovanjem pragova.
 Planirani najgori tok traje `22:50`; hard stop je `25:00`. Izmjereno trajanje
 jednog prozora je `9,981 s`, pa sa WAIT fazom najgori tok stvarno iznosi
 `23:03` — rezerva do hard stopa je oko dva minuta. Zato poslije poruke da je
-kalibracija gotova odmah klikni **2. Kreni sa mjerenjem** i ne oklijevaj sa
-potvrdama faza. Ne ponavljaj pokušaj zbog lošeg rezultata, nego samo zbog
-zapisane tehničke/proceduralne greške. Ukupno su dozvoljena najviše tri
-pokušaja.
+kalibracija gotova odmah klikni **2. Kreni sa mjerenjem**. Panel dodatno traži
+da u tom trenutku preostalih 25 minuta pokriva svih 530 s mjerenja i 20 s
+rezerve; ako ne pokriva, odbija start umjesto da svjesno proizvede nepotpun
+run. Ne ponavljaj pokušaj zbog lošeg rezultata, nego samo zbog zapisane
+tehničke/proceduralne greške. Ukupno su dozvoljena najviše tri pokušaja.
 
 Jedan ishod nije kvar ni greška operatera. `threshold_enter` je `p99` od 44
 DERIVE prozora, što za taj broj prozora ispada tačno **najveći** izmjereni

@@ -3,7 +3,7 @@
 Nenadgledana detekcija anomalija zvuka mašina (DCASE 2026 Task 2) na ESP32-S3-WROOM-1
 N32R16V. Plan i metodologija: [plan-master-rada.md](plan-master-rada.md).
 
-## Gdje je projekat sada (20.08.2026)
+## Gdje je projekat sada (26.08.2026)
 
 Prvi fizički test ventilatora postoji i dokumentovan je u
 [rezultat-fan01-2026-08-16.md](docs/rezultat-fan01-2026-08-16.md). `psd_shape`
@@ -19,18 +19,20 @@ apsolutni pragovi. K1 i multi-session host su centralizovani, research build
 čuva `96 + 5×96` obilježja, audio čitanje je bounded, a NVS storage modul ima
 schema/fingerprint/generation/CRC. DEVELOPMENT policy je fail-closed RAM-only:
 ne učitava, ne čuva i ne emituje `PROFILESTORE` dok politika ne bude fizički
-potvrđena i zamrznuta. `OBSERVATION_HOLD` arhitektura postoji, ali
-je numerička interference politika namjerno isključena dok je ne potvrdi novi
-normal-only fizički test. Commissioning pragovi su zato i dalje
-**DEVELOPMENT/PENDING**, a ne proizvodno završeni brojevi.
+potvrđena i zamrznuta. `OBSERVATION_HOLD` v3 je uključen kao DEVELOPMENT
+reliability gate: apsolutni prag se više ne prenosi između položaja mikrofona,
+nego se u svakoj sesiji izvodi kao `max(10 CAL normal-only) × 1,25`. Papirić,
+govor i vrata ne ulaze u fit. Kod, host i ploča su pripremljeni, ali isti
+GUIDED25 fizički retest tek treba potvrditi rezultat; commissioning i HOLD
+brojevi zato još nisu proizvodno završeni.
 
 | | |
 |---|---|
-| Serijski protokol | live `asd-quality-v1.5.0` · host `physical-fan-v1.8.0` + `physical-fan-artifacts-v1.8.0`; offline read ostaje zaključan na v1.6↔q1.3, v1.7↔q1.4 i v1.8↔q1.5 |
+| Serijski protokol | live `asd-quality-v1.6.0` · host `physical-fan-v1.9.0` + `physical-fan-artifacts-v1.9.0`; offline read ostaje zaključan i za v1.6↔q1.3, v1.7↔q1.4 i v1.8↔q1.5 |
 | Model | `psd_shape`, 96 traka log-PSD, Mahalanobis; finalni `k=10`: AUC 0,856 (razvojno, 20 podjela); referentni PC `k=20`: AUC 0,867 (kanonski, 100 podjela) |
-| PC testovi | **444 passed, 5 skipped** (22.08.2026; preskočeni traže raspakovan DCASE `fan` skup — sa njim 449 passed), uključujući PC↔C, multi-session, research, commissioning/HOLD, strogi q1.5 live tok, audio i NVS ugovore |
-| Posljednji build | ESP-IDF 5.5.5 `ASD_PSD_LIVE`: **PASS**, 349 728 B; to nije flash/runtime dokaz |
-| Fizički dokaz | istorijski v1.6/q1.3 FAN01 run; trenutni v1.8/q1.5 nije flashovan niti fizički validiran |
+| PC testovi | **472 passed** (26.08.2026), uključujući PC↔C, multi-session, research, commissioning/HOLD, oba fizička setapa kao zamrznutu regresiju, strogi q1.6 live tok, audio i NVS ugovore |
+| Posljednji build | ESP-IDF 5.5.5 `ASD_PSD_LIVE` + research: **PASS**, 353 168 B, SHA-256 `A1778C59…5718D17`; flash na COM3 i IDLE FLAGS preflight **PASS** |
+| Fizički dokaz | FAN01 ostaje istorijski; GUIDED25 run 26.08. je potvrdio P20, ali je prekinut hard deadlineom i otkrio setup-osjetljiv v2 HOLD prag; v3 fizički retest je otvoren |
 | **Ostalo** | **završiti elektroniku · zamrznuti normal-only politiku · kratak fizički run · power-loss/I2S runtime** → [docs/PREOSTALO.md](docs/PREOSTALO.md) |
 | Lemljenje | dvije ploče (uređaj + mjerna) → [docs/plan-dvije-plocice.md](docs/plan-dvije-plocice.md) · crteži [docs/sema-sklopa.pdf](docs/sema-sklopa.pdf) |
 
@@ -43,10 +45,10 @@ Mapa cijele dokumentacije, sa oznakom šta je aktuelno a šta istorijsko:
 [docs/INDEKS.md](docs/INDEKS.md). Kontekst i pravila rada na projektu:
 [KONTEKST.md](KONTEKST.md).
 
-> **Granica tvrdnje.** FAN01 je stvarni ventilator, ali papirić je kontrolisana
-> promjena protoka, ne potvrđen kvar. Novi v1.8/q1.5 softver je host- i
-> build-testiran; nije još flashovan, runtime/power-loss testiran niti potvrđen
-> novim fizičkim mjerenjem. Benchmark, zvučnik i build nisu fizička tačnost.
+> **Granica tvrdnje.** FAN01 i GUIDED25 su stvarni ventilator, ali papirić je
+> kontrolisana promjena protoka, ne potvrđen kvar. V3 je host/build/flash/IDLE
+> preflight potvrđen, ali još nije prošao kompletan fizički GUIDED25 niti
+> power-loss test. Benchmark, regresija i build nisu fizička tačnost.
 
 ## Struktura
 
