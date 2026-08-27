@@ -96,6 +96,7 @@ Svaki je zapis jedne faze, ne opšti status. Zbirni status je u
 | Dokument | Sadržaj |
 |---|---|
 | [`rad-poglavlje-2-pregled.md`](rad-poglavlje-2-pregled.md) | draft poglavlja 2 |
+| [`../radovi/master-rad/`](../radovi/master-rad/) | **master rad: tekst, generator `.docx`, FTN šablon i uputstvo mentora** |
 | [`../radovi/telfor2026/`](../radovi/telfor2026/) | TELFOR 2026: `HANDOFF.md`, `PREOSTALO-RAD.md`, generatori |
 | [`../future-work.md`](../future-work.md) | ideje koje NE idu u kod |
 

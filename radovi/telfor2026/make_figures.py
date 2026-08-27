@@ -300,10 +300,59 @@ def fig_spectrum():
     return "fig4_spectrum.png"
 
 
+def fig_fan_tone():
+    """Trasa mjerenja sa konstantnim tonom na stvarnom ventilatoru.
+
+    Izvor: results/physical_fan/run_20260827T220338_fan02_tone-validation-*/
+    Prag izlaska se cita iz PROFILE zapisa u serijskom logu, ne upisuje rukom.
+    """
+    run = REPO / ("results/physical_fan/"
+                  "run_20260827T220338_fan02_tone-validation-20260827-final")
+    rows = list(csv.DictReader(open(run / "detections.csv", encoding="utf-8")))
+    t = (np.array([float(r["elapsed_s"]) for r in rows]) -
+         float(rows[0]["elapsed_s"])) / 60.0
+    score = np.array([float(r["score"]) for r in rows])
+    hold = np.array([int(r["hold"]) for r in rows])
+    alarm = np.array([int(r["alarm"]) for r in rows])
+    enter = float(rows[0]["threshold"])
+
+    exit_thr = None
+    for line in open(run / "serial.log", encoding="utf-8", errors="ignore"):
+        if "PROFILE protocol" in line and "threshold_exit=" in line:
+            for field in line.split():
+                if field.startswith("threshold_exit="):
+                    exit_thr = float(field.split("=", 1)[1])
+            break
+    assert exit_thr is not None, "nema threshold_exit u serial.log"
+
+    fig, ax = plt.subplots(figsize=(COL_W, 1.85))
+    ax.semilogy(t, score, color="0.4", linewidth=0.7, zorder=2)
+    ok = (hold == 0) & (alarm == 0)
+    ax.scatter(t[ok], score[ok], s=4, color="black", zorder=3, label="normal")
+    ax.scatter(t[hold == 1], score[hold == 1], s=9, facecolors="none",
+               edgecolors="0.45", linewidths=0.6, zorder=4, label="held")
+    ax.scatter(t[alarm == 1], score[alarm == 1], s=6, color="black",
+               marker="^", zorder=5, label="alarm")
+    ax.axhline(enter, color="black", linewidth=0.7, linestyle="--")
+    ax.axhline(exit_thr, color="0.45", linewidth=0.7, linestyle=":")
+    ax.text(t[-1], enter * 1.18, "entry", fontsize=5.5, ha="right")
+    ax.text(t[-1], exit_thr * 0.62, "release", fontsize=5.5, ha="right",
+            color="0.35")
+    ax.set_xlabel("time in monitoring [min]")
+    ax.set_ylabel("score")
+    ax.grid(alpha=0.25, which="both")
+    ax.legend(frameon=False, loc="upper left", ncol=3, fontsize=5.5,
+              handletextpad=0.2, columnspacing=0.8, borderpad=0.1)
+    fig.savefig(OUT / "fig5_fan_tone.png", dpi=DPI)
+    plt.close(fig)
+    return "fig5_fan_tone.png"
+
+
 if __name__ == "__main__":
     print(fig_system())
     print(fig_device_run())
     print(fig_threshold())
+    print(fig_fan_tone())
     try:
         print(fig_spectrum())
     except Exception as exc:  # keš anomalija je opcion

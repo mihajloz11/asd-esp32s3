@@ -1,9 +1,18 @@
 # TELFOR 2026 — handoff za pisanje rada
 
-**Stanje 14.08.2026:** izvor rada je ažuriran u [`build_paper.py`](build_paper.py),
-a posljednji generisani [`telfor2026_asd_esp32s3.docx`](telfor2026_asd_esp32s3.docx)
-ima 4 strane i bio je provjeren renderom kroz Word. DOCX treba ponovo generisati
-i vizuelno provjeriti nakon ovih izmjena. Šta još fali: [`PREOSTALO-RAD.md`](PREOSTALO-RAD.md).
+**Stanje 27.08.2026:** rad je ažuriran rezultatima dva validna fizička
+mjerenja na ventilatoru i ponovo renderovan — **4 strane**. Ostala je jedna
+`[TODO]` oznaka, IEEE copyright broj, koji se dobija tek u registracionom
+sistemu. Šta još fali: [`PREOSTALO-RAD.md`](PREOSTALO-RAD.md).
+
+**Šta se promijenilo u odnosu na verziju od 14.08.:** bin 316 400 → 354 784 B,
+račun 704 → 716 ms po prozoru, pravilo praga `max(p90, mean+3σ)` → normal-only
+p99 ulaz / p95 izlaz sa odvojenim VERIFY-em, dodata kapija pouzdanosti
+(`OBSERVATION_HOLD`), popunjena Tabela III, dodata Sl. 2 sa fizičkog mjerenja,
+izbačena sekcija o potrošnji i fotografija ploče. Sekcija VI više ne prijavljuje
+nestabilnost praga kao otvoren problem nego kao izmjeren problem sa izmjerenim
+rješenjem, uz četvrti negativan rezultat koji je uređaj sam odbio na VERIFY-u.
+Puna analiza: [`docs/rezultat-finalna-validacija-2026-08-27.md`](../../docs/rezultat-finalna-validacija-2026-08-27.md).
 
 Ovaj fajl ostaje kao zapis o formatu i izvorima brojeva.
 

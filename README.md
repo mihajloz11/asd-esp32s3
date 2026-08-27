@@ -44,6 +44,7 @@ Papirić, govor, vrata i ton **ne ulaze** ni u jedan fit.
 | Posljednji build | ESP-IDF 5.5.5 `ASD_PSD_LIVE` + research: **PASS**, 354 784 B, SHA-256 `9ac2caca…8d967813`; **isti bin je pustio oba validna fizička runa** |
 | Fizički dokaz | **27.08.2026: dva `valid_physical_result` runa** — papirić (`8 084,49` prag, alarm u 3. bloku, oporavak `10,08 s`) i konstantni ton (`21 809,51` prag, `ANOMALY` + `ANOMALY_SUSTAINED`), oba `dropped=0` |
 | **Ostalo** | **završiti elektroniku · zamrznuti normal-only politiku · kratak fizički run · power-loss/I2S runtime** → [docs/PREOSTALO.md](docs/PREOSTALO.md) |
+| Radovi | master rad (48 strana, ćirilica i latinica iz istog izvora) → [radovi/master-rad/](radovi/master-rad/) · TELFOR 2026 (4 strane) → [radovi/telfor2026/](radovi/telfor2026/) |
 | Lemljenje | dvije ploče (uređaj + mjerna) → [docs/plan-dvije-plocice.md](docs/plan-dvije-plocice.md) · crteži [docs/sema-sklopa.pdf](docs/sema-sklopa.pdf) |
 
 Šta je urađeno i izmjereno, hronološki:

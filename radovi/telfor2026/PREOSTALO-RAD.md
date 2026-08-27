@@ -1,8 +1,8 @@
 # Šta još fali u radu za TELFOR 2026
 
-**Stanje:** 14.08.2026. · Izvor rada je ažuriran; postojeći DOCX je prethodno
-imao **4 strane**, ali ga treba ponovo generisati i renderovati nakon izmjena.
-Sve slike osim fotografije napravljene su iz stvarnih podataka.
+**Stanje:** 27.08.2026. · Rad je ažuriran rezultatima dva validna fizička
+mjerenja i ponovo renderovan: **4 strane, 3834 riječi**, unutar tvrdog
+ograničenja. Sve slike su iz stvarnih podataka.
 **Rok: 4. septembar 2026.**
 
 | fajl | šta radi |
@@ -70,10 +70,12 @@ cd radovi/telfor2026 && ../../.venv/Scripts/python.exe check_todo.py
 | # | Gdje | Šta treba | Blokira |
 |---|---|---|---|
 | 1 | podnožje 1. strane | IEEE copyright broj | registracija rada |
-| 2 | II.A | potrošnja cijelog lanca (sad stoji samo 119 mW praznog hoda) | **E5**: 5 V izvor + re-arm `ASD_INA_TEST` |
-| 3 | Tabela III (6 ćelija) | mjerenja sa fizičkim ventilatorom | **ventilator** |
-| 4 | Tabela III, napomena | briše se kad se tabela popuni | isto |
-| 5 | Sl. 3 | fotografija zalemljene ploče | **lemljenje** |
+
+Ostale četiri stavke su zatvorene 27.08.2026: Tabela III je popunjena
+mjerenjima sa fizičkog ventilatora, njena napomena je prepisana, sekcija o
+potrošnji je izbačena iz rada dok se cijeli lanac ne izmjeri, a mjesto
+fotografije zauzela je Sl. 2 sa trasom mjerenja tonom — koja nosi tvrdnju, a
+fotografija je nije nosila.
 
 Autorski blok, mentorov kontakt, odluka da nema zahvalnice/finansiranja i
 referenca [6] riješeni su u `build_paper.py`. Postojeći DOCX još sadrži stari
