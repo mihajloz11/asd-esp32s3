@@ -1,0 +1,9 @@
+host_utc,elapsed_s,firmware_session_index,kind,label,note
+2026-08-26T15:20:38.567+00:00,0.015,0,session,start,sigurnosna postavka potvrđena; operator condition=unconfirmed
+2026-08-26T15:20:39.019+00:00,0.468,0,device,reset,RTS reset; pocinje WAIT/CAL/DET
+2026-08-26T15:21:11.585+00:00,33.046,0,virtual_button,guided25,panel
+2026-08-26T15:21:11.588+00:00,33.046,0,virtual_button,press,panel
+2026-08-26T15:22:06.893+00:00,88.343,1,phase,calibration,fan mora ostati u potvrđeno normalnom stanju
+2026-08-26T15:34:45.820+00:00,847.281,1,phase,detection,firmware DET faza; operator condition i dalje nije potvrđen
+2026-08-26T15:37:55.359+00:00,1036.812,1,protocol,invalid_firmware_terminal,quality_reject:DET:LOW_LEVEL_OBSERVATION
+2026-08-26T15:37:55.409+00:00,1036.859,1,protocol,terminal_drain_complete,terminal STATE/FLOW_STOPPED sacuvani

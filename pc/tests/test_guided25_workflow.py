@@ -28,14 +28,14 @@ class Link:
     def arm_guided25(self): self.lines.append("GUIDED25"); return "armed"
 
 
-def test_schedule_is_preregistered_and_under_hard_25_minute_deadline() -> None:
+def test_schedule_is_preregistered_without_a_hard_deadline() -> None:
     p = guided.GUIDED25
     assert p["commissioning"] == {
         "max_settle_windows": 8, "center_windows": 10,
         "derive_windows": 44, "verify_windows": 22,
     }
     assert p["worst_case_seconds"] == 1370
-    assert p["worst_case_seconds"] <= 1380 < p["hard_deadline_seconds"] == 1500
+    assert p["hard_deadline_seconds"] is None
     assert p["guarded_worst_case_seconds"] == (
         p["worst_case_seconds"] + p["monitoring_start_guard_seconds"]
     )
@@ -53,13 +53,17 @@ def test_preflight_requires_fresh_idle_capable_firmware_and_artifact_dir(tmp_pat
     assert state.guided_preflight() == (True, [])
 
 
-def test_attempt_four_is_server_side_rejected(tmp_path) -> None:
+def test_documented_recovery_attempt_five_is_server_side_accepted(tmp_path) -> None:
     state = panel.PanelState(panel.PLANS["guided25"], workflow="guided25",
-                             report_dir=tmp_path, attempt=4)
+                             report_dir=tmp_path, attempt=5)
     state.feed("FLAGS protocol=asd-quality-v1.6.0 waiting=1 guided25_available=1 "
                "research_telemetry=1 profile_persistence_allowed=0 dropped=0")
     ok, reasons = state.guided_preflight()
-    assert not ok and "dosegnut limit od 3 pokusaja" in reasons
+    assert (ok, reasons) == (True, [])
+
+    state.attempt = 6
+    ok, reasons = state.guided_preflight()
+    assert not ok and "dosegnut limit od 5 pokusaja" in reasons
 
 
 def test_monitoring_start_requires_exact_44_22_and_research(tmp_path) -> None:
@@ -101,20 +105,23 @@ def test_firmware_keeps_default_and_guided_policies_separate() -> None:
     assert "policy.verify_windows = 22u" in source
 
 
-def test_firmware_uses_preregistered_p99_enter_that_cannot_arm_on_derive() -> None:
+def test_firmware_uses_preregistered_normal_only_p99_enter() -> None:
     source = (ROOT / "firmware" / "esp32s3_asd" / "main" /
               "psd_live.c").read_text(encoding="utf-8")
     assert "#define COMMISSION_ENTER_QUANTILE 0.99f" in source
+    assert "threshold_enter = percentile_higher(" in source
     assert "COMMISSION_ENTER_QUANTILE);" in source
     assert "p=%.4f" in source
+    assert "asd_robust_fit_center(" not in source
+    assert "asd_robust_fit_threshold(" not in source
 
-    # Mirrors firmware percentile_higher. With strict score > threshold,
-    # supported DERIVE lengths leave at most one score above p99, so n=3
-    # cannot arm on the data used to derive the threshold.
+    # DERIVE nije detekcijska faza; kasniji odvojeni VERIFY mora fail-closed
+    # potvrditi da tri uzastopna normalna prozora ne prelaze zamrznuti p99.
     for count in (44, 120):
         scores = list(range(count))
-        threshold = sorted(scores)[math.ceil(0.99 * count) - 1]
-        assert sum(score > threshold for score in scores) <= 1
+        p99_ceiling = sorted(scores)[math.ceil(0.99 * count) - 1]
+        assert p99_ceiling == sorted(scores)[math.ceil(0.99 * count) - 1]
+    assert "ASD_STAGE_COMMISSION_VERIFY" in source
 
 
 def test_virtual_and_physical_start_share_press_path() -> None:

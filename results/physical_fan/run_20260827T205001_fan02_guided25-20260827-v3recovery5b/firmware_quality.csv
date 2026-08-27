@@ -1,0 +1,1 @@
+host_utc,elapsed_s,firmware_session_index,protocol,phase,index,total,result,metrics_valid,feature_valid,samples,expected,rms_dbfs,dc,peak,clipped,zeros,stuck,dropped_delta,tonalness_proxy,tonalness_valid,tonal_gate,loo_mean,loo_sd,loo_cv,loo_range,loo_gate

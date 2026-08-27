@@ -97,21 +97,46 @@ def main() -> int:
     quality = json.loads(read(CONFIG / "asd_quality_policy_v1.json"))
     if quality.get("target_anomalies_used") is not False:
         problems.append("politika kvaliteta tvrdi da je koristila target anomalije")
+    quality_source = read(MAIN / "audio_quality_state.c")
+    level_floor = define(quality_source, "DEFAULT_LEVEL_FLOOR_DBFS")
+    if level_floor is None or abs(
+        float(level_floor.strip("()f")) - float(quality["policy"]["level_floor_dbfs"])
+    ) > 1e-6:
+        problems.append(
+            f"audio liveness floor: firmware {level_floor}, "
+            f"config {quality['policy']['level_floor_dbfs']}"
+        )
 
-    # --- commissioning prag: isti preregistrovani kandidat na obje strane ---
+    # --- commissioning prag: ista normal-only politika na svim stranama ---
     live = read(MAIN / "psd_live.c")
-    if (define(live, "COMMISSION_ENTER_QUANTILE") != "0.99f" or
-            define(live, "COMMISSION_EXIT_QUANTILE") != "0.95f"):
-        problems.append("commissioning prag u psd_live.c nije p99/p95")
+    runtime = json.loads(read(CONFIG / "asd_commissioning_runtime_v1.json"))
+    fit = runtime["normal_only_threshold_fit"]
+    for macro, key in (
+        ("COMMISSION_ENTER_QUANTILE", "enter_percentile"),
+        ("COMMISSION_EXIT_QUANTILE", "exit_percentile"),
+    ):
+        raw = define(live, macro)
+        if raw is None or abs(float(raw.rstrip("f")) - float(fit[key])) > 1e-6:
+            problems.append(f"{key}: firmware {raw}, config {fit[key]}")
+    if fit.get("source_phase") != "COMMISSION_DERIVE":
+        problems.append("prag nije izveden iz COMMISSION_DERIVE")
+    if fit.get("center_method") != "frozen_cal_center":
+        problems.append("centar nije zamrznuti CAL centar")
+    if fit.get("enter_method") != "empirical_percentile_higher":
+        problems.append("ulazni prag nije empirical percentile-higher p99")
+    if fit.get("target_anomalies_used_for_fit") is not False:
+        problems.append("commissioning prag tvrdi da koristi target anomalije")
+    if "asd_robust_fit_center(" in live or "asd_robust_fit_threshold(" in live:
+        problems.append("psd_live.c neocekivano primjenjuje odbaceni robust fit")
     if (define(live, "COMMISSION_EXIT_MAX_FRACTION") != "0.5f" or
             define(live, "COMMISSION_EXIT_FLOOR_QUANTILE") != "0.50f"):
         problems.append("izlazni prag u psd_live.c nema ogranicenja p50/0.5*enter")
     physical = read(ROOT / "pc" / "tools" / "physical_fan_experiment.py")
     if "COMMISSION_ENTER_QUANTILE = 0.99" not in physical:
-        problems.append("physical_fan_experiment.py ne validira firmware p99")
+        problems.append("physical_fan_experiment.py nema aktivni p99 commissioning prag")
     laboratory = read(ROOT / "pc" / "tools" / "derive_commissioning_policy.py")
     if '"empirical-p99_exit-p95-clamped", "percentile", 0.99' not in laboratory:
-        problems.append("PC commissioning manifest nema registrovani p99/p95")
+        problems.append("PC commissioning manifest nema aktivni empirical-p99 kandidat")
 
     # --- kapija pouzdanosti: firmware i zamrznuta politika moraju se poklopiti ---
     interference = json.loads(read(CONFIG / "asd_interference_policy_v3.json"))

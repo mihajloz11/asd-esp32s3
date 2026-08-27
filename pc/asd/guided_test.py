@@ -1,4 +1,4 @@
-"""Versioned, preregistered policy for the <=25 minute DEVELOPMENT run."""
+"""Versioned, preregistered policy for the DEVELOPMENT run."""
 from __future__ import annotations
 
 import json
@@ -20,7 +20,8 @@ def load_guided25() -> dict:
     )
     total = worst_commissioning + sum(int(p["seconds"]) for p in phases)
     guarded_total = total + int(policy["monitoring_start_guard_seconds"])
-    if guarded_total > int(policy["hard_deadline_seconds"]):
+    hard_deadline = policy.get("hard_deadline_seconds")
+    if hard_deadline is not None and guarded_total > int(hard_deadline):
         raise ValueError(
             f"guided25 guarded schedule is {guarded_total}s, over hard deadline"
         )

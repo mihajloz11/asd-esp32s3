@@ -1,0 +1,7 @@
+host_utc,elapsed_s,firmware_session_index,kind,label,note
+2026-08-27T18:52:41.246+00:00,0.063,0,session,start,sigurnosna postavka potvrđena; operator condition=unconfirmed
+2026-08-27T18:52:41.698+00:00,0.516,0,device,reset,RTS reset; pocinje WAIT/CAL/DET
+2026-08-27T19:03:15.473+00:00,634.297,0,virtual_button,guided25,panel
+2026-08-27T19:03:15.488+00:00,634.313,0,virtual_button,press,panel
+2026-08-27T19:04:10.777+00:00,689.594,1,phase,calibration,fan mora ostati u potvrđeno normalnom stanju
+2026-08-27T19:16:49.608+00:00,1448.438,1,protocol,invalid_firmware_telemetry,terminal_STATE_reason_unknown

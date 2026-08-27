@@ -19,7 +19,7 @@ extern "C" {
  * stanje na zici. Do v1.5.0 je kapija pouzdanosti bila iskljucena, pa taj put
  * nijedan host nikad nije vidio. */
 #define ASD_QUALITY_PROTOCOL "asd-quality-v1.6.0"
-#define ASD_QUALITY_POLICY_ID 0x51555631u
+#define ASD_QUALITY_POLICY_ID 0x51555632u
 
 typedef enum {
     ASD_QUALITY_OK = 0,

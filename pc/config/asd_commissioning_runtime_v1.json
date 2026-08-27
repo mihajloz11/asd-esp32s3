@@ -31,6 +31,14 @@
     "max_verify_chatter": 0,
     "verify_min_consecutive": 3
   },
+  "normal_only_threshold_fit": {
+    "source_phase": "COMMISSION_DERIVE",
+    "center_method": "frozen_cal_center",
+    "enter_method": "empirical_percentile_higher",
+    "enter_percentile": 0.99,
+    "exit_percentile": 0.95,
+    "target_anomalies_used_for_fit": false
+  },
   "profile_persistence_allowed": false,
   "change_rule": "Freeze numeric policy from normal-only evidence before production or NVS persistence."
 }

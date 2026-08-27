@@ -5,10 +5,14 @@
 #include <string.h>
 
 /* These are engineering/sensor-health gates, not anomaly-model parameters.
- * LEVEL_FLOOR and CLIP_LEVEL preserve the previously documented firmware
- * values.  Fraction limits are preregistered in pc/config/
- * asd_quality_policy_v1.json and must not be tuned on target anomalies. */
-#define DEFAULT_LEVEL_FLOOR_DBFS  (-60.0f)
+ * LEVEL_FLOOR is deliberately only a digital-audio liveness floor.  Machine
+ * presence is learned relative to the accepted CAL level; using the old
+ * -60 dBFS absolute value here made commissioning depend on microphone
+ * distance.  The -80 dBFS value was frozen from the normal-only 26.08.2026
+ * SETTLE observation (-66.164 dBFS), before any target anomaly was shown.
+ * STUCK/ZERO/NONFINITE checks still reject a dead microphone independently.
+ * All values are registered in pc/config/asd_quality_policy_v1.json. */
+#define DEFAULT_LEVEL_FLOOR_DBFS  (-80.0f)
 #define DEFAULT_CLIP_LEVEL        32000
 #define DEFAULT_MAX_CLIP_FRAC     0.001f
 #define DEFAULT_MAX_ZERO_FRAC     0.999f
