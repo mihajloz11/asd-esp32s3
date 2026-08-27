@@ -711,3 +711,41 @@ biti zamrznuti prije target readouta; nema post-hoc podešavanja. VERIFY traži
 nula alarmnih prozora, epizoda i chatter prelaza. Nula epizoda u 10 min ipak
 daje tek približno 18 epizoda/h kao jednostrani 95% Poisson gornji limit, pa je
 to funkcionalni go/no-go, ne dokaz dugoročne pouzdanosti.
+
+
+## 26–27.08.2026. — finalna validacija firmvera na pločici
+
+Devet runova, dva validna. Puna analiza sa svim brojkama:
+[`rezultat-finalna-validacija-2026-08-27.md`](rezultat-finalna-validacija-2026-08-27.md).
+
+Aktuelni live par je `physical-fan-v1.9.0` / `physical-fan-artifacts-v1.9.0` ↔
+`asd-quality-v1.6.0`. Offline reader i dalje čuva v1.6/q1.3, v1.7/q1.4 i
+v1.8/q1.5; istorijski runovi nisu dirani.
+
+**Šta je oboreno i popravljeno:**
+
+| Problem | Fix | Zapis |
+|---|---|---|
+| Pod `-60 dBFS` postao skrivena kapija prisustva mašine | pod `-80 dBFS`, obrazložen iz normal-only SETTLE `-66,1637 dBFS` | [P24](problemi-i-rjesenja.md) |
+| K1 pada na jednom klipu od deset | trim najviše dva CAL klipa uz ponovno centriranje, kapija `0,6` netaknuta | [P25](problemi-i-rjesenja.md) |
+| Robustni Hampel prag `791` naspram normalnih VERIFY prozora `2 083–7 766` | robustni fit odbačen, živi put vraćen na frozen CAL centar + empirical p99 | [P26](problemi-i-rjesenja.md) |
+| Hard deadline 1 500 s obara run prije kraja plana | deadline `null`, limit pokušaja `5`, `recovery_amendment` u workflow politici | [P27](problemi-i-rjesenja.md) |
+
+**Dokazi na 27.08.2026:**
+
+| Dokaz | Rezultat |
+|---|---|
+| puni PC suite | `478 passed in 29.17s` |
+| `check_schema_consistency.py` | PASS, `asd-quality-v1.6.0`, sve politike `target_anomalies_used=false` |
+| ESP-IDF 5.5.5 `ASD_PSD_LIVE` + research | `PASS`, 354 784 B, SHA-256 `9ac2caca…8d967813` |
+| Run A — papirić (`v3recovery5d`) | `valid_physical_result`; prag `8 084,49`; alarm u 3. bloku; oporavak `10,08 s`; `dropped=0` |
+| Run B — konstantni ton (`tone-validation-final`) | `valid_physical_result`; prag `21 809,51`; `ANOMALY` u 3 prozora, `ANOMALY_SUSTAINED` u 12; `dropped=0` |
+
+Isti binarni fajl je pustio oba runa, pa je q1.6 par ovim boot/runtime potvrđen.
+Govor i vrata nisu podigli alarm iako su im skorovi bili visoki — kapija
+pouzdanosti ih je odbila kao nestabilne, što je tražena osobina.
+
+**Šta i dalje nije dokazano:** lemljenje tastera i LED, I2S liveness na
+hardveru, power-loss / NVS persistence, INA226 / E5 strujni put i samostalan
+demo bez PC-a. GUIDED25 papirić kapija ostaje `1/3` — uzrok je izmjeren
+(stimulus se drži rukom), i prag se zbog toga **ne** pomjera.

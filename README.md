@@ -3,36 +3,46 @@
 Nenadgledana detekcija anomalija zvuka mašina (DCASE 2026 Task 2) na ESP32-S3-WROOM-1
 N32R16V. Plan i metodologija: [plan-master-rada.md](plan-master-rada.md).
 
-## Gdje je projekat sada (26.08.2026)
+## Gdje je projekat sada (27.08.2026)
 
-Prvi fizički test ventilatora postoji i dokumentovan je u
+**Firmware je funkcionalno završen i potvrđen na pločici.** Dva validna fizička
+runa 27.08.2026 pokazuju cio lanac kako je zamišljen: uređaj sam nauči normalno
+stanje nepoznatog ventilatora, sam izvede prag iz normal-only prozora, odbije
+nepouzdan prozor umjesto da ga tumači, i pouzdano prijavi konstantnu akustičku
+promjenu — bez računara, uz `dropped=0`. Puna analiza sa svim brojkama, svim
+odbačenim pokušajima i granicama tvrdnje:
+[rezultat-finalna-validacija-2026-08-27.md](docs/rezultat-finalna-validacija-2026-08-27.md).
+
+Kratko: konstantni ton je podigao `ANOMALY` u tri prozora (~30 s) i
+`ANOMALY_SUSTAINED` poslije dvanaest (~2 min), dok govor i vrata nisu podigli
+alarm iako su im skorovi bili visoki — kapija pouzdanosti ih je odbila kao
+nestabilne. Papirić je i dalje `1/3` po GUIDED25 kriteriju, i to iz izmjerenog
+razloga: drži se rukom, pa stimulus nije konstantan.
+
+Prvi fizički test ventilatora ostaje u
 [rezultat-fan01-2026-08-16.md](docs/rezultat-fan01-2026-08-16.md). `psd_shape`
-je veoma dobro rangirao bezbjedno izazvanu promjenu protoka papirićem, ali tadašnji
-prag iz kratke kalibracije nije radio: 54/60 normalnih prozora bilo je iznad
-praga. Papirić nije potvrđen stvarni kvar, a broj `324/h` iz starog izvještaja
-znači alarmne **prozore** po satu, ne alarmne epizode po satu.
+je i tada veoma dobro rangirao promjenu protoka papirićem, ali prag iz kratke
+kalibracije nije radio: 54/60 normalnih prozora bilo je iznad praga. Broj
+`324/h` iz tog izvještaja znači alarmne **prozore** po satu, ne epizode.
 
 Poslije FAN01 softver je preuređen u fail-closed tok
 `SETTLE → CENTER_LEARNING → COMMISSION_DERIVE → COMMISSION_VERIFY → MONITORING`.
-Centar, izvođenje praga i kasnija provjera sada su odvojeni; enter/exit su
-apsolutni pragovi. K1 i multi-session host su centralizovani, research build
-čuva `96 + 5×96` obilježja, audio čitanje je bounded, a NVS storage modul ima
+Centar, izvođenje praga i kasnija provjera su odvojeni; enter/exit su apsolutni
+pragovi. K1 i multi-session host su centralizovani, research build čuva
+`96 + 5×96` obilježja, audio čitanje je bounded, a NVS storage modul ima
 schema/fingerprint/generation/CRC. DEVELOPMENT policy je fail-closed RAM-only:
-ne učitava, ne čuva i ne emituje `PROFILESTORE` dok politika ne bude fizički
-potvrđena i zamrznuta. `OBSERVATION_HOLD` v3 je uključen kao DEVELOPMENT
-reliability gate: apsolutni prag se više ne prenosi između položaja mikrofona,
-nego se u svakoj sesiji izvodi kao `max(10 CAL normal-only) × 1,25`. Papirić,
-govor i vrata ne ulaze u fit. Kod, host i ploča su pripremljeni, ali isti
-GUIDED25 fizički retest tek treba potvrditi rezultat; commissioning i HOLD
-brojevi zato još nisu proizvodno završeni.
+ne učitava, ne čuva i ne emituje `PROFILESTORE` dok politika ne bude zamrznuta.
+`OBSERVATION_HOLD` v3 je uključen: prag se ne prenosi između položaja
+mikrofona, nego se po sesiji izvodi kao `max(10 CAL normal-only) × 1,25`.
+Papirić, govor, vrata i ton **ne ulaze** ni u jedan fit.
 
 | | |
 |---|---|
 | Serijski protokol | live `asd-quality-v1.6.0` · host `physical-fan-v1.9.0` + `physical-fan-artifacts-v1.9.0`; offline read ostaje zaključan i za v1.6↔q1.3, v1.7↔q1.4 i v1.8↔q1.5 |
 | Model | `psd_shape`, 96 traka log-PSD, Mahalanobis; finalni `k=10`: AUC 0,856 (razvojno, 20 podjela); referentni PC `k=20`: AUC 0,867 (kanonski, 100 podjela) |
-| PC testovi | **472 passed** (26.08.2026), uključujući PC↔C, multi-session, research, commissioning/HOLD, oba fizička setapa kao zamrznutu regresiju, strogi q1.6 live tok, audio i NVS ugovore |
-| Posljednji build | ESP-IDF 5.5.5 `ASD_PSD_LIVE` + research: **PASS**, 353 168 B, SHA-256 `A1778C59…5718D17`; flash na COM3 i IDLE FLAGS preflight **PASS** |
-| Fizički dokaz | FAN01 ostaje istorijski; GUIDED25 run 26.08. je potvrdio P20, ali je prekinut hard deadlineom i otkrio setup-osjetljiv v2 HOLD prag; v3 fizički retest je otvoren |
+| PC testovi | **478 passed** (27.08.2026), uključujući PC↔C, multi-session, research, commissioning/HOLD, oba fizička setapa kao zamrznutu regresiju, strogi q1.6 live tok, audio i NVS ugovore |
+| Posljednji build | ESP-IDF 5.5.5 `ASD_PSD_LIVE` + research: **PASS**, 354 784 B, SHA-256 `9ac2caca…8d967813`; **isti bin je pustio oba validna fizička runa** |
+| Fizički dokaz | **27.08.2026: dva `valid_physical_result` runa** — papirić (`8 084,49` prag, alarm u 3. bloku, oporavak `10,08 s`) i konstantni ton (`21 809,51` prag, `ANOMALY` + `ANOMALY_SUSTAINED`), oba `dropped=0` |
 | **Ostalo** | **završiti elektroniku · zamrznuti normal-only politiku · kratak fizički run · power-loss/I2S runtime** → [docs/PREOSTALO.md](docs/PREOSTALO.md) |
 | Lemljenje | dvije ploče (uređaj + mjerna) → [docs/plan-dvije-plocice.md](docs/plan-dvije-plocice.md) · crteži [docs/sema-sklopa.pdf](docs/sema-sklopa.pdf) |
 
@@ -40,15 +50,18 @@ brojevi zato još nisu proizvodno završeni.
 [docs/DNEVNIK-NEXT-LEVEL.md](docs/DNEVNIK-NEXT-LEVEL.md).
 Putanja modela sa svim pokušajima i negativnim rezultatima:
 [docs/put-do-modela.md](docs/put-do-modela.md).
-Problemi i zamke (P1–P19): [docs/problemi-i-rjesenja.md](docs/problemi-i-rjesenja.md).
+Problemi i zamke (P1–P27): [docs/problemi-i-rjesenja.md](docs/problemi-i-rjesenja.md).
 Mapa cijele dokumentacije, sa oznakom šta je aktuelno a šta istorijsko:
 [docs/INDEKS.md](docs/INDEKS.md). Kontekst i pravila rada na projektu:
 [KONTEKST.md](KONTEKST.md).
 
-> **Granica tvrdnje.** FAN01 i GUIDED25 su stvarni ventilator, ali papirić je
-> kontrolisana promjena protoka, ne potvrđen kvar. V3 je host/build/flash/IDLE
-> preflight potvrđen, ali još nije prošao kompletan fizički GUIDED25 niti
-> power-loss test. Benchmark, regresija i build nisu fizička tačnost.
+> **Granica tvrdnje.** FAN01, GUIDED25 i završna provjera tonom su stvarni
+> ventilator, ali papirić i pušteni ton su kontrolisane promjene, ne potvrđeni
+> kvarovi. Dokazano je da uređaj pouzdano prijavljuje **konstantnu akustičku
+> promjenu** i da je razlikuje od govora i vrata; nije dokazano da je uzrok
+> mehanički kvar — jedan mikrofon to ne može tvrditi. Lemljenje, I2S liveness,
+> power-loss/NVS i samostalan demo bez PC-a i dalje nisu fizički potvrđeni.
+> Benchmark, regresija i build nisu fizička tačnost.
 
 ## Struktura
 

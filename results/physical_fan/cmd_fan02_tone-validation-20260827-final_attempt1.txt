@@ -1,0 +1,7 @@
+guided25 panel
+press panel
+condition normal_baseline Zavrsna provjera tona: cista normalna osnova prije pustanja.
+condition normal_baseline Zavrsna provjera tona: cista normalna osnova prije pustanja.
+condition constant_tone_1khz Konstantni YouTube 1 kHz ton; fiksna jacina i polozaj.
+condition recovery_after_tone Konstantni ton ugasen; provjera povratka u normalu.
+stop kraj zavrsne provjere konstantnog tona

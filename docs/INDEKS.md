@@ -1,6 +1,6 @@
 # Indeks dokumentacije
 
-**Ažurirano:** 22.08.2026.
+**Ažurirano:** 27.08.2026.
 
 Repo ima mnogo dokumenata jer je metodologija tražila da se svaki pokušaj i
 svaki negativan rezultat zapišu. Zato je lako naletjeti na stariji fajl i
@@ -29,7 +29,7 @@ stanje** — čuvaju se jer objašnjavaju *zašto* je nešto odbačeno.
 |---|---|---|
 | [`DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md`](DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md) | konsolidacija faza 1–8, go/no-go protokol | aktuelno |
 | [`REVIEW-KRITICNO-2026-08-20.md`](REVIEW-KRITICNO-2026-08-20.md) | status kritičnih nalaza revizije | aktuelno |
-| [`protokol-fizicki-ventilator.md`](protokol-fizicki-ventilator.md) | zaključani protokol `physical-fan-v1.8.0` | aktuelno |
+| [`protokol-fizicki-ventilator.md`](protokol-fizicki-ventilator.md) | zaključani protokol fizičkog runa (živi par `physical-fan-v1.9.0` ↔ `asd-quality-v1.6.0`) | aktuelno |
 | [`GUIDED25-TEST-VENTILATORA.md`](GUIDED25-TEST-VENTILATORA.md) | vođeni test do 25 min, pass/fail kriteriji | aktuelno |
 | [`KAKO-SAMOSTALNO-POKRENUTI-GUIDED25.md`](KAKO-SAMOSTALNO-POKRENUTI-GUIDED25.md) | operatersko uputstvo za launcher | aktuelno |
 | [`kanonska-evaluacija.md`](kanonska-evaluacija.md) | usvojeni razvojni benchmark bez curenja | aktuelno |
@@ -57,6 +57,7 @@ Svaki je zapis jedne faze, ne opšti status. Zbirni status je u
 
 | Dokument | Sadržaj |
 |---|---|
+| [`rezultat-finalna-validacija-2026-08-27.md`](rezultat-finalna-validacija-2026-08-27.md) | **finalna validacija firmvera na pločici — dva validna runa, svi odbačeni pokušaji, granice tvrdnje** |
 | [`rezultat-fan01-2026-08-16.md`](rezultat-fan01-2026-08-16.md) | prvi valjan fizički test ventilatora |
 | [`preregistracija-fan01.md`](preregistracija-fan01.md) | preregistracija tog runa (pisana prije runa) |
 | [`hardver-verifikacija.md`](hardver-verifikacija.md) | šta je izmjereno na pločici (09.08.) |

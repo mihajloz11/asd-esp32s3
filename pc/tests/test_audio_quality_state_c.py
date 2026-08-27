@@ -160,6 +160,16 @@ def test_valid_normal_pcm_passes_and_metrics_match(quality_lib) -> None:
     assert metrics.clipped_count == metrics.zero_count == metrics.stuck_count == 0
 
 
+def test_normal_only_40cm_level_is_above_liveness_floor(quality_lib) -> None:
+    """The observed -66 dBFS normal setup must not be mistaken for dead audio."""
+    reason, metrics, policy = evaluate_pcm(quality_lib, [-16, 16] * 500)
+    assert metrics.rms_dbfs == pytest.approx(
+        20 * math.log10(16 / 32768), abs=1e-5,
+    )
+    assert metrics.rms_dbfs > policy.level_floor_dbfs
+    assert reason == OK
+
+
 @pytest.mark.parametrize(
     ("samples", "expected", "dropped_before", "dropped_after", "want"),
     [

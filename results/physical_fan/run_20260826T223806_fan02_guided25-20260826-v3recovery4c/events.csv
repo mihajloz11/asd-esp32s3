@@ -1,0 +1,31 @@
+host_utc,elapsed_s,firmware_session_index,kind,label,note
+2026-08-26T20:38:06.962+00:00,0.046,0,session,start,sigurnosna postavka potvrđena; operator condition=unconfirmed
+2026-08-26T20:38:07.413+00:00,0.5,0,device,reset,RTS reset; pocinje WAIT/CAL/DET
+2026-08-26T20:38:24.954+00:00,18.031,0,virtual_button,guided25,panel
+2026-08-26T20:38:24.963+00:00,18.046,0,virtual_button,press,panel
+2026-08-26T20:39:20.263+00:00,73.343,1,phase,calibration,fan mora ostati u potvrđeno normalnom stanju
+2026-08-26T20:41:00.866+00:00,173.953,1,protocol,terminal_drain_complete,terminal STATE/FLOW_STOPPED/SESSION ENDED sacuvani
+2026-08-26T20:41:00.866+00:00,173.953,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:00.893+00:00,173.968,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:00.894+00:00,173.968,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:05.820+00:00,178.906,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:10.867+00:00,183.953,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:15.838+00:00,188.921,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:20.850+00:00,193.937,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:25.859+00:00,198.937,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:30.869+00:00,203.953,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:35.880+00:00,208.953,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:40.888+00:00,213.968,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:45.901+00:00,218.984,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:50.908+00:00,223.984,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:41:55.919+00:00,229.0,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:42:00.930+00:00,234.015,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:42:05.939+00:00,239.015,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:42:10.948+00:00,244.031,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:42:15.961+00:00,249.046,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:42:20.969+00:00,254.046,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:42:25.979+00:00,259.062,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:42:30.989+00:00,264.062,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:42:35.998+00:00,269.078,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:42:41.008+00:00,274.093,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju
+2026-08-26T20:42:46.023+00:00,279.109,1,calibration,rejected,session=1; UNSTABLE_CALIBRATION; K1 loo_cv_above_max; host ostaje aktivan za novu sesiju

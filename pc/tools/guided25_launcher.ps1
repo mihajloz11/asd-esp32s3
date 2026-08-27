@@ -3,7 +3,7 @@ param(
     [ValidateSet("Menu", "Preview", "Test", "Logs", "Preflight")]
     [string]$Mode = "Menu",
     [string]$Port = "COM3",
-    [ValidateRange(1, 3)]
+    [ValidateRange(1, 5)]
     [int]$Attempt = 1,
     [string]$FanId = "fan02",
     [string]$SessionId = "",
@@ -168,10 +168,10 @@ if ([string]::IsNullOrWhiteSpace($SessionId)) {
 }
 $enteredFan = Read-Host "Fan ID [$FanId]"
 if (-not [string]::IsNullOrWhiteSpace($enteredFan)) { $FanId = $enteredFan.Trim() }
-$enteredAttempt = Read-Host "Broj pokusaja 1-3 [$Attempt]"
+$enteredAttempt = Read-Host "Broj pokusaja 1-5 [$Attempt]"
 if (-not [string]::IsNullOrWhiteSpace($enteredAttempt)) {
     $Attempt = [int]$enteredAttempt
-    if ($Attempt -lt 1 -or $Attempt -gt 3) { throw "Pokusaj mora biti 1, 2 ili 3." }
+    if ($Attempt -lt 1 -or $Attempt -gt 5) { throw "Pokusaj mora biti izmedju 1 i 5." }
 }
 Write-Host "Session ID: $SessionId"
 Write-Host "Provjeri fizicku postavku. Test se jos nije pokrenuo."

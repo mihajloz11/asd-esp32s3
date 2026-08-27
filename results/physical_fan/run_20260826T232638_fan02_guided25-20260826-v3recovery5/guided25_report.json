@@ -1,0 +1,26 @@
+{
+  "schema_version": "asd-guided25-v1.2.0-development",
+  "status": "FAIL",
+  "failures": [
+    "firmware_protocol_invalid",
+    "k1_or_commissioning_not_accepted",
+    "missing_runtime_normal_only_interference_threshold",
+    "research_pairs_or_checksum_invalid",
+    "too_few_windows:normal_baseline",
+    "too_few_windows:airflow_change_paper_1",
+    "too_few_windows:recovery_normal_1",
+    "too_few_windows:airflow_change_paper_2",
+    "too_few_windows:recovery_normal_2",
+    "too_few_windows:airflow_change_paper_3",
+    "too_few_windows:recovery_normal_3",
+    "too_few_windows:ambient_speech",
+    "too_few_windows:recovery_after_speech",
+    "too_few_windows:ambient_door",
+    "too_few_windows:final_recovery",
+    "paper_blocks_passed:0/3"
+  ],
+  "paper_blocks_passed": 0,
+  "evaluated_det_windows": 0,
+  "research_manifest_sha256": null,
+  "note": "Observed single-microphone noise tolerance. Granice kapije pouzdanosti su izvedene iz normal-only prozora (asd-interference-policy-v3.0.0-development); prag se po sesiji izvodi samo iz CAL normal-only prozora. HOLD odbija nepouzdan prozor, ali ne tvrdi sta ga je izazvalo."
+}

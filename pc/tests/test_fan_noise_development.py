@@ -133,6 +133,7 @@ def test_policy_is_selected_on_derive_then_frozen_before_verify() -> None:
         for result in first["candidate_results"]
     }
     assert {
+        "hampel3-capped-p99_exit-p95-clamped",
         "empirical-p99_exit-p75",
         "median-plus-6mad_exit-2mad",
         "blockmax6-p90_exit-p75",

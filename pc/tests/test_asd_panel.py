@@ -356,20 +356,16 @@ def test_monitoring_start_gate_requires_runtime_normal_only_hold_threshold(tmp_p
     assert "HOLD prag nije izveden" in "; ".join(reasons)
 
 
-def test_monitoring_start_gate_hard_stops_when_whole_plan_no_longer_fits(tmp_path) -> None:
+def test_monitoring_start_gate_remains_open_after_calibration_wait(tmp_path) -> None:
     state = _ready_guided_state(tmp_path)
-    required = sum(item[2] for item in state.plan) + int(
-        panel.GUIDED25["monitoring_start_guard_seconds"]
-    )
-    elapsed = panel.GUIDED25["hard_deadline_seconds"] - (required - 1)
-    state.session_started_at = __import__("time").monotonic() - elapsed
+    state.session_started_at = __import__("time").monotonic() - 24 * 60 * 60
 
     ok, reasons = state.guided_monitoring_gate()
 
-    assert not ok
-    assert "nema dovoljno vremena" in "; ".join(reasons)
+    assert ok, reasons
     snapshot = state.snapshot()
-    assert snapshot["monitoring_start_allowed"] is False
+    assert snapshot["deadline_remaining"] is None
+    assert snapshot["monitoring_start_allowed"] is True
 
 
 def test_monitoring_start_gate_accepts_full_plan_plus_guard(tmp_path) -> None:

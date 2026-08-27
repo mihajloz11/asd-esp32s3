@@ -463,9 +463,11 @@ class PanelState:
                 self.phase_at(elapsed) if elapsed is not None else (-1, 0.0)
             )
             total = sum(item[2] for item in self.plan)
-            deadline_remaining = None if self.session_started_at is None else max(
-                0.0, GUIDED25["hard_deadline_seconds"] -
-                (time.monotonic() - self.session_started_at)
+            hard_deadline = GUIDED25.get("hard_deadline_seconds")
+            deadline_remaining = (
+                None if self.session_started_at is None or hard_deadline is None
+                else max(0.0, hard_deadline -
+                         (time.monotonic() - self.session_started_at))
             )
             monitoring_required = total + int(
                 GUIDED25["monitoring_start_guard_seconds"]
@@ -510,9 +512,10 @@ class PanelState:
                     None if deadline_remaining is None else round(deadline_remaining)
                 ),
                 "monitoring_required_seconds": monitoring_required,
-                "monitoring_start_allowed": bool(
-                    deadline_remaining is not None
-                    and deadline_remaining >= monitoring_required
+                "monitoring_start_allowed": (
+                    True if hard_deadline is None
+                    else bool(deadline_remaining is not None and
+                              deadline_remaining >= monitoring_required)
                 ),
                 "final_result": self.final_result,
             }
@@ -520,7 +523,10 @@ class PanelState:
     def guided_preflight(self) -> tuple[bool, list[str]]:
         reasons = []
         if self.workflow != "guided25": reasons.append("panel nije u guided25 rezimu")
-        if self.attempt > GUIDED25["acceptance"]["attempt_limit"]: reasons.append("dosegnut limit od 3 pokusaja")
+        if self.attempt > GUIDED25["acceptance"]["attempt_limit"]:
+            reasons.append(
+                f"dosegnut limit od {GUIDED25['acceptance']['attempt_limit']} pokusaja"
+            )
         if self.last_line_at == 0 or time.time() - self.last_line_at > 15: reasons.append("nema svjeze telemetrije")
         if self.flags.get("guided25_available") != "1": reasons.append("firmware nema GUIDED25")
         if self.flags.get("protocol") != "asd-quality-v1.6.0": reasons.append("pogresna firmware/protocol verzija")
@@ -556,20 +562,22 @@ class PanelState:
             reasons.append("firmware nije potvrdio GUIDED25 44/22")
         if not all(self.research_counts.values()):
             reasons.append("nedostaje FEATURE96/SUBSEG96 telemetrija")
-        if self.session_started_at is None:
-            reasons.append("sesijski hard-stop tajmer nije pokrenut")
-        else:
-            remaining = GUIDED25["hard_deadline_seconds"] - (
-                time.monotonic() - self.session_started_at
-            )
-            required = sum(item[2] for item in self.plan) + int(
-                GUIDED25["monitoring_start_guard_seconds"]
-            )
-            if remaining < required:
-                reasons.append(
-                    f"nema dovoljno vremena: ostalo {max(0, round(remaining))}s, "
-                    f"potrebno najmanje {required}s"
+        hard_deadline = GUIDED25.get("hard_deadline_seconds")
+        if hard_deadline is not None:
+            if self.session_started_at is None:
+                reasons.append("sesijski hard-stop tajmer nije pokrenut")
+            else:
+                remaining = hard_deadline - (
+                    time.monotonic() - self.session_started_at
                 )
+                required = sum(item[2] for item in self.plan) + int(
+                    GUIDED25["monitoring_start_guard_seconds"]
+                )
+                if remaining < required:
+                    reasons.append(
+                        f"nema dovoljno vremena: ostalo {max(0, round(remaining))}s, "
+                        f"potrebno najmanje {required}s"
+                    )
         return not reasons, reasons
 
     def guided_result(self) -> dict:
@@ -740,10 +748,12 @@ class Conductor:
         self.stop_event.clear()
         if virtual_start:
             message += "; " + self.link.send("press")
-        expected_generation = self.state.session_generation + 1
-        self.deadline_thread = threading.Thread(
-            target=self._deadline, args=(expected_generation,), daemon=True)
-        self.deadline_thread.start()
+        hard_deadline = GUIDED25.get("hard_deadline_seconds")
+        if hard_deadline is not None:
+            expected_generation = self.state.session_generation + 1
+            self.deadline_thread = threading.Thread(
+                target=self._deadline, args=(expected_generation,), daemon=True)
+            self.deadline_thread.start()
         return message
 
     def _deadline(self, expected_generation: int) -> None:
@@ -759,8 +769,9 @@ class Conductor:
                 continue
             if done:
                 return
-            if (started is not None and time.monotonic() - started >=
-                    GUIDED25["hard_deadline_seconds"]):
+            hard_deadline = GUIDED25.get("hard_deadline_seconds")
+            if (hard_deadline is not None and started is not None and
+                    time.monotonic() - started >= hard_deadline):
                 self.link.send_raw("abort guided25_hard_deadline")
                 with self.state.lock:
                     self.state.invalid_reason = "guided25_hard_deadline"
@@ -1051,7 +1062,7 @@ function poll(){
     if(s.read_only_preview) document.getElementById('source').textContent +=
       ' · SIGURNI READ-ONLY PREGLED (test se ne moze pokrenuti)';
     if(s.workflow === 'guided25') document.getElementById('source').textContent +=
-      ' · pokusaj '+s.attempt+'/3 · rok '+mmss(s.deadline_remaining);
+      ' · pokusaj '+s.attempt+'/'+s.attempt_limit+' · rok '+mmss(s.deadline_remaining);
     document.getElementById('mode').textContent = flags.mode || '—';
     document.getElementById('state').textContent = flags.state || '';
     chip('c-waiting',  flags.waiting  === '1');

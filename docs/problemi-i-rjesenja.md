@@ -38,6 +38,10 @@
 | [P21](#p21) | 22.08 | operaterski tok | Run traži 20 potvrda faza, a panel ih nije tražio | riješeno (panel vodi klik po klik) |
 | [P22](#p22) | 22.08 | protokol mjerenja | Alarm iz prvog papirića progutao sljedeća dva bloka | djelimično (panel upozorava; trajanje oporavka otvoreno) |
 | [P23](#p23) | 23.08 | kalibracija / postavka | Jedan klip od deset propadne na 66 Hz i obori K1 | uzrok izmjeren, **otvoreno** |
+| [P24](#p24) | 26.08 | kvalitet signala | Apsolutni pod od -60 dBFS postao skrivena kapija prisustva mašine | riješeno |
+| [P25](#p25) | 26.08 | kalibracija | K1 pada na jednom klipu od deset, run ne stigne ni do DET-a | riješeno (trim do dva klipa) |
+| [P26](#p26) | 27.08 | commissioning | Robustni Hampel prag oborio sopstveni VERIFY | riješeno odbacivanjem robustnog fita |
+| [P27](#p27) | 26.08 | operaterski tok | Hard deadline od 25 min obara run prije kraja plana | riješeno |
 
 ---
 
@@ -1104,6 +1108,178 @@ jednoj traci, obara cijelu kalibraciju — to je svojstvo Mahalanobisa sa strano
 kovarijansom, i tako se prijavljuje u radu kao ograničenje metode. Nije razlog
 da se kapija pomjeri; eventualna izmjena traži bump verzije politike i novi
 preregistrovani retest.
+
+---
+
+<a id="p24"></a>
+## P24 — Apsolutni pod od -60 dBFS postao skrivena kapija prisustva mašine
+
+**Datum:** 26.08.2026 · **Oblast:** kvalitet signala · **Status:** riješeno
+
+**Simptom.** GUIDED25 run 26.08. u 17:20 (`v3recovery4`) srušen je usred DET
+faze, u 19. prozoru:
+
+```
+QUALITY phase=DET index=19 result=LOW_LEVEL_OBSERVATION rms_dbfs=-66.709
+        stuck=11594 zeros=4177 dropped_delta=0
+STATE   from=OBSERVATION_HOLD to=NO_MACHINE reason=LOW_LEVEL_OBSERVATION
+EVENT   type=FLOW_STOPPED reason=LOW_LEVEL_OBSERVATION level=MACHINE_PRESENCE
+```
+
+Run je time završio kao `invalid_firmware_terminal` i nije dao nijedan
+upotrebljiv papirić blok.
+
+**Uzrok.** `DEFAULT_LEVEL_FLOOR_DBFS` je bio `-60 dBFS` i bio je zamišljen kao
+provjera da digitalni audio uopšte živi. Ali ta granica je **apsolutna**, a
+nivo koji mikrofon vidi zavisi od rastojanja i ugla. Na 40 cm sa ovim
+ventilatorom normalan nivo je oko `-52 dBFS`, a normal-only SETTLE mjerenje je
+dalo `-66,1637 dBFS`. Pod od `-60 dBFS` je time prestao da bude liveness
+provjera i postao skrivena kapija prisustva mašine — koja obara run čim se
+ventilator na tren utiša ili se mikrofon pomjeri.
+
+**Rješenje.** Pod je spušten na `-80 dBFS`, sa `13,8 dB` rezerve u odnosu na
+izmjereni normal-only SETTLE. Brojka je zamrznuta **prije** nego što je ijedna
+target anomalija puštena, i upisana u `pc/config/asd_quality_policy_v1.json`
+(`v1.0.0 → v1.1.0`) zajedno sa izvorom mjerenja. `ASD_QUALITY_POLICY_ID` je
+bumpovan `0x51555631 → 0x51555632`.
+
+Prisustvo mašine i dalje čuvaju dvije nezavisne provjere koje ne zavise od
+rastojanja:
+
+- `PRESENCE` gate izveden po sesiji kao `cal_level_mean − 11 dB`;
+- `STUCK` / `ZERO` / `NONFINITE` provjere, koje hvataju stvarno mrtav mikrofon.
+
+**Dokaz.** Runovi 27.08. (`v3recovery5d`, `tone-validation-final`) prošli su
+cijeli plan bez ijednog `LOW_LEVEL_OBSERVATION` zapisa, na nivoima
+`-53,9 … -33,2 dBFS`.
+
+**Pouka.** Inženjerska kapija koja se poredi sa apsolutnim nivoom je uvijek i
+kapija mjerne postavke. Ako granica treba da znači da audio živi, mora imati
+rezervu prema najtišem izmjerenom normalnom stanju, a ne prema zdravorazumskom
+broju.
+
+---
+
+<a id="p25"></a>
+## P25 — K1 pada na jednom klipu od deset, run ne stigne ni do DET-a
+
+**Datum:** 26.08.2026 · **Oblast:** kalibracija · **Status:** riješeno
+
+**Simptom.** Dva runa zaredom (`v3recovery4b` 22:16, `v3recovery4c` 22:38) nisu
+dala **nijedan** DET prozor. Oba su ponavljala:
+
+```
+calibration rejected: UNSTABLE_CALIBRATION; K1 loo_cv_above_max
+```
+
+To je isti mehanizam kao [P23](#p23): devet klipova uredno, deseti strada u
+uskom pojasu `66–75 Hz`, i `loo_cv` pređe kapiju `0,6`.
+
+**Zašto se nije rješavalo pomjeranjem kapije.** Kapija `max_loo_cv = 0,6` štiti
+od toga da centar nauči nešto što nije normalno stanje ventilatora. Podizanje
+kapije bi tu zaštitu ukinulo i pustilo kratki tranzijent u centar.
+
+**Rješenje.** Umjesto pomjeranja kapije, K1 sad smije **izbaciti najviše dva**
+najgora CAL klipa. Poslije svakog izbacivanja centar i svi LOO skorovi se
+računaju ponovo, i preostali klipovi moraju proći **isti nepromijenjeni** prag
+`0,6`. Treća nestabilnost obara kalibraciju kao i ranije.
+`K1_MAX_DISCARDED_CAL_CLIPS 2` u `psd_live.c`.
+
+Izbacivanje je auditabilno — emituje se prije `CAL_SUMMARY` zapisa:
+
+```
+CALTRIM policy=k1-two-clip-trim-v1 discarded_count=2
+  discarded_index_1=9 discarded_loo_1=1616.417358
+  discarded_index_2=2 discarded_loo_2=998.927979
+  retained=8 raw_loo_cv=0.841676
+```
+
+**Dokaz.** Run `v3recovery4d` (26.08.): `raw_loo_cv 0,769753` → jedan klip
+izbačen → `0,463238`, K1 prihvaćen. Run `v3recovery5d` (27.08.):
+`raw_loo_cv 0,841676` → dva klipa → `0,426058`, K1 prihvaćen i run je otišao do
+kraja plana. Bez ove izmjene oba bi pala prije DET faze.
+
+**Šta ostaje.** Ovo liječi posljedicu, ne uzrok. Sam ispad u `66–75 Hz` je i
+dalje otvoren i opisan u [P23](#p23) — čuva se kao ograničenje metode u radu.
+
+---
+
+<a id="p26"></a>
+## P26 — Robustni Hampel prag oborio sopstveni VERIFY
+
+**Datum:** 27.08.2026 · **Oblast:** commissioning · **Status:** riješeno
+odbacivanjem robustnog fita
+
+**Šta se probalo.** Poslije runa u kojem je prag `1 051,74` djelovao pretup,
+činilo se da ga vuku pojedinačni visoki DERIVE prozori. Napisan je
+`asd_robust_fit.c`: koordinatni 10 % trimmed centar i Hampelova granica
+`median + 3 × 1,4826 × MAD`, sa empirijskim p99 kao gornjim plafonom.
+
+**Šta se desilo.** Run `v3recovery5c` (27.08. 20:52) je to izveo na pločici:
+
+```
+THRFIT method=trimmed-center-hampel-v1 source=COMMISSION_DERIVE_NORMAL_ONLY n=44
+       center_trim=0.1000 median=298.332031 mad=110.771149 robust_sigma=164.229309
+       sigma_multiplier=3.0000 p99_ceiling=1548.228516 threshold=791.019958 capped_high=3
+```
+
+Prag `791,02`. Ali normalni VERIFY prozori — iz iste sesije, bez ijedne
+anomalije — bili su `2 083 … 7 766`. Odvojeni fail-closed VERIFY je zato odbio
+kalibraciju:
+
+```
+REJECTED result=VERIFY_NORMAL_REJECT
+STATE from=NO_MACHINE to=CALIBRATION_REJECTED reason=VERIFY_NORMAL_REJECT
+```
+
+**Uzrok.** MAD normal-only DERIVE raspodjele opisuje samo njeno tijelo. Rep te
+raspodjele kod ovog ventilatora je znatno duži od `3 × 1,4826 × MAD`, pa
+Hampelova granica sječe ispod normalnog radnog opsega. Empirijski p99 taj rep
+poštuje jer se računa iz stvarnih vrijednosti.
+
+**Rješenje.** Živi put je vraćen na `frozen CAL center + empirical p99`, uz
+`exit = p95` ograničen na `[p50, 0,5 × enter]`. `asd_robust_fit.c/.h` ostaje u
+repou sa host parity testom radi reprodukcije, ali je **eksplicitno isključen
+iz živog puta** i to čuvaju tri nezavisne provjere:
+`pc/tools/check_schema_consistency.py`, `pc/tests/test_guided25_workflow.py` i
+imenovani odbačeni kandidat u `pc/tools/derive_commissioning_policy.py`.
+
+**Zašto je ovo dobar ishod.** Kapija koja postoji zbog ovakvih grešaka prvi put
+je proradila na stvarnom hardveru, i to prije nego što je nastao ijedan DET
+prozor. Loš prag nije mogao da se pretvori u rezultat.
+
+**Nuspojava koja je otkrivena.** Host nije poznavao `VERIFY_NORMAL_REJECT`, pa
+je run označio kao `invalid_firmware_telemetry / terminal_STATE_reason_unknown`
+umjesto kao ispravno odbijenu kalibraciju. Razlog je dodat u
+`CALIBRATION_STOP_REASONS` u `pc/tools/physical_fan_experiment.py`.
+
+---
+
+<a id="p27"></a>
+## P27 — Hard deadline od 25 min obara run prije kraja plana
+
+**Datum:** 26.08.2026 · **Oblast:** operaterski tok · **Status:** riješeno
+
+**Simptom.** GUIDED25 je imao `hard_deadline_seconds: 1500` i poseban nadzorni
+thread koji na isteku šalje `abort guided25_hard_deadline`. Treći pokušaj je
+tako automatski prekinut prije kraja plana, iako ni firmware ni mjerenje nisu
+imali problem.
+
+**Uzrok.** Ime „25 minuta" je iz vremena kad je commissioning bio kraći. Puni
+tok `SETTLE → CENTER (10) → DERIVE (44) → VERIFY (22) → MONITORING` sam po sebi
+traje oko 14 minuta, pa uz 11 uslova plana više ne staje u 1 500 s.
+
+**Rješenje.** Deadline je isključen: `hard_deadline_seconds: null`,
+`monitoring_start_guard_seconds: 0`, a limit pokušaja podignut `3 → 5`.
+Razlog i obim promjene su upisani kao `recovery_amendment` blok u
+`pc/config/guided25_workflow_v1.json`, uz bump `v1.1.0 → v1.2.0` i
+`target_anomalies_used_for_fit: false`. Panel (`asd_panel.py`), launcher
+(`guided25_launcher.ps1`), `start_fan_run.py` i `pc/asd/guided_test.py` sada
+tretiraju deadline kao opcion — kad ga nema, nadzorni thread se ne pokreće i
+preflight ga ne traži.
+
+**Dokaz.** Runovi 27.08. traju `1 509 s` i `2 000 s` i oba su završena planski,
+bez `guided25_hard_deadline` prekida.
 
 ---
 

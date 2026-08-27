@@ -101,7 +101,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--room", default="soba")
     parser.add_argument("--fan-speed-or-voltage", default="usb-5v-punjac")
     parser.add_argument("--plan", default="guided25", choices=("guided25", "full", "short"))
-    parser.add_argument("--attempt", type=int, choices=(1, 2, 3), default=1)
+    parser.add_argument("--attempt", type=int, choices=(1, 2, 3, 4, 5), default=1)
     parser.add_argument(
         "--research-telemetry-required", action="store_true",
         help="za razvojni build zahtijevaj kompletan 96+5x96 research paket",
