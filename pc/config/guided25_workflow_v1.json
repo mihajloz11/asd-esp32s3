@@ -1,8 +1,8 @@
 {
-  "schema_version": "asd-guided25-v1.1.0-development",
+  "schema_version": "asd-guided25-v1.2.0-development",
   "developmental": true,
-  "hard_deadline_seconds": 1500,
-  "monitoring_start_guard_seconds": 20,
+  "hard_deadline_seconds": null,
+  "monitoring_start_guard_seconds": 0,
   "firmware_mode": "GUIDED25",
   "window_seconds": 10,
   "commissioning": {
@@ -96,6 +96,13 @@
     "max_alarm_episodes_normal": 0,
     "max_dropped_samples": 0,
     "research_telemetry_required": true,
-    "attempt_limit": 3
+    "attempt_limit": 5
+  },
+  "recovery_amendment": {
+    "date": "2026-08-26",
+    "additional_attempts": [4, 5],
+    "reason": "Attempt 3 was automatically aborted by the former hard-stop start-gate defect. Attempt 4 was intentionally stopped after Paper 1 proved that raw p99 accepted an insensitive profile; attempt 5 validates the resulting normal-only robust centre and threshold fit.",
+    "scope": "Recovery retests of the unchanged 40 cm / 9 degree setup after the v3 HOLD/start-gate fix and the normal-only trimmed-centre/Hampel threshold fix.",
+    "target_anomalies_used_for_fit": false
   }
 }

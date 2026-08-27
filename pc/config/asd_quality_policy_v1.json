@@ -1,11 +1,11 @@
 {
-  "schema_version": "asd-quality-policy-v1.0.0",
-  "locked_utc": "2026-08-09T00:00:00+02:00",
+  "schema_version": "asd-quality-policy-v1.1.0",
+  "locked_utc": "2026-08-26T23:35:00+02:00",
   "scope": "sensor and calibration quality only; not an anomaly threshold",
   "target_anomalies_used": false,
   "policy": {
-    "level_floor_dbfs": -60.0,
-    "level_floor_origin": "pre-existing psd_live.c engineering gate",
+    "level_floor_dbfs": -80.0,
+    "level_floor_origin": "normal-only SETTLE at 40 cm/9 deg measured -66.1637497 dBFS; floor is a digital-audio liveness gate with 13.8 dB margin, not a fan-presence threshold",
     "clip_level_pcm16": 32000,
     "clip_level_origin": "pre-existing mic_test.c engineering gate",
     "max_clip_fraction": 0.001,

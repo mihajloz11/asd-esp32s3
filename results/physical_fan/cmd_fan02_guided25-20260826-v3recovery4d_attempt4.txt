@@ -1,0 +1,6 @@
+guided25 panel
+press panel
+condition normal_baseline Normalna osnova: Miruj i ne pricaj.
+condition airflow_change_paper_1 Papiric 1: Drzi papiric uz usis, bez dodira ventilatora.
+condition recovery_normal_1 Oporavak 1: Skloni papiric i ruku; tisina.
+abort operator_panel_abort

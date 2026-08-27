@@ -240,6 +240,21 @@ def test_parse_phases_threshold_and_dropped() -> None:
         "lo": 0.0, "factory": 0.0,
     }
     assert physical.parse_serial_line(
+        "THRFIT protocol=asd-quality-v1.6.0 method=trimmed-center-hampel-v1 "
+        "source=COMMISSION_DERIVE_NORMAL_ONLY n=44 center_trim=0.1000 "
+        "median=100.000000 mad=10.000000 robust_sigma=14.826000 "
+        "sigma_multiplier=3.0000 p99_ceiling=200.000000 "
+        "threshold=144.478000 capped_high=2"
+    ) == {
+        "kind": "THRFIT", "protocol": "asd-quality-v1.6.0",
+        "method": "trimmed-center-hampel-v1",
+        "source": "COMMISSION_DERIVE_NORMAL_ONLY", "n": 44,
+        "center_trim": 0.1, "median": 100.0, "mad": 10.0,
+        "robust_sigma": 14.826, "sigma_multiplier": 3.0,
+        "p99_ceiling": 200.0, "threshold": 144.478,
+        "capped_high": 2,
+    }
+    assert physical.parse_serial_line(
         "I psdlive: racun po klipu 704 ms, dropped=0"
     ) == {"kind": "DROPPED", "dropped": 0}
 
@@ -708,7 +723,7 @@ def test_literal_firmware_quality_replay_wait_and_reject_contract() -> None:
     wait_line = (
             "QUALITY protocol=asd-quality-v1.6.0 phase=WAIT index=1 total=60 "
         "result=LOW_LEVEL_OBSERVATION metrics_valid=1 feature_valid=0 samples=4096 expected=4096 "
-        "rms_dbfs=-70.000 dc=123.000 peak=200 clipped=0 zeros=0 stuck=0 "
+        "rms_dbfs=-90.000 dc=123.000 peak=200 clipped=0 zeros=0 stuck=0 "
         "dropped_delta=0 tonalness_valid=0 tonalness_proxy=0.000000 "
         "tonal_gate=not_computed"
     )
@@ -1024,7 +1039,7 @@ def test_quality_reject_and_out_of_order_telemetry_fail_fast() -> None:
     rejected = physical.transition_firmware_protocol(
         ready, {
             **_quality("DET"), "result": "LOW_LEVEL_OBSERVATION",
-            "rms_dbfs": -70.0,
+            "rms_dbfs": -90.0,
         },
     )
     assert rejected["terminal"] is True
@@ -1501,7 +1516,7 @@ def test_all_low_wait_cannot_enter_calibration() -> None:
             state,
             {
                 **_quality("WAIT", index),
-                "result": "LOW_LEVEL_OBSERVATION", "rms_dbfs": -70.0,
+                "result": "LOW_LEVEL_OBSERVATION", "rms_dbfs": -90.0,
             },
         )
         assert state["invalid_status"] is None

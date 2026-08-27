@@ -1,0 +1,2 @@
+host_utc,elapsed_s,firmware_session_index,record_kind,reason,raw_line
+2026-08-27T19:16:49.607+00:00,1448.422,1,STATE,terminal_STATE_reason_unknown,STATE protocol=asd-quality-v1.6.0 from=NO_MACHINE to=CALIBRATION_REJECTED reason=VERIFY_NORMAL_REJECT

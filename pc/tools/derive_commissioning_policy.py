@@ -66,18 +66,30 @@ class ThresholdSpec:
 
 
 THRESHOLD_SPECS: tuple[ThresholdSpec, ...] = (
-    # Pravilo koje firmver koristi od 23.08.2026. Ulaz je nepromijenjen (p99);
-    # izlaz je podignut sa p75 na p95, uz ogranicenja `max(p50)` odozdo i
-    # `0,5 * enter` odozgo koja zive u `psd_live.c` jer ih ovaj laboratorijski
-    # opis ne izrazava.
+    # Aktivno firmware pravilo od 26.08.2026: p99 je samo gornja granica, a
+    # ulazni prag je min(p99, median + 3 * 1.4826 * MAD). Firmware prije toga
+    # ponovo racuna centar kao koordinatni 10% trimmed mean nad sirovim DERIVE
+    # featureima. Ovaj score-only laboratorijski alat moze reprodukovati prag,
+    # ali ne i ponovno centriranje bez izvornih featurea.
+    #
+    # Izlaz je p95, uz ogranicenja `max(p50)` odozdo i `0,5 * enter` odozgo
+    # koja zive u `psd_live.c` jer ih ovaj laboratorijski opis ne izrazava.
     #
     # Razlog je izmjeren, ne pretpostavljen: run 23.08.2026 je imao enter 6341 i
     # exit 341, a najtisi ispravan DET prozor 463 -- alarm iz prvog papirica se
     # nikad nije ugasio i sljedeca dva bloka nisu imala u sta da udju. p75 znaci
     # da cetvrtina ispravnih prozora stoji IZNAD izlaza. Izvedeno iskljucivo iz
     # normal-only DERIVE raspodjele; nijedna ciljna anomalija nije otvorena.
+    # Aktivno firmware pravilo: posljednji stvarni normal-only VERIFY pokazao
+    # je da Hampel 3-sigma granica pravi niz laznih alarma, dok frozen CAL
+    # centar + empirical p99 prolazi isti VERIFY.
     ThresholdSpec(
         "empirical-p99_exit-p95-clamped", "percentile", 0.99,
+        "percentile", 0.95,
+    ),
+    # Odbaceni robustni kandidat ostaje samo radi reprodukcije regresije.
+    ThresholdSpec(
+        "hampel3-capped-p99_exit-p95-clamped", "hampel_capped_percentile", 3.0,
         "percentile", 0.95,
     ),
     ThresholdSpec(
@@ -310,6 +322,11 @@ def derive_threshold_pair(values: Sequence[float], spec: ThresholdSpec) -> tuple
     median, scaled_mad = _median_scaled_mad(scores)
     if spec.enter_method == "percentile":
         enter = _percentile_higher(scores, spec.enter_parameter)
+    elif spec.enter_method == "hampel_capped_percentile":
+        enter = min(
+            _percentile_higher(scores, 0.99),
+            median + spec.enter_parameter * scaled_mad,
+        )
     elif spec.enter_method == "median_mad":
         enter = median + spec.enter_parameter * scaled_mad
     elif spec.enter_method == "block_max_percentile":

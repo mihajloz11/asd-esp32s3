@@ -1,0 +1,91 @@
+{
+  "schema_version": "asd-research-artifacts-v1.0.0",
+  "wire_protocol_version": "asd-research-v1.0.0",
+  "required": true,
+  "enabled": true,
+  "artifact_valid": true,
+  "gate_passed": true,
+  "expected_window_count": 75,
+  "complete_window_count": 75,
+  "feature_record_count": 75,
+  "subsegment_record_count": 375,
+  "errors": [],
+  "npz": {
+    "path": "window_features.npz",
+    "sha256": "1b796e19a4d275ae655eaabd23b0c3c390fd1249c4cb91a1a4863a970f9b8e1e",
+    "arrays": {
+      "firmware_session_index": {
+        "shape": [
+          75
+        ],
+        "dtype": "int32"
+      },
+      "phase": {
+        "shape": [
+          75
+        ],
+        "dtype": "<U3"
+      },
+      "window": {
+        "shape": [
+          75
+        ],
+        "dtype": "int32"
+      },
+      "window_start_ms": {
+        "shape": [
+          75
+        ],
+        "dtype": "uint64"
+      },
+      "window_end_ms": {
+        "shape": [
+          75
+        ],
+        "dtype": "uint64"
+      },
+      "score": {
+        "shape": [
+          75
+        ],
+        "dtype": "float32"
+      },
+      "level_dbfs": {
+        "shape": [
+          75
+        ],
+        "dtype": "float32"
+      },
+      "tonalness_proxy": {
+        "shape": [
+          75
+        ],
+        "dtype": "float32"
+      },
+      "feature96": {
+        "shape": [
+          75,
+          96
+        ],
+        "dtype": "float32"
+      },
+      "subseg96": {
+        "shape": [
+          75,
+          5,
+          96
+        ],
+        "dtype": "float32"
+      },
+      "subseg_welch_segments": {
+        "shape": [
+          75,
+          5
+        ],
+        "dtype": "int32"
+      }
+    }
+  },
+  "external_wav": null,
+  "pcm_per_det": false
+}

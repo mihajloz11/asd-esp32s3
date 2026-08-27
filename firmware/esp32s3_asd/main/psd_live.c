@@ -53,14 +53,15 @@ static const char *TAG = "psdlive";
 #define HOPS_PER_CLIP  39                       /* 39 x 4096 = 159 744 ~ 10 s */
 #define N_CAL          10                       /* 10 x 10 s = 100 s; PC AUC 0,853 */
 #define WARM_HOPS      60                       /* ~15 s da se pusti ventilator */
+/* K1 odbija nestabilnu osnovu, ali kratki uski tranzijenti ventilatora ne
+ * smiju uci u njen centar. Najvise dva najgora CAL klipa mogu biti izostavljena;
+ * preostalih osam moraju proci isti unaprijed registrovani CV prag. */
+#define K1_MAX_DISCARDED_CAL_CLIPS 2
 
-/* Pragovi se izvode tek iz kasnijeg normal-only DERIVE bloka, ne iz deset
- * uzastopnih CENTER/LOO klipova. Enter je unaprijed registrovani empirijski
- * p99 kandidat, a exit je odvojeni p75. Sa `percentile_higher` i strogim
- * `score > enter`, p99 ostavlja najvise jedan DERIVE score iznad enter praga
- * za podrzane blokove od 52 ili 120 prozora. Zato DERIVE po konstrukciji ne
- * moze proizvesti n=3 alarmnu epizodu; vremenski kasniji VERIFY i dalje mora
- * nezavisno proci nulti episode/alarm-window/chatter gate. */
+/* Prag se izvodi iz normal-only DERIVE bloka prema unaprijed registrovanom
+ * empirical-p99 pravilu. Centar ostaje onaj koji je K1 prihvatio iz CAL-a;
+ * odvojeni VERIFY fail-closed provjerava tri uzastopna lazna alarma. Nijedan
+ * target-anomaly prozor ne ulazi u fit. */
 #define COMMISSION_ENTER_QUANTILE 0.99f
 /* Izlaz iz alarma je 23.08.2026 podignut sa p75 na p95 DERIVE raspodjele, i to
  * iskljucivo iz normal-only podataka -- nijedan papiric, govor ni vrata nisu
@@ -839,24 +840,121 @@ static asd_state_t run_session(unsigned session_index,
     if (!asd_quality_floats_finite(loo, N_CAL))
         return stop_flow("CAL", ASD_PHASE_CAL, state, ASD_QUALITY_NONFINITE);
 
-    float sorted[N_CAL];
-    memcpy(sorted, loo, sizeof(sorted));
-    qsort(sorted, N_CAL, sizeof(float), cmp_float);
+    float raw_sum = 0.0f;
+    for (int i = 0; i < N_CAL; i++) raw_sum += loo[i];
+    float raw_mean = raw_sum / N_CAL;
+    float raw_var = 0.0f;
+    for (int i = 0; i < N_CAL; i++)
+        raw_var += (loo[i] - raw_mean) * (loo[i] - raw_mean);
+    float raw_sd = sqrtf(raw_var / (N_CAL - 1));
+    float raw_loo_cv = fabsf(raw_mean) > 1e-12f ? raw_sd / fabsf(raw_mean) : 0.0f;
+    if (!isfinite(raw_mean) || !isfinite(raw_sd) || !isfinite(raw_loo_cv))
+        return stop_flow("CAL", ASD_PHASE_CAL, state, ASD_QUALITY_NONFINITE);
 
+    asd_calibration_quality_policy_t calibration_policy =
+        asd_calibration_quality_default_policy();
+    int cal_keep[N_CAL];
+    for (int i = 0; i < N_CAL; i++) cal_keep[i] = 1;
+    int kept_cal_clips = N_CAL;
+    int discarded_cal_clip[K1_MAX_DISCARDED_CAL_CLIPS] = {-1, -1};
+    float discarded_loo[K1_MAX_DISCARDED_CAL_CLIPS] = {NAN, NAN};
+    int discarded_cal_clip_count = 0;
+    float working_loo_cv = raw_loo_cv;
+
+    /* Uski, prolazni ton ne predstavlja novu osnovu. Kandidat se izostavlja
+     * samo dok bi K1 pao; poslije svakog izostavljanja centar i LOO se racunaju
+     * ponovo. Treca takva nestabilnost nije dozvoljena. */
+    while (working_loo_cv > calibration_policy.max_loo_cv &&
+           discarded_cal_clip_count < K1_MAX_DISCARDED_CAL_CLIPS) {
+        int candidate = -1;
+        for (int i = 0; i < N_CAL; i++) {
+            if (cal_keep[i] &&
+                (candidate < 0 || loo[i] > loo[candidate])) candidate = i;
+        }
+        if (candidate < 0)
+            return stop_flow("CAL", ASD_PHASE_CAL, state,
+                             ASD_QUALITY_INVALID_ARGUMENT);
+        discarded_cal_clip[discarded_cal_clip_count] = candidate;
+        discarded_loo[discarded_cal_clip_count] = loo[candidate];
+        discarded_cal_clip_count++;
+        cal_keep[candidate] = 0;
+        kept_cal_clips--;
+        for (int d = 0; d < DIM; d++) {
+            float s = 0.0f;
+            for (int i = 0; i < N_CAL; i++) {
+                if (!cal_keep[i]) continue;
+                s += (cal_feat[i][d] - asd_psd_norm_mean[d]) /
+                     asd_psd_norm_std[d];
+            }
+            center[d] = s / (float)kept_cal_clips;
+        }
+        for (int i = 0; i < N_CAL; i++) {
+            if (!cal_keep[i]) continue;
+            float c[DIM];
+            for (int d = 0; d < DIM; d++) {
+                float zi = (cal_feat[i][d] - asd_psd_norm_mean[d]) /
+                           asd_psd_norm_std[d];
+                c[d] = (center[d] * (float)kept_cal_clips - zi) /
+                       (float)(kept_cal_clips - 1);
+            }
+            loo[i] = score_with_center(cal_feat[i], c);
+            if (!clamp_nonnegative_score(&loo[i]))
+                return stop_flow("CAL", ASD_PHASE_CAL, state,
+                                 ASD_QUALITY_NONFINITE);
+        }
+        float working_sum = 0.0f;
+        for (int i = 0; i < N_CAL; i++)
+            if (cal_keep[i]) working_sum += loo[i];
+        float working_mean = working_sum / (float)kept_cal_clips;
+        float working_var = 0.0f;
+        for (int i = 0; i < N_CAL; i++) {
+            if (!cal_keep[i]) continue;
+            working_var += (loo[i] - working_mean) *
+                           (loo[i] - working_mean);
+        }
+        float working_sd = sqrtf(working_var / (float)(kept_cal_clips - 1));
+        working_loo_cv = fabsf(working_mean) > 1e-12f
+            ? working_sd / fabsf(working_mean) : 0.0f;
+        if (!isfinite(working_mean) || !isfinite(working_sd) ||
+            !isfinite(working_loo_cv))
+            return stop_flow("CAL", ASD_PHASE_CAL, state,
+                             ASD_QUALITY_NONFINITE);
+    }
+
+    float sorted[N_CAL];
     float sum = 0.0f;
-    for (int i = 0; i < N_CAL; i++) sum += loo[i];
-    float mean = sum / N_CAL;
+    int sorted_count = 0;
+    for (int i = 0; i < N_CAL; i++) {
+        if (!cal_keep[i]) continue;
+        sum += loo[i];
+        sorted[sorted_count++] = loo[i];
+    }
+    qsort(sorted, (size_t)sorted_count, sizeof(float), cmp_float);
+    float mean = sum / (float)sorted_count;
     float var = 0.0f;
-    for (int i = 0; i < N_CAL; i++) var += (loo[i] - mean) * (loo[i] - mean);
-    float sd = sqrtf(var / (N_CAL - 1));
+    for (int i = 0; i < N_CAL; i++) {
+        if (!cal_keep[i]) continue;
+        var += (loo[i] - mean) * (loo[i] - mean);
+    }
+    float sd = sqrtf(var / (float)(sorted_count - 1));
     if (!isfinite(mean) || !isfinite(sd))
         return stop_flow("CAL", ASD_PHASE_CAL, state, ASD_QUALITY_NONFINITE);
     float loo_cv = fabsf(mean) > 1e-12f ? sd / fabsf(mean) : 0.0f;
-    float loo_range = sorted[N_CAL - 1] - sorted[0];
+    float loo_range = sorted[sorted_count - 1] - sorted[0];
     /* CAL_SUMMARY wire schema ne dozvoljava NaN/Inf. Cisti modul ih svakako
      * odbija u host testu, ali UART ne smije prvo objaviti neparsabilan zapis. */
     if (!isfinite(loo_cv) || !isfinite(loo_range))
         return stop_flow("CAL", ASD_PHASE_CAL, state, ASD_QUALITY_NONFINITE);
+    if (discarded_cal_clip_count > 0) {
+        printf("CALTRIM protocol=%s policy=k1-two-clip-trim-v1 "
+               "discarded_count=%d discarded_index_1=%d discarded_loo_1=%.6f "
+               "discarded_index_2=%d discarded_loo_2=%.6f retained=%d "
+               "raw_loo_cv=%.6f\n",
+               ASD_QUALITY_PROTOCOL, discarded_cal_clip_count,
+               discarded_cal_clip[0] + 1, discarded_loo[0],
+               discarded_cal_clip[1] + 1, discarded_loo[1],
+               kept_cal_clips, raw_loo_cv);
+    }
     printf("QUALITY protocol=%s phase=CAL_SUMMARY result=OBSERVED "
            "loo_mean=%.6f loo_sd=%.6f loo_cv=%.6f loo_range=%.6f "
            "loo_gate=pending_normal_only\n",
@@ -865,8 +963,6 @@ static asd_state_t run_session(unsigned session_index,
 
     /* K1 se izvrsava odmah nakon auditabilnog CAL_SUMMARY zapisa. Nijedan prag,
      * CALIBRATION_ACCEPTED zapis ni DET prozor ne smije nastati poslije pada. */
-    asd_calibration_quality_policy_t calibration_policy =
-        asd_calibration_quality_default_policy();
     asd_calibration_quality_metrics_t calibration_metrics = {
         .loo_mean = mean,
         .loo_sd = sd,
@@ -905,7 +1001,7 @@ static asd_state_t run_session(unsigned session_index,
 
     ESP_LOGI(TAG, "--- kalibracija gotova (centar zamrznut) ---");
     ESP_LOGI(TAG, "LOO score: mean=%.2f sd=%.2f min=%.2f max=%.2f",
-             mean, sd, sorted[0], sorted[N_CAL - 1]);
+             mean, sd, sorted[0], sorted[sorted_count - 1]);
     ESP_LOGI(TAG, "referentni nivo masine: %.2f dBFS (gate prisustva %.2f dBFS)",
              cal_level_mean, cal_level_mean - presence.absent_margin_db);
     /* Drugi red koji se sastavlja iz vise poziva; vidi EMIT_BEGIN. */

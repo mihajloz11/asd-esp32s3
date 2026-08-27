@@ -1,0 +1,11 @@
+host_utc,elapsed_s,firmware_session_index,kind,label,note
+2026-08-26T20:45:12.937+00:00,0.047,0,session,start,sigurnosna postavka potvrđena; operator condition=unconfirmed
+2026-08-26T20:45:13.389+00:00,0.5,0,device,reset,RTS reset; pocinje WAIT/CAL/DET
+2026-08-26T20:45:29.925+00:00,17.032,0,virtual_button,guided25,panel
+2026-08-26T20:45:29.938+00:00,17.047,0,virtual_button,press,panel
+2026-08-26T20:46:25.280+00:00,72.391,1,phase,calibration,fan mora ostati u potvrđeno normalnom stanju
+2026-08-26T20:59:04.206+00:00,831.313,1,phase,detection,firmware DET faza; operator condition i dalje nije potvrđen
+2026-08-26T20:59:20.197+00:00,847.313,1,condition,normal_baseline,Normalna osnova: Miruj i ne pricaj.
+2026-08-26T21:00:10.278+00:00,897.391,1,condition,airflow_change_paper_1,"Papiric 1: Drzi papiric uz usis, bez dodira ventilatora."
+2026-08-26T21:01:00.959+00:00,948.063,1,condition,recovery_normal_1,Oporavak 1: Skloni papiric i ruku; tisina.
+2026-08-26T21:01:21.996+00:00,969.11,1,session,abort,operator_panel_abort

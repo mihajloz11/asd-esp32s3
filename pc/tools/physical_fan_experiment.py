@@ -127,6 +127,8 @@ RELEVANT_FILES = (
     FIRMWARE_DIR / "main" / "asd_profile_nvs.h",
     FIRMWARE_DIR / "main" / "asd_commissioning.c",
     FIRMWARE_DIR / "main" / "asd_commissioning.h",
+    FIRMWARE_DIR / "main" / "asd_robust_fit.c",
+    FIRMWARE_DIR / "main" / "asd_robust_fit.h",
     FIRMWARE_DIR / "main" / "asd_events.c",
     FIRMWARE_DIR / "main" / "asd_events.h",
     FIRMWARE_DIR / "main" / "asd_operator.c",
@@ -167,13 +169,25 @@ INTERFERENCE_POLICY_RECORD = json.loads(
     )
 )
 INTERFERENCE_POLICY = INTERFERENCE_POLICY_RECORD["policy"]
+RUNTIME_COMMISSIONING_RECORD = json.loads(
+    (ROOT / "pc" / "config" / "asd_commissioning_runtime_v1.json").read_text(
+        encoding="utf-8"
+    )
+)
+# Samo za citanje istorijskih THRFIT tragova iz kratko probane i odbacene
+# robustne verzije. Aktivna politika je frozen CAL + empirical p99 iz configa.
+ROBUST_THRESHOLD_POLICY = {
+    "center_trim_fraction_each_tail": 0.1,
+    "hampel_sigma_multiplier": 3.0,
+    "hampel_normal_sigma": 1.4826,
+}
 LEGACY_TEMPORAL_POLICY_RECORD = json.loads(
     (ROOT / "pc" / "config" / "asd_temporal_policy_v1.json").read_text(encoding="utf-8")
 )
 LEGACY_TEMPORAL_POLICY = LEGACY_TEMPORAL_POLICY_RECORD["policy"]
 
 ASCII_RECORD_RE = re.compile(
-    r"\b(?P<kind>QUALITY|STATE|EVENT|PRESENCE|TEMPORAL|INTERFERENCE|SESSION|BUTTON|PROFILESTORE)"
+    r"\b(?P<kind>QUALITY|STATE|EVENT|PRESENCE|TEMPORAL|INTERFERENCE|THRFIT|SESSION|BUTTON|PROFILESTORE)"
     r"(?:\s+(?P<body>.*))?$"
 )
 KEY_VALUE_RE = re.compile(r"(?P<key>[A-Za-z_][A-Za-z0-9_]*)=(?P<value>\S+)")
@@ -272,7 +286,7 @@ QUALITY_REJECT_RESULTS = {
 # Razlozi zaustavljanja toka koje uvodi Faza 2. Nisu kvar kvaliteta signala
 # nego zakljucak hijerarhije, pa se drze odvojeno od QUALITY_REJECT_RESULTS.
 PRESENCE_STOP_REASONS = {"FAN_STOPPED", "PRESENCE_LOST"}
-CALIBRATION_STOP_REASONS = {"UNSTABLE_CALIBRATION"}
+CALIBRATION_STOP_REASONS = {"UNSTABLE_CALIBRATION", "VERIFY_NORMAL_REJECT"}
 FLOW_STOP_REASONS = (
     QUALITY_REJECT_RESULTS | PRESENCE_STOP_REASONS | CALIBRATION_STOP_REASONS
 )
@@ -580,6 +594,47 @@ def _vocabulary_error(kind: str, parsed: dict[str, Any]) -> str | None:
             rel_tol=1e-6, abs_tol=1e-6,
         ):
             return "interference_threshold_not_normal_only_rule"
+    elif kind == "THRFIT":
+        if parsed["method"] != "trimmed-center-hampel-v1":
+            return "threshold_fit_method_mismatch"
+        if parsed["source"] != "COMMISSION_DERIVE_NORMAL_ONLY":
+            return "threshold_fit_non_normal_source"
+        for field in (
+            "center_trim", "median", "mad", "robust_sigma",
+            "sigma_multiplier", "p99_ceiling", "threshold",
+        ):
+            if not math.isfinite(float(parsed[field])):
+                return f"nonfinite_field:THRFIT:{field}"
+        if parsed["n"] < 3 or not 0 <= parsed["capped_high"] <= parsed["n"]:
+            return "threshold_fit_invalid_counts"
+        expected_trim = float(
+            ROBUST_THRESHOLD_POLICY["center_trim_fraction_each_tail"]
+        )
+        expected_multiplier = float(
+            ROBUST_THRESHOLD_POLICY["hampel_sigma_multiplier"]
+        )
+        expected_normal_sigma = float(
+            ROBUST_THRESHOLD_POLICY["hampel_normal_sigma"]
+        )
+        if not math.isclose(parsed["center_trim"], expected_trim, abs_tol=1e-6):
+            return "threshold_fit_trim_off_policy"
+        if not math.isclose(
+            parsed["sigma_multiplier"], expected_multiplier, abs_tol=1e-6,
+        ):
+            return "threshold_fit_multiplier_off_policy"
+        if not math.isclose(
+            parsed["robust_sigma"], expected_normal_sigma * parsed["mad"],
+            rel_tol=1e-5, abs_tol=1e-5,
+        ):
+            return "threshold_fit_sigma_inconsistent"
+        expected_threshold = min(
+            parsed["p99_ceiling"],
+            parsed["median"] + parsed["sigma_multiplier"] * parsed["robust_sigma"],
+        )
+        if not parsed["threshold"] > 0.0 or not math.isclose(
+            parsed["threshold"], expected_threshold, rel_tol=1e-5, abs_tol=1e-5,
+        ):
+            return "threshold_fit_threshold_inconsistent"
     elif kind == "PROFILESTORE":
         if parsed["schema"] != PROFILE_STORE_SCHEMA_VERSION:
             return "profile_store_schema_mismatch"
@@ -779,6 +834,7 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
             "temporal_policy_id", "interference_policy_id",
             "verify_alarm_windows", "verify_episodes", "verify_chatter",
             "normal_windows", "use_tonalness_delta", "long_hold_windows",
+            "n", "capped_high",
         }
         float_fields = {
             "rms_dbfs", "dc", "tonalness_proxy", "loo_mean", "loo_sd",
@@ -787,6 +843,8 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
             "threshold_enter", "threshold_exit", "derive_mean", "derive_sd",
             "verify_alarm_time_percent",
             "normal_max", "multiplier", "threshold",
+            "center_trim", "median", "mad", "robust_sigma",
+            "sigma_multiplier", "p99_ceiling",
         }
         parsed: dict[str, Any] = {"kind": kind, "protocol": values.pop("protocol")}
         try:
@@ -851,6 +909,12 @@ def parse_serial_line(line: str) -> dict[str, Any] | None:
                 "protocol", "policy", "source", "normal_windows",
                 "normal_max", "multiplier", "threshold",
                 "use_tonalness_delta", "long_hold_windows",
+            }
+        elif kind == "THRFIT":
+            required = {
+                "protocol", "method", "source", "n", "center_trim",
+                "median", "mad", "robust_sigma", "sigma_multiplier",
+                "p99_ceiling", "threshold", "capped_high",
             }
         elif kind == "SESSION":
             required = {"protocol", "action", "source", "reason",
@@ -1296,6 +1360,9 @@ def new_session_protocol_state(*, firmware_session_index: int = 0) -> dict[str, 
         "interference_normal_max": None,
         "interference_multiplier": None,
         "interference_threshold": None,
+        "robust_fit_seen": False,
+        "robust_fit_threshold": None,
+        "robust_fit_n": None,
         "absent_run": 0,
         "deviation_run": 0,
         "anomaly_active": False,
@@ -1790,7 +1857,7 @@ def _expected_terminal_state(reason: str, phase: str) -> str:
         return "NO_MACHINE"
     if reason in {"LOW_LEVEL_OBSERVATION", "INSUFFICIENT_LEVEL"}:
         return "NO_MACHINE"
-    if reason == "UNSTABLE_CALIBRATION":
+    if reason in CALIBRATION_STOP_REASONS:
         return "CALIBRATION_REJECTED"
     if reason == "CLIPPING":
         return "RECALIBRATION_REQUIRED" if phase == "DET" else "CALIBRATION_REJECTED"
@@ -2194,6 +2261,23 @@ def transition_firmware_protocol(
                     state, "invalid_firmware_telemetry",
                     f"COMMISSION_DERIVE_before_K1:{reason}",
                 )
+    elif kind == "THRFIT":
+        if state["robust_fit_seen"]:
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "duplicate_THRFIT",
+            )
+        runtime = state["runtime_commissioning"]
+        if (
+            int(runtime.get("derive_windows", 0)) != int(record["n"])
+            or int(runtime.get("verify_windows", 0)) != 0
+            or bool(runtime.get("monitoring", False))
+        ):
+            return _invalidate(
+                state, "invalid_missing_telemetry", "THRFIT_before_complete_DERIVE",
+            )
+        state["robust_fit_seen"] = True
+        state["robust_fit_threshold"] = float(record["threshold"])
+        state["robust_fit_n"] = int(record["n"])
     elif kind == "PROFILE":
         if state["runtime_profile_seen"]:
             return _invalidate(
@@ -2243,6 +2327,18 @@ def transition_firmware_protocol(
         state["runtime_profile_threshold_exit"] = float(record["threshold_exit"])
         state["runtime_profile_level_mean_dbfs"] = float(record["level_mean_dbfs"])
         state["runtime_profile_derive_windows"] = int(record["derive_windows"])
+        if (
+            state["robust_fit_seen"]
+            and not state.get("profile_store_valid", False)
+            and not math.isclose(
+                float(record["threshold_enter"]),
+                float(state["robust_fit_threshold"]),
+                rel_tol=1e-6, abs_tol=1e-6,
+            )
+        ):
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "PROFILE_THRFIT_threshold_mismatch",
+            )
     elif kind == "QUALITY":
         if (
             state.get("profile_store_seen", False)
@@ -2379,6 +2475,15 @@ def transition_firmware_protocol(
             return _invalidate(
                 state, "invalid_firmware_telemetry",
                 "ADAPTTHR_PROFILE_threshold_mismatch",
+            )
+        if state["robust_fit_seen"] and not state.get("profile_store_valid", False) and (
+            not math.isclose(
+                record["threshold"], float(state["robust_fit_threshold"]),
+                rel_tol=1e-6, abs_tol=1e-6,
+            )
+        ):
+            return _invalidate(
+                state, "invalid_firmware_telemetry", "ADAPTTHR_THRFIT_threshold_mismatch",
             )
         state["adapt_seen"] = True
         state["adapt_threshold"] = float(record["threshold"])
@@ -3382,6 +3487,7 @@ def run_experiment(args: argparse.Namespace) -> int:
     guided_capability_seen = False
     telemetry_counts = {"QUALITY": 0, "STATE": 0, "EVENT": 0,
                         "PRESENCE": 0, "TEMPORAL": 0, "INTERFERENCE": 0,
+                        "THRFIT": 0,
                         "SESSION": 0, "BUTTON": 0, "PROFILESTORE": 0,
                         "COMMISSION": 0, "PROFILE": 0,
                         "FEATURE96": 0, "SUBSEG96": 0}
@@ -3746,7 +3852,7 @@ def run_experiment(args: argparse.Namespace) -> int:
                     firmware_event_writer.writerow(row)
                     firmware_event_handle.flush()
                 elif parsed and parsed["kind"] in (
-                    "SESSION", "BUTTON", "PRESENCE", "TEMPORAL", "INTERFERENCE", "PROFILESTORE",
+                    "SESSION", "BUTTON", "PRESENCE", "TEMPORAL", "INTERFERENCE", "THRFIT", "PROFILESTORE",
                     "COMMISSION", "PROFILE",
                 ):
                     protocol_state = transition_firmware_protocol(protocol_state, parsed)
