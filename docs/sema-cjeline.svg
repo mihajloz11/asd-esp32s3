@@ -1,0 +1,366 @@
+<svg viewBox="0 0 1180 1700" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="1180" height="1700" fill="#ffffff"/>
+
+  <!-- ============ NASLOV ============ -->
+  <text x="24" y="34" font-size="21" font-weight="bold" fill="#202124">ASD ESP32-S3 — tri cjeline: šta se lemi i kako se spaja</text>
+  <text x="24" y="52" font-size="11.5" fill="#5f6368">Izvori: pins.h · plan-dvije-plocice.md · e5-povezivanje-i-mjerenje.md · lemljenje-cjeline-i-mjerenje.md   |   Raspored pinova na crtežu je logički; na modulima su svi pinovi u jednom redu.</text>
+
+  <!-- ================================================================= -->
+  <!-- ============ PANEL A — CJELINA 1: MJERNA PLOČA =================== -->
+  <!-- ================================================================= -->
+  <rect x="20" y="60" width="1140" height="500" rx="10" fill="#ffffff" stroke="#dadce0" stroke-width="1.5"/>
+  <rect x="20" y="60" width="1140" height="4" rx="2" fill="#e2711d"/>
+  <text x="44" y="92" font-size="16" font-weight="bold" fill="#202124">CJELINA 1 — MJERNA PLOČA (prototipna 4×6 cm) · kači se samo za mjerenje potrošnje</text>
+  <text x="44" y="114" font-size="11.5" fill="#5f6368">Lemi se: ženski headeri 1×8 (INA226), 2× 1×2 (AMS1117), 1×2 (470 µF), 1×2 (5 V ULAZ), 1×4 (K-U) + GND šina  ≈ 20 spojeva.  Moduli se ubadaju, ne leme se.</text>
+
+  <!-- 5 V ULAZ -->
+  <text x="97" y="160" font-size="11" text-anchor="middle" fill="#5f6368">punjač 5 V (presječen USB kabl)</text>
+  <rect x="45" y="170" width="105" height="85" rx="6" fill="#f8f9fa" stroke="#5f6368" stroke-width="2"/>
+  <text x="97" y="196" font-size="12" font-weight="bold" text-anchor="middle" fill="#202124">5 V ULAZ</text>
+  <text x="144" y="219" font-size="11" text-anchor="end" fill="#d93025" font-weight="bold">+5 V</text>
+  <text x="144" y="244" font-size="11" text-anchor="end" fill="#333333" font-weight="bold">GND</text>
+  <circle cx="150" cy="215" r="3.5" fill="#d93025"/>
+  <circle cx="150" cy="240" r="3.5" fill="#333333"/>
+
+  <!-- AMS1117 -->
+  <rect x="210" y="165" width="165" height="95" rx="6" fill="#e8f0fe" stroke="#1a73e8" stroke-width="2"/>
+  <text x="292" y="189" font-size="13" font-weight="bold" text-anchor="middle" fill="#202124">AMS1117-3.3</text>
+  <text x="292" y="204" font-size="10" text-anchor="middle" fill="#5f6368">modul — NE lemi se</text>
+  <text x="219" y="219" font-size="11" fill="#d93025" font-weight="bold">IN+</text>
+  <text x="219" y="244" font-size="11" fill="#333333" font-weight="bold">IN−</text>
+  <text x="366" y="219" font-size="11" text-anchor="end" fill="#e2711d" font-weight="bold">OUT+</text>
+  <text x="366" y="244" font-size="11" text-anchor="end" fill="#333333" font-weight="bold">OUT−</text>
+  <circle cx="210" cy="215" r="3.5" fill="#d93025"/>
+  <circle cx="210" cy="240" r="3.5" fill="#333333"/>
+  <circle cx="375" cy="215" r="3.5" fill="#e2711d"/>
+  <circle cx="375" cy="240" r="3.5" fill="#333333"/>
+
+  <!-- 5V ULAZ -> AMS -->
+  <line x1="150" y1="215" x2="210" y2="215" stroke="#d93025" stroke-width="2.5"/>
+  <line x1="150" y1="240" x2="210" y2="240" stroke="#333333" stroke-width="2.5"/>
+
+  <!-- 3V3 IZVOR (narandzasto) -->
+  <line x1="375" y1="215" x2="520" y2="215" stroke="#e2711d" stroke-width="3"/>
+  <line x1="440" y1="215" x2="440" y2="310" stroke="#e2711d" stroke-width="3"/>
+  <line x1="440" y1="310" x2="520" y2="310" stroke="#e2711d" stroke-width="3"/>
+  <circle cx="440" cy="215" r="4.5" fill="#e2711d"/>
+  <text x="415" y="338" font-size="12" font-weight="bold" text-anchor="middle" fill="#e2711d">3V3 IZVOR</text>
+  <text x="415" y="353" font-size="10" text-anchor="middle" fill="#5f6368">prije šanta</text>
+
+  <!-- INA226 -->
+  <rect x="520" y="155" width="290" height="205" rx="6" fill="#e8f0fe" stroke="#1a73e8" stroke-width="2"/>
+  <text x="665" y="182" font-size="14" font-weight="bold" text-anchor="middle" fill="#202124">INA226</text>
+  <text x="665" y="199" font-size="10" text-anchor="middle" fill="#5f6368">šant R100 = 0,1 Ω · I2C adresa 0x44</text>
+  <text x="530" y="219" font-size="11" fill="#e2711d" font-weight="bold">IN+</text>
+  <text x="530" y="314" font-size="11" fill="#e2711d" font-weight="bold">VCC</text>
+  <text x="800" y="219" font-size="11" text-anchor="end" fill="#7b3fbf" font-weight="bold">IN−</text>
+  <text x="800" y="259" font-size="11" text-anchor="end" fill="#7b3fbf" font-weight="bold">VBS</text>
+  <text x="800" y="304" font-size="11" text-anchor="end" fill="#1a73e8" font-weight="bold">SDA</text>
+  <text x="800" y="336" font-size="11" text-anchor="end" fill="#1a73e8" font-weight="bold">SCL</text>
+  <circle cx="520" cy="215" r="3.5" fill="#e2711d"/>
+  <circle cx="520" cy="310" r="3.5" fill="#e2711d"/>
+  <circle cx="810" cy="215" r="3.5" fill="#7b3fbf"/>
+  <circle cx="810" cy="255" r="3.5" fill="#7b3fbf"/>
+  <circle cx="810" cy="300" r="3.5" fill="#1a73e8"/>
+  <circle cx="810" cy="332" r="3.5" fill="#1a73e8"/>
+  <!-- sant -->
+  <line x1="520" y1="215" x2="625" y2="215" stroke="#202124" stroke-width="2.5"/>
+  <rect x="625" y="202" width="85" height="26" fill="#ffffff" stroke="#202124" stroke-width="2.5"/>
+  <text x="667" y="221" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#202124">0,1 Ω</text>
+  <line x1="710" y1="215" x2="810" y2="215" stroke="#202124" stroke-width="2.5"/>
+  <text x="640" y="248" font-size="10" text-anchor="middle" fill="#5f6368">šant — sva mjerena struja ide ovuda</text>
+  <text x="665" y="352" font-size="10" text-anchor="middle" fill="#5f6368">ALE — ne spaja se</text>
+  <!-- INA GND -->
+  <circle cx="600" cy="360" r="3.5" fill="#333333"/>
+  <line x1="600" y1="360" x2="600" y2="430" stroke="#333333" stroke-width="2.5"/>
+  <text x="608" y="382" font-size="11" fill="#333333" font-weight="bold">GND</text>
+
+  <!-- 3V3 POTROSAC (ljubicasto) -->
+  <text x="900" y="176" font-size="12" font-weight="bold" fill="#7b3fbf">3V3 POTROŠAČ</text>
+  <text x="900" y="191" font-size="10" fill="#5f6368">poslije šanta</text>
+  <line x1="810" y1="215" x2="1010" y2="215" stroke="#7b3fbf" stroke-width="3"/>
+  <line x1="810" y1="255" x2="890" y2="255" stroke="#7b3fbf" stroke-width="3"/>
+  <line x1="890" y1="215" x2="890" y2="292" stroke="#7b3fbf" stroke-width="3"/>
+  <line x1="890" y1="308" x2="890" y2="324" stroke="#7b3fbf" stroke-width="3"/>
+  <line x1="890" y1="340" x2="890" y2="352" stroke="#7b3fbf" stroke-width="3"/>
+  <circle cx="890" cy="215" r="4.5" fill="#7b3fbf"/>
+  <circle cx="890" cy="255" r="4.5" fill="#7b3fbf"/>
+  <!-- 470 uF -->
+  <line x1="868" y1="352" x2="912" y2="352" stroke="#202124" stroke-width="3.5"/>
+  <line x1="868" y1="363" x2="912" y2="363" stroke="#202124" stroke-width="3.5"/>
+  <line x1="890" y1="363" x2="890" y2="430" stroke="#333333" stroke-width="2.5"/>
+  <text x="918" y="349" font-size="13" font-weight="bold" fill="#202124">+</text>
+  <text x="862" y="374" font-size="11" font-weight="bold" text-anchor="end" fill="#202124">470 µF</text>
+  <text x="862" y="391" font-size="10" text-anchor="end" fill="#b3261e">vadiv — prvo mjeri BEZ njega</text>
+
+  <!-- I2C ka K-U -->
+  <line x1="810" y1="300" x2="1010" y2="300" stroke="#1a73e8" stroke-width="2.5"/>
+  <line x1="810" y1="332" x2="1010" y2="332" stroke="#1a73e8" stroke-width="2.5"/>
+
+  <!-- K-U konektor -->
+  <text x="1072" y="162" font-size="12" font-weight="bold" text-anchor="middle" fill="#202124">K-U 1×4 → CJELINA 2</text>
+  <rect x="1010" y="175" width="125" height="195" rx="6" fill="#f8f9fa" stroke="#5f6368" stroke-width="2"/>
+  <text x="1022" y="219" font-size="11" fill="#7b3fbf" font-weight="bold">1  3V3</text>
+  <text x="1022" y="259" font-size="11" fill="#333333" font-weight="bold">2  GND</text>
+  <text x="1022" y="304" font-size="11" fill="#1a73e8" font-weight="bold">3  SDA</text>
+  <text x="1022" y="336" font-size="11" fill="#1a73e8" font-weight="bold">4  SCL</text>
+  <circle cx="1010" cy="215" r="3.5" fill="#7b3fbf"/>
+  <circle cx="1010" cy="255" r="3.5" fill="#333333"/>
+  <circle cx="1010" cy="300" r="3.5" fill="#1a73e8"/>
+  <circle cx="1010" cy="332" r="3.5" fill="#1a73e8"/>
+  <!-- K-U GND ka sini, sa prekidima na I2C linijama -->
+  <line x1="985" y1="255" x2="1010" y2="255" stroke="#333333" stroke-width="2.5"/>
+  <line x1="985" y1="255" x2="985" y2="292" stroke="#333333" stroke-width="2.5"/>
+  <line x1="985" y1="308" x2="985" y2="324" stroke="#333333" stroke-width="2.5"/>
+  <line x1="985" y1="340" x2="985" y2="430" stroke="#333333" stroke-width="2.5"/>
+
+  <!-- GND drops -->
+  <line x1="172" y1="240" x2="172" y2="430" stroke="#333333" stroke-width="2.5"/>
+  <circle cx="172" cy="240" r="4.5" fill="#333333"/>
+  <line x1="375" y1="240" x2="400" y2="240" stroke="#333333" stroke-width="2.5"/>
+  <line x1="400" y1="240" x2="400" y2="430" stroke="#333333" stroke-width="2.5"/>
+
+  <!-- GND sina -->
+  <line x1="60" y1="430" x2="1000" y2="430" stroke="#333333" stroke-width="5"/>
+  <text x="62" y="452" font-size="11.5" font-weight="bold" fill="#202124">GND ŠINA (gola kalajisana žica) — sve mase dolaze u JEDNU tačku (zvjezdasta masa). Razvučena masa je već jednom pokvarila mjerenje napona.</text>
+
+  <!-- upozorenja -->
+  <rect x="45" y="468" width="1090" height="76" rx="8" fill="#fff4f4" stroke="#b3261e" stroke-width="1.5"/>
+  <text x="58" y="490" font-size="11.5" fill="#b3261e" font-weight="bold">✗  3V3 IZVOR i 3V3 POTROŠAČ NIKAD spojeni — ommetrom između njih mora biti ≈ 0,1 Ω (ne 0 Ω, ne prekid). Ako se spoje, INA226 mjeri nulu a uređaj radi normalno.</text>
+  <text x="58" y="511" font-size="11.5" fill="#202124">✓  VBS mora ići na POTROŠAČ. Ako visi u vazduhu, napon i snaga su smeće — a struja i dalje izgleda savršeno tačno.</text>
+  <text x="58" y="532" font-size="11.5" fill="#202124">→  VARIJANTA L (lab. napajanje): +3,30 V ide PRAVO na IN+, strujni limit 300–500 mA. AMS1117 i 5 V ULAZ se tada preskaču. Nikad preko 3,6 V.</text>
+
+  <!-- ================================================================= -->
+  <!-- ============ PANEL B — CJELINA 2: UREĐAJ ======================== -->
+  <!-- ================================================================= -->
+  <rect x="20" y="580" width="1140" height="580" rx="10" fill="#ffffff" stroke="#dadce0" stroke-width="1.5"/>
+  <rect x="20" y="580" width="1140" height="4" rx="2" fill="#1a73e8"/>
+  <text x="44" y="612" font-size="16" font-weight="bold" fill="#202124">CJELINA 2 — UREĐAJ: ESP32-S3 + INMP441 + 2 LED + taster · radi sam na powerbanku</text>
+  <text x="44" y="634" font-size="11.5" fill="#5f6368">Lemi se: 2× otpornik 330 Ω + 2 LED (8 spojeva), 100 nF i 10 µF na padove mikrofona, žice na faston jezičke tastera. Headeri S3 i mikrofona su već zalemljeni.</text>
+
+  <!-- INMP441 -->
+  <rect x="55" y="675" width="175" height="225" rx="6" fill="#e8f0fe" stroke="#1a73e8" stroke-width="2"/>
+  <text x="142" y="700" font-size="13" font-weight="bold" text-anchor="middle" fill="#202124">INMP441</text>
+  <text x="142" y="716" font-size="10" text-anchor="middle" fill="#5f6368">žice ka S3 kraće od 10 cm</text>
+  <text x="222" y="734" font-size="11" text-anchor="end" fill="#d93025" font-weight="bold">VDD</text>
+  <text x="222" y="762" font-size="11" text-anchor="end" fill="#333333" font-weight="bold">GND</text>
+  <text x="222" y="799" font-size="11" text-anchor="end" fill="#188038" font-weight="bold">SCK</text>
+  <text x="222" y="826" font-size="11" text-anchor="end" fill="#188038" font-weight="bold">WS</text>
+  <text x="222" y="853" font-size="11" text-anchor="end" fill="#188038" font-weight="bold">SD</text>
+  <text x="222" y="880" font-size="11" text-anchor="end" fill="#e37400" font-weight="bold">L/R</text>
+  <circle cx="230" cy="730" r="3.5" fill="#d93025"/>
+  <circle cx="230" cy="758" r="3.5" fill="#333333"/>
+  <circle cx="230" cy="795" r="3.5" fill="#188038"/>
+  <circle cx="230" cy="822" r="3.5" fill="#188038"/>
+  <circle cx="230" cy="849" r="3.5" fill="#188038"/>
+  <circle cx="230" cy="876" r="3.5" fill="#e37400"/>
+
+  <!-- zice mik -> S3 -->
+  <line x1="230" y1="730" x2="430" y2="730" stroke="#d93025" stroke-width="2.5"/>
+  <line x1="230" y1="758" x2="430" y2="758" stroke="#333333" stroke-width="2.5"/>
+  <line x1="230" y1="795" x2="430" y2="795" stroke="#188038" stroke-width="2.5"/>
+  <line x1="230" y1="822" x2="430" y2="822" stroke="#188038" stroke-width="2.5"/>
+  <line x1="230" y1="849" x2="430" y2="849" stroke="#188038" stroke-width="2.5"/>
+  <!-- L/R na GND -->
+  <line x1="230" y1="876" x2="330" y2="876" stroke="#e37400" stroke-width="2.5"/>
+  <line x1="330" y1="876" x2="330" y2="908" stroke="#e37400" stroke-width="2.5"/>
+  <line x1="316" y1="908" x2="344" y2="908" stroke="#333333" stroke-width="3"/>
+  <line x1="321" y1="915" x2="339" y2="915" stroke="#333333" stroke-width="2.5"/>
+  <line x1="326" y1="922" x2="334" y2="922" stroke="#333333" stroke-width="2"/>
+  <text x="330" y="944" font-size="10.5" text-anchor="middle" fill="#e37400">L/R na GND — obavezno</text>
+  <!-- kondenzatori uz mikrofon -->
+  <line x1="270" y1="730" x2="270" y2="742" stroke="#d93025" stroke-width="2"/>
+  <line x1="258" y1="742" x2="282" y2="742" stroke="#202124" stroke-width="3"/>
+  <line x1="258" y1="749" x2="282" y2="749" stroke="#202124" stroke-width="3"/>
+  <line x1="270" y1="749" x2="270" y2="758" stroke="#333333" stroke-width="2"/>
+  <text x="288" y="740" font-size="10" fill="#202124">100 nF</text>
+  <line x1="345" y1="730" x2="345" y2="742" stroke="#d93025" stroke-width="2"/>
+  <line x1="333" y1="742" x2="357" y2="742" stroke="#202124" stroke-width="3"/>
+  <line x1="333" y1="749" x2="357" y2="749" stroke="#202124" stroke-width="3"/>
+  <line x1="345" y1="749" x2="345" y2="758" stroke="#333333" stroke-width="2"/>
+  <text x="363" y="740" font-size="10" fill="#202124">10 µF</text>
+  <text x="340" y="778" font-size="10" text-anchor="middle" fill="#5f6368">oba zalemljena NA pločicu mikrofona</text>
+
+  <!-- ESP32-S3 -->
+  <rect x="430" y="660" width="310" height="390" rx="8" fill="#f1f3f4" stroke="#5f6368" stroke-width="2.5"/>
+  <text x="585" y="690" font-size="14" font-weight="bold" text-anchor="middle" fill="#202124">ESP32-S3-DevKitC-1</text>
+  <text x="585" y="707" font-size="10" text-anchor="middle" fill="#5f6368">N32R16V · zabranjeni GPIO 35/36/37</text>
+  <text x="440" y="734" font-size="11" fill="#d93025" font-weight="bold">3V3</text>
+  <text x="440" y="762" font-size="11" fill="#333333" font-weight="bold">GND</text>
+  <text x="440" y="799" font-size="11" fill="#188038" font-weight="bold">GPIO 4</text>
+  <text x="440" y="826" font-size="11" fill="#188038" font-weight="bold">GPIO 5</text>
+  <text x="440" y="853" font-size="11" fill="#188038" font-weight="bold">GPIO 6</text>
+  <circle cx="430" cy="730" r="3.5" fill="#d93025"/>
+  <circle cx="430" cy="758" r="3.5" fill="#333333"/>
+  <circle cx="430" cy="795" r="3.5" fill="#188038"/>
+  <circle cx="430" cy="822" r="3.5" fill="#188038"/>
+  <circle cx="430" cy="849" r="3.5" fill="#188038"/>
+  <text x="730" y="734" font-size="11" text-anchor="end" fill="#188038" font-weight="bold">GPIO 2</text>
+  <text x="730" y="789" font-size="11" text-anchor="end" fill="#d93025" font-weight="bold">GPIO 11</text>
+  <text x="730" y="864" font-size="11" text-anchor="end" fill="#202124" font-weight="bold">GPIO 10</text>
+  <text x="730" y="1004" font-size="11" text-anchor="end" fill="#5f6368" font-weight="bold">GPIO 43</text>
+  <circle cx="740" cy="730" r="3.5" fill="#188038"/>
+  <circle cx="740" cy="785" r="3.5" fill="#d93025"/>
+  <circle cx="740" cy="860" r="3.5" fill="#202124"/>
+  <circle cx="740" cy="1000" r="3.5" fill="#5f6368"/>
+  <!-- donji pinovi -->
+  <circle cx="460" cy="1050" r="3.5" fill="#7b3fbf"/>
+  <circle cx="495" cy="1050" r="3.5" fill="#333333"/>
+  <circle cx="530" cy="1050" r="3.5" fill="#1a73e8"/>
+  <circle cx="565" cy="1050" r="3.5" fill="#1a73e8"/>
+  <circle cx="625" cy="1050" r="3.5" fill="#a142f4"/>
+  <circle cx="655" cy="1050" r="3.5" fill="#a142f4"/>
+  <circle cx="685" cy="1050" r="3.5" fill="#a142f4"/>
+  <circle cx="715" cy="1050" r="3.5" fill="#333333"/>
+  <text transform="rotate(-90 460 1042)" x="460" y="1042" font-size="10" text-anchor="end" fill="#7b3fbf" font-weight="bold">3V3</text>
+  <text transform="rotate(-90 495 1042)" x="495" y="1042" font-size="10" text-anchor="end" fill="#333333" font-weight="bold">GND</text>
+  <text transform="rotate(-90 530 1042)" x="530" y="1042" font-size="10" text-anchor="end" fill="#1a73e8" font-weight="bold">GPIO 8</text>
+  <text transform="rotate(-90 565 1042)" x="565" y="1042" font-size="10" text-anchor="end" fill="#1a73e8" font-weight="bold">GPIO 9</text>
+  <text transform="rotate(-90 625 1042)" x="625" y="1042" font-size="10" text-anchor="end" fill="#a142f4" font-weight="bold">GPIO 12</text>
+  <text transform="rotate(-90 655 1042)" x="655" y="1042" font-size="10" text-anchor="end" fill="#a142f4" font-weight="bold">GPIO 13</text>
+  <text transform="rotate(-90 685 1042)" x="685" y="1042" font-size="10" text-anchor="end" fill="#a142f4" font-weight="bold">GPIO 14</text>
+  <text transform="rotate(-90 715 1042)" x="715" y="1042" font-size="10" text-anchor="end" fill="#333333" font-weight="bold">GND</text>
+
+  <!-- LED 1 -->
+  <text x="890" y="708" font-size="11" text-anchor="middle" fill="#188038" font-weight="bold">zelena — status</text>
+  <line x1="740" y1="730" x2="795" y2="730" stroke="#188038" stroke-width="2.5"/>
+  <rect x="795" y="718" width="62" height="24" fill="#ffffff" stroke="#202124" stroke-width="2.5"/>
+  <text x="826" y="735" font-size="11" font-weight="bold" text-anchor="middle" fill="#202124">330 Ω</text>
+  <line x1="857" y1="730" x2="895" y2="730" stroke="#202124" stroke-width="2.5"/>
+  <path d="M895 718 L895 742 L925 730 Z" fill="#188038" stroke="#188038" stroke-width="2"/>
+  <line x1="925" y1="716" x2="925" y2="744" stroke="#202124" stroke-width="3"/>
+  <line x1="925" y1="730" x2="1010" y2="730" stroke="#333333" stroke-width="2.5"/>
+  <!-- LED 2 -->
+  <text x="890" y="763" font-size="11" text-anchor="middle" fill="#d93025" font-weight="bold">crvena — alarm</text>
+  <line x1="740" y1="785" x2="795" y2="785" stroke="#d93025" stroke-width="2.5"/>
+  <rect x="795" y="773" width="62" height="24" fill="#ffffff" stroke="#202124" stroke-width="2.5"/>
+  <text x="826" y="790" font-size="11" font-weight="bold" text-anchor="middle" fill="#202124">330 Ω</text>
+  <line x1="857" y1="785" x2="895" y2="785" stroke="#202124" stroke-width="2.5"/>
+  <path d="M895 773 L895 797 L925 785 Z" fill="#d93025" stroke="#d93025" stroke-width="2"/>
+  <line x1="925" y1="771" x2="925" y2="799" stroke="#202124" stroke-width="3"/>
+  <line x1="925" y1="785" x2="1010" y2="785" stroke="#333333" stroke-width="2.5"/>
+  <text x="1028" y="742" font-size="10" fill="#5f6368">duža nožica (anoda)</text>
+  <text x="1028" y="756" font-size="10" fill="#5f6368">ide ka otporniku</text>
+
+  <!-- taster -->
+  <text x="890" y="820" font-size="11" text-anchor="middle" fill="#202124" font-weight="bold">arkadni taster</text>
+  <text x="890" y="834" font-size="10" text-anchor="middle" fill="#5f6368">interni pull-up, bez otpornika</text>
+  <line x1="740" y1="860" x2="850" y2="860" stroke="#202124" stroke-width="2.5"/>
+  <circle cx="853" cy="860" r="4" fill="#202124"/>
+  <line x1="856" y1="857" x2="912" y2="841" stroke="#202124" stroke-width="2.5"/>
+  <circle cx="915" cy="860" r="4" fill="#202124"/>
+  <line x1="915" y1="860" x2="1010" y2="860" stroke="#333333" stroke-width="2.5"/>
+
+  <!-- zajednicka masa desno -->
+  <line x1="1010" y1="730" x2="1010" y2="903" stroke="#333333" stroke-width="2.5"/>
+  <circle cx="1010" cy="785" r="4.5" fill="#333333"/>
+  <circle cx="1010" cy="860" r="4.5" fill="#333333"/>
+  <line x1="996" y1="903" x2="1024" y2="903" stroke="#333333" stroke-width="3"/>
+  <line x1="1001" y1="910" x2="1019" y2="910" stroke="#333333" stroke-width="2.5"/>
+  <line x1="1006" y1="917" x2="1014" y2="917" stroke="#333333" stroke-width="2"/>
+  <text x="758" y="948" font-size="10.5" fill="#b3261e" font-weight="bold">Taster NE smije biti pritisnut pri uključenju —</text>
+  <text x="758" y="963" font-size="10.5" fill="#b3261e" font-weight="bold">firmware to čita kao ulazak u EVAL mod.</text>
+
+  <!-- konektori dolje -->
+  <line x1="460" y1="1050" x2="460" y2="1075" stroke="#7b3fbf" stroke-width="2.5"/>
+  <line x1="495" y1="1050" x2="495" y2="1075" stroke="#333333" stroke-width="2.5"/>
+  <line x1="530" y1="1050" x2="530" y2="1075" stroke="#1a73e8" stroke-width="2.5"/>
+  <line x1="565" y1="1050" x2="565" y2="1075" stroke="#1a73e8" stroke-width="2.5"/>
+  <rect x="375" y="1075" width="240" height="56" rx="6" fill="#f3e8ff" stroke="#7b3fbf" stroke-width="2"/>
+  <text x="495" y="1098" font-size="12" font-weight="bold" text-anchor="middle" fill="#202124">K-M 1×4 → CJELINA 1</text>
+  <text x="495" y="1117" font-size="10" text-anchor="middle" fill="#5f6368">3V3 · GND · SDA (8) · SCL (9)</text>
+
+  <line x1="625" y1="1050" x2="625" y2="1075" stroke="#a142f4" stroke-width="2.5"/>
+  <line x1="655" y1="1050" x2="655" y2="1075" stroke="#a142f4" stroke-width="2.5"/>
+  <line x1="685" y1="1050" x2="685" y2="1075" stroke="#a142f4" stroke-width="2.5"/>
+  <line x1="715" y1="1050" x2="715" y2="1075" stroke="#333333" stroke-width="2.5"/>
+  <rect x="625" y="1075" width="240" height="56" rx="6" fill="#faf0ff" stroke="#a142f4" stroke-width="2"/>
+  <text x="745" y="1098" font-size="12" font-weight="bold" text-anchor="middle" fill="#202124">K-LA 1×4 → analizator</text>
+  <text x="745" y="1117" font-size="10" text-anchor="middle" fill="#5f6368">markeri faza 12 · 13 · 14 + GND</text>
+
+  <line x1="740" y1="1000" x2="985" y2="1000" stroke="#5f6368" stroke-width="2.5"/>
+  <line x1="985" y1="1000" x2="985" y2="1075" stroke="#5f6368" stroke-width="2.5"/>
+  <rect x="875" y="1075" width="240" height="56" rx="6" fill="#f8f9fa" stroke="#5f6368" stroke-width="2"/>
+  <text x="995" y="1098" font-size="12" font-weight="bold" text-anchor="middle" fill="#202124">K-UART 1×3 → USB-TTL</text>
+  <text x="995" y="1117" font-size="10" text-anchor="middle" fill="#5f6368">TX 43 · RX 44 · GND</text>
+
+  <!-- ================================================================= -->
+  <!-- ============ PANEL C — SPAJANJE ZA MJERENJE ===================== -->
+  <!-- ================================================================= -->
+  <rect x="20" y="1180" width="1140" height="470" rx="10" fill="#ffffff" stroke="#dadce0" stroke-width="1.5"/>
+  <rect x="20" y="1180" width="1140" height="4" rx="2" fill="#7b3fbf"/>
+  <text x="44" y="1212" font-size="16" font-weight="bold" fill="#202124">SPAJANJE ZA MJERENJE POTROŠNJE (E5)</text>
+  <text x="44" y="1233" font-size="11.5" fill="#5f6368">Redoslijed: izvor OFF i USB vani → 4 žice između cjelina → GND analizatora pa sonde → UART → provjera multimetrom → izvor ON. Nazad obrnutim redom.</text>
+
+  <text x="805" y="1262" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#b3261e">✗  USB na S3 MORA biti iskopčan — inače struja zaobiđe šant</text>
+
+  <!-- napajanje -->
+  <rect x="45" y="1275" width="195" height="125" rx="6" fill="#f8f9fa" stroke="#5f6368" stroke-width="2"/>
+  <text x="142" y="1299" font-size="12" font-weight="bold" text-anchor="middle" fill="#202124">EKSTERNO NAPAJANJE</text>
+  <text x="57" y="1324" font-size="11" fill="#202124" font-weight="bold">L: lab. napajanje 3,30 V</text>
+  <text x="57" y="1339" font-size="10" fill="#5f6368">limit 300–500 mA → pravo na IN+</text>
+  <text x="57" y="1363" font-size="11" fill="#202124" font-weight="bold">P: zidni punjač 5 V</text>
+  <text x="57" y="1378" font-size="10" fill="#5f6368">→ 5 V ULAZ → AMS1117</text>
+  <text x="57" y="1394" font-size="10" fill="#b3261e" font-weight="bold">nikad preko 3,6 V</text>
+
+  <line x1="240" y1="1335" x2="285" y2="1335" stroke="#202124" stroke-width="2.5"/>
+  <path d="M285 1335 L275 1330 L275 1340 Z" fill="#202124"/>
+
+  <!-- cjelina 1 -->
+  <rect x="290" y="1275" width="250" height="125" rx="8" fill="#fff7ed" stroke="#e2711d" stroke-width="2.5"/>
+  <text x="415" y="1302" font-size="13" font-weight="bold" text-anchor="middle" fill="#202124">CJELINA 1 — MJERNA</text>
+  <text x="415" y="1326" font-size="11" text-anchor="middle" fill="#202124">AMS1117 → INA226 (šant 0,1 Ω)</text>
+  <text x="415" y="1345" font-size="11" text-anchor="middle" fill="#202124">→ 470 µF (vadiv)</text>
+  <text x="415" y="1375" font-size="10.5" text-anchor="middle" fill="#e2711d" font-weight="bold">daje: napon i struju</text>
+
+  <!-- 4 zice -->
+  <text x="610" y="1285" font-size="10" text-anchor="middle" fill="#7b3fbf" font-weight="bold">3V3</text>
+  <line x1="540" y1="1295" x2="680" y2="1295" stroke="#7b3fbf" stroke-width="2.5"/>
+  <text x="610" y="1312" font-size="10" text-anchor="middle" fill="#333333" font-weight="bold">GND</text>
+  <line x1="540" y1="1322" x2="680" y2="1322" stroke="#333333" stroke-width="2.5"/>
+  <text x="610" y="1339" font-size="10" text-anchor="middle" fill="#1a73e8" font-weight="bold">SDA → GPIO 8</text>
+  <line x1="540" y1="1349" x2="680" y2="1349" stroke="#1a73e8" stroke-width="2.5"/>
+  <text x="610" y="1366" font-size="10" text-anchor="middle" fill="#1a73e8" font-weight="bold">SCL → GPIO 9</text>
+  <line x1="540" y1="1376" x2="680" y2="1376" stroke="#1a73e8" stroke-width="2.5"/>
+  <text x="610" y="1394" font-size="10" text-anchor="middle" fill="#5f6368">4 žice, ≤ 20 cm</text>
+
+  <!-- cjelina 2 -->
+  <rect x="680" y="1275" width="250" height="125" rx="8" fill="#f0f7ff" stroke="#1a73e8" stroke-width="2.5"/>
+  <text x="805" y="1302" font-size="13" font-weight="bold" text-anchor="middle" fill="#202124">CJELINA 2 — UREĐAJ</text>
+  <text x="805" y="1326" font-size="11" text-anchor="middle" fill="#202124">ESP32-S3 + INMP441</text>
+  <text x="805" y="1345" font-size="11" text-anchor="middle" fill="#202124">+ 2 LED + taster</text>
+  <text x="805" y="1375" font-size="10.5" text-anchor="middle" fill="#1a73e8" font-weight="bold">daje: markere faza</text>
+
+  <!-- uart -->
+  <line x1="930" y1="1335" x2="965" y2="1335" stroke="#5f6368" stroke-width="2.5"/>
+  <path d="M965 1335 L955 1330 L955 1340 Z" fill="#5f6368"/>
+  <rect x="968" y="1275" width="167" height="125" rx="6" fill="#f8f9fa" stroke="#5f6368" stroke-width="2"/>
+  <text x="1051" y="1299" font-size="12" font-weight="bold" text-anchor="middle" fill="#202124">USB-TTL adapter</text>
+  <text x="980" y="1326" font-size="11" fill="#202124">RX ← GPIO 43 (TX)</text>
+  <text x="980" y="1346" font-size="11" fill="#202124">GND ← GND</text>
+  <text x="980" y="1372" font-size="10.5" fill="#b3261e" font-weight="bold">VCC se NE spaja</text>
+  <text x="980" y="1388" font-size="10" fill="#5f6368">(zaobišao bi šant)</text>
+
+  <!-- ka analizatoru -->
+  <line x1="745" y1="1400" x2="745" y2="1450" stroke="#a142f4" stroke-width="2.5"/>
+  <line x1="775" y1="1400" x2="775" y2="1450" stroke="#a142f4" stroke-width="2.5"/>
+  <line x1="805" y1="1400" x2="805" y2="1450" stroke="#a142f4" stroke-width="2.5"/>
+  <line x1="835" y1="1400" x2="835" y2="1450" stroke="#333333" stroke-width="2.5"/>
+  <rect x="680" y="1450" width="250" height="125" rx="8" fill="#faf0ff" stroke="#a142f4" stroke-width="2.5"/>
+  <text x="805" y="1476" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#202124">LOGIČKI ANALIZATOR</text>
+  <text x="696" y="1501" font-size="11" fill="#202124">CH0 ← GPIO 12   I2S snimanje</text>
+  <text x="696" y="1521" font-size="11" fill="#202124">CH1 ← GPIO 13   DSP / feature</text>
+  <text x="696" y="1541" font-size="11" fill="#202124">CH2 ← GPIO 14   inferenca</text>
+  <text x="696" y="1563" font-size="10.5" fill="#5f6368">GND ← GND, spaja se PRVI · sve tri niske = idle</text>
+
+  <!-- formula -->
+  <rect x="45" y="1430" width="600" height="145" rx="8" fill="#f8f9fa" stroke="#dadce0" stroke-width="1.5"/>
+  <text x="60" y="1456" font-size="12.5" font-weight="bold" fill="#b3261e">Logički analizator NE mjeri struju.</text>
+  <text x="60" y="1476" font-size="11.5" fill="#202124">On daje samo vremensku osu — koliko tačno traje koja faza rada.</text>
+  <text x="60" y="1512" font-size="16" font-weight="bold" fill="#202124" font-family="Consolas, monospace">E_faza  =  U × I_faza × t_faza</text>
+  <text x="60" y="1538" font-size="11.5" fill="#202124">U, I  ←  INA226 (CJELINA 1)</text>
+  <text x="60" y="1558" font-size="11.5" fill="#202124">t     ←  logički analizator (markeri GPIO 12 / 13 / 14)</text>
+
+  <text x="45" y="1608" font-size="11" fill="#5f6368">Markeri faza još nisu u firmveru. Bez njih, privremeno: CH0 ← GPIO 5 (I2S WS pulsira dok snima), CH1 ← GPIO 2, CH2 ← GPIO 11 (LED obrasci), CH3/CH4 ← GPIO 8/9 (dekodiranje I2C).</text>
+  <text x="45" y="1628" font-size="11" fill="#5f6368">Granice DSP-a i inference se tako ne vide — za njih trebaju markeri, tj. par gpio_set_level poziva u psd_live.c.</text>
+</svg>

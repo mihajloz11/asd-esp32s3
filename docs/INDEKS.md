@@ -23,6 +23,16 @@ stanje** — čuvaju se jer objašnjavaju *zašto* je nešto odbačeno.
 | [`../plan-master-rada.md`](../plan-master-rada.md) | metodologija i plan master rada |
 | [`cilj-modela.md`](cilj-modela.md) | nepromjenjivi cilj i kriterij uspjeha |
 
+## Uputstva za razumijevanje projekta (01.09.2026)
+
+Ne uvode nove brojke — sabiraju postojeće na jedno mjesto, za učenje i za odbranu.
+
+| Dokument | Sadržaj |
+|---|---|
+| [`UPUTSTVO-1-KAKO-JE-NASTAO-PROJEKAT.md`](UPUTSTVO-1-KAKO-JE-NASTAO-PROJEKAT.md) | mapa ključnih fajlova + hronologija u 11 etapa: šta je urađeno, izmjereno i zašto je promijenjeno |
+| [`UPUTSTVO-2-TEORIJA-OD-NULE.md`](UPUTSTVO-2-TEORIJA-OD-NULE.md) | zvuk, Furijeova transformacija, Welch/PSD, ML, Mahalanobis, metrike, TFLite/TFLM, I2S drajver, rječnik |
+| [`UPUTSTVO-3-LITERATURA.md`](UPUTSTVO-3-LITERATURA.md) | naučni radovi: gdje se koji koristi u projektu i šta u njemu treba pročitati |
+
 ## Aktuelno stanje i protokoli
 
 | Dokument | Sadržaj | Stanje |
@@ -81,6 +91,8 @@ Svaki je zapis jedne faze, ne opšti status. Zbirni status je u
 | Dokument | Sadržaj |
 |---|---|
 | [`plan-dvije-plocice.md`](plan-dvije-plocice.md) | **aktuelna** podjela: ploča U (uređaj) + ploča M (mjerna) |
+| [`lemljenje-cjeline-i-mjerenje.md`](lemljenje-cjeline-i-mjerenje.md) | **bench verzija**: šta se lemi po cjelini, spajanje za E5, logički analizator |
+| [`sema-cjeline.svg`](sema-cjeline.svg) | šema u tri panela: mjerna ploča · uređaj · spajanje za mjerenje |
 | `sema-sklopa.pdf` | crteži sklopa, 7 strana A4 (generiše `make_sema_sklopa.py`) |
 | [`sema-povezivanja.md`](sema-povezivanja.md) | pinout INMP441 + INA226 |
 | [`lemljenje.md`](lemljenje.md) | procedura lemljenja (ažurirana na dvije ploče) |
