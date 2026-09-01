@@ -12,6 +12,7 @@ Pokretanje:
 from __future__ import annotations
 
 import copy
+from datetime import datetime
 from pathlib import Path
 
 from docx import Document
@@ -712,6 +713,22 @@ def add_figure(doc, key, caption):
 
 def build():
     doc = Document(str(TEMPLATE))
+
+    # IEEE sablon nosi svoja svojstva: naslov "Paper Title (use style: paper
+    # title)", autor "IEEE", posljednji urednik "Leonid". Bez ovoga zavrse u
+    # svojstvima naseg .docx-a i u PDF-u koji Word izveze iz njega.
+    sada = datetime.now()
+    cp = doc.core_properties
+    cp.title = TITLE
+    cp.author = AUTHORS
+    cp.last_modified_by = AUTHORS
+    cp.keywords = KEYWORDS
+    cp.comments = ""
+    cp.subject = ""
+    cp.category = ""
+    cp.created = sada
+    cp.modified = sada
+    cp.revision = 1
     # Zadrzi IEEE tipografiju, ali ukloni malo suvisnog vertikalnog razmaka
     # kako dopunjeni tekst i reference ostaju unutar ogranicenja od 4 strane.
     doc.styles["Body Text"].paragraph_format.space_after = Pt(5)
