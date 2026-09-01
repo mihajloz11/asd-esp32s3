@@ -26,6 +26,7 @@ from pathlib import Path
 
 from docx import Document
 from docx.enum.section import WD_SECTION
+from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.oxml import OxmlElement
@@ -37,6 +38,9 @@ HERE = Path(__file__).resolve().parent
 BODY_FONT = "Times New Roman"
 HEAD_FONT = "Arial"
 CODE_FONT = "Courier New"
+
+STIL_POTPIS_SLIKE = "Potpis slike"
+STIL_POTPIS_TABELE = "Potpis tabele"
 
 
 # --------------------------------------------------------------------------
@@ -76,7 +80,17 @@ _LATINICNI_TOKENI = {
     "Android", "Git", "GitHub", "Espressif", "InvenSense", "Qualcomm",
     "Festo", "Ikotek", "Xtensa", "Welch", "Ledoit", "Wolf", "arXiv", "doi",
     "et", "al", "vol", "no", "pp", "str",
+    # naziv modula studijskog programa se u dokumentima ne preslovljava
+    "Embedded",
+    # identifikator masine iz skupa DCASE; ostale ("sliderEmu", "gearboxEmu")
+    # hvata pravilo za camelCase, ali "fan" je citav malim slovima
+    "fan",
 }
+
+# Slova kojih nema u srpskoj cirilici. Token koji ih sadrzi nije srpska rijec
+# nego strana rijec ili identifikator, pa bi preslovljavanje dalo pola-pola
+# oblike tipa "Wорду" ili "Пyтхону".
+_SLOVA_VAN_CIRILICE = set("qwxyQWXY")
 _LATINICNA_SLOVA = set("abcdefghijklmnopqrstuvwxyz"
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        "čćđšžČĆĐŠŽ")
@@ -92,9 +106,13 @@ def _ostaje_latinica(token: str) -> bool:
         return True
     if "_" in token:                             # identifikatori iz koda
         return True
+    if any(z in _SLOVA_VAN_CIRILICE for z in token):
+        return True                               # Word, Python, Max, ToyCar
     slova = [z for z in token if z in _LATINICNA_SLOVA]
     if len(slova) >= 2 and all(z.isupper() for z in slova):
         return True                               # AUC, PSD, DCASE, UART
+    if any(z.isupper() for z in slova[1:]):
+        return True                               # sliderEmu, bearingEmu
     return False
 
 
@@ -230,11 +248,35 @@ def _podesi_stilove(doc: Document) -> None:
         st.paragraph_format.space_after = Pt(10 if ime == "Heading 1" else 6)
         st.paragraph_format.keep_with_next = True
 
+    # Potpisi dobijaju sopstvene stilove da bi Word mogao da izgradi Spisak
+    # slika i Spisak tabela poljima TOC 	. Zvanicni FTN MSc sablon ima obje
+    # liste kao odvojene sekcije, pa moraju biti razdvojive.
+    for ime in (STIL_POTPIS_SLIKE, STIL_POTPIS_TABELE):
+        st = doc.styles.add_style(ime, WD_STYLE_TYPE.PARAGRAPH)
+        st.base_style = doc.styles["Normal"]
+        st.font.name = BODY_FONT
+        st.font.size = Pt(11)
+        st.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        st.paragraph_format.first_line_indent = Cm(0)
+        st.quick_style = True
+
     for sekcija in doc.sections:
-        sekcija.top_margin = Cm(2.5)
-        sekcija.bottom_margin = Cm(2.5)
-        sekcija.left_margin = Cm(3.0)
-        sekcija.right_margin = Cm(2.5)
+        _geometrija(sekcija)
+
+
+def _geometrija(sekcija) -> None:
+    """A4 sa marginama za tvrdo koricenje.
+
+    python-docx krece od svog praznog sablona, a on je US Letter
+    (215,9 x 279,4 mm). Zvanicni FTN MSc sablon je A4, pa se format
+    postavlja izricito, i za svaku naknadno dodatu sekciju.
+    """
+    sekcija.page_width = Cm(21.0)
+    sekcija.page_height = Cm(29.7)
+    sekcija.top_margin = Cm(2.5)
+    sekcija.bottom_margin = Cm(2.5)
+    sekcija.left_margin = Cm(3.0)     # siri lijevi rub zbog koricenja
+    sekcija.right_margin = Cm(2.5)
 
 
 def _polje(pasus, uputstvo: str) -> None:
@@ -253,24 +295,62 @@ def _polje(pasus, uputstvo: str) -> None:
         r._r.append(el)
 
 
-def _broj_strane(sekcija, rimski: bool) -> None:
+# Redoslijed elemenata u w:sectPr propisan je shemom: w:pgNumType ide poslije
+# w:lnNumType, a prije w:cols. Word odbija dokument sa pogresnim redoslijedom,
+# pa se element umece na tacno mjesto umjesto na kraj.
+_POSLIJE_PGNUM = ("w:cols", "w:formProt", "w:vAlign", "w:noEndnote",
+                  "w:titlePg", "w:textDirection", "w:docGrid")
+
+
+def _numeracija(sekcija, fmt: str, pocetak: int | None = None) -> None:
+    """Postavi format i pocetak numeracije strana za jednu sekciju."""
+    sectPr = sekcija._sectPr
+    for stari in sectPr.findall(qn("w:pgNumType")):
+        sectPr.remove(stari)
+    el = OxmlElement("w:pgNumType")
+    el.set(qn("w:fmt"), fmt)
+    if pocetak is not None:
+        el.set(qn("w:start"), str(pocetak))
+    for ime in _POSLIJE_PGNUM:
+        cvor = sectPr.find(qn(ime))
+        if cvor is not None:
+            cvor.addprevious(el)
+            return
+    sectPr.append(el)
+
+
+def _broj_strane(sekcija, prva_prazna: bool = False) -> None:
+    """Broj strane centriran u podnozju; format daje _numeracija."""
+    sekcija.different_first_page_header_footer = prva_prazna
     stopa = sekcija.footer.paragraphs[0]
     stopa.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _polje(stopa, "PAGE \\* ROMAN" if rimski else "PAGE \\* ARABIC")
+    stopa.paragraph_format.first_line_indent = Cm(0)
+    _polje(stopa, "PAGE")
 
 
 # --------------------------------------------------------------------------
 # gradnja
 # --------------------------------------------------------------------------
 class Rad:
+    # Imena stilova potpisa, da ih `rad_tekst.py` moze imenovati bez uvoza.
+    STIL_SLIKE = STIL_POTPIS_SLIKE
+    STIL_TABELE = STIL_POTPIS_TABELE
+
     def __init__(self, cirilica: bool):
         self.doc = Document()
         self.pisac = Pisac(cirilica)
         _podesi_stilove(self.doc)
         self.brojac = {"slika": 0, "tabela": 0, "listing": 0}
         self.poglavlje = 0
+        self.oznaka = None           # slovo priloga, kad se pise prilog
+        self._preskoci_prelom = False
         self.slike: list[tuple[str, str]] = []
         self.tabele: list[tuple[str, str]] = []
+        # Prednji dio nosi rimske brojeve, tijelo arapske od 1 -- tako je u
+        # zvanicnom FTN MSc sablonu. Korice ostaju bez broja.
+        prva = self.doc.sections[0]
+        _numeracija(prva, "upperRoman", 1)
+        _broj_strane(prva, prva_prazna=True)
 
     # -- osnovni blokovi ---------------------------------------------------
     @contextmanager
@@ -290,9 +370,32 @@ class Rad:
     def nova_strana(self):
         self.doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
 
+    def _oznaka_poglavlja(self) -> str:
+        """Broj poglavlja u tijelu rada, slovo priloga u prilozima."""
+        return self.oznaka if self.oznaka else str(self.poglavlje)
+
+    def prilog(self, slovo: str):
+        """Zapocni prilog; slike, tabele i listinzi se dalje broje A.1, A.2..."""
+        self.oznaka = slovo
+        self.brojac = {"slika": 0, "tabela": 0, "listing": 0}
+
+    def pocni_tijelo(self):
+        """Zapocni tijelo rada: nova sekcija, arapska numeracija od 1."""
+        sek = self.doc.add_section(WD_SECTION.NEW_PAGE)
+        _geometrija(sek)
+        sek.footer.is_linked_to_previous = False
+        _numeracija(sek, "decimal", 1)
+        _broj_strane(sek)
+        # Prelom strane vec nosi prelom sekcije; bez ovoga bi prvi naslov
+        # dodao jos jedan i ostavio praznu stranu.
+        self._preskoci_prelom = True
+
     def naslov(self, tekst: str, nivo: int = 1, numerisi: bool = True):
         if nivo == 1:
-            self.nova_strana()
+            if self._preskoci_prelom:
+                self._preskoci_prelom = False
+            else:
+                self.nova_strana()
             if numerisi:
                 self.poglavlje += 1
                 self.pod = 0
@@ -339,9 +442,9 @@ class Rad:
             run.font.size = Pt(10)
         if potpis:
             self.brojac["listing"] += 1
-            oznaka = f"Листинг {self.poglavlje}.{self.brojac['listing']}. " \
-                if self.pisac.cirilica else \
-                f"Listing {self.poglavlje}.{self.brojac['listing']}. "
+            broj = f"{self._oznaka_poglavlja()}.{self.brojac['listing']}"
+            oznaka = (f"Листинг {broj}. " if self.pisac.cirilica
+                      else f"Listing {broj}. ")
             p = self.doc.add_paragraph()
             p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p.paragraph_format.space_before = Pt(6)
@@ -375,12 +478,13 @@ class Rad:
                desno: set[int] | None = None):
         """Tabela; po uputstvu potpis ide IZNAD tabele."""
         self.brojac["tabela"] += 1
-        oznaka = f"{self.poglavlje}.{self.brojac['tabela']}"
+        oznaka = f"{self._oznaka_poglavlja()}.{self.brojac['tabela']}"
         rijec = "Табела" if self.pisac.cirilica else "Tabela"
-        p = self.doc.add_paragraph()
+        p = self.doc.add_paragraph(style=STIL_POTPIS_TABELE)
         p.paragraph_format.space_before = Pt(10)
         p.paragraph_format.space_after = Pt(3)
         p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.paragraph_format.keep_with_next = True
         self.pisac.upisi(p, f"{rijec} {oznaka}. {potpis}")
         self.tabele.append((oznaka, potpis))
 
@@ -408,19 +512,21 @@ class Rad:
     def slika(self, putanja: str, potpis: str, sirina_cm: float = 14.0):
         """Slika; po uputstvu potpis ide ISPOD slike."""
         self.brojac["slika"] += 1
-        oznaka = f"{self.poglavlje}.{self.brojac['slika']}"
+        oznaka = f"{self._oznaka_poglavlja()}.{self.brojac['slika']}"
         rijec = "Слика" if self.pisac.cirilica else "Slika"
         puna = HERE / putanja
         p = self.doc.add_paragraph()
         p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.paragraph_format.space_before = Pt(8)
+        # Bez ovoga se potpis zna prelomiti na sljedecu stranu bez slike.
+        p.paragraph_format.keep_with_next = True
         if puna.exists():
             p.add_run().add_picture(str(puna), width=Cm(sirina_cm))
         else:
             run = p.add_run(f"[ nedostaje slika: {putanja} ]")
             run.font.size = Pt(10)
             run.italic = True
-        cap = self.doc.add_paragraph()
+        cap = self.doc.add_paragraph(style=STIL_POTPIS_SLIKE)
         cap.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
         cap.paragraph_format.space_after = Pt(10)
         self.pisac.upisi(cap, f"{rijec} {oznaka}. {potpis}")
@@ -456,14 +562,17 @@ class Rad:
 
     def sadrzaj_polje(self):
         p = self.doc.add_paragraph()
-        _polje(p, r'TOC \o "1-3" \h \z \u')
-        nap = self.doc.add_paragraph()
-        nap.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = nap.add_run(self.pisac.slovi(
-            "(sadrzaj se popunjava u Wordu: desni klik na polje pa Update Field)"
-        ))
-        run.italic = True
-        run.font.size = Pt(9)
+        _polje(p, 'TOC \\o "1-3" \\h \\z \\u')
+
+    def spisak_polje(self, stil: str):
+        """Spisak slika ili tabela: Word ga gradi iz stila potpisa.
+
+        Zvanicni FTN MSc sablon ima Spisak slika i Spisak tabela kao dvije
+        odvojene liste, pa se i ovdje grade odvojeno, svaka nad svojim
+        stilom potpisa. Polje puni `render_check.py`.
+        """
+        p = self.doc.add_paragraph()
+        _polje(p, 'TOC \\h \\z \\t "%s,1"' % stil)
 
     def metapodaci(self, naslov: str, autor: str) -> None:
         """Popuni svojstva dokumenta prije snimanja.

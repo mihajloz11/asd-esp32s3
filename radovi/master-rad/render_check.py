@@ -35,6 +35,8 @@ def main() -> int:
             doc.Fields.Update()
             for toc in doc.TablesOfContents:
                 toc.Update()
+            for tof in doc.TablesOfFigures:
+                tof.Update()
         doc.Save()
         strana = doc.ComputeStatistics(WD_STAT_PAGES)
         rijeci = doc.ComputeStatistics(WD_STAT_WORDS)

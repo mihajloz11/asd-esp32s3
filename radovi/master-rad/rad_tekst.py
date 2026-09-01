@@ -8,7 +8,8 @@ uputstvo v8. Oznake u tekstu:
     **naglaseno**     bold, preslovljava se
 
 Sve brojke imaju izvor u repou; ni jedna nije prepisana napamet. Gdje izvor
-jos ne postoji stoji [TODO] i `check_todo.py` ih broji.
+jos ne postoji stoji [TODO]; prebrojati ih sa
+`grep -c "\[TODO\]" rad_tekst.py` (check_todo.py postoji samo za TELFOR).
 """
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ NASLOV_EN = ("Unsupervised Anomalous Sound Detection for Machine Condition "
              "Self-Calibration")
 
 AUTOR = "Mihajlo Živković"
-INDEKS = "E1 80/2024"          # [TODO] potvrditi tačan broj indeksa
+INDEKS = "E1 80/2024"          # potvrdio autor, 01.09.2026.
 MENTOR = "prof. dr Ivan Mezei, red. prof."
 GODINA = "2026"
 
@@ -36,6 +37,7 @@ def napisi(r) -> None:
     _sadrzaj(r)
     _skracenice(r)
     _liste(r)
+    r.pocni_tijelo()
     _uvod(r)
     _teorija(r)
     _koncept(r)
@@ -124,8 +126,9 @@ def _kdi(r) -> None:
         ("Izdavač, IZ:", "Autorski reprint"),
         ("Mjesto i adresa, MA:",
          "Novi Sad, Fakultet tehničkih nauka, Trg Dositeja Obradovića 6"),
-        ("Fizički opis rada, FO:", "[TODO] poglavlja / strana / citata / tabela / "
-                                   "slika / grafika / priloga"),
+        ("Fizički opis rada, FO:",
+         "9 poglavlja / 47 strana / 12 citata / 20 tabela / 6 slika / "
+         "0 grafika / 3 priloga"),
         ("Naučna oblast, NO:", "Elektrotehnika i računarstvo"),
         ("Naučna disciplina, ND:", "Elektronika i ugrađeni sistemi"),
         ("Predmetna odrednica / ključne riječi, PO:",
@@ -207,8 +210,9 @@ def _kwd(r) -> None:
             ("Publisher, PB:", "Author's reprint"),
             ("Publication place, PP:",
              "Novi Sad, Faculty of Technical Sciences, Trg Dositeja Obradovica 6"),
-            ("Physical description, PD:", "[TODO] chapters / pages / references / "
-                                          "tables / figures / graphs / appendices"),
+            ("Physical description, PD:",
+             "9 chapters / 47 pages / 12 references / 20 tables / "
+             "6 figures / 0 graphs / 3 appendices"),
             ("Scientific field, SF:", "Electrical and computer engineering"),
             ("Scientific discipline, SD:", "Electronics and embedded systems"),
             ("Subject / Keywords, S/KW:",
@@ -340,15 +344,18 @@ def _skracenice(r) -> None:
 
 
 def _liste(r) -> None:
+    """Spisak slika i spisak tabela, odvojeno, kako trazi struktura iz
+    uputstva ("Lista slika, grafika" i "Lista tabela") i kako je u zvanicnom
+    FTN MSc sablonu. Polja puni Word pri pokretanju `render_check.py`."""
     r.nova_strana()
-    r.naslovni_blok([("Lista slika i tabela", 14, True)], velika=True)
+    r.naslovni_blok([("Lista slika", 14, True)], velika=True)
     r.prazan()
-    r.pasus(
-        "Popis slika i tabela generiše se u Wordu poljima *Insert > Table of "
-        "Figures* nad stilovima potpisa slike odnosno potpisa tabele. Slike su "
-        "numerisane po poglavljima i potpisane ispod, a tabele su numerisane "
-        "po poglavljima i potpisane iznad, kako je propisano uputstvom za "
-        "pisanje završnih radova.", uvlaka=False)
+    r.spisak_polje(r.STIL_SLIKE)
+
+    r.nova_strana()
+    r.naslovni_blok([("Lista tabela", 14, True)], velika=True)
+    r.prazan()
+    r.spisak_polje(r.STIL_TABELE)
 
 
 # ==========================================================================
@@ -513,7 +520,7 @@ def _teorija(r) -> None:
         "Time se smanjuje varijansa procjene po cijenu frekvencijske "
         "rezolucije, a odnos je pod kontrolom preko dužine segmenta. Za dužinu "
         "segmenta od 8192 uzorka i frekvenciju odabiranja od 16 kHz, razmak "
-        "između susjednih tačaka spektra iznosi:")
+        "između susjednih tačaka spektra dat je izrazom (1):")
     r.jednacina("Δf = fs / N = 16000 / 8192 ≈ 1,95 Hz", 1)
     r.pasus(
         "Za poređenje, uobičajena dužina prozora od 1024 uzorka daje razmak od "
@@ -527,8 +534,8 @@ def _teorija(r) -> None:
         "Nakon što je isječak sveden na vektor obilježja, potrebna je mjera "
         "koliko taj vektor odstupa od naučenog normalnog stanja. Euklidska "
         "udaljenost nije prikladna jer tretira sve dimenzije jednako i "
-        "zanemaruje njihove međusobne veze. Mahalanobisova udaljenost uzima u "
-        "obzir kovarijansnu strukturu podataka:")
+        "zanemaruje njihove međusobne veze. Mahalanobisova udaljenost [7] uzima "
+        "u obzir kovarijansnu strukturu podataka, izraz (2):")
     r.jednacina("s(x) = (z − c)ᵀ P (z − c)", 2)
     r.pasus(
         "gdje je *z* standardizovani vektor obilježja, *c* lokalni centar "
@@ -582,7 +589,7 @@ def _teorija(r) -> None:
 
     r.naslov("Hardverska platforma", 2)
     r.pasus(
-        "Ciljna platforma je modul ESP32-S3-WROOM-1 N32R16V. Sadrži "
+        "Ciljna platforma je modul ESP32-S3-WROOM-1 N32R16V [8]. Sadrži "
         "dvojezgarni procesor *Xtensa LX7* na 240 MHz, 512 KB interne "
         "statičke memorije, 32 MB fleš memorije i 16 MB oktalne "
         "pseudostatičke memorije. Za ovaj rad su bitne tri osobine: "
@@ -590,11 +597,12 @@ def _teorija(r) -> None:
         "radne memorije za spektar visoke rezolucije, i skup vektorskih "
         "instrukcija koji ubrzava operacije nad nizovima brojeva.")
     r.pasus(
-        "Kao izvor zvuka koristi se digitalni MEMS mikrofon INMP441. On daje "
+        "Kao izvor zvuka koristi se digitalni MEMS mikrofon INMP441 [10]. On "
+        "daje "
         "24-bitni podatak preko sabirnice I2S, bez potrebe za analognim "
         "pojačavačem ili spoljnim analogno-digitalnim pretvaračem. Time se iz "
         "lanca uklanja najveći izvor šuma i neponovljivosti kod jeftinih "
-        "akustičkih sistema.")
+        "akustičkih sistema. Karakteristike platforme date su u Tabeli 2.1.")
     r.tabela(
         "Karakteristike korišćene platforme",
         ["Stavka", "Vrijednost"],
@@ -639,7 +647,8 @@ def _koncept(r) -> None:
         "tri stvari: lokalni centar iz deset ispravnih isječaka, prag odluke "
         "iz odvojenog perioda normalnog rada, i granica pouzdanosti pojedinog "
         "prozora. Sve tri veličine su specifične za tu mašinu, taj položaj "
-        "mikrofona i tu prostoriju, i nijedna se ne prenosi između postavki.")
+        "mikrofona i tu prostoriju, i nijedna se ne prenosi između postavki. "
+        "Podjela posla prikazana je na Slici 3.1.")
     r.slika("slike/sl_sistem.png",
             "Podjela posla: opšti model se uči na računaru i ugrađuje u "
             "firmver, a centar, prag i granica pouzdanosti mjere se na licu "
@@ -735,7 +744,7 @@ def _model(r) -> None:
     r.naslov("Faza 1 — neuronske mreže", 2)
     r.pasus(
         "Polazno stanje bio je autoenkoder, standardna osnova takmičenja "
-        "DCASE. Mjerenja su data u tabeli.")
+        "DCASE. Mjerenja su data u Tabeli 4.1.")
     r.tabela(
         "Rezultati pristupa zasnovanih na neuronskim mrežama",
         ["Pristup", "AUC"],
@@ -762,7 +771,8 @@ def _model(r) -> None:
     r.pasus(
         "Mreža je napuštena. Isječak se sažima u srednju vrijednost i "
         "standardnu devijaciju po mel traci, kovarijansa se uči unaprijed na "
-        "990 izvornih snimaka, a na uređaju se mjeri samo centar.")
+        "990 izvornih snimaka, a na uređaju se mjeri samo centar. Rezultati su "
+        "u Tabeli 4.2.")
     r.tabela(
         "Statistički pristupi nad log-mel sažetkom",
         ["Pristup", "AUC", "Zaključak"],
@@ -786,8 +796,8 @@ def _model(r) -> None:
     r.naslov("Faza 3 — sistematska runda nad ocjenjivačem", 2)
     r.pasus(
         "Sprovedeno je šest serija eksperimenata nad zadnjim dijelom obrade, "
-        "sve na uparenim izborima kalibracionih isječaka. Prikazani su samo "
-        "nalazi koji mijenjaju sliku.")
+        "sve na uparenim izborima kalibracionih isječaka. U Tabeli 4.3 "
+        "prikazani su samo nalazi koji mijenjaju sliku.")
     r.tabela(
         "Izbor iz rundi nad ocjenjivačem",
         ["Pristup", "AUC", "Zaključak"],
@@ -821,7 +831,7 @@ def _model(r) -> None:
         "rezolucije: Velčova procjena sa segmentom od 8192 uzorka i "
         "preklapanjem od 50 %, sažeta u 96 logaritamski raspoređenih traka od "
         "10 do 4000 Hz, logaritmovana i normalizovana oduzimanjem skalarne "
-        "srednje vrijednosti isječka.")
+        "srednje vrijednosti isječka. Izmjerene varijante daje Tabela 4.4.")
     r.tabela(
         "Varijante spektralnog obilježja visoke rezolucije",
         ["Varijanta", "AUC", "Zaključak"],
@@ -839,7 +849,8 @@ def _model(r) -> None:
         "osnovne frekvencije obrtanja. Prethodni ulaz je imao razmak tačaka "
         "spektra od 15,6 Hz, a mel trake dodatno spajaju susjedne frekvencije, "
         "pa se te linije razmažu prije nego što model uopšte išta vidi. "
-        "Rezolucija od 1,95 Hz ih razdvaja.", uvlaka=False)
+        "Rezolucija od 1,95 Hz ih razdvaja, što se vidi na Slici 4.1.",
+        uvlaka=False)
     r.slika("slike/sl_rezolucija.png",
             "Spektar normalnog rada ventilatora pri dvije rezolucije; pri "
             "razmaku od 15,6 Hz harmonijske linije se stapaju, a pri 1,95 Hz "
@@ -848,7 +859,8 @@ def _model(r) -> None:
         "Zanimljivo je da medijana centra, koja je u mel prostoru donosila tri "
         "poena, u ovom prostoru ne donosi ništa. Objašnjenje je da je medijana "
         "pomagala zato što je mel prostor bio šumniji; u čistijem spektralnom "
-        "prostoru robusnost više nema šta da popravlja.")
+        "prostoru robusnost više nema šta da popravlja. Koliko kalibracija "
+        "mora da traje pokazuje Tabela 4.5.")
     r.tabela(
         "Zavisnost AUC od trajanja kalibracije (konačno obilježje)",
         ["Trajanje kalibracije", "50 s", "100 s", "200 s", "300 s", "400 s"],
@@ -865,10 +877,10 @@ def _model(r) -> None:
         "Do ovog trenutka obilježje je bilo mjereno samo na ventilatoru. "
         "Poslije mjerenja na svih sedam mašina razvojnog skupa slika je bitno "
         "drugačija, i to je nalaz koji se mora navesti uz svaku tvrdnju o "
-        "kvalitetu rješenja.")
+        "kvalitetu rješenja. Poređenje po mašinama daje Tabela 4.6.")
     r.tabela(
         "Poređenje obilježja po mašinama, kanonska evaluacija "
-        "(k = 20, 100 podjela)",
+        "(*k* = 20, 100 podjela)",
         ["Mašina", "`psd_shape`", "`mel1280`", "`mel256`"],
         [
             ["**fan**", "**0,867**", "0,627", "0,590"],
@@ -903,9 +915,9 @@ def _model(r) -> None:
         "**unaprijed**, izmjereni su svi odjednom pod istim podjelama, i "
         "rezultat je objavljen kakav god bio. Kandidati su bili u kodu prije "
         "nego što je ijedan anomalni isječak otvoren, a lista se nije mijenjala "
-        "prema rezultatu.")
+        "prema rezultatu. Rezultati svih šest dati su u Tabeli 4.7.")
     r.tabela(
-        "Šest unaprijed navedenih alternativa (k = 10, 20 podjela)",
+        "Šest unaprijed navedenih alternativa (*k* = 10, 20 podjela)",
         ["Kandidat", "Ideja", "AUC", "Razlika"],
         [
             ["`psd_shape`", "dosadašnje obilježje", "0,856 ± 0,024", "—"],
@@ -956,7 +968,7 @@ def _model(r) -> None:
         "pravi alarm. Dotadašnje pravilo — tri uzastopna prozora iznad praga — "
         "uvedeno je kao razumna pretpostavka i nikada nije bilo izmjereno. "
         "Očekivanje je bilo da će eksponencijalno usrednjavanje i kumulativna "
-        "suma biti nadogradnja.")
+        "suma biti nadogradnja. Izmjerena pravila poredi Tabela 4.8.")
     r.tabela(
         "Vremenska pravila odlučivanja (40 podjela, 2000 normalnih prozora)",
         ["Pravilo", "Lažnih/h", "Tuđa mašina/h", "Odziv na pobudu od 1 prozora"],
@@ -982,6 +994,9 @@ def _model(r) -> None:
         "da standardna tehnika nije isto što i prikladna tehnika.")
 
     r.naslov("Sažetak napretka", 2)
+    r.pasus(
+        "Tabela 4.9 sažima napredak kroz faze razvoja, a Slika 4.2 isti "
+        "napredak prikazuje grafički.", uvlaka=False)
     r.tabela(
         "Napredak kroz faze razvoja",
         ["Faza", "Najbolji AUC", "Prava prepreka"],
@@ -1030,7 +1045,7 @@ def _realizacija(r) -> None:
         "i napajanjem. Linija za izbor kanala vezuje se na masu, čime se bira "
         "lijevi kanal koji firmver čita; ako ta linija ostane nepovezana, "
         "uređaj prima tišinu, što je greška koja se lako previdi jer sistem "
-        "nastavlja da radi.")
+        "nastavlja da radi. Raspored pinova dat je u Tabeli 5.1.")
     r.tabela(
         "Povezivanje mikrofona INMP441",
         ["Pin mikrofona", "Pin ESP32-S3", "Napomena"],
@@ -1048,7 +1063,8 @@ def _realizacija(r) -> None:
         "GPIO 10 prema masi, uz unutrašnji *pull-up* otpornik, a dvije "
         "svjetleće diode na GPIO 2 i GPIO 11 preko otpornika od 220 do 330 Ω. "
         "Pinovi 35, 36 i 37 se ne koriste jer ih zauzima oktalna "
-        "pseudostatička memorija.", uvlaka=False)
+        "pseudostatička memorija. Cijela šema povezivanja data je na "
+        "Slici 5.1.", uvlaka=False)
     r.slika("slike/sl_sema.png",
             "Šema povezivanja mikrofona, tastera i signalnih dioda na modul "
             "ESP32-S3")
@@ -1081,7 +1097,8 @@ def _realizacija(r) -> None:
         "Dobijeni vektor se standardizuje parametrima naučenim na računaru, "
         "poslije čega se računa kvadrirana Mahalanobisova udaljenost od "
         "lokalnog centra prema izrazu (2). Sav račun je u pokretnom zarezu "
-        "jednostruke tačnosti.")
+        "jednostruke tačnosti. Izmjerena vremena izračunavanja daje "
+        "Tabela 5.2.")
     r.tabela(
         "Mjerenja izračunavanja obilježja na uređaju",
         ["Veličina", "Vrijednost"],
@@ -1120,7 +1137,8 @@ def _realizacija(r) -> None:
         "isti moduli provjeravaju na računaru bez pločice. Konačni tok "
         "obuhvata module za prihvat zvuka, provjeru kvaliteta signala, "
         "izračunavanje obilježja, kalibraciju, izvođenje praga, kapiju "
-        "pouzdanosti, vremensku odluku i operaterski interfejs.")
+        "pouzdanosti, vremensku odluku i operaterski interfejs. Uloga svakog "
+        "modula data je u Tabeli 5.3.")
     r.tabela(
         "Moduli konačnog toka",
         ["Modul", "Uloga"],
@@ -1137,7 +1155,8 @@ def _realizacija(r) -> None:
             ["`asd_operator.c`", "taster, diode i operaterski tok"],
         ])
     r.pasus(
-        "Svaki modul koji donosi odluku ima parnjaka u testovima na računaru, "
+        "Firmver je pisan za okruženje ESP-IDF [9]. Svaki modul koji donosi "
+        "odluku ima parnjaka u testovima na računaru, "
         "koji se preko sučelja za pozivanje funkcija iz dijeljene biblioteke "
         "poredi sa referentnom implementacijom u Pythonu. Time se izbjegava "
         "situacija u kojoj se ista logika neprimjetno razilazi između dvije "
@@ -1338,15 +1357,20 @@ def _rezultati(r) -> None:
 
     r.naslov("Referentni skup podataka", 2)
     r.pasus(
+        "Razvojni skup DCASE 2026 sastavljen je od snimaka stvarnih industrijskih "
+        "mašina [3] i minijaturnih mašina iz skupa ToyADMOS2 [6], pa "
+        "obuhvata i domenski pomak koji se u radu mjeri. Obrada na računaru "
+        "oslanja se na biblioteke SciPy [12] za spektralnu procjenu i "
+        "scikit-learn [11] za procjenu kovarijanse. "
         "Kanonska evaluacija poredi tri obilježja pod istim ocjenjivačem, na "
         "sto unaprijed određenih podjela, sa 20 isječaka za lokalnu "
         "kalibraciju. Anomalni isječci se učitavaju tek u završnoj fazi, "
         "poslije zamrzavanja liste metoda, podjela i modela. Postupak se "
         "prekida ako otkrije anomaliju u kohorti za obuku ili preklapanje "
-        "kalibracionih i ocjenjivanih isječaka.")
+        "kalibracionih i ocjenjivanih isječaka. Rezultati su u Tabeli 7.1.")
     r.tabela(
         "Kanonska evaluacija: AUC po mašini i obilježju "
-        "(k = 20, 100 podjela)",
+        "(*k* = 20, 100 podjela)",
         ["Mašina", "`psd_shape`", "`mel1280`", "`mel256`"],
         [
             ["**fan**", "**0,867 ± 0,027**", "0,627 ± 0,035", "0,590 ± 0,034"],
@@ -1371,7 +1395,8 @@ def _rezultati(r) -> None:
         "Prije nego što je nabavljen ventilator, uređaj je provjeravan "
         "reprodukcijom snimaka iz skupa podataka preko zvučnika. To mjerenje "
         "je dalo AUC 0,716 umjesto 0,864, i uzrok je izmjeren, a ne "
-        "pretpostavljen.")
+        "pretpostavljen. Rasipanje ocjena kroz akustički kanal daje "
+        "Tabela 7.2.")
     r.tabela(
         "Rasipanje ocjena kroz akustički kanal",
         ["Put signala", "Ocjena normalnog", "Ocjena anomalije"],
@@ -1404,10 +1429,10 @@ def _rezultati(r) -> None:
         "duvanja. Bočni položaj je izabran jer u struji vazduha turbulencija "
         "na membrani nadjača zvuk mašine. Izazvana promjena je papirić uz "
         "usisnu stranu rešetke, bez kontakta sa lopaticama, ponovljen tri "
-        "puta.")
+        "puta. Ocjene po blokovima date su u Tabeli 7.3.")
     r.tabela(
         "Prvi fizički test: ocjene po blokovima",
-        ["Blok", "Prozora", "Medijana", "Min", "Max"],
+        ["Blok", "Prozora", "Medijana", "Min", "Maks"],
         [
             ["Normalna osnova", "60", "876", "180", "16 152"],
             ["Izazvana promjena 1", "6", "29 899", "2 197", "40 812"],
@@ -1444,7 +1469,7 @@ def _rezultati(r) -> None:
         "kalibraciona isječka. Koeficijent varijacije je time pao sa 0,84 na "
         "0,43, čime je kalibracija prihvaćena; bez tog pravila mjerenje ne bi "
         "ni došlo do faze nadzora. Izvedeni prag ulaska iznosi 8084, a prag "
-        "izlaska 3707.")
+        "izlaska 3707. Ocjene po označenim uslovima daje Tabela 7.4.")
     r.tabela(
         "Ocjene po označenim uslovima, mjerenje sa izazvanom promjenom "
         "(prag ulaska 8084)",
@@ -1479,7 +1504,8 @@ def _rezultati(r) -> None:
         "Razgovor i otvaranje vrata nisu podigli alarm iako su im ocjene bile "
         "visoke, 36 838 odnosno 4366. Četiri od pet prozora razgovora "
         "proglašena su nepouzdanim. To je tražena osobina: smetnja se odbija "
-        "kao nepouzdana, umjesto da bude protumačena kao stanje mašine.")
+        "kao nepouzdana, umjesto da bude protumačena kao stanje mašine. Cijela "
+        "trasa mjerenja prikazana je na Slici 7.1.")
     r.slika("slike/sl_run_papiric.png",
             "Trasa ocjene tokom mjerenja sa izazvanom promjenom protoka; "
             "označeni su prag ulaska, prag izlaska, nepouzdani prozori i "
@@ -1492,7 +1518,7 @@ def _rezultati(r) -> None:
         "ton od 1 kHz sa zvučnika, na fiksnoj jačini i položaju. Kalibracija "
         "je u ovom mjerenju prošla bez izbacivanja isječaka, sa koeficijentom "
         "varijacije 0,43. Izvedeni prag ulaska iznosi 21 810, a prag izlaska "
-        "10 905.")
+        "10 905. Ocjene po označenim uslovima daje Tabela 7.5.")
     r.tabela(
         "Ocjene po označenim uslovima, mjerenje sa konstantnim tonom "
         "(prag ulaska 21 810)",
@@ -1514,7 +1540,8 @@ def _rezultati(r) -> None:
         "unutar normalnog opsega, jer je zvučnik bio na premaloj jačini. "
         "Poslije pojačanja ocjena skače na stabilnih 30 000 do 33 000. To je "
         "koristan negativan podatak: promjena mora biti dovoljno jaka u odnosu "
-        "na sopstveni šum ventilatora, a prag nije apsolutna osjetljivost.")
+        "na sopstveni šum ventilatora, a prag nije apsolutna osjetljivost. "
+        "Trasa cijelog mjerenja je na Slici 7.2.")
     r.slika("slike/sl_run_ton.png",
             "Trasa ocjene tokom mjerenja sa konstantnim tonom; alarm se "
             "podiže poslije tri uzastopna pouzdana prozora, a oznaka trajnog "
@@ -1528,6 +1555,9 @@ def _rezultati(r) -> None:
         "izmjereno.")
 
     r.naslov("Sažetak fizičkih mjerenja", 2)
+    r.pasus(
+        "Tabela 7.6 sažima oba validna mjerenja na ventilatoru, jedno "
+        "pored drugog.", uvlaka=False)
     r.tabela(
         "Sažetak dva validna mjerenja na ventilatoru",
         ["Veličina", "Izazvana promjena protoka", "Konstantan ton"],
@@ -1762,9 +1792,6 @@ def _literatura(r) -> None:
         "P. Virtanen et al., „SciPy 1.0: Fundamental algorithms for "
         "scientific computing in Python“, *Nature Methods*, vol. 17, "
         "str. 261–272, 2020, doi: 10.1038/s41592-019-0686-2.",
-        "[TODO] Provjeriti i dopuniti referencu na sistematsko poređenje "
-        "ocjenjivača u detekciji anomalija zvuka (arXiv:2606.19269), sa "
-        "tačnim autorima i stranicama prije predaje.",
     ]
     with r.latinicno():
         for i, ref in enumerate(reference, 1):
@@ -1798,6 +1825,7 @@ def _prilozi(r) -> None:
     r.naslov("Prilozi", numerisi=False)
     r.prazan()
 
+    r.prilog("A")
     r.naslov("Prilog A — sadržaj digitalnog priloga", 2, numerisi=False)
     r.pasus(
         "Zbog obima, izvorni kod, zapisi mjerenja i sirovi podaci dostavljaju "
@@ -1814,10 +1842,16 @@ results/        zapisi mjerenja, uključujući fizičke runove
 radovi/         ovaj rad i rad za konferenciju
 """)
     r.pasus(
-        "Adresa spremišta: [TODO] upisati adresu javnog spremišta prije "
-        "predaje.", uvlaka=False)
+        "Adresa spremišta: `https://github.com/mihajloz11/asd-esp32s3`. "
+        "[TODO] spremište je u trenutku pisanja privatno; otvoriti ga "
+        "prije predaje ili priložiti sadržaj na digitalnom nosaču.",
+        uvlaka=False)
 
+    r.prilog("B")
     r.naslov("Prilog B — sažetak politika i njihovih verzija", 2, numerisi=False)
+    r.pasus(
+        "Tabela B.1 daje sve zaključane politike i njihove verzije.",
+        uvlaka=False)
     r.tabela(
         "Zaključane politike i njihove verzije",
         ["Politika", "Verzija", "Šta određuje"],
@@ -1842,10 +1876,11 @@ radovi/         ovaj rad i rad za konferenciju
         "korišćene za njihovo izvođenje, i ta oznaka se provjerava automatski "
         "pri svakoj izmjeni.", uvlaka=False)
 
+    r.prilog("C")
     r.naslov("Prilog C — primjer zapisa telemetrije", 2, numerisi=False)
     r.pasus(
         "Uređaj emituje strukturisane zapise sa izričitom oznakom verzije "
-        "protokola. Ispod je izvod iz stvarnog mjerenja, sa sažetkom "
+        "protokola. Listing C.1 je izvod iz stvarnog mjerenja, sa sažetkom "
         "kalibracije, izvedenim pragom i podizanjem alarma.", uvlaka=False)
     r.kod("""
 CALTRIM  protocol=asd-quality-v1.6.0 policy=k1-two-clip-trim-v1

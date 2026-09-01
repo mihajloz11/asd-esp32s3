@@ -55,8 +55,8 @@ ABSTRACT = (
     "sound only. The device is an ESP32-S3 with a single MEMS microphone: a "
     "Welch power spectral density front end, a Ledoit-Wolf Mahalanobis score, "
     "and a local centre learned in about 115 s from ten calibration windows. "
-    "Every operating policy - audio quality gate, machine-presence gate, "
-    "temporal decision rule and threshold - is derived without reading a "
+    "Every operating policy — audio quality gate, machine-presence gate, "
+    "temporal decision rule and threshold — is derived without reading a "
     "single anomalous recording. With ten calibration windows, we report a "
     "developmental AUC of 0.856 on the DCASE 2026 fan data and 716 ms "
     "of computation per 10 s window. On a physical fan the device learns "
@@ -119,7 +119,7 @@ BODY = [
      "contributions are:"),
     ("p",
      "1) A complete self-calibrating detector: 716 ms of computation per "
-     "10 s window, an about 14x real-time margin, 355 kB of firmware and "
+     "10 s window, an about 14× real-time margin, 355 kB of firmware and "
      "no neural network. 2) A normal-only design protocol under which "
      "every operating policy is derived, versioned and frozen before any "
      "anomalous recording is read. 3) A fail-closed decision hierarchy in "
@@ -149,7 +149,7 @@ BODY = [
      "would require, and its result is identical to the batch computation. "
      "One 10 s window "
      "takes 716 ms end to end, feature and score together, which is an "
-     "about 14x real-time margin."),
+     "about 14× real-time margin."),
     ("p",
      "The same C code computes features on the host and on the device. On one "
      "benchmark WAV the host-to-C difference is at most 9.5e-7 feature units, "
@@ -236,7 +236,7 @@ BODY = [
      "presence gate declares the machine present immediately at or above the "
      "calibrated mean minus 11 dB, and declares it stopped only after three "
      "consecutive windows below that level. This separates “machine stopped” "
-     "from “machine behaving strangely” - two conditions that a "
+     "from “machine behaving strangely” — two conditions that a "
      "distance-based score cannot tell apart, since both are far from the "
      "normal centre. Only then is the Mahalanobis score compared against the "
      "threshold, and only then does the temporal rule decide whether the "
@@ -349,8 +349,8 @@ BODY = [
     ("table", "T3"),
     ("p",
      "The paper trial is the more informative of the two. The feature saw "
-     "the change in all three blocks - median scores of 26 399, 60 050 "
-     "and 14 389 against a normal baseline of 1190 - but an alarm was "
+     "the change in all three blocks — median scores of 26 399, 60 050 "
+     "and 14 389 against a normal baseline of 1190 — but an alarm was "
      "raised only in the third. In the first two the reliability gate "
      "held four and three of five windows, so the run of three "
      "consecutive reliable windows never completed. A strip of paper held "
@@ -366,7 +366,7 @@ BODY = [
      "enough relative to the fan's own noise. After the tone was switched "
      "off the score fell below the entry threshold but stayed above the "
      "release threshold until the trial ended, so that release latency was "
-     "not measured."),
+     "not measured. Fig. 2 shows the score over the whole trial."),
     ("figure", ("FIG_FAN",
                 "Score over the tone trial, one point per 10 s window. "
                 "The alarm is raised after three consecutive reliable "
@@ -405,7 +405,7 @@ BODY = [
      "The fourth negative result belongs here, because the verification "
      "stage produced it. A more robust estimator was tried on the device, "
      "the smaller of the empirical 99th percentile and a Hampel bound of "
-     "median + 3 x 1.4826 x MAD. It returned a threshold of 791 while the "
+     "median + 3 × 1.4826 × MAD. It returned a threshold of 791 while the "
      "normal verification windows of the same session scored between 2083 "
      "and 7766, and verification rejected the calibration before a single "
      "monitoring window existed. The median absolute deviation describes "
@@ -514,7 +514,7 @@ TABLES = {
             ["Leave-one-out CV", "0.84 -> 0.43", "0.43"],
             ["Entry / release threshold", "8084 / 3707", "21 810 / 10 905"],
             ["Normal baseline, median score", "1190", "7164"],
-            ["Induced change, median score", "14 389 - 60 050", "22 629"],
+            ["Induced change, median score", "14 389 – 60 050", "22 629"],
             ["Monitoring windows", "65", "115"],
             ["Alarm windows / episodes", "3 / 2", "64 / 2"],
             ["Alarm latency", "3 windows", "3 windows"],
@@ -647,7 +647,8 @@ def add_table(doc, spec):
     _keep_rows_together(table)
 
     if spec.get("note"):
-        note = doc.add_paragraph()
+        # Sablon ima namjenski stil za napomenu ispod tabele.
+        note = doc.add_paragraph(style="table footnote")
         note.alignment = WD_ALIGN_PARAGRAPH.LEFT
         note.paragraph_format.space_before = Pt(2)
         note.paragraph_format.space_after = Pt(6)
