@@ -45,7 +45,7 @@ Papirić, govor, vrata i ton **ne ulaze** ni u jedan fit.
 | Fizički dokaz | **27.08.2026: dva `valid_physical_result` runa** — papirić (`8 084,49` prag, alarm u 3. bloku, oporavak `10,08 s`) i konstantni ton (`21 809,51` prag, `ANOMALY` + `ANOMALY_SUSTAINED`), oba `dropped=0` |
 | **Ostalo** | **završiti elektroniku · zamrznuti normal-only politiku · kratak fizički run · power-loss/I2S runtime** → [docs/PREOSTALO.md](docs/PREOSTALO.md) |
 | Radovi | master rad (48 strana, ćirilica i latinica iz istog izvora) → [radovi/master-rad/](radovi/master-rad/) · TELFOR 2026 (4 strane) → [radovi/telfor2026/](radovi/telfor2026/) |
-| Lemljenje | dvije ploče (uređaj + mjerna) → [docs/plan-dvije-plocice.md](docs/plan-dvije-plocice.md) · crteži [docs/sema-sklopa.pdf](docs/sema-sklopa.pdf) |
+| Lemljenje | dvije ploče (uređaj + mjerna) → [radno/elektronika/plan-dvije-plocice.md](radno/elektronika/plan-dvije-plocice.md) · crteži [radno/elektronika/sema-sklopa.pdf](radno/elektronika/sema-sklopa.pdf) |
 
 Šta je urađeno i izmjereno, hronološki:
 [docs/DNEVNIK-NEXT-LEVEL.md](docs/DNEVNIK-NEXT-LEVEL.md).
@@ -76,6 +76,9 @@ firmware/esp32s3_asd/   ESP-IDF v5.x projekat (finalni PSD/Mahalanobis; istorijs
 data/               DCASE 2026 dev dataset (gitignored)
 models/             PSD .npz/meta + istorijski .keras/.tflite artefakti
 results/            results.csv + logovi + keš featura
+radno/              odvojivo prije javnog repoa (radno/README.md)
+  elektronika/      sklapanje, lemljenje, šeme, E5/INA226 energetski dio
+  ucenje/           uputstva za razumijevanje projekta
 ```
 
 ## Setup (Windows)
@@ -135,7 +138,7 @@ i time izbjegava baferovanje približno 640 KB velikog punog float ulaznog
 prozora. Finalni ESP32-S3 build report pokazuje oko 293 kB zauzetog i 342 kB
 slobodnog DIRAM-a; ne tvrdi se da cijeli finalni PSD feature put koristi manje
 od 25 kB. Detalji: [docs/edge-adaptacija.md](docs/edge-adaptacija.md), inventar
-i nabavka: [docs/hardware.md](docs/hardware.md).
+i nabavka: [radno/elektronika/hardware.md](radno/elektronika/hardware.md).
 
 ## Ključne odluke (odstupanja od librosa/baseline — za pogl. 5 rada)
 

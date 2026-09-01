@@ -26,12 +26,13 @@ stanje** — čuvaju se jer objašnjavaju *zašto* je nešto odbačeno.
 ## Uputstva za razumijevanje projekta (01.09.2026)
 
 Ne uvode nove brojke — sabiraju postojeće na jedno mjesto, za učenje i za odbranu.
+Stoje u [`../radno/ucenje/`](../radno/) — vidi [`../radno/README.md`](../radno/README.md).
 
 | Dokument | Sadržaj |
 |---|---|
-| [`UPUTSTVO-1-KAKO-JE-NASTAO-PROJEKAT.md`](UPUTSTVO-1-KAKO-JE-NASTAO-PROJEKAT.md) | mapa ključnih fajlova + hronologija u 11 etapa: šta je urađeno, izmjereno i zašto je promijenjeno |
-| [`UPUTSTVO-2-TEORIJA-OD-NULE.md`](UPUTSTVO-2-TEORIJA-OD-NULE.md) | zvuk, Furijeova transformacija, Welch/PSD, ML, Mahalanobis, metrike, TFLite/TFLM, I2S drajver, rječnik |
-| [`UPUTSTVO-3-LITERATURA.md`](UPUTSTVO-3-LITERATURA.md) | naučni radovi: gdje se koji koristi u projektu i šta u njemu treba pročitati |
+| [`UPUTSTVO-1-KAKO-JE-NASTAO-PROJEKAT.md`](../radno/ucenje/UPUTSTVO-1-KAKO-JE-NASTAO-PROJEKAT.md) | mapa ključnih fajlova + hronologija u 11 etapa: šta je urađeno, izmjereno i zašto je promijenjeno |
+| [`UPUTSTVO-2-TEORIJA-OD-NULE.md`](../radno/ucenje/UPUTSTVO-2-TEORIJA-OD-NULE.md) | zvuk, Furijeova transformacija, Welch/PSD, ML, Mahalanobis, metrike, TFLite/TFLM, I2S drajver, rječnik |
+| [`UPUTSTVO-3-LITERATURA.md`](../radno/ucenje/UPUTSTVO-3-LITERATURA.md) | naučni radovi: gdje se koji koristi u projektu i šta u njemu treba pročitati |
 
 ## Aktuelno stanje i protokoli
 
@@ -71,8 +72,8 @@ Svaki je zapis jedne faze, ne opšti status. Zbirni status je u
 | [`rezultat-fan01-2026-08-16.md`](rezultat-fan01-2026-08-16.md) | prvi valjan fizički test ventilatora |
 | [`preregistracija-fan01.md`](preregistracija-fan01.md) | preregistracija tog runa (pisana prije runa) |
 | [`hardver-verifikacija.md`](hardver-verifikacija.md) | šta je izmjereno na pločici (09.08.) |
-| [`e5-mjerenje-01-rezultat.md`](e5-mjerenje-01-rezultat.md) | prvo mjerenje potrošnje |
-| [`e5-povezivanje-i-mjerenje.md`](e5-povezivanje-i-mjerenje.md) | postavka E5 mjerenja |
+| [`e5-mjerenje-01-rezultat.md`](../radno/elektronika/e5-mjerenje-01-rezultat.md) | prvo mjerenje potrošnje |
+| [`e5-povezivanje-i-mjerenje.md`](../radno/elektronika/e5-povezivanje-i-mjerenje.md) | postavka E5 mjerenja |
 | [`panel-i-virtuelni-taster.md`](panel-i-virtuelni-taster.md) | panel i virtuelni taster |
 | [`faza2-semantika-dogadjaja.md`](faza2-semantika-dogadjaja.md) | prisustvo mašine, režim, semantika događaja |
 
@@ -88,20 +89,24 @@ Svaki je zapis jedne faze, ne opšti status. Zbirni status je u
 
 ## Hardver i elektronika
 
+Cio ovaj skup živi u [`../radno/elektronika/`](../radno/), zajedno sa
+fotografijama i crtežima (`img/`) i generatorom `make_sema_sklopa.py`.
+Zašto je odvojen: [`../radno/README.md`](../radno/README.md).
+
 | Dokument | Sadržaj |
 |---|---|
-| [`plan-dvije-plocice.md`](plan-dvije-plocice.md) | **aktuelna** podjela: ploča U (uređaj) + ploča M (mjerna) |
-| [`lemljenje-cjeline-i-mjerenje.md`](lemljenje-cjeline-i-mjerenje.md) | **bench verzija**: šta se lemi po cjelini, spajanje za E5, logički analizator |
-| [`sema-cjeline.svg`](sema-cjeline.svg) | šema u tri panela: mjerna ploča · uređaj · spajanje za mjerenje |
-| `sema-sklopa.pdf` | crteži sklopa, 7 strana A4 (generiše `make_sema_sklopa.py`) |
-| [`sema-povezivanja.md`](sema-povezivanja.md) | pinout INMP441 + INA226 |
-| [`lemljenje.md`](lemljenje.md) | procedura lemljenja (ažurirana na dvije ploče) |
-| [`lemljenje-kratko.md`](lemljenje-kratko.md) | kratka lista za lemljenje |
-| [`hardver-lista.md`](hardver-lista.md) | inventar imamo/kupiti |
-| [`hardware.md`](hardware.md) | kompatibilnost i nabavka |
-| [`donijeti-sa-posla.md`](donijeti-sa-posla.md) | spisak za donijeti s posla |
-| [`porudzbina-elektromodul.md`](porudzbina-elektromodul.md) | porudžbina, isporučeno 04.08. |
-| [`ina226-provjera.md`](ina226-provjera.md) | dijagnostika INA226 (riješeno 10.08.) |
+| [`plan-dvije-plocice.md`](../radno/elektronika/plan-dvije-plocice.md) | **aktuelna** podjela: ploča U (uređaj) + ploča M (mjerna) |
+| [`lemljenje-cjeline-i-mjerenje.md`](../radno/elektronika/lemljenje-cjeline-i-mjerenje.md) | **bench verzija**: šta se lemi po cjelini, spajanje za E5, logički analizator |
+| [`sema-cjeline.svg`](../radno/elektronika/sema-cjeline.svg) | šema u tri panela: mjerna ploča · uređaj · spajanje za mjerenje |
+| [`sema-sklopa.pdf`](../radno/elektronika/sema-sklopa.pdf) | crteži sklopa, 7 strana A4 (generiše `make_sema_sklopa.py`) |
+| [`sema-povezivanja.md`](../radno/elektronika/sema-povezivanja.md) | pinout INMP441 + INA226 |
+| [`lemljenje.md`](../radno/elektronika/lemljenje.md) | procedura lemljenja (ažurirana na dvije ploče) |
+| [`lemljenje-kratko.md`](../radno/elektronika/lemljenje-kratko.md) | kratka lista za lemljenje |
+| [`hardver-lista.md`](../radno/elektronika/hardver-lista.md) | inventar imamo/kupiti |
+| [`hardware.md`](../radno/elektronika/hardware.md) | kompatibilnost i nabavka |
+| [`donijeti-sa-posla.md`](../radno/elektronika/donijeti-sa-posla.md) | spisak za donijeti s posla |
+| [`porudzbina-elektromodul.md`](../radno/elektronika/porudzbina-elektromodul.md) | porudžbina, isporučeno 04.08. |
+| [`ina226-provjera.md`](../radno/elektronika/ina226-provjera.md) | dijagnostika INA226 (riješeno 10.08.) |
 
 ## Materijal za rad
 

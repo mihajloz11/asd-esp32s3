@@ -89,7 +89,7 @@ pa <b>INA226</b>, pa <b>mikrofoni na kraju</b> kad si uhodan — oni su jedini k
 <li><b>Obje letvice ubodi u MB-102</b> preko srednjeg kanala, nasloni ploču odozgo — breadboard je drži pod 90°.</li>
 <li>Zalemi <b>po jedan ugaoni pin sa svake strane</b>, provjeri da stoji ravno, tek onda ostale.</li>
 </ol>
-<p>Pinovi su fiksirani u <a href="../firmware/esp32s3_asd/main/pins.h">pins.h</a>:
+<p>Pinovi su fiksirani u <a href="../../firmware/esp32s3_asd/main/pins.h">pins.h</a>:
 <code>4</code> BCLK · <code>5</code> WS · <code>6</code> SD · <code>8</code> SDA · <code>9</code> SCL · <code>2</code> LED · <code>10</code> taster.<br>
 Zabranjeni: GPIO 35/36/37 (oktalni PSRAM), strapping 0/3/45/46.</p>
 
@@ -197,7 +197,7 @@ breadboard je sasvim legitiman za demo — samo ga zalijepi za nešto čvrsto i 
 Uzemlji se prije vađenja iz kese. Zato lemiš jedan po jedan.</div>
 <div class="wb"><b>2. Otpornici fale</b> — bez 220–330 Ω ne vezuj LED na GPIO.</div>
 <div class="wb"><b>3. Firmware pali samo jednu LED (GPIO 2).</b> Imaš crvenu i zelenu; za obje treba
-GPIO 11 + izmjena u <a href="../firmware/esp32s3_asd/main/app_main.c">app_main.c</a>.
+GPIO 11 + izmjena u <a href="../../firmware/esp32s3_asd/main/app_main.c">app_main.c</a>.
 Za sad zalemi zelenu (svijetli = normal, gasi se pri anomaliji).</div>
 
 <p style="color:var(--mut);font-size:.85rem;margin-top:40px">Slike komponenti: elektromodul.rs, preuzete za internu dokumentaciju (repo je privatan).</p>

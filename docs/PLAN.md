@@ -143,7 +143,7 @@ kraju dvokanalno, jer DIRAM je već na 86 %.
 ### D. Fizički uređaj i mjerenja koja fale
 
 1. INA226: I2C i registri su potvrđeni → spojiti IN+/IN− i VBS prema
-   [šemi povezivanja](sema-povezivanja.md) → izmjeriti **E5 potrošnju**.
+   [šemi povezivanja](../radno/elektronika/sema-povezivanja.md) → izmjeriti **E5 potrošnju**.
    Bez toga je Pareto analiza iz plana rada nepotpuna (tri od četiri ose).
 2. Otpornik 220–330 Ω → LED (kod već upravlja GPIO2).
 3. Perfboard umjesto jumper žica, rasterećenje kablova, fotografija i šema.

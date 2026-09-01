@@ -49,7 +49,7 @@ lemilicu), pa **INA226**, pa **mikrofoni na kraju** kad si uhodan — oni su jed
 3. **Obje letvice ubodi u MB-102** preko srednjeg kanala, nasloni ploču odozgo — breadboard je drži pod 90°.
 4. Zalemi **po jedan ugaoni pin sa svake strane**, provjeri da stoji ravno, tek onda ostale.
 
-Pinovi su fiksirani u [pins.h](../firmware/esp32s3_asd/main/pins.h):
+Pinovi su fiksirani u [pins.h](../../firmware/esp32s3_asd/main/pins.h):
 `4` BCLK · `5` WS · `6` SD · `8` SDA · `9` SCL · `2` LED · `10` taster.
 Zabranjeni: GPIO 35/36/37 (oktalni PSRAM), strapping 0/3/45/46.
 
@@ -160,7 +160,7 @@ Razlog: na breadboardu žice ispadaju i duge I2S linije hvataju šum; za demo ho
    **ne peri ploču** poslije. Uzemlji se prije vađenja iz kese. Zato lemiš jedan po jedan.
 2. **Otpornici fale** — bez 220–330 Ω ne vezuj LED na GPIO.
 3. **Firmware pali samo jednu LED (GPIO 2).** Imaš crvenu i zelenu; za obje treba GPIO 11
-   + izmjena u [app_main.c](../firmware/esp32s3_asd/main/app_main.c). Za sad zalemi zelenu
+   + izmjena u [app_main.c](../../firmware/esp32s3_asd/main/app_main.c). Za sad zalemi zelenu
    (svijetli = normal, gasi se pri anomaliji).
 
 ---

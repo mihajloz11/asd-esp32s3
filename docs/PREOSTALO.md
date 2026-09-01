@@ -83,8 +83,8 @@ pouzdanosti ili generalizacije.
 
 ## Elektronika
 
-Plan ostaje u [plan-dvije-plocice.md](plan-dvije-plocice.md) i
-[sema-sklopa.pdf](sema-sklopa.pdf). Za uređajnu ploču trebaju jedan INMP441,
+Plan ostaje u [plan-dvije-plocice.md](../radno/elektronika/plan-dvije-plocice.md) i
+[sema-sklopa.pdf](../radno/elektronika/sema-sklopa.pdf). Za uređajnu ploču trebaju jedan INMP441,
 zelena LED na GPIO2, crvena LED na GPIO11, po jedan otpornik 220–330 Ω i taster
 GPIO10↔GND. Drugi mikrofon nije dio finalne šeme; raniji dual-channel kandidati
 nisu opravdali dodatnu složenost.

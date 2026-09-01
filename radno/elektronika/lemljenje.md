@@ -10,7 +10,7 @@
 > **Kratka verzija za na posao:** [lemljenje-kratko.md](lemljenje-kratko.md) (+ šema [sema-lemljenje.svg](sema-lemljenje.svg))
 >
 > Komponente stigle 04.08.2026 (vidi [hardver-lista.md](hardver-lista.md)).
-> Pinovi su fiksirani u [pins.h](../firmware/esp32s3_asd/main/pins.h), šema u
+> Pinovi su fiksirani u [pins.h](../../firmware/esp32s3_asd/main/pins.h), šema u
 > [sema-povezivanja.md](sema-povezivanja.md). **Ništa ne lemi dok ne provjeriš pin-mapu.**
 
 Princip: **faza 1 = samo headeri** (da moduli uđu u MB-102, sve ostalo se ubada bez
@@ -111,7 +111,7 @@ odvojivim kontaktima ili ga drži na breadboardu.
    (nepovratno) ili preko žica. Ako hoćeš da INMP441 ostane vadiv, uzmi ženski header
    (~30 din) prije faze 2.
 3. **Firmware pali SAMO JEDNU LED (GPIO 2).** Imaš crvenu i zelenu, ali za obje treba
-   2. pin (GPIO 11) + izmjena u [app_main.c](../firmware/esp32s3_asd/main/app_main.c)
+   2. pin (GPIO 11) + izmjena u [app_main.c](../../firmware/esp32s3_asd/main/app_main.c)
    (`gpio_set_level(PIN_LED, !anomaly)` je trenutno jedan poziv). Za sad zalemi jednu
    (zelenu = normal, gasi se pri anomaliji) ili prvo dopuni kod.
 4. **INA226 šant** — po dolasku pročitaj oznaku: `R100` = 0,1 Ω, `R010` = 0,01 Ω.

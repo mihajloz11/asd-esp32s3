@@ -247,7 +247,7 @@ Između njih je shunt od **0,1 Ω** i sva mjerena struja ide kroz njega.
 
 Ranija verzija ove šeme je govorila da `VBS` ostaje prazan. **To je bilo pogrešno.**
 
-Firmware u [`ina226_test.c`](../firmware/esp32s3_asd/main/ina226_test.c) u svakom
+Firmware u [`ina226_test.c`](../../firmware/esp32s3_asd/main/ina226_test.c) u svakom
 očitavanju čita četiri veličine:
 
 ```c
@@ -309,10 +309,10 @@ ju je uračunavala.
 
 ## 6. Šta ovaj plan ne mijenja
 
-- **Pin-mapa ostaje ista** — [`pins.h`](../firmware/esp32s3_asd/main/pins.h):
+- **Pin-mapa ostaje ista** — [`pins.h`](../../firmware/esp32s3_asd/main/pins.h):
   SCK/WS/SD = 4/5/6, I2C = 8/9, taster = 10, LED = 2 i 11. Firmware se ne dira.
 - **Jedan mikrofon, ne dva** — zatvoreno mjerenjem 14.08.
-  ([PREOSTALO.md](PREOSTALO.md)) Drugi INMP441 ostaje rezerva.
+  ([PREOSTALO.md](../../docs/PREOSTALO.md)) Drugi INMP441 ostaje rezerva.
 - **470 µF ostaje vadiv**, ne fiksno zalemljen — mjerni kompromis iz
   [sema-povezivanja.md](sema-povezivanja.md), sekcija 2.
 - Sve mjere opreza pri lemljenju INMP441 iz [lemljenje.md](lemljenje.md) važe

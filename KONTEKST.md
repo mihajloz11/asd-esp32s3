@@ -73,7 +73,7 @@ autoriteta je ovaj:
 | Rezultat prvog fizičkog testa | [`docs/rezultat-fan01-2026-08-16.md`](docs/rezultat-fan01-2026-08-16.md) |
 | Sve zamke koje su već koštale vremena (P1–P19) | [`docs/problemi-i-rjesenja.md`](docs/problemi-i-rjesenja.md) |
 | Hronologija svega urađenog | [`docs/DNEVNIK-NEXT-LEVEL.md`](docs/DNEVNIK-NEXT-LEVEL.md), [`docs/dnevnik-projekta.md`](docs/dnevnik-projekta.md) |
-| Elektronika i lemljenje | [`docs/plan-dvije-plocice.md`](docs/plan-dvije-plocice.md) + `docs/sema-sklopa.pdf` |
+| Elektronika i lemljenje | [`radno/elektronika/plan-dvije-plocice.md`](radno/elektronika/plan-dvije-plocice.md) + `radno/elektronika/sema-sklopa.pdf` |
 
 **Puni indeks sa oznakom aktuelno/istorijsko:** [`docs/INDEKS.md`](docs/INDEKS.md).
 
@@ -162,6 +162,8 @@ radovi/telfor2026/           rad za TELFOR 2026
 models/         PSD .npz/meta + istorijski .keras/.tflite artefakti
 results/        results.csv, logovi, fizički runovi, kanonska evaluacija
 data/           DCASE 2026 dev skup (gitignored)
+radno/          odvojivo prije javnog repoa — elektronika/ (sklapanje, lemljenje,
+                šeme, E5/INA226) i ucenje/ (uputstva); vidi radno/README.md
 ```
 
 Finalni put u firmveru je `psd_live.c` + `psd_features_c.c` +

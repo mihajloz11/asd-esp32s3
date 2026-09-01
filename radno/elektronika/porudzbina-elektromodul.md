@@ -74,7 +74,7 @@ Samo obavezno + dostava = **2.764 din**.
 Prošao sam kroz `main/` da vidim gdje spisak i kod mogu da se ne poklope. Ukratko: **spisak je dobar, ništa ne fali od kupovine za osnovni rad**, ali ima 6 stvari koje mogu da te iznenade pri spajanju.
 
 ### ✅ Što je potvrđeno da radi (kod postoji, poklapa se s hardverom)
-- **I2S mikrofon:** pinovi 4/5/6, 32-bit slot, **lijevi slot** (L/R→GND), mono, `>>14` shift — INMP441 potpuno podržan ([audio_i2s.c](../firmware/esp32s3_asd/main/audio_i2s.c)).
+- **I2S mikrofon:** pinovi 4/5/6, 32-bit slot, **lijevi slot** (L/R→GND), mono, `>>14` shift — INMP441 potpuno podržan ([audio_i2s.c](../../firmware/esp32s3_asd/main/audio_i2s.c)).
 - **PSRAM OCT + 32 MB flash** u sdkconfig-u — tačno za N32R16V, nema boot-loop rizika ako koristiš default.
 - **Particija:** 4 MB app + 20 MB FAT za klipove; eval čita PCM16 mono 16 kHz s flasha.
 - **Model je ugrađen** (`fan_tiny32_s0` int8, 69 KB) — on-device inferenca ima šta da vrti.

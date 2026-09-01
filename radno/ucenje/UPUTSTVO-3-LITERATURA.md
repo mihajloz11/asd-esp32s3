@@ -4,10 +4,10 @@
 
 > **Prvo, pošteno:** PDF-ovi ovih radova **nisu preuzeti u repo**. U projektu
 > postoje samo citati i linkovi — u
-> [`../plan-master-rada.md`](../plan-master-rada.md) (sekcije 2 i 12),
-> [`istrazivanje-psd-model.md`](istrazivanje-psd-model.md) (dno) i u spisku
+> [`../../plan-master-rada.md`](../../plan-master-rada.md) (sekcije 2 i 12),
+> [`istrazivanje-psd-model.md`](../../docs/istrazivanje-psd-model.md) (dno) i u spisku
 > literature master rada
-> ([`../radovi/master-rad/rad_tekst.py`](../radovi/master-rad/rad_tekst.py),
+> ([`../../radovi/master-rad/rad_tekst.py`](../../radovi/master-rad/rad_tekst.py),
 > funkcija `_literatura`). Ovaj dokument ih sabira na jedno mjesto i za svaki
 > kaže **zašto postoji u ovom radu** i **šta u njemu treba pročitati**.
 > Preuzimanje PDF-ova: vidi [odjeljak 5](#5-kako-preuzeti-pdf-ove).
@@ -40,10 +40,10 @@ zaključak. Za odbranu ti trebaju **opis zadatka** i **tabele rezultata**.
 - Referenca [1] u radu i cijela postavka mjerenja — 7 mašina, `source`/`target`
   domen, first-shot uslovi.
 - Baseline autoenkoder iz [2]/[3] je tačno ono što je implementirano u
-  [`../pc/asd/model.py`](../pc/asd/model.py) (640→128→8→128→640) i što je dalo
+  [`../../pc/asd/model.py`](../../pc/asd/model.py) (640→128→8→128→640) i što je dalo
   AUC 0,451 na `fan` target domenu.
 - Metrika (AUC + pAUC pri FPR ≤ 0,1, harmonijska sredina) implementirana u
-  [`../pc/asd/eval.py`](../pc/asd/eval.py).
+  [`../../pc/asd/eval.py`](../../pc/asd/eval.py).
 
 **Šta konkretno čitati:**
 
@@ -67,7 +67,7 @@ zaključak. Za odbranu ti trebaju **opis zadatka** i **tabele rezultata**.
 | 9 | Harada et al., *ToyADMOS2*, DCASE Workshop 2021, str. 1–5 | [doi:10.5281/zenodo.5770113](https://doi.org/10.5281/zenodo.5770113) | ★★ |
 
 **Gdje se koriste:** [7] su podaci na kojima je sve mjereno
-([`../pc/asd/data.py`](../pc/asd/data.py) očekuje raspakovanu strukturu
+([`../../pc/asd/data.py`](../../pc/asd/data.py) očekuje raspakovanu strukturu
 `data/dcase2026_dev/<masina>/{train,test}`). [8] i [9] su izvorni skupovi od
 kojih je DCASE 2026 sastavljen — citiraju se, ne koriste direktno.
 
@@ -75,7 +75,7 @@ kojih je DCASE 2026 sastavljen — citiraju se, ne koriste direktno.
 udaljenost, uslovi) i **spisak tipova kvarova**. To je jedini dio koji ti treba
 da bi u radu mogao napisati *šta „anomalija" u ovom skupu zapravo jeste* — a to
 je važno, jer je izmjereno da DCASE anomalija odgovara kvaru od oko −30 dB, što
-je vrlo suptilno ([`put-do-modela.md`](put-do-modela.md), faza 5).
+je vrlo suptilno ([`put-do-modela.md`](../../docs/put-do-modela.md), faza 5).
 
 ---
 
@@ -91,11 +91,11 @@ Ova tri rada su **temelj onoga što je stvarno na pločici**.
 
 **Gdje se koriste:**
 
-- **Welch [10]** → [`psd_features_c.c`](../firmware/esp32s3_asd/main/psd_features_c.c)
+- **Welch [10]** → [`psd_features_c.c`](../../firmware/esp32s3_asd/main/psd_features_c.c)
   i `bench_periodicity.py`: `nperseg = 8192`, preklapanje 50 %, Hann prozor. To je
   doslovno metod iz ovog rada.
 - **Ledoit–Wolf [11]** → procjena kovarijanse iz 990 snimaka, čiji inverz je
-  matrica 96×96 u [`psd_model_data.h`](../firmware/esp32s3_asd/main/psd_model_data.h).
+  matrica 96×96 u [`psd_model_data.h`](../../firmware/esp32s3_asd/main/psd_model_data.h).
   Bez skupljanja inverz nije numerički siguran.
 - **Mahalanobis [12]** → funkcija `asd_psd_score` u istom C fajlu.
 
@@ -134,7 +134,7 @@ rad popunjava.
   put koji je odrađen za istorijski TFLM mod; domen (EKG) nije bitan.
 - [15] i [16] — za tabelu poređenja: šta jesu i **šta nisu** uradili (nema DCASE
   protokola, nema domain-shift evaluacije, nije MCU klasa…). Ta tabela je u
-  [`../plan-master-rada.md`](../plan-master-rada.md), sekcija 2.3.
+  [`../../plan-master-rada.md`](../../plan-master-rada.md), sekcija 2.3.
 - [18] — **poglavlja o kvantizaciji i o TFLM areni**, ako želiš temeljno
   razumijevanje umjesto samo upotrebe.
 
@@ -142,8 +142,8 @@ rad popunjava.
 
 ## 5. Radovi na koje se projekat oslanjao u istraživanju modela
 
-Ovi se pominju u [`istrazivanje-psd-model.md`](istrazivanje-psd-model.md) i
-[`put-do-modela.md`](put-do-modela.md) kao potvrda ili kontrast nalazima.
+Ovi se pominju u [`istrazivanje-psd-model.md`](../../docs/istrazivanje-psd-model.md) i
+[`put-do-modela.md`](../../docs/put-do-modela.md) kao potvrda ili kontrast nalazima.
 
 | # | Rad | Link | Zašto |
 |---|---|---|---|
@@ -179,7 +179,7 @@ motivaciju**: tu je fizičko obrazloženje harmonijskih linija rotacionih mašin
 
 **INMP441 datasheet je jedini dokument iz ove tabele koji vrijedi pročitati u
 cjelini** — kratak je, a objašnjava tačno ono što je u
-[`audio_i2s.c`](../firmware/esp32s3_asd/main/audio_i2s.c) implementirano.
+[`audio_i2s.c`](../../firmware/esp32s3_asd/main/audio_i2s.c) implementirano.
 
 ---
 

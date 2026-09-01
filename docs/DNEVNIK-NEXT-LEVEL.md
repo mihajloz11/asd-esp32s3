@@ -469,7 +469,7 @@ Lampica i taster idu u zasebnom FreeRTOS tasku na 20 ms; bez toga bi se obrazac
 osvježavao tek svakih 256 ms i treperenje od 5 Hz se ne bi ni vidjelo.
 
 Ostaje `BLOCKED_HARDWARE`: taster i LED **nisu zalemljeni**. Otpornici 220–330 Ω
-su na spisku [donijeti-sa-posla.md](donijeti-sa-posla.md). Logika je pokrivena
+su na spisku [donijeti-sa-posla.md](../radno/elektronika/donijeti-sa-posla.md). Logika je pokrivena
 testovima, sam pritisak nije provjeren na pločici.
 
 ## Blok D — Faza 4: vremenska odluka

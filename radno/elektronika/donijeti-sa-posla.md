@@ -8,7 +8,7 @@
 >
 > **Ventilator se više ne traži.** FAN01 od 16.08. je izveden na prenosivom USB
 > ventilatoru koji već imaš, uz mikrofon na 20 cm i 90° na osu duvanja
-> ([rezultat-fan01-2026-08-16.md](rezultat-fan01-2026-08-16.md)). Raniji zapisi
+> ([rezultat-fan01-2026-08-16.md](../../docs/rezultat-fan01-2026-08-16.md)). Raniji zapisi
 > koji su ventilator, 12 V adapter i nosač vodili kao otvorenu nabavku su
 > zatvoreni.
 
@@ -51,7 +51,7 @@ putu za demo, ne više „srednji prioritet".
 
 **Drugi mikrofon se NE lemi.** Faza 5 je izmjerila da su sve dual-channel
 varijante slabije od jednog kanala; modul #2 ostaje rezerva. Detalji:
-[DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md), blok G.
+[DNEVNIK-NEXT-LEVEL.md](../../docs/DNEVNIK-NEXT-LEVEL.md), blok G.
 
 ### Otpornik za LED — račun i zamka sa zelenom
 
@@ -110,9 +110,9 @@ dekapling na sebi.
 ## Šta se ovim otključava
 
 Ovaj spisak pokriva samo nabavni dio. Šta se radi kad komponente budu na stolu i
-kojim redom stoji u [PREOSTALO.md](PREOSTALO.md); redoslijed lemljenja ploče U je
+kojim redom stoji u [PREOSTALO.md](../../docs/PREOSTALO.md); redoslijed lemljenja ploče U je
 u [plan-dvije-plocice.md §5](plan-dvije-plocice.md), a vođeni test u
-[GUIDED25-TEST-VENTILATORA.md](GUIDED25-TEST-VENTILATORA.md).
+[GUIDED25-TEST-VENTILATORA.md](../../docs/GUIDED25-TEST-VENTILATORA.md).
 
 Dvije granice koje ovaj spisak **ne** ukida: build v1.8/q1.5 nije flashovan ni
 runtime-potvrđen na pločici, a commissioning pragovi su još
@@ -197,7 +197,7 @@ sigurnije laboratorijsko napajanje sa limitom 0,30 A (stavka 4).
 
 `ASD_INA_TEST` je trenutno u stanju `READY` i **odbija da ponovi mjerenje**.
 Guard je `esp_reset_reason() != ESP_RST_POWERON`
-([ina226_test.c:147](../firmware/esp32s3_asd/main/ina226_test.c:147)), a reset
+([ina226_test.c:147](../../firmware/esp32s3_asd/main/ina226_test.c:147)), a reset
 preko EN pina se prijavljuje kao `rst:0x1 (POWERON)` — izmjereno 11.08.
 Posljedice:
 

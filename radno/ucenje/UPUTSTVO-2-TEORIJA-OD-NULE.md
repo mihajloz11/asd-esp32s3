@@ -55,7 +55,7 @@ može da predstavi. 0 dBFS je maksimum, negativne vrijednosti su tiše. Naš tip
 sobni nivo je oko **−46 dBFS**. Skala je logaritamska: −6 dB je dvostruko manja
 amplituda.
 
-> **Gdje je ovo u kodu:** [`audio_i2s.c`](../firmware/esp32s3_asd/main/audio_i2s.c)
+> **Gdje je ovo u kodu:** [`audio_i2s.c`](../../firmware/esp32s3_asd/main/audio_i2s.c)
 > — `AUDIO_SR` je 16000, konverzija 32→16 bita je u `capture_task`.
 
 ---
@@ -91,7 +91,7 @@ ovaj projekat ne bi radio na mikrokontroleru.
 
 Naša implementacija je klasični **radix-2 FFT** sa unaprijed izračunatim
 tabelama sinusa/kosinusa (`twiddle` faktori) i bit-reverse permutacijom:
-[`psd_features_c.c`](../firmware/esp32s3_asd/main/psd_features_c.c), nizovi
+[`psd_features_c.c`](../../firmware/esp32s3_asd/main/psd_features_c.c), nizovi
 `tw_re`, `tw_im`, `bitrev`.
 
 ### 2.3 Šta znači jedan „bin"
@@ -122,7 +122,7 @@ gubimo vremensku rezoluciju.
 
 Za mašinu koja lupa (ventil, udar ležaja) izbor bi bio suprotan — i to je tačno
 razlog zašto naš model *ne* generalizuje na `valve` i `slider`
-([`put-do-modela.md`](put-do-modela.md), faza 4b).
+([`put-do-modela.md`](../../docs/put-do-modela.md), faza 4b).
 
 ---
 
@@ -144,7 +144,7 @@ Cijena: glavni „brijeg" oko prave frekvencije postaje malo širi. Dobitak: bo�
 listovi padnu za desetine decibela, pa slabu liniju pored jake možeš uopšte da
 vidiš. Za mašinu sa mnogo harmonika različite jačine to je presudno.
 
-U kodu: niz `hann` u [`psd_features_c.c`](../firmware/esp32s3_asd/main/psd_features_c.c).
+U kodu: niz `hann` u [`psd_features_c.c`](../../firmware/esp32s3_asd/main/psd_features_c.c).
 
 ### 3.2 Periodogram i zašto je previše šuman
 
@@ -225,7 +225,7 @@ Zanimljiv izmjeren detalj iz našeg skupa: tri „brzine" (`spd_1/2/3`) DCASE
 ventilatora **imaju istu obrtnu frekvenciju** (vrhovi 68,4 / 76,2 / 78,1 Hz se
 poklapaju unutar jednog bina), a razlikuju se samo po širokopojasnom nivou. Zato
 je cijela ideja „kalibracija po radnom režimu" pala na nulu razlike
-([`put-do-modela.md`](put-do-modela.md), faza 6).
+([`put-do-modela.md`](../../docs/put-do-modela.md), faza 6).
 
 ---
 
@@ -249,8 +249,8 @@ Naša zamjena — 96 logaritamskih traka nad FFT 8192 — je konceptualno sličn
 (grupisanje binova u trake), ali sa 8× finijom polaznom rezolucijom i granicama
 biranim za mašinu, ne za uho.
 
-> **Log-mel put nije obrisan** iz repoa: [`features.py`](../pc/asd/features.py) i
-> [`features_c.c`](../firmware/esp32s3_asd/main/features_c.c) i dalje postoje jer
+> **Log-mel put nije obrisan** iz repoa: [`features.py`](../../pc/asd/features.py) i
+> [`features_c.c`](../../firmware/esp32s3_asd/main/features_c.c) i dalje postoje jer
 > su na njima izmjereni svi rezultati autoenkodera koji idu u rad kao poređenje.
 
 ---
@@ -306,7 +306,7 @@ umjesto stvarnih **0,758**. Otud pravilo koje sad drži cio projekat:
 > — nikad za centar, kovarijansu, prag ili izbor varijante.
 
 CI to čak i mehanički provjerava: sve politike moraju nositi
-`target_anomalies_used: false` ([`ci.yml`](../.github/workflows/ci.yml)).
+`target_anomalies_used: false` ([`ci.yml`](../../.github/workflows/ci.yml)).
 
 ---
 
@@ -384,7 +384,7 @@ veliku.
 **Dvostranost dolazi besplatno.** Udaljenost je uvijek pozitivna, pa raste i kad
 nešto poraste i kad nešto padne. Zato ovaj skor hvata i „ventilator se ubrzao" i
 „ventilator je stao" — što jednostrani prag na grešci rekonstrukcije nije mogao
-([P11](problemi-i-rjesenja.md#p11)).
+([P11](../../docs/problemi-i-rjesenja.md#p11)).
 
 ### 8.3 Podjela posla: oblik se uči unaprijed, centar na licu mjesta
 
@@ -442,7 +442,7 @@ uređaj je fitovao 0,77090 naspram PC-ovih 0,77064.
 
 U finalnom putu je gamma zamijenjena empirijskim p99, jer je robustni fit u
 runovima davao prag `791` naspram normalnih VERIFY prozora `2 083–7 766`
-([P26](problemi-i-rjesenja.md)).
+([P26](../../docs/problemi-i-rjesenja.md)).
 
 ### 9.2 Histereza — dva praga umjesto jednog
 
@@ -503,9 +503,9 @@ COMMISSION_VERIFY provjera praga na svježim normalnim prozorima
 MONITORING        ANOMALY → ANOMALY_SUSTAINED
 ```
 
-Kod: [`asd_commissioning.c`](../firmware/esp32s3_asd/main/asd_commissioning.c),
-[`asd_temporal.c`](../firmware/esp32s3_asd/main/asd_temporal.c),
-[`asd_interference.c`](../firmware/esp32s3_asd/main/asd_interference.c).
+Kod: [`asd_commissioning.c`](../../firmware/esp32s3_asd/main/asd_commissioning.c),
+[`asd_temporal.c`](../../firmware/esp32s3_asd/main/asd_temporal.c),
+[`asd_interference.c`](../../firmware/esp32s3_asd/main/asd_interference.c).
 
 ---
 
@@ -571,7 +571,7 @@ AUC je istraživačka metrika. Za uređaj se prijavljuju:
 | `dropped` | izgubljenih audio uzoraka | **0** |
 | `compute_ms` | vrijeme računa po prozoru od 10 s | 716–728 ms |
 
-> Pravilo iz [`cilj-modela.md`](cilj-modela.md): *„Za stvarni uređaj AUC nije
+> Pravilo iz [`cilj-modela.md`](../../docs/cilj-modela.md): *„Za stvarni uređaj AUC nije
 > dovoljan."*
 
 ### 10.5 Zašto se rezultati prijavljuju kao „± std" i sa uparenim seedovima
@@ -622,7 +622,7 @@ brže od realnih, a vektorske instrukcije obrađuju više njih odjednom).
 
 **PTQ (Post-Training Quantization)** — kvantizuje se gotov model, uz mali
 reprezentativni skup podataka da bi se odredile skale. To smo radili
-([`quantize.py`](../pc/asd/quantize.py)).
+([`quantize.py`](../../pc/asd/quantize.py)).
 
 **Izmjereno u ovom radu:** kvantizacija je **besplatna** — ΔhMean ∈ [−0,005;
 +0,011] preko svih 35 kombinacija modela i mašina. Čak i Mahalanobis backend nad
@@ -654,7 +654,7 @@ samo od vektorskih instrukcija.
 Zato što je izmjereno da statistički model radi **bolje** (0,864 vs 0,451) i
 **jeftinije** (38 KB tabela + jedno množenje matricom, bez arene i bez
 interpretera). Rad taj put ne skriva — on je i dalje u repou
-([`tflm_infer.cc`](../firmware/esp32s3_asd/main/tflm_infer.cc)) sa svim
+([`tflm_infer.cc`](../../firmware/esp32s3_asd/main/tflm_infer.cc)) sa svim
 mjerenjima, jer negativan rezultat sa mjerenjem je rezultat.
 
 ---
@@ -687,14 +687,14 @@ pa preko žica ide digitalni tok. Prednost je ogromna — analogni signal na 20 
 | **SD / DIN** | serial data | sami bitovi |
 
 Kod nas je **ESP32 master** (on generiše BCLK i WS), a mikrofon slave. Pinovi na
-S3: BCLK 4, WS 5, SD 6 ([`pins.h`](../firmware/esp32s3_asd/main/pins.h)).
+S3: BCLK 4, WS 5, SD 6 ([`pins.h`](../../firmware/esp32s3_asd/main/pins.h)).
 
 INMP441 ima i pin `L/R`: vezan na GND znači „javljaj se u lijevom slotu". Zato
 je u kodu `slot_mask = I2S_STD_SLOT_LEFT`.
 
 Format je **Philips standard**: podatak kasni jedan takt za promjenom WS-a. Otud
 `I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG` u
-[`audio_i2s.c`](../firmware/esp32s3_asd/main/audio_i2s.c).
+[`audio_i2s.c`](../../firmware/esp32s3_asd/main/audio_i2s.c).
 
 ### 12.3 24 bita u 32-bitnom slotu i `>>14`
 
@@ -743,7 +743,7 @@ odgodi snimanje na drugom.
 **Watchdog** je tajmer koji restartuje sistem ako task predugo ne ustupi
 procesor. Jednom nas je koštao runa: ispis dugačkog base64 toka trajao je 19 s
 bez ustupanja, pa je watchdog upisao svoj tekst **usred** toka i pokvario WAV
-([P4](problemi-i-rjesenja.md#p4)). Rješenje: `vTaskDelay` svakih 16 linija +
+([P4](../../docs/problemi-i-rjesenja.md#p4)). Rješenje: `vTaskDelay` svakih 16 linija +
 kontrolna suma.
 
 ### 12.6 Bug koji vrijedi zapamtiti: timeout u tickovima
@@ -757,7 +757,7 @@ Podmuklost je bila u tome što je `dropped` i dalje bio 0 (ništa nije stizalo d
 se odbaci!), a `level_dbfs` je bio −999. Sve je „izgledalo uredno".
 
 Komentar sa mjerenjem stoji u kodu:
-[`audio_i2s.c:60`](../firmware/esp32s3_asd/main/audio_i2s.c#L60).
+[`audio_i2s.c:60`](../../firmware/esp32s3_asd/main/audio_i2s.c#L60).
 
 ### 12.7 Tranzijent pri uključenju
 
@@ -778,7 +778,7 @@ otporan na gubitak napajanja. Tu se čuva naučeni profil (centar, pragovi,
 metapodaci).
 
 Format nosi **schema verziju, otisak (fingerprint) politike, generaciju i CRC32**
-([`asd_profile_store.c`](../firmware/esp32s3_asd/main/asd_profile_store.c)) — da
+([`asd_profile_store.c`](../../firmware/esp32s3_asd/main/asd_profile_store.c)) — da
 uređaj nikad ne učita profil koji je snimljen pod drugim pravilima.
 
 Trenutno je politika `DEVELOPMENT`, pa je runtime **RAM-only**: namjerno ne

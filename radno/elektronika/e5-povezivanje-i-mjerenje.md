@@ -2,7 +2,7 @@
 
 > **Status 11.08.2026: prvo mjerenje je izvedeno.** Rezultat, nalazi i sljedeći
 > koraci su u [`e5-mjerenje-01-rezultat.md`](e5-mjerenje-01-rezultat.md), sirovi
-> log u [`results/e5_mjerenje_01_uart.log`](../results/e5_mjerenje_01_uart.log).
+> log u [`results/e5_mjerenje_01_uart.log`](../../results/e5_mjerenje_01_uart.log).
 >
 > Ukratko: strujni kanal radi i potvrđen je nezavisno (34,73 mA), ali naponski
 > kanal čita 3,425 V umjesto ~3,22 V, a napojna grana ima ~2 Ω serijskog otpora.

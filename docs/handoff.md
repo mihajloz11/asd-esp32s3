@@ -68,7 +68,7 @@ Dataset DCASE 2026 dev, 7 mašina, u `data/` (nije u gitu).
 
 INA226 I2C lanac je potvrđen 10.08.2026. Uzrok ranijeg kvara bio je pogrešno
 spojen GND, ne modul. Preostaje E5 povezivanje strujnog puta preko IN+/IN− i
-VBS prema [šemi povezivanja](sema-povezivanja.md).
+VBS prema [šemi povezivanja](../radno/elektronika/sema-povezivanja.md).
 
 ## Firmware — build modovi
 

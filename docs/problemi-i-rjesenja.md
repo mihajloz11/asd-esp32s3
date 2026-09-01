@@ -652,8 +652,8 @@ oštećena ili zaliven port:
 - membrana ne pretvara zvuk → nikakav akustički signal se ne vidi, ni sinus na
   1 kHz blizu pune skale. **Točno ono što je izmjereno.**
 
-Ovo je i unaprijed predviđen rizik: [lemljenje.md](lemljenje.md) i
-[hardver-lista.md](hardver-lista.md) izričito kažu **„ne dirati sound port"**, i
+Ovo je i unaprijed predviđen rizik: [lemljenje.md](../radno/elektronika/lemljenje.md) i
+[hardver-lista.md](../radno/elektronika/hardver-lista.md) izričito kažu **„ne dirati sound port"**, i
 zato su kupljena dva komada. Rastvarači, ultrazvučno čišćenje i bilo koja
 tečnost u portu su za MEMS mikrofon zabranjeni — izopropanol može rastvoriti ili
 deformisati membranu, a i kad ne ošteti, ostavlja ostatak.
@@ -733,7 +733,7 @@ modul #1 je kroz 31 s neprekidnog kucanja dao raspon 1,2 dB i peak ≤ 20.
 
 Time je potvrđena i dijagnoza: podatkovni put je cijelo vrijeme radio, akustički
 nije postojao. Uzrok — izopropanol u sound portu — ostaje najvjerovatnije
-objašnjenje, i pravilo „ne dirati sound port" iz [lemljenje.md](lemljenje.md)
+objašnjenje, i pravilo „ne dirati sound port" iz [lemljenje.md](../radno/elektronika/lemljenje.md)
 stoji.
 
 **Šta je ovo odblokiralo:** validnu kalibraciju na uređaju, cijelu DET fazu i

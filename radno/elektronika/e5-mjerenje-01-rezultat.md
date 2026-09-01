@@ -2,7 +2,7 @@
 
 **Datum:** 11.08.2026
 **Firmware:** `on-device-verified-37-gc5a8678`, ESP-IDF v5.5.5, build `ASD_INA_TEST=1`
-**Sirovi log:** [`results/e5_mjerenje_01_uart.log`](../results/e5_mjerenje_01_uart.log)
+**Sirovi log:** [`results/e5_mjerenje_01_uart.log`](../../results/e5_mjerenje_01_uart.log)
 **Postavka:** [`e5-povezivanje-i-mjerenje.md`](e5-povezivanje-i-mjerenje.md)
 
 ---
@@ -36,7 +36,7 @@ jednostavno ispisivati rezultat na konzolu i čekati da ga neko pročita.
 
 ### Riješeno na dva načina istovremeno
 
-**1. Jednokratni armirani režim u firmveru** ([`ina226_test.c`](../firmware/esp32s3_asd/main/ina226_test.c))
+**1. Jednokratni armirani režim u firmveru** ([`ina226_test.c`](../../firmware/esp32s3_asd/main/ina226_test.c))
 
 Test prolazi kroz tri stanja koja se čuvaju u NVS-u:
 
@@ -279,7 +279,7 @@ tako što se idle izmjeri sa anketiranjem i bez njega.
 ### E. Poređenje PSD i neuronskog modela po energiji
 
 Završna tačka za rad. PSD model je već pobijedio po tačnosti
-(target AUC 0,864 naspram 0,669 — [`istrazivanje-psd-model.md`](istrazivanje-psd-model.md)).
+(target AUC 0,864 naspram 0,669 — [`istrazivanje-psd-model.md`](../../docs/istrazivanje-psd-model.md)).
 Ako pobijedi i po energiji po inferenci, to je jak zaključak koji spaja E4, E5 i
 izbor finalnog modela.
 
