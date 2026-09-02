@@ -96,6 +96,7 @@ Zašto je odvojen: [`../radno/README.md`](../radno/README.md).
 | Dokument | Sadržaj |
 |---|---|
 | [`plan-dvije-plocice.md`](../radno/elektronika/plan-dvije-plocice.md) | **aktuelna** podjela: ploča U (uređaj) + ploča M (mjerna) |
+| [`uredjaj-na-protobordu.md`](../radno/elektronika/uredjaj-na-protobordu.md) | **odluka 02.09.**: uređaj ostaje na MB-102, LED/taster na 3D držaču, koji otpornici |
 | [`lemljenje-cjeline-i-mjerenje.md`](../radno/elektronika/lemljenje-cjeline-i-mjerenje.md) | **bench verzija**: šta se lemi po cjelini, spajanje za E5, logički analizator |
 | [`sema-cjeline.svg`](../radno/elektronika/sema-cjeline.svg) | šema u tri panela: mjerna ploča · uređaj · spajanje za mjerenje |
 | [`sema-sklopa.pdf`](../radno/elektronika/sema-sklopa.pdf) | crteži sklopa, 7 strana A4 (generiše `make_sema_sklopa.py`) |

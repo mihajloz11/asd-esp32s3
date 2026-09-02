@@ -8,7 +8,7 @@ Sklop se dijeli na **dvije nezavisne cjeline** koje se spajaju sa 4 žice:
 ```
    ┌──── CJELINA 1: MJERNA (energetska) ────┐             ┌──── CJELINA 2: UREĐAJ ────┐
    │  ploča 4×6 cm, sve zalemljeno          │   4 žice    │  ESP32-S3 + INMP441       │
-   │  AMS1117 → INA226 (šant 0,1 Ω) → 470µF │ ══════════  │  + 2 LED + 2×330 Ω        │
+   │  AMS1117 → INA226 (šant 0,1 Ω) → 470µF │ ══════════  │  + 2 LED + otpornici      │
    └────────────────────────────────────────┘  3V3 GND    │  + taster                 │
         ↑                                      SDA SCL    └───────────────────────────┘
    5 V punjač  ILI  lab. 3,3 V direktno na IN+                 ↑ 4 žice (12/13/14+GND)
@@ -79,14 +79,19 @@ Silk redoslijed INA226: `IN+ · IN− · VBS · ALE · SDA · SCL · GND · VCC`
 
 Ovo je odvojena cjelina, radi sama na powerbanku i ne dira se pri mjerenju.
 
+> **Odluka 02.09.2026:** uređaj se **ne lemi na ploču** — ostaje na protobordu
+> MB-102, a LED, otpornici i taster idu na 3D štampani držač.
+> Obrazloženje, računica otpornika i tabela veza:
+> [uredjaj-na-protobordu.md](uredjaj-na-protobordu.md).
+
 ### Šta se lemi (headeri S3, mikrofona i INA226 su već zalemljeni)
 
 | # | Šta | Spojeva |
 |---|---|---|
-| 1 | 2× otpornik 330 Ω, u seriji sa LED | 4 |
+| 1 | Otpornik 100 Ω (zelena) i 330 Ω (crvena), u seriji sa LED | 4 |
 | 2 | Zelena LED (status) + crvena LED (alarm) | 4 |
 | 3 | Žice na faston jezičke arkadnog tastera | 2 (nabijaju se, ne leme) |
-| 4 | 100 nF + 10 µF **na padove mikrofona** | 4 |
+| 4 | 470 nF + 10 µF **na padove mikrofona** (100 nF ako ga nabaviš) | 4 |
 | 5 | *(opciono)* header K-LA 1×4 za logički analizator | 4 |
 
 ### Kako se povezuje
@@ -94,7 +99,7 @@ Ovo je odvojena cjelina, radi sama na powerbanku i ne dira se pri mjerenju.
 ```
   INMP441                    ESP32-S3
   ───────                    ────────
-  VDD  ──────────────────── 3V3          ┐ 100 nF (keramika) između VDD i GND
+  VDD  ──────────────────── 3V3          ┐ 470 nF (keramika) između VDD i GND
   GND  ──────────────────── GND          ┘ 10 µF (elektrolit, + na VDD) — oba
   SCK  ──────────────────── GPIO 4         zalemljena NA pločicu mikrofona
   WS   ──────────────────── GPIO 5
@@ -102,7 +107,7 @@ Ovo je odvojena cjelina, radi sama na powerbanku i ne dira se pri mjerenju.
   L/R  ──────────────────── GND     ← obavezno, inače firmware čita tišinu
 
 
-  GPIO 2  ──[ 330 Ω ]──▶|── GND       zelena LED (status)
+  GPIO 2  ──[ 100 Ω ]──▶|── GND       zelena LED (status)
   GPIO 11 ──[ 330 Ω ]──▶|── GND       crvena LED (alarm)
             ▲ duža nožica (anoda) ide ka otporniku
 
@@ -209,11 +214,13 @@ INA226). Granice DSP-a i inference se tako ne vide — za njih trebaju markeri.
 
 | Šta | Kom | Gdje |
 |---|---|---|
-| Ženska pin letvica 40×1 (ident 407) | 2 | Mikro Princ, 42 din/kom |
-| Otpornik 330 Ω 1/4 W (ident 32004) | 10 (min. pakovanje) | Mikro Princ, 2,28 din/kom |
-| Keramika 100 nF raster 2,54 mm (CKM 0.1uF/63V RM2.5) | 2 | Mikro Princ, 12 din/kom |
+| Ženska pin letvica 40×1 (ident 407) — samo za mjernu ploču | 2 | Mikro Princ, 42 din/kom |
+| Otpornik **330 Ω** 1/4 W (ident 32004) — crvena LED | 10 (min. pakovanje) | Mikro Princ, 2,28 din/kom |
+| Otpornik **100 Ω** 1/4 W — zelena LED | 10 (min. pakovanje) | Mikro Princ, ≈ 2,3 din/kom |
 
-≈ 130 din. Sve ostalo je na stolu.
+≈ 130 din. **Kondenzatori se ne kupuju** — 470 nF keramika, 10 µF i 470 µF
+elektroliti su već na stolu. Zašto dvije različite vrijednosti otpornika i zašto
+uređaj ostaje na protobordu: [uredjaj-na-protobordu.md](uredjaj-na-protobordu.md).
 
 **Firmware:** markeri faza na GPIO 12/13/14 još nisu implementirani — to je
 `gpio_set_level` na ulazu i izlazu iz tri postojeće faze u `psd_live.c`.

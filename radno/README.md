@@ -26,6 +26,7 @@ Sve što opisuje **fizičku izradu uređaja i mjerenje potrošnje**:
 |---|---|
 | `plan-dvije-plocice.md` | aktuelna podjela: ploča U (uređaj) + ploča M (mjerna) |
 | `lemljenje-cjeline-i-mjerenje.md` | bench verzija: šta se lemi po cjelini, spajanje za E5, logički analizator |
+| `uredjaj-na-protobordu.md` | odluka 02.09.: uređaj na MB-102, LED/taster na 3D držaču, izbor otpornika i kondenzatora |
 | `lemljenje.md`, `lemljenje-kratko.md`, `lemljenje-kratko.html` | procedura lemljenja |
 | `sema-cjeline.svg` | šema u tri panela: mjerna ploča · uređaj · spajanje za mjerenje |
 | `sema-povezivanja.md`, `sema-povezivanja.svg` | pinout INMP441 + INA226 |

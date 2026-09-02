@@ -136,7 +136,7 @@
   <rect x="20" y="580" width="1140" height="580" rx="10" fill="#ffffff" stroke="#dadce0" stroke-width="1.5"/>
   <rect x="20" y="580" width="1140" height="4" rx="2" fill="#1a73e8"/>
   <text x="44" y="612" font-size="16" font-weight="bold" fill="#202124">CJELINA 2 — UREĐAJ: ESP32-S3 + INMP441 + 2 LED + taster · radi sam na powerbanku</text>
-  <text x="44" y="634" font-size="11.5" fill="#5f6368">Lemi se: 2× otpornik 330 Ω + 2 LED (8 spojeva), 100 nF i 10 µF na padove mikrofona, žice na faston jezičke tastera. Headeri S3 i mikrofona su već zalemljeni.</text>
+  <text x="44" y="634" font-size="11.5" fill="#5f6368">Lemi se: otpornici 100 Ω (zelena) i 330 Ω (crvena) + 2 LED (8 spojeva), 100 nF i 10 µF na padove mikrofona, žice na faston jezičke tastera. Headeri S3 i mikrofona su već zalemljeni.</text>
 
   <!-- INMP441 -->
   <rect x="55" y="675" width="175" height="225" rx="6" fill="#e8f0fe" stroke="#1a73e8" stroke-width="2"/>
@@ -225,7 +225,7 @@
   <text x="890" y="708" font-size="11" text-anchor="middle" fill="#188038" font-weight="bold">zelena — status</text>
   <line x1="740" y1="730" x2="795" y2="730" stroke="#188038" stroke-width="2.5"/>
   <rect x="795" y="718" width="62" height="24" fill="#ffffff" stroke="#202124" stroke-width="2.5"/>
-  <text x="826" y="735" font-size="11" font-weight="bold" text-anchor="middle" fill="#202124">330 Ω</text>
+  <text x="826" y="735" font-size="11" font-weight="bold" text-anchor="middle" fill="#202124">100 Ω</text>
   <line x1="857" y1="730" x2="895" y2="730" stroke="#202124" stroke-width="2.5"/>
   <path d="M895 718 L895 742 L925 730 Z" fill="#188038" stroke="#188038" stroke-width="2"/>
   <line x1="925" y1="716" x2="925" y2="744" stroke="#202124" stroke-width="3"/>
