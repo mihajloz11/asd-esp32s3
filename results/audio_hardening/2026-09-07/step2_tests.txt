@@ -1,0 +1,30 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\mihaj\Desktop\master new\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\mihaj\Desktop\master-psd-nonempty
+collecting ... collected 22 items
+
+pc/tests/test_audio_pcm_c.py::test_every_pcm_bin_keeps_existing_gain_and_rounding PASSED [  4%]
+pc/tests/test_audio_pcm_c.py::test_full_slot_range_saturates_without_sign_wrap PASSED [  9%]
+pc/tests/test_audio_liveness_contract.py::test_audio_data_path_has_total_deadline_and_no_infinite_wait PASSED [ 13%]
+pc/tests/test_audio_liveness_contract.py::test_silence_is_not_treated_as_a_read_error PASSED [ 18%]
+pc/tests/test_audio_liveness_contract.py::test_psd_live_maps_bounded_failures_to_named_fail_closed_reasons PASSED [ 22%]
+pc/tests/test_audio_quality_state_c.py::test_default_policy_matches_versioned_normal_only_record PASSED [ 27%]
+pc/tests/test_audio_quality_state_c.py::test_valid_normal_pcm_passes_and_metrics_match PASSED [ 31%]
+pc/tests/test_audio_quality_state_c.py::test_normal_only_40cm_level_is_above_liveness_floor PASSED [ 36%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples0-1000-0-0-1] PASSED [ 40%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples1-1000-0-0-3] PASSED [ 45%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples2-1000-0-0-3] PASSED [ 50%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples3-1000-0-0-4] PASSED [ 54%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples4-1000-0-0-6] PASSED [ 59%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples5-1000-20-21-7] PASSED [ 63%]
+pc/tests/test_audio_quality_state_c.py::test_nonfinite_metrics_are_sensor_fault_and_stop[dc] PASSED [ 68%]
+pc/tests/test_audio_quality_state_c.py::test_nonfinite_metrics_are_sensor_fault_and_stop[rms] PASSED [ 72%]
+pc/tests/test_audio_quality_state_c.py::test_nonfinite_metrics_are_sensor_fault_and_stop[rms_dbfs] PASSED [ 77%]
+pc/tests/test_audio_quality_state_c.py::test_feature_nonfinite_guard PASSED [ 81%]
+pc/tests/test_audio_quality_state_c.py::test_only_ok_can_continue_and_public_tokens_are_stable PASSED [ 86%]
+pc/tests/test_audio_quality_state_c.py::test_low_level_is_observation_only_during_wait PASSED [ 90%]
+pc/tests/test_audio_quality_state_c.py::test_clip_level_is_owned_by_validated_policy PASSED [ 95%]
+pc/tests/test_audio_quality_state_c.py::test_phase_specific_stop_state_integration PASSED [100%]
+
+============================= 22 passed in 1.00s ==============================

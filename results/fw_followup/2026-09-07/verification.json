@@ -1,0 +1,23 @@
+{
+  "original_working_firmware_sha256": "9ac2caca2c5010747547d4bb942aae96f700221588a4a6863b5c01948d967813",
+  "original_tracked_firmware_and_models_unchanged": true,
+  "packages": [
+    {
+      "package": "psd-nonempty-2026-09-07",
+      "candidate_sha256": "c78770f2552e6c8fc6e53e2d4fd539020e5765d16504706499a728ca90beeb8c",
+      "both_copies_verified": true
+    },
+    {
+      "package": "audio-saturation-2026-09-07",
+      "candidate_sha256": "a7ccd93704c4a26b1632950829fcaee88f851a7221c2169feb63b57899c129b3",
+      "both_copies_verified": true
+    },
+    {
+      "package": "audio-stats-sync-2026-09-07",
+      "candidate_sha256": "612b8b70aa69ff8e611c6c17108a7829da21306264133ccefe6f42b7b3bc884d",
+      "both_copies_verified": true
+    }
+  ],
+  "report_copies_identical": true,
+  "hardware_flashed": false
+}

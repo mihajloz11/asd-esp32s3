@@ -1,0 +1,18 @@
+{
+  "plan_sha256": "114c96c69fb3ea582fba817442aeabda1638862bdbc6fd430b5606a9a8dff8d2",
+  "target_anomaly_feature_reads": 0,
+  "models": {
+    "baseline_log96": "f4e3bc655251d94488398a5d1fd91c390f9f951a679576d18be5391e5f5e1a86",
+    "nonempty_log96": "470b38430d6335e3f8c3bd74c165c49669408961bdc6b3e619c0e0ecffb36a7c"
+  },
+  "split_manifests": {
+    "10": "e00d8099fed028b50ccdef83efa7a1c9b65a9a095e5b142a055faa097c9f1c28",
+    "20": "8e117290c5464216059f23c1d3797e519484915a23c1dd4fcda65eebfa20932d"
+  },
+  "band_map_sha256": "a3795689094e9940f7d6619ff2a829f7208983ca3dc5070e5783dd3bc21e468a",
+  "source_hashes": {
+    "pc/tools/evaluate_psd_nonempty.py": "eadfb90488e407855baaa11ff6889265802b85eb460d53401ef894fb2b4ed525",
+    "firmware/esp32s3_asd/main/psd_features_c.c": "c3577a0e5cffa505374a6f96fcf0d87dbcb71f21561282b9fc77528a1df4f51d",
+    "pc/tools/evaluate_canonical.py": "73c66673de040d3fabaa178241cc5c94dc33f9bada06cbee3ebe563a8392fcd8"
+  }
+}

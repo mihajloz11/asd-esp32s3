@@ -1,0 +1,14 @@
+{
+  "scope": "all locally reachable refs; text blobs only; reflogs and binary containers excluded",
+  "objects": 1858,
+  "blobs": 1235,
+  "binary_blobs_skipped": 196,
+  "text_bytes_scanned": 37875636,
+  "patterns": [
+    "private_key",
+    "github_token",
+    "aws_access_key",
+    "api_key"
+  ],
+  "hits": []
+}

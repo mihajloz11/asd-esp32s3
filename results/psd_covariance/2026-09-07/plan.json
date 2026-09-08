@@ -1,0 +1,17 @@
+{
+  "protocol": "psd-covariance-normal-only-v1",
+  "frontend": "nonempty_log96",
+  "candidates": ["ledoit_wolf", "eigen_floor_100", "diagonal_blend_010", "scale_floor_q25"],
+  "eigen_max_condition": 100.0,
+  "diagonal_blend": 0.1,
+  "source_scale_floor_quantile": 0.25,
+  "splits": 100,
+  "split_random_state": 20260809,
+  "k": [10, 20],
+  "normal_diagnostic_quantile": 0.99,
+  "normal_diagnostic_scope": "calibration-score q99 is a diagnostic only; it is not the firmware commissioning threshold",
+  "fit_policy": "source normal only; local centre from each normal calibration subset; models frozen before anomaly feature reads",
+  "selection_policy": "report all variants without retuning; no automatic firmware export or change to commissioning gates",
+  "evaluation_policy": "same development clips and paired splits as the nonempty experiment; no new independent dataset",
+  "physical_calibration_replay": false
+}

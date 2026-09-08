@@ -1,25 +1,11 @@
-# Tačno ono što `pytest pc/tests` traži — ništa više.
-#
-# ZAŠTO POSTOJI ODVOJENO OD requirements.txt. Puni requirements povlači
-# TensorFlow (~600 MB) i matplotlib, a nijedan host test ih ne uvozi;
-# CI bi zbog toga trajao minutima umjesto sekundi.
-#
-# ZAŠTO SE NE PIŠE RUČNO U ci.yml. Prvi prolaz CI-ja je pao na `tqdm`, koji
-# `pc/asd/data.py` uvozi a ja ga nisam naveo. Spisak sada stoji u fajlu i
-# provjerava se u čistom venvu prije nego što se dira workflow.
-#
-# Provjera (iz korijena repozitorija):
-#   python -m venv .venv-ci
-#   .venv-ci\Scripts\pip install -r pc\requirements-ci.txt
-#   .venv-ci\Scripts\python -m pytest pc/tests -q
-
+# host tests; tensorflow is only needed for the historical training pipeline
 numpy>=1.26,<2.1
 scipy>=1.11
 scikit-learn>=1.4
 soundfile>=0.12
 tqdm>=4.66
 pytest>=8.0
-# test_features_c.py poredi našu mel banku sa librosa referencom
+# reference implementation for mel parity
 librosa>=0.10
-# test_physical_fan_experiment.py mockuje `serial`, ali ga i uvozi
+# serial import used by host tests
 pyserial>=3.5
