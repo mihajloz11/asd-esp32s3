@@ -1,0 +1,20 @@
+{
+  "plan_sha256": "360aadd424256ca330a4eec994b654b7e8d7738aa6786ec9ef79de19dc4dc5f4",
+  "target_anomaly_feature_reads": 0,
+  "models": {
+    "ledoit_wolf": "b78a91c00c90db2b54510059b25410a76fbf68a164438d8f983b338843fadc63",
+    "eigen_floor_100": "ae98775c7c65c41ca11d10ce93c3d36e47d4514dac3528fcd67bca51a96049f1",
+    "diagonal_blend_010": "f823242f47040f56abe66152b38cd7268534fa5bb79c9adaa6de704d6090d713",
+    "scale_floor_q25": "987cdd882dd90628fecafe1b72d7fa5ac3f2502f2f26af8840492f3570f60fd0"
+  },
+  "normal_diagnostics_sha256": "9c0e17a05da380a0e4b28133c956173fbac7b117428aa62607ed867aa1b1bd7b",
+  "split_manifests": {
+    "10": "e00d8099fed028b50ccdef83efa7a1c9b65a9a095e5b142a055faa097c9f1c28",
+    "20": "8e117290c5464216059f23c1d3797e519484915a23c1dd4fcda65eebfa20932d"
+  },
+  "source_hashes": {
+    "pc/tools/evaluate_psd_covariance.py": "c13777c253dbed23c0181ab2bd3a9936e8d89e8dc851fb6d13690192c07182c4",
+    "pc/tools/evaluate_psd_nonempty.py": "eadfb90488e407855baaa11ff6889265802b85eb460d53401ef894fb2b4ed525",
+    "pc/tools/evaluate_canonical.py": "73c66673de040d3fabaa178241cc5c94dc33f9bada06cbee3ebe563a8392fcd8"
+  }
+}

@@ -3,9 +3,12 @@
 Ovaj fajl je **ulazna tačka** u projekat. Cilj mu je da se rad nikad ne nastavi
 od pogrešnog ili zastarjelog stanja.
 
-**Posljednja revizija:** 22.08.2026, ažurirano 27.08.2026 poslije finalne
-validacije firmvera. Sve brojke ispod su provjerene pokretanjem koda ili
-čitanjem artefakta, ne prepisivanjem iz starijih dokumenata.
+**Revizija 06.09.2026.** Aktuelan pregled je u
+[README-u](README.md), [nalazima revizije](results/repository_audit/2026-09-06/README.md)
+i [preostalim stavkama](docs/PREOSTALO.md). Stariji sažeci ispod ostaju kontekst
+razvoja; kod i sirovi artefakti imaju prednost. Papirić ima GUIDED25 FAIL,
+validna telemetrija nije prolaz probe, a oporavak nakon tona nije izmjeren.
+Posljednji firmware se čuva bez izmjena i novih fizičkih proba.
 
 ---
 
@@ -107,8 +110,8 @@ Ono što je i dalje **nedokazano** (i mora ostati tako napisano):
 - commissioning pragovi su i dalje `DEVELOPMENT` — pravilo je potvrđeno na dva
   runa, ali zamrzavanje za proizvodnju traži bump verzije i novi
   preregistrovani retest;
-- GUIDED25 papirić kapija daje `1/3`; uzrok je izmjeren (stimulus se drži
-  rukom), i **prag se zbog toga ne pomjera**;
+- GUIDED25 papirić kapija daje `1/3` i FAIL; ručna nestabilnost je moguće
+  objašnjenje, bez izolovanog dokaza uzroka; **prag se zbog toga ne pomjera**;
 - oporavak poslije jakog stimulusa nije izmjeren — run B je završen dok je skor
   bio između izlaznog i ulaznog praga;
 - I2S liveness, power-loss i NVS persistence nisu fizički testirani;

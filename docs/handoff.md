@@ -1,5 +1,8 @@
 # Predaja stanja — ASD na ESP32-S3 (ažurirano 22.08.2026)
 
+> Razvojni materijal. Za ispravljeno tumačenje završnih proba i filter prozora
+> važi [revizija rezultata od 06.09.2026.](rezultat-finalna-validacija-2026-08-27.md). Starije brojke i planovi ovdje nisu novi dokazi.
+
 Sažetak za nastavak rada u novoj sesiji. Detalji: [dnevnik-projekta.md](dnevnik-projekta.md),
 [problemi-i-rjesenja.md](problemi-i-rjesenja.md), [model-poboljsanje.md](model-poboljsanje.md).
 

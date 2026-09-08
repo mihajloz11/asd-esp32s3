@@ -1,0 +1,12 @@
+{
+  "baseline_git_head": "34f4fc23e654c80b47a365fcbbca091c487b6a55",
+  "protected_files": 610,
+  "changed_protected_files": [],
+  "host_ast_unchanged": {
+    "pc/tools/asd_panel.py": true,
+    "pc/tools/physical_fan_experiment.py": true
+  },
+  "firmware_bin_sha256": "9ac2caca2c5010747547d4bb942aae96f700221588a4a6863b5c01948d967813",
+  "firmware_bin_matches": true,
+  "pass": true
+}

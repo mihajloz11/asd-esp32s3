@@ -1,0 +1,5 @@
+schema i politike saglasne:
+  protokol            asd-quality-v1.6.0
+  prisustvo           11.0 dB / 3 prozora
+  vremenska odluka    absolute_profile (n=3, odvojeni enter/exit pragovi)
+  sve politike        target_anomalies_used=false

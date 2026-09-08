@@ -1283,6 +1283,32 @@ bez `guided25_hard_deadline` prekida.
 
 ---
 
+## P28 — Revizija pred objavu, 06.09.2026.
+
+**PSD trake.** U 96 logaritamskih traka osam nema FFT tačku: indeksi
+0, 1, 3, 4, 6, 8, 11 i 15. Fiksni log floor prije centriranja uvodi uticaj
+pojačanja u sve dimenzije. [C dijagnostika](../pc/tools/probe_psd_gain.py)
+potvrđuje analitički pomjeraj na sintetičkom signalu; nema novog dokaza AUC-a.
+Spajanje praznih traka zahtijeva novi standardizator, kovarijansu i validaciju.
+
+**Audio konverzija.** `audio_i2s.c` računa apsolutnu vrijednost u int32,
+što za INT32_MIN prekoračuje opseg. Svođenje pomjerenog uzorka u int16 nema
+eksplicitno zasićenje. Nije utvrđeno da se taj rubni slučaj javio u mjerenjima.
+Buduća izmjena treba čistu funkciju sa testovima rubnih vrijednosti.
+
+**Brojači.** Proizvođač uvećava `dropped`, dok se brojač iz drugog toka
+nulira i čita. Bez sinhronizacije postoji rizik gubitka inkrementa pri resetu.
+`volatile` sam ne obezbjeđuje konzistentan skup statistika. Potrebna je
+odvojena provjera snimka/resetovanja statistike prije promjene firmware-a.
+
+**Izvještavanje.** Validnost telemetrije i GUIDED25 ishod sada su razdvojeni.
+Zajednički čitač podataka za radove uklanja miješanje sirovih i prihvatljivih
+prozora. Pragovi nisu pomjerani da bi prethodne probe naknadno prošle.
+
+Detalji, prioriteti i dalji postupci:
+[revizija projekta](../results/repository_audit/2026-09-06/README.md).
+Firmware ostaje netaknut.
+
 ## Slijepe ulice i odbačene ideje
 
 | Ideja | Zašto je odbačena |

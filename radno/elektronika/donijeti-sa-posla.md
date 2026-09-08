@@ -197,7 +197,7 @@ sigurnije laboratorijsko napajanje sa limitom 0,30 A (stavka 4).
 
 `ASD_INA_TEST` je trenutno u stanju `READY` i **odbija da ponovi mjerenje**.
 Guard je `esp_reset_reason() != ESP_RST_POWERON`
-([ina226_test.c:147](../../firmware/esp32s3_asd/main/ina226_test.c:147)), a reset
+([ina226_test.c#L147](../../firmware/esp32s3_asd/main/ina226_test.c#L147)), a reset
 preko EN pina se prijavljuje kao `rst:0x1 (POWERON)` — izmjereno 11.08.
 Posljedice:
 

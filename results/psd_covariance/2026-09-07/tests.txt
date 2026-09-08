@@ -1,0 +1,10 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\mihaj\Desktop\master new\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\mihaj\Desktop\master-psd-nonempty
+collecting ... collected 2 items
+
+pc/tests/test_psd_covariance.py::test_covariance_variants_preserve_source_fit_and_limit_precision PASSED [ 50%]
+pc/tests/test_psd_covariance.py::test_raw_loo_cv_matches_explicit_leave_one_out_centres PASSED [100%]
+
+============================== 2 passed in 1.96s ==============================

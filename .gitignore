@@ -54,3 +54,12 @@ radovi/*/preview/
 # Uputstvo mentora (v8) i originalni FTN sabloni (.doc/.dot) ostaju u repou.
 radovi/master-rad/master_rad_asd_esp32s3_*.pdf
 radovi/master-rad/sablon/ftn-*.docx
+
+# local credentials and review outputs
+.env
+.env.*
+!.env.example
+*.pem
+firmware/esp32s3_asd/build-*/
+dist/
+~$*

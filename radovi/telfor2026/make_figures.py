@@ -139,15 +139,15 @@ def fig_system():
 
     # --- kalibracija ---
     box(26, 20, 66, 12,
-        ["calibration (push-button): ten 10 s windows,",
-         "local centre + threshold, from normal sound only"])
+        ["normal-only: 10 centre + 44 derive + 22 verify,",
+         "frozen centre and separate entry / release thresholds"])
     arrow([(85, 58), (98.5, 58), (98.5, 26), (92, 26)], dashed=True)
 
     # --- red 3: odluka ---
     box(0, 2, 22, 14, ["presence gate", "level >= cal.", "mean - 11 dB"],
         gate=True)
-    box(26, 2, 22, 14, ["score >", "threshold"], gate=True)
-    box(52, 2, 22, 14, ["temporal rule", "3 consecutive,", "release at 0.7x"],
+    box(26, 2, 22, 14, ["high score?", "unstable: HOLD"], gate=True)
+    box(52, 2, 22, 14, ["3 reliable highs", "release <= exit", "12th alarm: event"],
         gate=True)
     box(78, 2, 22, 14, ["alarm LED"], bold=True)
     arrow([(22, 9), (26, 9)])

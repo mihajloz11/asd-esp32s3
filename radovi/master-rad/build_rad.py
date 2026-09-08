@@ -43,9 +43,7 @@ STIL_POTPIS_SLIKE = "Potpis slike"
 STIL_POTPIS_TABELE = "Potpis tabele"
 
 
-# --------------------------------------------------------------------------
 # preslovljavanje
-# --------------------------------------------------------------------------
 # Digrafi idu prvi jer bi inace "nj" postalo "нј" umjesto "њ".
 _DIGRAFI = [
     ("Nj", "Њ"), ("NJ", "Њ"), ("nj", "њ"),
@@ -142,9 +140,7 @@ def u_cirilicu(tekst: str) -> str:
     return "".join(izlaz)
 
 
-# --------------------------------------------------------------------------
 # inline oznake u tekstu
-# --------------------------------------------------------------------------
 # *strani termin*  -> kurziv, ostaje latinica (uputstvo, str. 4)
 # `kod`            -> Courier New, ostaje latinica
 # **naglaseno**    -> bold, preslovljava se
@@ -196,6 +192,13 @@ class Pisac:
 
     def upisi(self, pasus, tekst: str, *, bold=False, size=None, font=None,
               velika=False):
+        if "{{PAGES}}" in tekst:
+            parts = tekst.split("{{PAGES}}")
+            for index, part in enumerate(parts):
+                self.upisi(pasus, part, bold=bold, size=size, font=font, velika=velika)
+                if index < len(parts) - 1:
+                    _polje(pasus, "NUMPAGES")
+            return pasus
         for dio, stil in _dijelovi(tekst):
             run = pasus.add_run()
             if stil == "c":
@@ -216,9 +219,7 @@ class Pisac:
         return pasus
 
 
-# --------------------------------------------------------------------------
 # stilovi dokumenta
-# --------------------------------------------------------------------------
 def _podesi_stilove(doc: Document) -> None:
     normal = doc.styles["Normal"]
     normal.font.name = BODY_FONT
@@ -328,9 +329,7 @@ def _broj_strane(sekcija, prva_prazna: bool = False) -> None:
     _polje(stopa, "PAGE")
 
 
-# --------------------------------------------------------------------------
 # gradnja
-# --------------------------------------------------------------------------
 class Rad:
     # Imena stilova potpisa, da ih `rad_tekst.py` moze imenovati bez uvoza.
     STIL_SLIKE = STIL_POTPIS_SLIKE
@@ -365,10 +364,18 @@ class Rad:
 
     def prazan(self, koliko: int = 1):
         for _ in range(koliko):
-            self.doc.add_paragraph()
+            paragraph = self.doc.add_paragraph()
+            paragraph.paragraph_format.space_after = Pt(0)
+            paragraph.paragraph_format.line_spacing = Pt(12)
 
     def nova_strana(self):
-        self.doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
+        paragraph = self.doc.add_paragraph()
+        paragraph.paragraph_format.space_before = Pt(0)
+        paragraph.paragraph_format.space_after = Pt(0)
+        paragraph.paragraph_format.line_spacing = Pt(1)
+        run = paragraph.add_run()
+        run.font.size = Pt(1)
+        run.add_break(WD_BREAK.PAGE)
 
     def _oznaka_poglavlja(self) -> str:
         """Broj poglavlja u tijelu rada, slovo priloga u prilozima."""
@@ -432,11 +439,14 @@ class Rad:
             self.pisac.upisi(p, red)
 
     def kod(self, tekst: str, potpis: str | None = None):
+        if potpis and self.doc.paragraphs:
+            self.doc.paragraphs[-1].paragraph_format.keep_with_next = True
         for red in tekst.strip("\n").split("\n"):
             p = self.doc.add_paragraph()
             p.paragraph_format.space_before = Pt(0)
             p.paragraph_format.space_after = Pt(0)
             p.paragraph_format.left_indent = Cm(0.5)
+            p.paragraph_format.keep_with_next = bool(potpis)
             run = p.add_run(red if red else " ")
             run.font.name = CODE_FONT
             run.font.size = Pt(10)
@@ -491,14 +501,19 @@ class Rad:
         t = self.doc.add_table(rows=1, cols=len(zaglavlje))
         t.style = "Table Grid"
         t.alignment = WD_TABLE_ALIGNMENT.CENTER
+        header = OxmlElement("w:tblHeader")
+        t.rows[0]._tr.get_or_add_trPr().append(header)
         desno = desno or set()
         for i, tekst in enumerate(zaglavlje):
             celija = t.rows[0].cells[i]
             celija.paragraphs[0].paragraph_format.space_after = Pt(2)
+            celija.paragraphs[0].paragraph_format.keep_with_next = True
             celija.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             self.pisac.upisi(celija.paragraphs[0], tekst, bold=True, size=10)
         for red in redovi:
-            celije = t.add_row().cells
+            row = t.add_row()
+            row._tr.get_or_add_trPr().append(OxmlElement("w:cantSplit"))
+            celije = row.cells
             for i, tekst in enumerate(red):
                 par = celije[i].paragraphs[0]
                 par.paragraph_format.space_after = Pt(2)
@@ -548,14 +563,18 @@ class Rad:
     def kdi_tabela(self, redovi: list[tuple[str, str]]):
         t = self.doc.add_table(rows=0, cols=2)
         t.style = "Table Grid"
+        t.autofit = False
+        t.columns[0].width = Cm(6)
+        t.columns[1].width = Cm(9.5)
         for lijevo, desno in redovi:
             celije = t.add_row().cells
-            celije[0].width = Cm(6.5)
-            celije[1].width = Cm(9.0)
+            celije[0].width = Cm(6)
+            celije[1].width = Cm(9.5)
             for celija, tekst, bold in ((celije[0], lijevo, True),
                                         (celije[1], desno, False)):
                 par = celija.paragraphs[0]
-                par.paragraph_format.space_after = Pt(2)
+                par.paragraph_format.space_after = Pt(0)
+                par.paragraph_format.line_spacing = 1.0
                 par.paragraph_format.first_line_indent = Cm(0)
                 self.pisac.upisi(par, tekst, bold=bold, size=10)
         self.doc.add_paragraph()

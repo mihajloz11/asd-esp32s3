@@ -12,25 +12,27 @@ Pokretanje:
 from __future__ import annotations
 
 import copy
+import sys
 from datetime import datetime
 from pathlib import Path
 
 from docx import Document
+from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+from rezultati import summary, number
 TEMPLATE = HERE / "sablon" / "IEEE_conference_template_a4.docx"
 OUTPUT = HERE / "telfor2026_asd_esp32s3.docx"
 
 TODO = "[TODO] "
 
 
-# --------------------------------------------------------------------------
 # sadrzaj rada
-# --------------------------------------------------------------------------
 
 BANNER_LEFT = "34th Telecommunications Forum TELFOR 2026"
 BANNER_RIGHT = "Serbia, Belgrade, November 24-26, 2026"
@@ -48,27 +50,21 @@ AFFIL = [
 ]
 
 ABSTRACT = (
-    "Anomalous sound detection for machine condition monitoring is almost "
-    "always evaluated as an offline benchmark. This paper reports what changes "
-    "when the same statistical detector is moved onto a microcontroller and "
-    "required to calibrate itself, in the field, on one machine, from normal "
-    "sound only. The device is an ESP32-S3 with a single MEMS microphone: a "
-    "Welch power spectral density front end, a Ledoit-Wolf Mahalanobis score, "
-    "and a local centre learned in about 115 s from ten calibration windows. "
-    "Every operating policy — audio quality gate, machine-presence gate, "
-    "temporal decision rule and threshold — is derived without reading a "
-    "single anomalous recording. With ten calibration windows, we report a "
-    "developmental AUC of 0.856 on the DCASE 2026 fan data and 716 ms "
-    "of computation per 10 s window. On a physical fan the device learns "
-    "the normal state of a machine it has never heard, derives its own "
-    "threshold from a normal-only period, verifies that threshold on a "
-    "later normal-only period, and reports a sustained acoustic change "
-    "while rejecting speech and door noise as unreliable rather than "
-    "interpreting them. An earlier version of the same system produced "
-    "thresholds differing by a factor of 16 across repeated calibrations "
-    "of the same machine in the same room; we report both that failure "
-    "and the measured fix, together with four negative results, one of "
-    "which the device itself rejected during verification."
+    "This paper evaluates a normal-only anomalous sound detector on an ESP32-S3"
+    " with one MEMS microphone. A Welch spectral feature and a Ledoit-Wolf "
+    "Mahalanobis score use a local centre learned from ten normal windows. The "
+    "deployed ten-window configuration reaches a developmental AUC of 0.856 on "
+    "DCASE 2026 fan data. Feature and score computation takes about 716 ms per "
+    "10 s window. Field commissioning additionally derives a threshold from 44 "
+    "normal windows and verifies it on 22 later windows; the complete sequence "
+    "takes about 13.6 min in two recorded trials. The device detects an added "
+    "tone and withholds decisions on unstable speech and door windows. The "
+    "paper-strip trial detects only one of three prescribed change blocks and "
+    "fails its acceptance criteria. Both trials provide valid telemetry, which "
+    "is distinct from passing the experiment. Earlier threshold instability and"
+    " a rejected robust estimator are reported alongside these results. The "
+    "experiments demonstrate on-device execution, but do not establish fault "
+    "diagnosis or long-term reliability."
 )
 
 KEYWORDS = (
@@ -97,59 +93,40 @@ BODY = [
      "be fitted on normal sound alone and has to generalise to machines and "
      "operating conditions it has never heard."),
     ("p",
-     "That formulation is nearly always evaluated offline. A model is fitted "
-     "on a workstation, scored against a labelled test set, and reported as "
-     "an area under the ROC curve. The deployment questions stay outside the "
-     "loop, and they are not small ones. A device installed next to one "
-     "machine has to decide by itself whether the machine is running at all; "
-     "whether the audio it has just captured can be trusted; which score is "
-     "high enough to be called an anomaly; and how long a deviation has to "
-     "persist before anyone is told about it. None of those questions can be "
-     "answered with anomalous recordings, because the installation does not "
-     "have any."),
+     "Offline AUC measures ranking across thresholds. Deployment additionally "
+     "requires a threshold for one installation, checks on audio validity and a "
+     "rule for persistent deviations. These decisions must be made without "
+     "assuming access to future faults. The present work studies their "
+     "implementation and observed limitations on a microcontroller."),
     ("p",
-     "This paper reports what happened once those questions had to be "
-     "answered on the device. The system is a self-contained detector on an "
-     "ESP32-S3 "
-     "microcontroller with a single MEMS microphone. An operator presses one "
-     "button, the device listens to the machine for about 115 s, learns its "
-     "normal sound, and monitors it from then on. In the reported bench run, "
-     "a PC only replayed the audio stimulus through a loudspeaker; calibration, "
-     "inference and decisions remained entirely on the device. The "
+     "The system performs calibration, scoring and alarm decisions on the "
+     "ESP32-S3. A PC records telemetry, sends operator commands and, in replay "
+     "trials, supplies the acoustic stimulus. Ten windows learn the centre; "
+     "threshold derivation and verification follow before monitoring. The "
      "contributions are:"),
     ("p",
-     "1) A complete self-calibrating detector: 716 ms of computation per "
-     "10 s window, an about 14× real-time margin, 355 kB of firmware and "
-     "no neural network. 2) A normal-only design protocol under which "
-     "every operating policy is derived, versioned and frozen before any "
-     "anomalous recording is read. 3) A fail-closed decision hierarchy in "
-     "which the device refuses to score untrustworthy input, and a "
-     "reliability gate that rejects an internally unstable window instead "
-     "of attributing it to a cause a single microphone cannot identify. "
-     "4) A threshold derived on the device from one normal-only period "
-     "and verified on a later one, which removes the factor-16 "
-     "calibration instability we previously reported as an open failure "
-     "mode. 5) Measurements on a physical fan, and four negative results, "
-     "one of which the verification stage rejected on the device before "
-     "it could reach monitoring."),
+     "1) An on-device statistical detector with measured computation cost and "
+     "host-to-C checks. 2) A normal-only fitting procedure with separate "
+     "threshold derivation and verification. 3) A reliability gate that "
+     "withholds decisions on internally unstable high-score windows. 4) Physical"
+     " trials with explicit acceptance failures and retained negative results. "
+     "These contributions concern a developmental fan detector rather than a "
+     "general fault-diagnosis system."),
     ("h1", "System Overview"),
     ("h2", "Hardware and signal path"),
     ("p",
-     "The platform is an ESP32-S3-WROOM-1 N32R16V (240 MHz dual core, 16 MB "
-     "PSRAM) running ESP-IDF v5.5.5. Audio arrives from one INMP441 MEMS "
-     "microphone over I2S at 16 kHz, 16 bit, mono. A push-button starts "
-     "calibration and two LEDs report the device state, so the complete user "
-     "interface is one button and two lamps. Fig. 1 shows the whole chain, "
-     "from the microphone to the alarm."),
+     "The platform is an ESP32-S3 development board at 240 MHz with 16 MB PSRAM, "
+     "running ESP-IDF v5.5.5. An INMP441 microphone supplies I2S audio at 16 "
+     "kHz, converted to 16-bit mono samples. The intended interface has one "
+     "push-button and two LEDs. The recorded trials use a UART virtual button "
+     "through the same operator event path; a complete standalone button-and-LED"
+     " demonstration remains unverified. Fig. 1 shows the signal path."),
     ("p",
-     "The firmware image is 354 784 B with research telemetry included "
-     "and leaves most of the application partition free. "
-     "The front end is computed in streaming fashion, hop by hop, avoiding "
-     "the approximately 640 kB full-window float buffer that a 10 s recording "
-     "would require, and its result is identical to the batch computation. "
-     "One 10 s window "
-     "takes 716 ms end to end, feature and score together, which is an "
-     "about 14× real-time margin."),
+     "The firmware image is 354 784 B including research telemetry. Streaming "
+     "processing avoids a 640 kB full-window float buffer. The measured 716 ms "
+     "covers feature and score computation per 10 s window, not acquisition, "
+     "UART output or alarm latency. The approximately 14× compute margin is not "
+     "a worst-case timing guarantee for the full pipeline."),
     ("p",
      "The same C code computes features on the host and on the device. On one "
      "benchmark WAV the host-to-C difference is at most 9.5e-7 feature units, "
@@ -157,76 +134,65 @@ BODY = [
      "most 1.7e-6. Host results and device results therefore refer to the "
      "same quantity by construction rather than by assumption."),
     ("figure", ("FIG_SYSTEM",
-                "Signal path and decision hierarchy. Bold outlines mark the "
-                "gates that stop the pipeline instead of producing a score. "
-                "The threshold and the local centre come from the on-site "
-                "calibration, never from a host.")),
+                "Signal path and decision hierarchy. Reliability gating applies to high "
+                "scores. Calibration and threshold fitting run on the device; the PC "
+                "records telemetry and operator labels.")),
     ("h2", "Feature and model"),
     ("p",
-     "The feature is a Welch power spectral density estimate [4] with an "
-     "8192-sample segment and 50 % overlap, reduced to 96 logarithmically "
-     "spaced bands between 10 Hz and 4 kHz on a logarithmic magnitude scale, "
-     "with the mean level subtracted. Subtracting the mean turns the feature "
-     "into a spectral shape rather than a loudness measurement, which matters "
-     "because microphone distance is not controlled in the field."),
+     "The feature uses Welch spectral estimation [4] with 8192-sample periodic "
+     "Hann segments and 50 % overlap: 38 complete segments per 10 s window. Band"
+     " mean power is mapped through log10 and centred across 96 logarithmic "
+     "bands from 10 Hz to 4 kHz. Eight low-frequency bands contain no FFT bin "
+     "and receive a fixed log floor before centring, so the implementation is "
+     "not exactly invariant to input gain."),
     ("p",
-     "The statistical model is deliberately split in two. A per-dimension "
-     "standardisation and a Ledoit-Wolf shrinkage precision matrix [5] are "
-     "estimated once, on the host, from 990 normal source-domain clips; the "
-     "96x96 matrix occupies 36 864 B in flash. Only the local centre, the "
-     "arithmetic mean of ten calibration windows, is learned on the deployed "
-     "machine. Writing z for the standardised feature, c for that local centre "
-     "and P for the precision matrix, the firmware computes the squared "
-     "Mahalanobis score s(x) = (z − c)ᵀ P (z − c)."),
+     "Standardisation and a Ledoit-Wolf precision matrix [5] are fitted offline "
+     "on 990 source-domain normal clips. The 96×96 float matrix occupies 36 864 "
+     "B. On-device calibration collects ten normal windows; up to two may be "
+     "rejected by the calibration consistency check before the centre is frozen."
+     " For standardised features z, centre c and precision P, the score is the "
+     "squared Mahalanobis distance s(x) = (z − c)ᵀ P (z − c)."),
     ("p",
-     "This split is what makes field calibration feasible. The precision "
-     "matrix is the part that needs a large amount of data; the centre is the "
-     "part that has to be local. About 115 s of listening is enough for a "
-     "centre and nowhere near enough for a covariance in 96 dimensions. This "
-     "ten-window configuration is the deployed and demonstrated setting and "
-     "reaches an AUC of 0.8556 ± 0.0240 over 20 development splits. A "
-     "separate 100-split canonical reference with 20 calibration windows "
-     "reaches an AUC of 0.8666 and is not the deployed configuration."),
+     "The source covariance supplies a prior over normal variation, while the "
+     "centre adapts to the installation. Ten-window centre learning reaches AUC "
+     "0.8556 ± 0.0240 over 20 development splits. A separate canonical reference"
+     " uses 20 calibration windows and 100 splits, reaching 0.8666; it is not "
+     "the deployed configuration. Neither comparison is an independent final "
+     "test."),
     ("h2", "Operating flow"),
     ("p",
-     "A button press starts a fixed sequence: SETTLE, then ten 10 s "
-     "windows that fix the local centre, then 44 normal-only windows from "
-     "which the threshold is derived, then 22 later normal-only windows "
-     "on which that threshold is verified, and only then MONITORING. The "
-     "entry threshold is the empirical 99th percentile of the derivation "
-     "window scores and the release threshold the 95th, clamped below by "
-     "the median and above by half the entry threshold. Derivation and "
-     "verification are separated in time and in data: if any alarm occurs "
-     "during verification the calibration is rejected and the device does "
-     "not arm. The threshold is never adjusted to make verification pass, "
-     "which would defeat its purpose. In monitoring an alarm needs three "
-     "consecutive reliable windows above the entry threshold, roughly "
-     "30 s, and twelve further alarm windows raise a separate "
-     "sustained-deviation event."),
+     "The guided profile runs SETTLE, ten centre-learning windows, 44 threshold-"
+     "derivation windows and 22 verification windows before MONITORING. The "
+     "normal audio alone totals at least 760 s before settling and overhead. "
+     "Entry is the empirical higher 99th percentile, equal to the maximum for 44"
+     " values. Release is the smaller of p95 and half the entry threshold, "
+     "floored at the median; conflicting bounds reject calibration. VERIFY "
+     "rejects an alarm, which requires three consecutive high scores, not a "
+     "single exceedance. Monitoring also requires three consecutive reliable "
+     "high windows. Sustained deviation is emitted at the twelfth measured alarm"
+     " window, including entry; HOLD pauses that count."),
 
     ("h1", "Normal-Only Design Protocol"),
     ("p",
-     "The rule we imposed on ourselves is that any policy shipped to the "
-     "device must be derivable from normal data alone, because a deployed "
-     "device has nothing else. This is stronger than avoiding test-set "
-     "leakage: it forbids using anomalies even to choose a constant."),
+     "Model parameters, calibration centres and thresholds are fitted using "
+     "normal recordings only. This data boundary does not imply that the "
+     "complete research process was blind to anomalies: results of earlier "
+     "labelled and physical trials informed subsequent design choices. The "
+     "policies remain developmental."),
     ("p",
-     "The rule is enforced mechanically. The quality, presence and temporal "
-     "policies each live in a versioned JSON file recording the derivation "
-     "data, the decision statistic, the measured properties, the stated "
-     "limitation, and a change rule requiring fresh normal-only evidence "
-     "before any anomaly data are touched. In the evaluator, anomalous clips "
-     "are loaded only in the final scoring stage, after the method list, the "
-     "splits, the preprocessing, the global model and the calibration "
-     "protocol are frozen. The evaluator stops if an anomaly reaches a "
-     "fitting or calibration cohort, if calibration and held-out sets "
-     "overlap, or if a feature cache was produced by different code."),
+     "Versioned JSON policies record fitting data, parameters and limitations. "
+     "The evaluator freezes its method list, splits and fitted models before "
+     "loading anomaly features for scoring. It rejects anomalous fitting inputs,"
+     " overlapping calibration and evaluation cohorts, and incompatible caches. "
+     "These checks guard the current computation; they cannot remove bias from "
+     "earlier model selection."),
 
     ("h1", "Fail-Closed Decision Hierarchy"),
     ("p",
-     "A benchmark script always receives a well-formed clip. A device does "
-     "not, so scoring is the third of four ordered stages and never the "
-     "first."),
+     "The runtime separates audio validity, machine presence, reliability and "
+     "temporal alarm decisions. Diagnostic scores may still be computed for held"
+     " windows; withholding an alarm decision is not the same as omitting all "
+     "computation."),
     ("p",
      "The quality gate checks the exact sample count, RMS level, peak, clipped "
      "fraction (at most 1e-3), zero and stuck-sample fractions, and a per-window "
@@ -242,21 +208,17 @@ BODY = [
      "threshold, and only then does the temporal rule decide whether the "
      "comparison becomes an alarm."),
     ("p",
-     "The calibration itself is fail-closed as well. A rejected window does "
-     "not get replaced silently; calibration stops and the operator repeats "
-     "it. We prefer a device that refuses to arm over a device that arms on "
-     "ten windows of which two were noise."),
+     "Invalid audio stops calibration. A separate consistency check may discard "
+     "at most two of the ten otherwise valid calibration windows, recomputing "
+     "the centre and leave-one-out scores each time. This exception is logged "
+     "and must be distinguished from silent replacement of bad audio."),
 
     ("p",
-     "A fourth stage was added after the first physical trial. Each 10 s "
-     "window is split into five sub-windows and a feature is computed for "
-     "each. If those five disagree by more than a per-session limit, the "
-     "window is internally unstable, its score is not a reliable measure "
-     "of machine state, and it is excluded from alarm build-up. The limit "
-     "is derived per session as 1.25 times the largest instability seen "
-     "among the ten calibration windows; an earlier absolute limit "
-     "carried the scale of one microphone position and stopped being "
-     "valid as soon as the setup moved."),
+     "Each 10 s window also yields five sub-window features. For a score above "
+     "the entry threshold, excessive disagreement triggers OBSERVATION_HOLD. Its"
+     " limit is 1.25 times the largest instability among the ten normal "
+     "calibration windows. The gate is conditional on a high score; it does not "
+     "reject every internally unstable low-score window."),
     ("p",
      "The gate suspends alarm build-up, but it does not clear an active "
      "alarm and does not modify the learned centre or threshold. It also "
@@ -282,16 +244,13 @@ BODY = [
      "the negative outcomes removed design options and are worth naming."),
     ("table", "T1"),
     ("p",
-     "Three outcomes removed design options. Rotation-order features collapse "
-     "to 0.639: the median fundamental is 34 Hz at all three labelled "
-     "speeds and their dominant peaks coincide to within one 1.95 Hz bin, "
-     "so the labelled speeds carry nothing the shape feature does not "
-     "already have. All three dual-microphone variants are worse than the "
-     "single channel and the spatial-mask variant reaches 0.450, below "
-     "chance, so the shipped device uses one microphone by measurement "
-     "rather than by cost. Adding a transient channel yields +0.0012 AUC "
-     "against a split-to-split standard deviation of 0.024, which is "
-     "nothing."),
+     "Rotation-order features reach AUC 0.639. The estimated fundamental remains"
+     " near 34 Hz across the three labelled speeds, which does not establish "
+     "actual shaft speed without a reference tachometer. All three tested dual-"
+     "channel variants underperform the first channel. Adding transient features"
+     " gives +0.0012 AUC; comparing that difference with an individual standard "
+     "deviation is not a paired significance test, so no meaningful advantage is"
+     " established."),
     ("h2", "Scope of the front end"),
     ("p",
      "Under a stricter 100-split protocol the same backend was run with two "
@@ -313,17 +272,13 @@ BODY = [
      "measure and are never counted as false alarms."),
     ("table", "T2"),
     ("p",
-     "The selected rule, hysteresis with entry at the threshold, release at "
-     "0.7 times the threshold and three consecutive windows, gives no false "
-     "alarms, no response at all to a single disturbed window, and roughly "
-     "half the response to a foreign machine that the plain three-window rule "
-     "gives, at the same detection latency. No candidate satisfied the strict "
-     "criterion of zero false alarms and zero response to short disturbances "
-     "and no missed sustained shift; we report that as a rejected criterion "
-     "rather than relaxing it silently. One reason is structural: a disturbed "
-     "window next to one already above the threshold can complete a run of "
-     "three, and no consecutive-window rule can exclude that. The other "
-     "reason is the threshold itself, the subject of Section VI."),
+     "In this earlier offline comparison, hysteresis with release at 0.7 times "
+     "entry reduced foreign-machine alarm episodes while retaining three-window "
+     "latency. No candidate passed every specified criterion. Table II uses "
+     "synthetic score perturbations and does not measure speech rejection or "
+     "physical detection accuracy. The final firmware retains consecutive-window"
+     " hysteresis but uses separately derived absolute entry and release "
+     "thresholds."),
     ("h2", "Autonomous operation on the device"),
     ("p",
      "Before a fan was available the device calibrated itself and monitored "
@@ -338,45 +293,41 @@ BODY = [
      "claim from it."),
     ("h2", "Trials on a physical fan"),
     ("p",
-     "Two valid trials were then run on a physical fan, both from the "
-     "same firmware image, with the microphone 40 cm from the shaft. In "
-     "the first, the induced change was a strip of paper held against the "
-     "intake grille, repeated three times, followed by speech and a door. "
-     "In the second, the change was a constant 1 kHz tone from a "
-     "loudspeaker at a fixed level and position. Table III reports both. "
-     "The induced changes are controlled, reversible disturbances; "
-     "neither is a confirmed fault, and we do not call them one."),
+     "Two final trials use the same firmware image and one fan, with the "
+     "microphone 40 cm from the shaft. One applies a hand-held paper strip three"
+     " times, then speech and a door disturbance. The other uses a reproduced 1 "
+     "kHz tone. Table III uses only protocol-valid, confirmed, non-transition "
+     "DET windows: 43/65 and 99/115 respectively. Held windows remain included. "
+     "Telemetry validity and experiment acceptance are reported separately. "
+     "Neither stimulus is a confirmed fault."),
     ("table", "T3"),
     ("p",
-     "The paper trial is the more informative of the two. The feature saw "
-     "the change in all three blocks — median scores of 26 399, 60 050 "
-     "and 14 389 against a normal baseline of 1190 — but an alarm was "
-     "raised only in the third. In the first two the reliability gate "
-     "held four and three of five windows, so the run of three "
-     "consecutive reliable windows never completed. A strip of paper held "
-     "by hand is not a constant stimulus, and the device refuses to call "
-     "an unstable window an anomaly. Speech and the door produced high "
-     "scores, 36 838 and 4366, and no alarm, for the same reason."),
+     "Paper-block median scores are 30 255, 62 344 and 19 844 versus baseline "
+     "1146, but an alarm appears only in block three. In each of the first two "
+     "blocks, three of four eligible windows are held. The GUIDED25 verdict is "
+     "FAIL: one of three blocks detected, with a carried alarm in recovery. "
+     "Speech and door medians are 38 307 and 49 549, with no alarms in four and "
+     "two eligible windows. These short observations do not establish general "
+     "noise rejection."),
     ("p",
-     "The tone trial supplies the constant stimulus the paper trial lacked. "
-     "The alarm was raised after three consecutive reliable windows, about "
-     "30 s, and the sustained-deviation event followed twelve alarm windows "
-     "later. The first nine tone windows scored within the normal range "
-     "because the loudspeaker was too quiet: the change has to be loud "
-     "enough relative to the fan's own noise. After the tone was switched "
-     "off the score fell below the entry threshold but stayed above the "
-     "release threshold until the trial ended, so that release latency was "
-     "not measured. Fig. 2 shows the score over the whole trial."),
+     "The tone trial produces two alarm episodes and a sustained-deviation "
+     "event. Alarm entry follows three reliable high windows; this is not a "
+     "measured 30 s delay from initial tone onset. Early tone-labelled windows "
+     "remain below threshold. Notes describe a later volume increase, but its "
+     "exact time is not recorded. Recovery-labelled scores remain high for much "
+     "of the trial and only later fall below entry, without reaching release. "
+     "Release latency is therefore unmeasured. Fig. 2 retains all DET windows "
+     "for continuity."),
     ("figure", ("FIG_FAN",
                 "Score over the tone trial, one point per 10 s window. "
                 "The alarm is raised after three consecutive reliable "
                 "windows; held windows are excluded from alarm build-up. "
                 "Note the logarithmic scale.")),
 
-    ("h1", "Threshold Instability and Its Fix"),
+    ("h1", "Threshold Instability and Revised Commissioning"),
     ("p",
-     "The failure mode we previously reported as open is worth restating "
-     "because the fix follows from it. The same board, microphone, audio "
+     "Earlier repeated calibration trials expose threshold sensitivity, "
+     "with the same board, microphone, audio "
      "source and room produced three calibrations with thresholds of "
      "5687, 347 and 1088. Scoring the windows of run 1 with the threshold "
      "of run 2 puts 92 % of them above it; the reverse leaves 8 % above. "
@@ -384,61 +335,52 @@ BODY = [
      "median score spans a factor of 4.7. The scores were comparatively "
      "stable; the threshold was not."),
     ("p",
-     "The mechanism was the estimator, not the machine. The threshold was "
-     "taken from the ten leave-one-out calibration scores as "
-     "max(Q_0.90, mean + 3 sd). In one run a single window stood out and "
-     "the standard deviation carried the threshold to 5687; in another "
-     "the calibration was clean with a standard deviation of 60 while the "
-     "normal operation that followed had a standard deviation of 8557. "
-     "Ten windows recorded back to back do not represent how much normal "
-     "operation varies later."),
+     "The earlier estimator used max(Q_0.90, mean + 3 sd) of ten leave-one-out "
+     "scores. One outlying window inflated the threshold; a cleaner calibration "
+     "underestimated later normal variation. These observations implicate short "
+     "calibration and changing acoustics, but do not isolate a single physical "
+     "cause."),
     ("p",
-     "The fix is the derive-and-verify sequence of Section II.C: the "
-     "threshold comes from 44 normal-only windows as an empirical "
-     "percentile rather than from a mean and a standard deviation over "
-     "ten, and it is then verified on 22 later normal-only windows. In "
-     "both physical trials the derived threshold passed verification and "
-     "the resulting monitoring produced two alarm episodes in the paper "
-     "trial and two in the tone trial, each attributable to an induced "
-     "change rather than to normal operation."),
+     "The revised sequence uses 44 normal derivation windows and 22 later "
+     "verification windows. Both final trials pass commissioning, with different"
+     " thresholds for their respective sessions. Two accepted sessions cannot "
+     "establish calibration repeatability or a low long-term false-alarm rate. "
+     "The paper trial still fails its prescribed detection and recovery "
+     "criteria."),
     ("p",
-     "The fourth negative result belongs here, because the verification "
-     "stage produced it. A more robust estimator was tried on the device, "
-     "the smaller of the empirical 99th percentile and a Hampel bound of "
-     "median + 3 × 1.4826 × MAD. It returned a threshold of 791 while the "
-     "normal verification windows of the same session scored between 2083 "
-     "and 7766, and verification rejected the calibration before a single "
-     "monitoring window existed. The median absolute deviation describes "
-     "only the body of the distribution, and the tail of normal operation "
-     "on this fan is far longer than three robust deviations. The robust "
-     "estimator was removed from the live path; a gate that fires rarely "
-     "still earns its place."),
+     "A robust candidate used the smaller of empirical p99 and median + 3 × "
+     "1.4826 × MAD, together with a trimmed centre. Its threshold was 791; later"
+     " normal verification scores reached 2083–7766 and commissioning was "
+     "rejected. This is evidence that the candidate underestimated variation in "
+     "that session. Changing both centre and threshold also prevents attributing"
+     " the failure to either component alone. The candidate remains outside the "
+     "live firmware path."),
     ("p",
-     "One limitation is unchanged. The calibration quality gate rejects a "
-     "session whose ten clips disagree, and a single clip deviating by "
-     "about 0.7 dB in one of 96 bands is enough to trigger it, always in "
-     "the narrow band around the rotation frequency. The device may discard "
-     "at most the two worst clips and recompute, which treats the symptom "
-     "rather than the small variance the borrowed covariance assigns to "
-     "that band."),
+     "The consistency check remains sensitive to narrow-band changes under the "
+     "source-domain covariance. Trimming up to two calibration windows improves "
+     "acceptance in one final trial, but does not establish robustness across "
+     "installations. Eight empty spectral bands and source-to-device covariance "
+     "mismatch are candidates for future investigation; changing them would "
+     "require retraining and new validation."),
 
     ("h1", "Conclusion"),
     ("p",
-     "A statistical anomalous sound detector fits comfortably on an "
-     "ESP32-S3: 716 ms per 10 s window, 355 kB of firmware, one "
-     "microphone, one button, and a field calibration that ends with a "
-     "threshold the device derived and verified by itself. Every "
-     "operating policy was derived from normal sound alone, and the "
-     "decision hierarchy fails closed rather than scoring untrustworthy "
-     "audio."),
+     "A statistical detector executes on the ESP32-S3 with 716 ms of measured "
+     "feature-and-score computation per 10 s window and a 355 kB image. It "
+     "learns a local centre and derives and verifies alarm thresholds from "
+     "normal audio. Its recorded decisions can be checked against retained "
+     "telemetry."),
     ("p",
-     "On a physical fan the device reports a constant acoustic change "
-     "reliably and rejects speech and a door as unreliable rather than "
-     "interpreting them. What limits the claim is no longer threshold "
-     "stability but coverage: one fan, one room, and induced changes that "
-     "are controlled disturbances rather than confirmed faults. A second "
-     "machine, a longer normal-only run for a meaningful false-alarm "
-     "interval, and full-pipeline power remain open."),
+     "The tone experiment demonstrates sustained-change signalling. The paper-"
+     "strip experiment detects one of three blocks and fails its acceptance "
+     "criteria; speech and door blocks produce no alarms in this short record. "
+     "Threshold repeatability, recovery after a strong stimulus, independent "
+     "machines and full-pipeline power remain open. Controlled perturbations are"
+     " not confirmed mechanical faults."),
+    ("h1ack", "Acknowledgment"),
+    ("p", "OpenAI Codex assisted with drafting and revising Sections I–VII and "
+     "checking tables against recorded project data. Experimental values "
+     "come from the retained measurement artifacts."),
 ]
 
 REFERENCES = [
@@ -513,19 +455,29 @@ TABLES = {
             ["Calibration accepted", "yes, 2 clips trimmed", "yes, no trim"],
             ["Leave-one-out CV", "0.84 -> 0.43", "0.43"],
             ["Entry / release threshold", "8084 / 3707", "21 810 / 10 905"],
-            ["Normal baseline, median score", "1190", "7164"],
-            ["Induced change, median score", "14 389 – 60 050", "22 629"],
-            ["Monitoring windows", "65", "115"],
+            ["Normal baseline, median score", "1146", "7085"],
+            ["Induced change, median score", "19 844–62 344", "23 574"],
+            ["DET total / eligible", "65 / 43", "115 / 99"],
             ["Alarm windows / episodes", "3 / 2", "64 / 2"],
-            ["Alarm latency", "3 windows", "3 windows"],
+            ["Entry rule", "3 reliable high windows", "3 reliable high windows"],
             ["Median release latency", "10.1 s", "not measured"],
             ["Speech / door response", "no alarm, windows held", "not applied"],
-            ["Sustained-deviation event", "no", "yes, after 12 windows"],
+            ["Sustained-deviation event", "no", "yes, at 12th alarm window"],
             ["Per-window dropped samples", "0", "0"],
         ],
-        "note": "Both trials come from the same firmware image. The induced changes are controlled disturbances, not confirmed faults.",
+        "note": "Counts use eligible windows, including HOLD. Paper trial: GUIDED25 FAIL (1/3 blocks; carried alarm). Tone onset latency and final release latency are unmeasured.",
     },
 }
+
+
+# physical counts and medians use the same filter as the thesis
+_paper, _tone = summary("paper"), summary("tone")
+_pg, _tg = _paper["groups"], _tone["groups"]
+_change = [_pg[f"airflow_change_paper_{i}"]["median"] for i in (1, 2, 3)]
+_rows = TABLES["T3"]["rows"]
+_rows[3][1:] = [number(_pg["normal_baseline"]["median"]), number(_tg["normal_baseline"]["median"])]
+_rows[4][1:] = [f"{number(min(_change))}–{number(max(_change))}", number(_tg["constant_tone_1khz"]["median"])]
+_rows[5][1:] = [f"{r['raw']} / {r['eligible']}" for r in (_paper, _tone)]
 
 # Slike koje postoje kao fajl (pravi se u make_figures.py). Ostale su okviri
 # koji rezervisu stvarnu visinu dok se sadrzaj ne napravi.
@@ -542,9 +494,7 @@ FIGURE_PLACEHOLDER = {
 }
 
 
-# --------------------------------------------------------------------------
 # pomocne funkcije za OOXML
-# --------------------------------------------------------------------------
 
 def unnumber(paragraph):
     """Uklanja automatsku numeraciju stila (npr. rimski broj uz Heading 1)."""
@@ -708,9 +658,7 @@ def add_figure(doc, key, caption):
     doc.add_paragraph(style="Body Text")
 
 
-# --------------------------------------------------------------------------
 # gradnja dokumenta
-# --------------------------------------------------------------------------
 
 def build():
     doc = Document(str(TEMPLATE))
@@ -801,9 +749,9 @@ def build():
         p = doc.add_paragraph(style="references")
         p.text = ref
 
-    # Bez zavrsne sekcije za balansiranje kolona: kad tekst tacno ispuni
-    # cetvrtu stranu, prazan pasus iza prelaza otvori praznu petu stranu.
+    # balance the final page without changing the two-column body
     body.append(body_sect_pr)
+    doc.add_section(WD_SECTION.CONTINUOUS)
 
     # --- copyright u podnozju prve strane ---
     section = doc.sections[1]

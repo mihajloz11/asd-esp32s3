@@ -1,18 +1,16 @@
 # Finalna validacija firmvera na fizičkom ventilatoru — 26–27.08.2026
 
-**Status:** firmware je funkcionalno završen i potvrđen na pločici.
+**Revizija tumačenja:** 06.09.2026. Firmware je izvršen na pločici; prolaz telemetrijskih provjera nije isto što i prolaz eksperimenta.
 **Live ugovor:** `asd-quality-v1.6.0` ↔ host `physical-fan-v1.9.0` /
 `physical-fan-artifacts-v1.9.0`.
 **Dva validna fizička runa** nose sve brojke u ovom dokumentu; nijedna nije
 prepisana iz starijeg teksta.
 
-> **Granica tvrdnje.** Dokazano je da uređaj sam nauči normalno stanje
-> nepoznatog ventilatora, sam izvede prag iz normal-only podataka i pouzdano
-> prijavi **konstantnu akustičku promjenu**, uz `dropped=0`. Nije dokazano da
-> je uzrok te promjene mehanički kvar — jedan mikrofon to ne može tvrditi.
-> Papirić i pušteni ton su kontrolisane promjene, ne potvrđeni kvarovi.
-> GUIDED25 kapija za papirić i dalje daje `FAIL` po sopstvenom kriteriju
-> (`1/3` bloka); razlog je izmjeren i opisan u odjeljku 2.
+> **Granica tvrdnje.** Obje sesije imaju prihvaćenu kalibraciju i validnu
+> telemetriju. Ton daje alarm i trajno odstupanje. GUIDED25 proba papirićem
+> ima FAIL: 1/3 detektovanih blokova i prenesen alarm u oporavak. Nestabilnost
+> ručne pobude je moguće objašnjenje, ne dokaz jedinog uzroka. Pobude nisu
+> potvrđeni kvarovi, a dugoročna pouzdanost nije izmjerena.
 
 ---
 
@@ -27,7 +25,7 @@ prepisana iz starijeg teksta.
 | Trajnost promjene se posebno prijavljuje | `ANOMALY_SUSTAINED` poslije 12 alarmnih prozora |
 | Nestabilan prozor se odbija, ne tumači | `OBSERVATION_HOLD` / `OBSERVATION_RESUMED` |
 | Telemetrija je kompletna i bez gubitka | `dropped=0`, research paket `125/125` i `75/75` |
-| Realno vrijeme je zadovoljeno | `compute_ms` 716–728 ms na prozor od 10 s |
+| Izmjeren trošak računanja | `compute_ms` 716–728 ms za obilježje i ocjenu; ne obuhvata cijeli tok |
 
 Binarni fajl je **isti u oba validna runa**:
 
@@ -72,47 +70,33 @@ INTERFERENCE source=CAL_NORMAL_ONLY normal_windows=10 normal_max=1.49000776
 
 **Rezultat po uslovu** (medijana skora; prag `8084,49`):
 
-| Uslov | Prozora | HOLD | Alarmnih | Medijana |
-|---|---:|---:|---:|---:|
-| `normal_baseline` | 5 | 0 | 0 | 1 190,0 |
-| `airflow_change_paper_1` | 5 | 4 | 0 | 26 398,5 |
-| `recovery_normal_1` | 5 | 0 | 0 | 2 836,9 |
-| `airflow_change_paper_2` | 5 | 3 | 0 | 60 049,9 |
-| `recovery_normal_2` | 5 | 1 | 0 | 2 662,7 |
-| `airflow_change_paper_3` | 5 | 2 | **2** | 14 388,8 |
-| `recovery_normal_3` | 5 | 0 | 2 | 3 635,8 |
-| `ambient_speech` | 5 | 4 | 0 | 36 838,2 |
-| `recovery_after_speech` | 5 | 1 | 0 | 3 038,9 |
-| `ambient_door` | 3 | 1 | 0 | 4 366,2 |
-| `final_recovery` | 6 | 1 | 0 | 2 863,7 |
+| Uslov | Prozora | HOLD | Alarmnih | Medijana | Opseg |
+|---|---:|---:|---:|---:|---|
+| `normal_baseline` | 4 | 0 | 0 | 1 146 | 1 080 – 2 134 |
+| `airflow_change_paper_1` | 4 | 3 | 0 | 30 255 | 16 008 – 56 167 |
+| `recovery_normal_1` | 4 | 0 | 0 | 2 757 | 2 563 – 3 097 |
+| `airflow_change_paper_2` | 4 | 3 | 0 | 62 344 | 54 026 – 66 838 |
+| `recovery_normal_2` | 4 | 0 | 0 | 2 555 | 2 120 – 3 234 |
+| `airflow_change_paper_3` | 4 | 1 | 2 | 19 844 | 14 051 – 29 760 |
+| `recovery_normal_3` | 4 | 0 | 1 | 3 086 | 2 221 – 4 190 |
+| `ambient_speech` | 4 | 4 | 0 | 38 307 | 31 074 – 41 066 |
+| `recovery_after_speech` | 4 | 0 | 0 | 2 819 | 2 528 – 3 050 |
+| `ambient_door` | 2 | 1 | 0 | 49 549 | 4 366 – 94 732 |
+| `final_recovery` | 5 | 0 | 0 | 2 825 | 2 594 – 3 456 |
+
+Filter: validan protokol, potvrđen uslov, bez prelaznog prozora; HOLD ostaje uključen.
 
 Run metrike: 65 DET prozora sirovo, 43 za metrike, 3 alarmna prozora, 2 epizode,
 `6,98 %` vremena u alarmu, medijana oporavka `10,08 s`, `dropped=0`.
 
-**Zašto je papirić prošao samo jednom.** Model je promjenu vidio u sva tri
-bloka — medijane `26k`, `60k`, `14k` naspram normalne `1,2k`. Alarm nije podignut
-u prva dva jer je kapija pouzdanosti odbila prozore kao nestabilne: 4 od 5
-odnosno 3 od 5 prozora završilo je u `OBSERVATION_HOLD`, pa brojač uzastopnih
-prekoračenja nikad nije stigao do 3. Treći blok je bio najmirniji — jedan HOLD,
-pa `1 → 2 → 3` i alarm:
-
-```
-1229.6 airflow_change_paper_3 score= 11645 hold=1 consec=0
-1239.6 airflow_change_paper_3 score= 14051 hold=0 consec=1
-1249.6 airflow_change_paper_3 score= 25298 hold=0 consec=2
-1259.6 airflow_change_paper_3 score= 29760 hold=0 consec=3 ALARM
-```
-
-To je **projektovano ponašanje, a ne promašaj**: papirić se drži rukom, pa
-stimulus po konstrukciji nije konstantan. Sistem odbija da nestabilan prozor
-proglasi anomalijom. Alarm se zatim prenio dva prozora u `recovery_normal_3`
-(`12 866` i `4 190`, oba iznad izlaznog praga `3 707`) i ugasio se na `2 221` —
-to je jedini razlog zašto GUIDED25 kapija za ovaj run kaže `FAIL`
-(`alarm_or_carried_alarm:recovery_normal_3`, `paper_blocks_passed:1/3`).
-
-**Govor i vrata nisu podigli alarm** iako su skorovi bili visoki
-(`36 838` i `4 366`): 4 od 5 prozora govora završilo je u HOLD-u. To je tražena
-osobina — smetnja se odbija kao nepouzdana, ne proglašava se kategorijom.
+**Ishod papirića.** Medijane ocjene su 30 255, 62 344 i 19 844,
+naspram osnove 1146. U prva dva bloka tri od četiri prozora imaju HOLD,
+pa se ne ostvari uslov od tri uzastopna pouzdana prekoračenja. Alarm se javlja
+u trećem bloku. To jeste promašaj zadatih kriterija detekcije, iako tok
+firmvera odgovara implementiranom pravilu. GUIDED25 prijavljuje i prenesen
+alarm u `recovery_normal_3`. Ručno držanje papirića nije izolovano kao jedini
+uzrok nestabilnosti. U četiri prozora govora i dva prozora vrata nema alarma;
+taj mali uzorak ne potvrđuje opštu otpornost na buku.
 
 ---
 
@@ -121,8 +105,7 @@ osobina — smetnja se odbija kao nepouzdana, ne proglašava se kategorijom.
 `results/physical_fan/run_20260827T220338_fan02_tone-validation-20260827-final`
 
 Ista postavka i isti binarni fajl. Cilj: provjeriti šta se dešava kad promjena
-zaista jeste konstantna. Izvor: konstantni 1 kHz ton sa zvučnika, fiksne jačine
-i položaja.
+ima tonski karakter. Izvor je ton od 1 kHz sa zvučnika. Bilješke navode naknadno pojačanje; tačno vrijeme promjene jačine nije zabilježeno.
 
 **Kalibracija je prošla bez trima** — `loo_cv=0,432290` je ispod kapije `0,6`,
 pa `CALTRIM` nije ni emitovan.
@@ -143,9 +126,11 @@ DERIVE raspodjele.
 
 | Uslov | Prozora | HOLD | Alarmnih | Medijana | Opseg |
 |---|---:|---:|---:|---:|---|
-| `normal_baseline` | 6 | 0 | 0 | 7 163,7 | 6 711,7 – 8 171,3 |
-| `constant_tone_1khz` | 45 | 8 | 14 | 22 628,5 | 6 890,3 – 87 151,6 |
-| `recovery_after_tone` | 51 | 8 | 51 | 32 883,8 | 12 266,0 – 127 539,3 |
+| `normal_baseline` | 5 | 0 | 0 | 7 085 | 6 712 – 8 171 |
+| `constant_tone_1khz` | 44 | 8 | 14 | 23 574 | 7 327 – 87 152 |
+| `recovery_after_tone` | 50 | 8 | 50 | 33 170 | 12 266 – 127 539 |
+
+Filter: validan protokol, potvrđen uslov, bez prelaznog prozora; HOLD ostaje uključen.
 
 **Tok alarma.**
 
@@ -172,32 +157,22 @@ Research paket je kompletan: 125 prozora očekivano, 125 kompletno,
 `window_features.npz` SHA-256
 `c0cd588d2ab99dcc00389ea7df007ac843441208c148c0435f5c71cef24e8b09`.
 
-**Prvi dio tona je bio pretih.** Prvih devet prozora tona dalo je
-`6 890 – 15 582`, dakle unutar normalnog opsega — zvučnik je bio na premaloj
-jačini. Poslije pojačanja skor skače na stabilnih `30 – 33k` i alarm se diže u
-tri prozora, oko 30 s. To je koristan negativan podatak: **promjena mora biti
-dovoljno jaka u odnosu na sopstveni šum ventilatora**, prag nije apsolutna
-osjetljivost.
+**Oznake i vrijeme pobude.** Rani prozori označeni kao ton ostaju ispod
+praga. Bilješke navode kasnije pojačanje, bez precizne vremenske oznake.
+Zato tri uzastopna pouzdana prekoračenja opisuju pravilo ulaska u alarm,
+a ne izmjereno kašnjenje od 30 s od početka tona.
 
-**Šta se desilo poslije gašenja.** Ton je stvarno utišan oko `1 861 s`.
-Skor je odmah pao sa `~40k` na `12 266 – 19 561`, dakle **ispod ulaznog** praga
-`21 809` ali **iznad izlaznog** `10 905`, pa je alarm ostao zaključan do kraja
-runa. Histereza je radila kako je projektovana; run je završen prije nego što je
-skor stigao ispod izlazne granice, tako da vrijeme oporavka za ovaj stimulus
-**nije izmjereno**.
-
-> **Napomena o označavanju.** Oznaka `recovery_after_tone` je unesena u
-> `1 491 s`, a ton je stvarno ugašen tek oko `1 861 s`. Zato taj red u
-> `SUMMARY.md` miješa ~6 minuta uključenog i ~2,3 minute isključenog tona i
-> **ne smije se čitati kao „oporavak"**. Rastavljanje je vidljivo tek u
-> `detections.csv`, po prozorima.
+Oznaka `recovery_after_tone` ne potvrđuje da je zvučnik tada utišan.
+Veliki dio tog bloka ostaje na visokim ocjenama. Kasniji pad ispod ulaznog,
+ali iznad izlaznog praga vidljiv je u CSV-u; sam pad ne određuje tačan
+trenutak gašenja izvora. Završni oporavak i njegovo kašnjenje nisu izmjereni.
 
 ---
 
 ## 4. Kako lanac odluke radi u ovoj verziji
 
 ```
-WAIT → CAL (10 × 10 s) → K1 → SETTLE → CENTER_LEARNING (10)
+WAIT → SETTLE → CENTER_LEARNING (10 prozora, zatim K1)
      → COMMISSION_DERIVE (44) → COMMISSION_VERIFY (22) → MONITORING
 ```
 
@@ -209,14 +184,14 @@ WAIT → CAL (10 × 10 s) → K1 → SETTLE → CENTER_LEARNING (10)
   `[p50, 0,5 × enter]`. Centar ostaje onaj koji je K1 prihvatio iz CAL-a.
 - **VERIFY** je odvojen i fail-closed: 22 normalna prozora ne smiju dati
   nijednu alarmnu epizodu. Ako daju — `VERIFY_NORMAL_REJECT`, run pada.
-- **Kapija pouzdanosti** (`OBSERVATION_HOLD`) se izvodi po sesiji kao
+- **Kapija pouzdanosti** se primjenjuje na ocjene iznad ulaznog praga; njena granica se izvodi po sesiji kao
   `max(10 CAL normal-only subsegment_instability) × 1,25`. HOLD suspenduje
   gradnju alarma, **ne briše** aktivan alarm i **ne mijenja** profil. Šest
   uzastopnih HOLD prozora daju `OBSERVATION_HOLD_WARNING`.
 - **Alarm** traži 3 uzastopna pouzdana prozora iznad `enter` praga
-  (`asd-events-v1.1.0-development`, `min_consecutive=3`), a gasi se ispod
+  (`asd-events-v1.1.0-development`, `min_consecutive=3`), a gasi se na ili ispod
   `exit` praga.
-- **Trajnost**: poslije 12 alarmnih prozora (~2 min) emituje se
+- **Trajnost**: na dvanaestom mjerenom alarmnom prozoru, uključujući ulaz (HOLD pauzira brojanje), emituje se
   `ANOMALY_SUSTAINED`. Stanje ostaje `ANOMALY`.
 
 **„Kvar" nije akustička kategorija.** Terminalno stanje koje panel prikazuje kao
@@ -227,6 +202,8 @@ promjena se prijavljuje kao `ANOMALY` + `ANOMALY_SUSTAINED`, sa oznakom događaj
 održava, ali ne može dokazati mehanički uzrok.
 
 ---
+
+Kompletan vođeni postupak traje oko 13,57 min od virtuelnog tastera do nadzora u obje sesije. Deset CAL, 44 DERIVE i 22 VERIFY prozora daju najmanje 760 s zvuka prije čekanja i ostalog troška.
 
 ## 5. Kako se došlo dovde — svi pokušaji 26–27.08.
 
@@ -371,21 +348,11 @@ Svi pragovi u oba runa izvedeni su iz normal-only prozora te iste sesije.
 
 ## 8. Šta ostaje otvoreno
 
-Firmware je funkcionalno završen. Ostaje sitno čišćenje i fizički dokazi koji
-nemaju veze sa algoritmom:
-
-1. **GUIDED25 papirić kapija** i dalje daje `1/3`. Uzrok je izmjeren — papirić
-   se drži rukom, pa stimulus nije konstantan. Ako se traži `3/3`, treba
-   mehanički fiksirana prepreka, ne izmjena praga. **Prag se ne pomjera da bi
-   run prošao.**
-2. **Oporavak poslije jakog stimulusa nije izmjeren** — run B je završen dok je
-   skor još bio između izlaznog i ulaznog praga.
-3. `CALTRIM` ispisuje `discarded_loo_2=nan` kad je izbačen samo jedan klip.
-   Bezopasno (nije parsirani protokolarni zapis, `firmware_parse_errors.csv` je
-   prazan u oba runa), ali treba srediti pri sljedećem bumpu protokola.
-4. Nedokazano i dalje: lemljenje tastera i LED, I2S liveness na hardveru,
-   power-loss / NVS persistence, INA226 / E5 strujni put, samostalan demo bez
-   PC-a.
+Radna verzija ostaje sačuvana. GUIDED25 FAIL, neizmjeren završni oporavak,
+ponovljivost kalibracije i kratki uzorci ostaju ograničenja. Ručna pobuda nije
+izolovana kao jedini uzrok promašaja. Potpuno samostalan interfejs, prekid I2S,
+power-loss i potrošnja cijelog lanca nisu potvrđeni. Dodatna mjerenja se ne
+podrazumijevaju kao uslov za završetak dokumentovanja postojećih rezultata.
 
 Ažurirana lista: [`PREOSTALO.md`](PREOSTALO.md).
 

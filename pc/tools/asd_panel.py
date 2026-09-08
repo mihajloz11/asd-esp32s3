@@ -78,8 +78,7 @@ DET_ANOM_RE = re.compile(r"^DET\b.*?\banom=(?P<anom>[01])\b")
 DEFAULT_PORT = 8772
 LOG_LINES = 12
 
-# Sto se pokazuje u logu panela. WAIT/CAL/QUALITY se namjerno preskacu -- ima ih
-# stotine po sesiji i izgurali bi ono zbog cega se log i gleda.
+# keep operator events visible; omit repetitive window telemetry.
 LOGGED_RECORDS = {
     "VBUTTON", "BUTTON", "SESSION", "STATE", "EVENT", "ADAPTTHR",
     "INTERFERENCE",

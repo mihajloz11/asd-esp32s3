@@ -1,5 +1,8 @@
 # Uputstvo 2 — teorija od nule: zvuk, Furije, ML, metrike, TFLite, drajver
 
+> Razvojni materijal. Za ispravljeno tumačenje završnih proba i filter prozora
+> važi [revizija rezultata od 06.09.2026.](../../docs/rezultat-finalna-validacija-2026-08-27.md). Starije brojke i planovi ovdje nisu novi dokazi.
+
 **Napisano:** 01.09.2026. · **Za koga:** za razumijevanje, ne za citiranje.
 
 Cilj ovog dokumenta je da poslije njega možeš na odbrani objasniti **svaki

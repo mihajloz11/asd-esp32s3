@@ -1,5 +1,8 @@
 # Uputstvo 3 — literatura: koji radovi, gdje se koriste, šta u njima čitati
 
+> Razvojni materijal. Za ispravljeno tumačenje završnih proba i filter prozora
+> važi [revizija rezultata od 06.09.2026.](../../docs/rezultat-finalna-validacija-2026-08-27.md). Starije brojke i planovi ovdje nisu novi dokazi.
+
 **Napisano:** 01.09.2026.
 
 > **Prvo, pošteno:** PDF-ovi ovih radova **nisu preuzeti u repo**. U projektu

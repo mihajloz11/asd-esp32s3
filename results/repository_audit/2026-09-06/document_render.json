@@ -1,0 +1,17 @@
+[
+  {
+    "File": "radovi/master-rad/master_rad_asd_esp32s3_cir.docx",
+    "Pages": 42,
+    "Pdf": "radovi/master-rad/master_rad_asd_esp32s3_cir.pdf"
+  },
+  {
+    "File": "radovi/master-rad/master_rad_asd_esp32s3_lat.docx",
+    "Pages": 42,
+    "Pdf": "radovi/master-rad/master_rad_asd_esp32s3_lat.pdf"
+  },
+  {
+    "File": "radovi/telfor2026/telfor2026_asd_esp32s3.docx",
+    "Pages": 4,
+    "Pdf": "radovi/telfor2026/telfor2026_asd_esp32s3.pdf"
+  }
+]

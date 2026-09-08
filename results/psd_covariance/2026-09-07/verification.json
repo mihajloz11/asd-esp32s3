@@ -1,0 +1,8 @@
+{
+  "plan_unchanged": true,
+  "no_anomaly_features_before_freeze": true,
+  "models_unchanged": true,
+  "normal_diagnostics_unchanged": true,
+  "source_hashes_match": true,
+  "all_200_baseline_auc_and_pauc_reproduced": true
+}

@@ -7,11 +7,15 @@ uputstvo v8. Oznake u tekstu:
     `kod`             Courier New, ostaje latinica
     **naglaseno**     bold, preslovljava se
 
-Sve brojke imaju izvor u repou; ni jedna nije prepisana napamet. Gdje izvor
-jos ne postoji stoji [TODO]; prebrojati ih sa
-`grep -c "\[TODO\]" rad_tekst.py` (check_todo.py postoji samo za TELFOR).
+Izvori rezultata i preostale formalne stavke navedeni su u PREOSTALO-RAD.md.
 """
 from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from rezultati import thesis_rows
 
 NASLOV_SR = ("Nenadgledana detekcija anomalija zvuka masina na mikrokontroleru "
              "ESP32-S3 sa samokalibracijom na licu mjesta")
@@ -52,9 +56,7 @@ def napisi(r) -> None:
     _prilozi(r)
 
 
-# ==========================================================================
 # prednji dio
-# ==========================================================================
 def _korice(r) -> None:
     r.prazan(3)
     r.naslovni_blok([
@@ -127,7 +129,7 @@ def _kdi(r) -> None:
         ("Mjesto i adresa, MA:",
          "Novi Sad, Fakultet tehničkih nauka, Trg Dositeja Obradovića 6"),
         ("Fizički opis rada, FO:",
-         "9 poglavlja / 47 strana / 12 citata / 20 tabela / 6 slika / "
+         "9 poglavlja / {{PAGES}} strana / 12 citata / 20 tabela / 6 slika / "
          "0 grafika / 3 priloga"),
         ("Naučna oblast, NO:", "Elektrotehnika i računarstvo"),
         ("Naučna disciplina, ND:", "Elektronika i ugrađeni sistemi"),
@@ -151,40 +153,36 @@ def _kdi(r) -> None:
 
 def _izvod_sr() -> str:
     return (
-        "U radu je realizovan samostalan uređaj za nenadgledanu detekciju "
-        "anomalija zvuka rotacionih mašina, zasnovan na mikrokontroleru "
-        "ESP32-S3 i jednom MEMS mikrofonu. Opšti oblik varijacije normalnog "
-        "rada uči se unaprijed na računaru iz 990 ispravnih snimaka iz skupa "
-        "DCASE 2026 Task 2, a uređaj se pri postavljanju sam kalibriše na "
-        "ventilatoru koji nikada nije čuo i sam izvodi prag odluke iz "
-        "perioda u kojem su prisutna samo normalna stanja. Obilježje je "
-        "spektar snage visoke rezolucije sažet u 96 logaritamskih traka, a "
-        "mjera odstupanja je Mahalanobisova udaljenost od lokalno naučenog "
-        "centra. Na referentnom skupu za ventilator postignut je AUC 0,867. "
-        "Na stvarnom ventilatoru potvrđeno je da uređaj samostalno nauči "
-        "normalno stanje, odbije nepouzdan prozor umjesto da ga tumači i "
-        "pouzdano prijavi konstantnu akustičku promjenu, uz obradu od 716 ms "
-        "po prozoru od 10 s i bez ijednog izgubljenog uzorka."
+        "U radu je realizovan prototip za nenadgledanu detekciju anomalija zvuka "
+        "ventilatora na mikrokontroleru ESP32-S3 sa jednim MEMS mikrofonom. "
+        "Globalni model uči se iz 990 normalnih snimaka DCASE 2026, a centar i "
+        "pragovi iz normalnog zvuka konkretne postavke. Koriste se 96 logaritamskih"
+        " spektralnih traka i kvadrirana Mahalanobisova udaljenost. Razvojni AUC "
+        "iznosi 0,856 za deset kalibracionih prozora; odvojena referenca sa "
+        "dvadeset prozora daje 0,867. U dvije završne fizičke probe prihvaćeni su "
+        "kalibracija i zapis telemetrije. Proba tonom daje alarm i trajno "
+        "odstupanje, dok proba papirićem detektuje jedan od tri bloka i ne prolazi "
+        "zadate kriterije. Obrada obilježja i ocjene traje oko 716 ms po prozoru od"
+        " 10 s. Nema prijavljenih gubitaka uzoraka, ali dugoročna pouzdanost i "
+        "detekcija potvrđenih kvarova nisu utvrđene."
     )
 
 
 def _izvod_en() -> str:
     return (
-        "This thesis presents a self-contained device for unsupervised "
-        "anomalous sound detection of rotating machinery, built around an "
-        "ESP32-S3 microcontroller and a single MEMS microphone. The general "
-        "shape of normal-operation variation is learned offline on a "
-        "workstation from 990 healthy recordings of the DCASE 2026 Task 2 "
-        "dataset, while the device calibrates itself on a previously unheard "
-        "fan and derives its own decision threshold from a normal-only "
-        "period. The feature is a high-resolution power spectral density "
-        "summarised into 96 logarithmic bands, and the deviation measure is "
-        "the Mahalanobis distance from a locally learned centre. An AUC of "
-        "0.867 is achieved on the fan benchmark. On a physical fan the device "
-        "is shown to learn the normal state autonomously, to reject an "
-        "unreliable window instead of interpreting it, and to reliably report "
-        "a constant acoustic change, with 716 ms of computation per 10 s "
-        "window and no dropped samples."
+        "This thesis presents an unsupervised fan sound anomaly-detection prototype"
+        " using an ESP32-S3 and one MEMS microphone. A global model is fitted on "
+        "990 normal DCASE 2026 recordings; a local centre and thresholds are "
+        "learned from normal audio at the installation. The detector uses 96 "
+        "logarithmic spectral bands and squared Mahalanobis distance. Developmental"
+        " AUC is 0.856 with ten calibration windows; a separate twenty-window "
+        "reference reaches 0.867. Two final physical trials pass commissioning and "
+        "telemetry checks. The added-tone trial produces alarm and sustained-"
+        "deviation events, while the paper-strip trial detects one of three change "
+        "blocks and fails its acceptance criteria. Feature and score computation "
+        "takes about 716 ms per 10 s window. No dropped samples are reported, but "
+        "long-term reliability and detection of confirmed faults remain "
+        "unestablished."
     )
 
 
@@ -211,7 +209,7 @@ def _kwd(r) -> None:
             ("Publication place, PP:",
              "Novi Sad, Faculty of Technical Sciences, Trg Dositeja Obradovica 6"),
             ("Physical description, PD:",
-             "9 chapters / 47 pages / 12 references / 20 tables / "
+             "9 chapters / {{PAGES}} pages / 12 references / 20 tables / "
              "6 figures / 0 graphs / 3 appendices"),
             ("Scientific field, SF:", "Electrical and computer engineering"),
             ("Scientific discipline, SD:", "Electronics and embedded systems"),
@@ -264,47 +262,9 @@ def _zadatak(r) -> None:
 def _izjava(r) -> None:
     r.nova_strana()
     r.naslovni_blok([("Izjava o akademskoj čestitosti", 14, True)])
-    r.prazan()
-    r.pasus("Student: _____________________________________", uvlaka=False)
-    r.pasus("Broj indeksa: _________________________________", uvlaka=False)
-    r.pasus("Student/kinja osnovnih ili master akademskih studija", uvlaka=False)
-    r.pasus("Autor rada pod nazivom:", uvlaka=False)
-    r.pasus("__________________________________________________________________",
-            uvlaka=False)
-    r.pasus("__________________________________________________________________",
-            uvlaka=False)
-    r.prazan()
-    r.pasus("Potpisivanjem izjavljujem:", uvlaka=False)
-    r.stavke([
-        "da je rad isključivo rezultat mog sopstvenog istraživačkog rada;",
-        "da nisam koristio alate vještačke inteligencije za generisanje i/ili "
-        "kreiranje dijelova rada;",
-        "da sam rad i mišljenja drugih autora koje sam koristio u ovom radu "
-        "naznačio ili citirao i navedeni su u spisku literature/referenci koji "
-        "su sastavni dio ovog rada;",
-        "da sam dobio sve dozvole za korišćenje autorskog djela koji se u "
-        "cjelosti unose u predati rad i da sam to jasno naveo;",
-        "da sam svjestan da je plagijat korišćenje tuđih radova u bilo kom "
-        "obliku (kao citata, parafraza, slika, tabela, dijagrama, dizajna, "
-        "planova, fotografija, filma, muzike, formula, veb sajtova, "
-        "kompjuterskih programa i sl.) bez navođenja autora ili predstavljanje "
-        "tuđih autorskih djela kao mojih, kažnjivo po zakonu (Zakon o "
-        "autorskom i srodnim pravima, Službeni glasnik Republike Srbije, br. "
-        "104/2009, 99/2011, 119/2012), kao i drugih zakona i odgovarajućih "
-        "akata Univerziteta u Novom Sadu;",
-        "da sam svjestan da plagijat uključuje i predstavljanje, upotrebu i "
-        "distribuiranje rada predavača ili drugih studenata kao sopstvenih;",
-        "da sam svjestan posljedica koje kod dokazanog plagijata mogu "
-        "prouzrokovati na predati rad i moj status;",
-        "da je elektronska verzija rada identična štampanom primjerku i "
-        "pristajem na njegovo objavljivanje pod uslovima propisanim aktima "
-        "Univerziteta.",
-    ])
     r.prazan(2)
-    r.pasus("U Novom Sadu, ______________          "
-            "Potpis studenta/studentkinje", uvlaka=False)
-    r.pasus("                                      "
-            "________________________", uvlaka=False)
+    r.pasus("[TODO] Ovdje se umeće zvanična izjava o akademskoj čestitosti "
+            "usaglašena sa mentorom prije predaje rada.", uvlaka=False)
 
 
 def _sadrzaj(r) -> None:
@@ -358,20 +318,15 @@ def _liste(r) -> None:
     r.spisak_polje(r.STIL_TABELE)
 
 
-# ==========================================================================
 # 1. UVOD
-# ==========================================================================
 def _uvod(r) -> None:
     r.naslov("Uvod")
     r.pasus(
-        "Mašine sa rotacionim dijelovima mijenjaju svoj zvučni potpis prije "
-        "nego što otkažu. Ležaj koji se troši, lopatica koja se iskrivi, "
-        "filter koji se zapuši ili disbalans na osovini mijenjaju raspodjelu "
-        "energije po frekvencijama mnogo prije nego što promjena postane "
-        "vidljiva na proizvodu ili čujna čovjeku. Zbog toga je akustički "
-        "nadzor privlačan oblik prediktivnog održavanja: senzor se ne montira "
-        "na mašinu, ne traži zaustavljanje pogona i ne mijenja njenu "
-        "konstrukciju.")
+        "Promjene u radu rotacionih mašina mogu se odraziti na njihov zvučni "
+        "spektar. Akustička detekcija anomalija koristi ta odstupanja kao razlog za"
+        " dodatnu provjeru mašine [2], [3]. Mikrofon omogućava beskontaktno "
+        "mjerenje, ali istovremeno prima zvuk okoline. Zbog toga promjena zvuka "
+        "sama po sebi ne potvrđuje kvar niti određuje njegov uzrok.")
     r.pasus(
         "Istraživačka zajednica ovaj problem obrađuje pod nazivom detekcija "
         "anomalija zvuka mašina, a od 2020. godine postoji i standardizovan "
@@ -381,15 +336,11 @@ def _uvod(r) -> None:
         "primjerku iste vrste mašine. Taj pomak domena čini da rješenja koja "
         "dobro rade na jednoj mašini često podbace na drugoj.")
     r.pasus(
-        "Praktično sva objavljena rješenja tog zadatka izvode se na "
-        "grafičkim procesorima ili serverskoj klasi hardvera, često sa "
-        "ansamblima dubokih modela. Industrijska primjena traži suprotno: "
-        "jeftin i samostalan senzorski čvor koji radi bez mreže, bez oblaka i "
-        "bez računara pored sebe. Između te dvije slike stoji jaz koji nije "
-        "samo pitanje broja operacija po sekundi. Uređaj koji sam donosi "
-        "odluku mora sam i da postavi prag odluke, mora da prepozna kada "
-        "njegovo mjerenje nije pouzdano, i ne smije da nastavi da uči dok "
-        "mašina nije u potvrđeno ispravnom stanju.")
+        "Referentni postupci DCASE prvenstveno porede modele na označenim skupovima"
+        " snimaka [1], [2]. Prenos na mikrokontroler zahtijeva i provjeru vremena "
+        "obrade, memorije i postupka odlučivanja. Uređaj mora da postavi prag, "
+        "prepozna nepouzdano mjerenje i zadrži naučeni profil tokom nadzora. U ovom"
+        " radu te funkcije razmatraju se zajedno sa kvalitetom rangiranja.")
 
     r.naslov("Predmet rada", 2)
     r.pasus(
@@ -410,18 +361,14 @@ def _uvod(r) -> None:
 
     r.naslov("Motivacija za izbor teme", 2)
     r.pasus(
-        "Tema je izabrana zbog spoja dvije oblasti koje se rijetko sreću u "
-        "istom radu: obrade signala i statističkog učenja s jedne strane, i "
-        "ugrađenih sistema sa strogim ograničenjima memorije i vremena s "
-        "druge. Zanimalo me je koliko od jednog istraživačkog rezultata "
-        "zaista preživi kada se prenese na mikrokontroler i pusti da radi bez "
-        "nadzora — i šta se tačno pokvari na tom putu.")
+        "Tema je izabrana zbog interesovanja za obradu signala i realizaciju "
+        "statističkih modela na ugrađenim sistemima. Cilj je bio da se provjeri "
+        "kako ograničenja memorije, vremena obrade i uslova snimanja utiču na "
+        "praktičnu upotrebu detektora.")
     r.pasus(
-        "Odgovor na to pitanje ispao je zanimljiviji od očekivanog. Ono što "
-        "se pokvarilo nije bila tačnost modela nego politika odlučivanja oko "
-        "njega. Zbog toga je značajan dio ovog rada posvećen upravo tome: "
-        "kako se prag izvodi, kako se prepoznaje da mjerenje nije pouzdano i "
-        "šta uređaj radi kada dokaza nema.")
+        "Tokom razvoja pokazalo se da kvalitet rangiranja nije dovoljan za "
+        "upotrebljiv alarm. Zato je dio rada posvećen izvođenju praga, provjeri "
+        "kalibracije i ponašanju pri nepouzdanim mjerenjima.")
 
     r.naslov("Cilj i doprinosi rada", 2)
     r.pasus(
@@ -432,21 +379,18 @@ def _uvod(r) -> None:
         "**Kompletan lanac na mikrokontroleru.** Obilježje, ocjena "
         "odstupanja, kalibracija, izvođenje praga i vremensko pravilo "
         "odlučivanja izvršavaju se na uređaju, bez računara u putanji odluke.",
-        "**Kalibracija otporna na kvar.** Tok kalibracije prekida se kada "
-        "dokaza nema, umjesto da upozori i nastavi. Prag se izvodi iz "
-        "odvojenog perioda i provjerava se na trećem, vremenski kasnijem "
-        "periodu prije nego što uređaj uopšte pređe u nadzor.",
-        "**Kapija pouzdanosti.** Prozor koji je interno nestabilan odbija se "
+        "**Provjera prihvatljivosti kalibracije.** Učenje se prekida kada podaci ne"
+        " zadovolje zadate uslove. Prag se izvodi iz odvojenog normalnog perioda i "
+        "provjerava na kasnijem periodu prije prelaska u nadzor.",
+        "**Kapija pouzdanosti.** Interno nestabilan prozor iznad ulaznog praga odbija se "
         "kao nepouzdan umjesto da bude protumačen. Jedan mikrofon ne može "
         "tvrditi šta je izvor smetnje, pa uređaj to i ne tvrdi.",
-        "**Mjerene negativne nalaze.** Zabilježeno je i objašnjeno šest "
-        "alternativnih obilježja koja su slabija od usvojenog, dvije "
-        "standardne tehnike vremenskog filtriranja koje pogoršavaju sistem, i "
-        "jedno robusno pravilo praga koje je oborila sopstvena provjera na "
-        "pločici.",
-        "**Reproducibilan artefakt.** Kompletan tok, od pripreme podataka do "
-        "firmvera i zapisa fizičkih mjerenja, čuva se u javnom spremištu sa "
-        "kontrolnim sumama izvora svakog mjerenja.",
+        "**Poređenje alternativnih postupaka.** Prikazano je sedam kandidata uz "
+        "osnovno obilježje, više vremenskih pravila i robusno pravilo praga koje je"
+        " odbijeno tokom provjere na pločici.",
+        "**Digitalni prilog.** Izvorni kod, konfiguracije, tabele i zapisi fizičkih"
+        " mjerenja čuvaju se u verzionisanom spremištu, uz kontrolne sume izvora i "
+        "firmvera.",
     ])
 
     r.naslov("Pregled rada po poglavljima", 2)
@@ -473,9 +417,7 @@ def _uvod(r) -> None:
         "ograničenja, a deveto poglavlje daje zaključak i pravce daljeg rada.")
 
 
-# ==========================================================================
 # 2. TEORIJSKE OSNOVE
-# ==========================================================================
 def _teorija(r) -> None:
     r.naslov("Teorijske osnove")
     r.pasus(
@@ -494,12 +436,11 @@ def _teorija(r) -> None:
         "Zbog toga se model uči isključivo iz normalnih snimaka, a anomalija "
         "se definiše kao odstupanje od naučenog opisa normalnog stanja.")
     r.pasus(
-        "Skup podataka korišćen u ovom radu je razvojni skup takmičenja DCASE "
-        "2026, zadatak 2 [1]. Postavka je *first-shot*: model se ocjenjuje na "
-        "vrsti mašine i na fizičkom primjerku koji nisu korišćeni za "
-        "podešavanje. Skup razlikuje izvorni i ciljni domen, gdje ciljni domen "
-        "predstavlja drugi primjerak iste vrste mašine ili promijenjene uslove "
-        "rada, čime se namjerno uvodi pomak domena [2], [3].")
+        "Korišćen je razvojni skup DCASE 2026, zadatak 2 [1]. Zvanična postavka "
+        "*first-shot* razmatra prenos na prethodno neviđene tipove mašina. Ovaj rad"
+        " koristi dostupni razvojni skup za izbor i poređenje postupaka, pa njegovi"
+        " rezultati nisu nezavisna ocjena na skrivenom skupu takmičenja. Izvorni i "
+        "ciljni domen predstavljaju različite uslove snimanja ili rada [2], [3].")
     r.pasus(
         "Za ventilator, koji je predmet ovog rada, izvorni domen sadrži 990 "
         "snimaka normalnog rada. Svaki snimak traje 10 s i uzorkovan je na "
@@ -589,25 +530,22 @@ def _teorija(r) -> None:
 
     r.naslov("Hardverska platforma", 2)
     r.pasus(
-        "Ciljna platforma je modul ESP32-S3-WROOM-1 N32R16V [8]. Sadrži "
-        "dvojezgarni procesor *Xtensa LX7* na 240 MHz, 512 KB interne "
-        "statičke memorije, 32 MB fleš memorije i 16 MB oktalne "
-        "pseudostatičke memorije. Za ovaj rad su bitne tri osobine: "
-        "hardverska podrška za sabirnicu I2S sa prenosom preko DMA, dovoljno "
-        "radne memorije za spektar visoke rezolucije, i skup vektorskih "
-        "instrukcija koji ubrzava operacije nad nizovima brojeva.")
+        "Korišćena je razvojna ploča sa ESP32-S3 procesorom na 240 MHz i 16 MB "
+        "PSRAM-a. Dobavljačka oznaka N32R16V i podešavanje fleš memorije od 32 MB "
+        "opisuju konkretnu ploču. Ta oznaka se ne nalazi u tabeli standardnih "
+        "WROOM-1 modula u dokumentu [8], pa se kapacitet ploče ne izvodi iz te "
+        "tabele. Razvojno okruženje je ESP-IDF 5.5.5 [9].")
     r.pasus(
-        "Kao izvor zvuka koristi se digitalni MEMS mikrofon INMP441 [10]. On "
-        "daje "
-        "24-bitni podatak preko sabirnice I2S, bez potrebe za analognim "
-        "pojačavačem ili spoljnim analogno-digitalnim pretvaračem. Time se iz "
-        "lanca uklanja najveći izvor šuma i neponovljivosti kod jeftinih "
-        "akustičkih sistema. Karakteristike platforme date su u Tabeli 2.1.")
+        "Kao izvor zvuka koristi se digitalni MEMS mikrofon INMP441 [10]. On daje "
+        "24-bitni podatak preko sabirnice I2S, pa nisu potrebni spoljni analogno-"
+        "digitalni pretvarač i analogni pojačavač. Digitalna veza pojednostavljuje "
+        "povezivanje, ali ne uklanja šum mikrofona, uticaj napajanja ili akustike "
+        "prostorije. Karakteristike platforme date su u Tabeli 2.1.")
     r.tabela(
         "Karakteristike korišćene platforme",
         ["Stavka", "Vrijednost"],
         [
-            ["Modul", "ESP32-S3-WROOM-1 N32R16V"],
+            ["Ploča", "ESP32-S3, oznaka dobavljača N32R16V"],
             ["Procesor", "dvojezgarni Xtensa LX7, 240 MHz"],
             ["Interna memorija", "512 KB SRAM"],
             ["Spoljna memorija", "16 MB oktalni PSRAM, 32 MB fleš"],
@@ -621,9 +559,7 @@ def _teorija(r) -> None:
         "poglavlju.", uvlaka=False)
 
 
-# ==========================================================================
 # 3. KONCEPT RJEŠENJA
-# ==========================================================================
 def _koncept(r) -> None:
     r.naslov("Koncept rješenja")
     r.pasus(
@@ -708,9 +644,7 @@ def _koncept(r) -> None:
         "dosljedno i provjerava se automatski pri svakoj izmjeni.")
 
 
-# ==========================================================================
 # 4. RAZVOJ MODELA
-# ==========================================================================
 def _model(r) -> None:
     r.naslov("Razvoj modela — svi izmjereni pokušaji")
     r.pasus(
@@ -720,15 +654,14 @@ def _model(r) -> None:
         "tako. Drugo, negativan rezultat koji nije zapisan vraća se kasnije "
         "kao „nova ideja“ i troši vrijeme po drugi put.")
     r.pasus(
-        "Sve vrijednosti u ovom poglavlju su AUC na ciljnom domenu ventilatora "
-        "— dakle na primjerku koji model nije čuo — osim gdje je izričito "
-        "navedeno drugačije. Protokol lokalne kalibracije je isti kod svih "
-        "pristupa: *k* isječaka ciljne mašine koristi se samo za mjerenje "
-        "centra, ocjena se radi na preostalim normalnim i svim anomalnim "
-        "isječcima, isječak korišćen za kalibraciju se nikada ne ocjenjuje, a "
-        "postupak se ponavlja 20 do 100 puta sa različitim izborom.")
+        "U ovom poglavlju dati su razvojni rezultati na DCASE skupu. Raniji "
+        "eksperimenti razlikuju se po podjelama i protokolu; njihove najbolje "
+        "vrijednosti opisuju tok istraživanja i nisu jedinstveno kontrolisano "
+        "poređenje. Uparene runde koriste iste kalibracione podjele za sve "
+        "kandidate. Oznake anomalija ne ulaze u fit, ali je raniji uvid u rezultate"
+        " uticao na izbor pristupa, pa ostaje pristrasnost izbora modela.")
 
-    r.naslov("Pravilo poštenog poređenja", 2)
+    r.naslov("Protokol poređenja", 2)
     r.pasus(
         "Prije prikaza rezultata potrebno je navesti pravilo koje je naučeno "
         "na sopstvenoj grešci. Poređenja metoda važe samo na **uparenim "
@@ -755,17 +688,15 @@ def _model(r) -> None:
             ["Samonadzirano učenje", "≈ 0,50"],
         ], desno={1})
     r.pasus(
-        "Autoenkoder uči da prekopira spektar. Mreža koja dobro kopira ne mora "
-        "razumjeti mašinu — dovoljno joj je da zapamti prosječan oblik. Na "
-        "istom snimku izmjerena je greška rekonstrukcije 2,53 za ispravan i "
-        "2,57 za neispravan ventilator, dakle razlika od 1,6 %. Greška "
-        "rekonstrukcije nije mjera zdravlja mašine.", uvlaka=False)
+        "U isprobanoj konfiguraciji greška rekonstrukcije nije dovoljno razdvajala "
+        "klase. U jednom poređenju dobijeno je 2,53 za normalan i 2,57 za anomalni "
+        "snimak, što je razlika od oko 1,6 %. To je nalaz za ovu arhitekturu i "
+        "protokol; ne isključuje primjenu drugih autoenkodera.", uvlaka=False)
     r.pasus(
-        "Naučena ugradnja pada iz drugog razloga. Mreža je učena da razlikuje "
-        "tipove mašina i radne režime, a taj zadatak je prelak: dovoljno joj "
-        "je da nauči „ovo je ventilator, ovo je reduktor“. Da bi to postigla, "
-        "ona namjerno odbacuje varijaciju unutar jedne mašine — a upravo ta "
-        "varijacija razlikuje ispravan od neispravnog primjerka.")
+        "Naučena reprezentacija takođe nije dala dobro rangiranje. Jedno moguće "
+        "objašnjenje je nepodudaranje zadatka obuke, koji razlikuje tipove mašina i"
+        " režime, sa promjenama unutar jedne mašine. Ovaj mehanizam nije izdvojen "
+        "posebnim eksperimentom, pa se navodi kao tumačenje.")
 
     r.naslov("Faza 2 — statistika nad mel sažetkom", 2)
     r.pasus(
@@ -856,21 +787,20 @@ def _model(r) -> None:
             "razmaku od 15,6 Hz harmonijske linije se stapaju, a pri 1,95 Hz "
             "ostaju razdvojene")
     r.pasus(
-        "Zanimljivo je da medijana centra, koja je u mel prostoru donosila tri "
-        "poena, u ovom prostoru ne donosi ništa. Objašnjenje je da je medijana "
-        "pomagala zato što je mel prostor bio šumniji; u čistijem spektralnom "
-        "prostoru robusnost više nema šta da popravlja. Koliko kalibracija "
-        "mora da traje pokazuje Tabela 4.5.")
+        "Medijana centra, koja je pomagala u ranijem mel prostoru, u ovoj rundi ne "
+        "nadmašuje srednju vrijednost. Različita raspodjela obilježja je moguće "
+        "objašnjenje, ali nije posebno izolovana. Tabela 4.5 prikazuje zavisnost "
+        "rangiranja od broja kalibracionih isječaka.")
     r.tabela(
         "Zavisnost AUC od trajanja kalibracije (konačno obilježje)",
         ["Trajanje kalibracije", "50 s", "100 s", "200 s", "300 s", "400 s"],
         [["AUC", "0,834", "0,853", "0,864", "0,866", "0,875"]],
         desno={1, 2, 3, 4, 5})
     r.pasus(
-        "Već 50 s kalibracije prelazi postavljeni cilj od 0,80, a kriva je "
-        "ravna poslije 200 s. Trajanje kalibracije zato nije usko grlo, što je "
-        "bilo važno za odluku o tome koliko dugo uređaj mora da sluša prije "
-        "nego što postane upotrebljiv.", uvlaka=False)
+        "Već pet normalnih isječaka daje razvojni AUC iznad 0,80. Ova tabela "
+        "opisuje samo učenje lokalnog centra i rangiranje; ne obuhvata vrijeme "
+        "izvođenja i provjere alarmnog praga. Povećanje broja isječaka i dalje "
+        "donosi određeni dobitak, uz duže učenje.", uvlaka=False)
 
     r.naslov("Granica važenja: pobjeda za ventilator, ne uopšte", 2)
     r.pasus(
@@ -892,13 +822,11 @@ def _model(r) -> None:
             ["ToyCarEmu", "0,376", "0,552", "0,518"],
         ], desno={1, 2, 3})
     r.pasus(
-        "Obilježje `psd_shape` pobjeđuje na dvije od sedam mašina, a po "
-        "harmonijskoj sredini — koja je zvanična mjera takmičenja — lošije je "
-        "od mel osnove. Fizički razlog je očekivan: uske harmonijske linije "
-        "postoje kod rotacionih mašina, ali ne kod ventila koji je impulsivan, "
-        "klizača kod kojeg dominira trenje, ili igračke. Tamo visoka "
-        "frekvencijska rezolucija ne donosi ništa, a troši dimenzije i "
-        "pogoršava procjenu kovarijanse.", uvlaka=False)
+        "Obilježje psd_shape daje veći AUC na dvije od sedam mašina u ovom "
+        "protokolu. Na ostalima je bolje najmanje jedno mel obilježje. Različita "
+        "spektralna struktura mašina može objasniti dio razlike, ali iz ovih "
+        "rezultata nije utvrđen poseban fizički uzrok za svaku mašinu. Tabela nije "
+        "zvanični ukupni rezultat DCASE takmičenja.", uvlaka=False)
     r.pasus(
         "Za ovaj rad to znači sljedeće. Uređaj je namijenjen ventilatorima, pa "
         "izbor obilježja ostaje ispravan i tvrdnja o AUC 0,867 **važi za "
@@ -907,17 +835,14 @@ def _model(r) -> None:
         "na drugi tip mašine, obilježje bi se biralo po tipu, a takav izbor je "
         "moguće napraviti bez ijedne ciljne oznake, samo iz izvornog domena.")
 
-    r.naslov("Faza 5 — šest unaprijed navedenih alternativa", 2)
+    r.naslov("Faza 5 — poređenje alternativnih obilježja", 2)
     r.pasus(
-        "Sve prethodne faze bile su pokušaji da se nađe bolje obilježje, i "
-        "svaki je bio motivisan onim što je prethodni propustio. Ova faza je "
-        "prvi put postupila obrnuto: uzeto je šest pravaca koje je plan naveo "
-        "**unaprijed**, izmjereni su svi odjednom pod istim podjelama, i "
-        "rezultat je objavljen kakav god bio. Kandidati su bili u kodu prije "
-        "nego što je ijedan anomalni isječak otvoren, a lista se nije mijenjala "
-        "prema rezultatu. Rezultati svih šest dati su u Tabeli 4.7.")
+        "U narednoj rundi poređeno je sedam kandidata sa osnovnim obilježjem na "
+        "istih dvadeset kalibracionih podjela. Lista je fiksirana prije te runde "
+        "evaluacije. To obezbjeđuje upareno poređenje unutar runde, ali ne uklanja "
+        "raniji uvid u razvojne rezultate. Sve konfiguracije su date u Tabeli 4.7.")
     r.tabela(
-        "Šest unaprijed navedenih alternativa (*k* = 10, 20 podjela)",
+        "Sedam alternativa i osnovno obilježje (*k* = 10, 20 podjela)",
         ["Kandidat", "Ideja", "AUC", "Razlika"],
         [
             ["`psd_shape`", "dosadašnje obilježje", "0,856 ± 0,024", "—"],
@@ -930,20 +855,18 @@ def _model(r) -> None:
             ["`psd_plus_transient`", "spori i brzi put", "0,857", "+0,001"],
         ], desno={2, 3})
     r.pasus(
-        "Nijedan kandidat ne pobjeđuje. Jedini pozitivan pomak od 0,001 je "
-        "dvadeset puta manji od sopstvenog rasipanja po podjeli, pa nije "
-        "poboljšanje nego šum.", uvlaka=False)
+        "Kombinacija sa tranzijentnim obilježjima daje mali pozitivan pomak od oko "
+        "0,0012 AUC. Poređenje tog pomaka sa standardnom devijacijom pojedinačnih "
+        "rezultata nije test statističke značajnosti. Za takav zaključak potreban "
+        "je interval uparenih razlika i nezavisna provjera; postojeći rezultat nije"
+        " dovoljan razlog za složeniji model.", uvlaka=False)
     r.pasus(
-        "Mehanizam pada svakog kandidata je zabilježen, jer je to korisnije od "
-        "same brojke. Pristupi zasnovani na redu i režimu počivaju na "
-        "pretpostavci da oznake brzine u skupu znače različitu obrtnu brzinu. "
-        "Procjena osnovne frekvencije dala je 34,0 Hz za sve tri brzine. Prvi "
-        "refleks je bio da je procjena pokvarena, pa je urađena kontrola "
-        "nezavisna od nje — položaj tonalnih vrhova iznad spektralne pozadine. "
-        "Vrhovi se poklapaju unutar jedne tačke spektra za sve tri brzine. "
-        "Brzine se, dakle, u ovom skupu ne razlikuju po obrtnoj frekvenciji "
-        "nego po širokopojasnom nivou; procjena je bila ispravna, a "
-        "preslikavanje ose je samo izgubilo rezoluciju.")
+        "Procijenjena osnovna frekvencija ostaje oko 34 Hz za tri oznake brzine, a "
+        "dominantni vrhovi se poklapaju unutar jedne spektralne tačke. To "
+        "ograničava korisnost isprobanog preslikavanja u red obrtanja. Bez "
+        "tahometra ili potvrde autora skupa nije dokazano da je stvarna brzina "
+        "vratila ista; oznaka i akustički vrh ne moraju predstavljati istu fizičku "
+        "veličinu.")
     r.pasus(
         "Dvokanalni pristupi su svi slabiji od bližeg kanala samog. Varijanta "
         "sa maskom pala je ispod slučajnog pogađanja, i razlog je poučan: "
@@ -953,14 +876,10 @@ def _model(r) -> None:
         "su tonalne i širokopojasne, pa mjeri nešto što u ovim podacima ne "
         "postoji.")
     r.pasus(
-        "Ova faza nije dala bolji model, ali je dala dvije druge stvari. Prva "
-        "je potvrda da su ograničenja u firmveru bila ispravna: firmver je "
-        "odbijao da tvrdi promjenu brzine, ambijentalnu buku ili mehaničku "
-        "anomaliju kao kategoriju, jer dokaza nije bilo. Ova faza je dokaze "
-        "potražila po sve tri linije i nije ih našla. Druga je preusmjeravanje "
-        "na pravo usko grlo: kada šest alternativa ne pomjeri obilježje, a "
-        "prag se između dvije kalibracije razlikuje šesnaest puta, dalje "
-        "ulaganje u obilježje nema smisla.")
+        "U ovoj rundi nije utvrđena prednost koja bi opravdala složeniji ugrađeni "
+        "model. Dalji razvoj zato je usmjeren na kalibraciju i alarmnu politiku. "
+        "Negativni nalazi ostaju ograničeni na ispitane konfiguracije i ne "
+        "isključuju druge dvokanalne ili tranzijentne pristupe.")
 
     r.naslov("Faza 6 — vremensko pravilo odlučivanja", 2)
     r.pasus(
@@ -988,10 +907,10 @@ def _model(r) -> None:
         "šumu, a ovdje je zadatak obrnut — odbaciti **veliku kratku** pobudu.",
         uvlaka=False)
     r.pasus(
-        "Usvojena je histereza sa razdvojenim pragom ulaska i izlaska, koja ne "
-        "unosi memoriju o veličini pobude, a prepolovljuje broj alarmnih "
-        "epizoda kada se akustika pomjeri. Ovo je najjasniji primjer pravila "
-        "da standardna tehnika nije isto što i prikladna tehnika.")
+        "U ovoj ranijoj simulaciji histereza smanjuje broj epizoda na drugoj mašini"
+        " sa 11,16 na 5,40 na sat. Poređenje ne mjeri detekciju fizičkih kvarova. "
+        "Završni firmware koristi zasebno izvedene apsolutne pragove ulaska i "
+        "izlaska; raniji faktor izlaska 0,7 nije njegova konačna postavka.")
 
     r.naslov("Sažetak napretka", 2)
     r.pasus(
@@ -1005,31 +924,20 @@ def _model(r) -> None:
             ["2. Statistika nad mel sažetkom", "0,674", "—"],
             ["3. Ocjenjivač", "0,716", "uslovljenost kovarijanse, pa plato"],
             ["4. **Obilježje**", "**0,864**", "**rezolucija po frekvenciji**"],
-            ["5. Šest alternativa", "0,857", "nijedna ne pobjeđuje — prepreka nije obilježje"],
+            ["5. Sedam alternativa", "0,857", "nijedna ne pobjeđuje — prepreka nije obilježje"],
             ["6. Vremensko pravilo", "—", "pravilo alarma; usvojena histereza"],
         ], desno={1})
     r.slika("slike/sl_napredak.png",
-            "Napredak najboljeg izmjerenog AUC kroz faze razvoja; jedina "
-            "promjena obilježja donijela je veći pomak od dvanaest varijanti "
-            "ocjenjivača zajedno")
+            "Najbolji razvojni AUC po fazama; različiti protokoli ograničavaju direktno"
+            " poređenje")
     r.pasus(
-        "Napredak od 0,451 do 0,864 postignut je uz potvrđen rad na uređaju. "
-        "Iz ovog puta izdvajaju se pouke koje vrijede i van ovog rada. "
-        "Obilježje nosi više od ocjenjivača: dvanaest varijanti ocjenjivača "
-        "dalo je sedam poena, a jedna promjena obilježja petnaest. Negativan "
-        "rezultat na bliskim parametrima ne zatvara pravac — u ranijoj tabeli "
-        "neuspjeha stajalo je da finiji prozor od 4096 uzoraka sa linearnim "
-        "trakama daje 0,50 do 0,64, i to je zaustavilo istraživanje na duže "
-        "vrijeme, a pobjednik je bio dva parametra dalje. Konačno, "
-        "„verifikovano“ ne znači „optimalno“: raniji ulaz je bio potvrđen "
-        "poređenjem računara i uređaja i zato tretiran kao nedodirljiv, ali "
-        "verifikacija dokazuje da je implementacija tačna, ne da je izbor "
-        "dobar.", uvlaka=False)
+        "Razvoj pokazuje značaj izbora obilježja, regularizacije i zasebne provjere"
+        " praga. Najbolje vrijednosti pojedinih faza potiču iz različitih podjela i"
+        " konfiguracija. Zbog toga njihov hronološki rast opisuje istraživački put,"
+        " a ne kontrolisani efekat jedne promjene.", uvlaka=False)
 
 
-# ==========================================================================
 # 5. REALIZACIJA
-# ==========================================================================
 def _realizacija(r) -> None:
     r.naslov("Realizacija na platformi ESP32-S3")
     r.pasus(
@@ -1058,13 +966,12 @@ def _realizacija(r) -> None:
             ["`L/R`", "GND", "izbor lijevog kanala"],
         ])
     r.pasus(
-        "Signalne veze do mikrofona drže se kraćim od 10 cm zbog integriteta "
-        "digitalnog signala. Taster za pokretanje kalibracije vezan je na "
-        "GPIO 10 prema masi, uz unutrašnji *pull-up* otpornik, a dvije "
-        "svjetleće diode na GPIO 2 i GPIO 11 preko otpornika od 220 do 330 Ω. "
-        "Pinovi 35, 36 i 37 se ne koriste jer ih zauzima oktalna "
-        "pseudostatička memorija. Cijela šema povezivanja data je na "
-        "Slici 5.1.", uvlaka=False)
+        "Preporučene su kratke signalne veze do mikrofona. Predviđen je taster "
+        "između GPIO 10 i mase, uz unutrašnji *pull-up*, zelena dioda na GPIO 2 "
+        "preko 100 Ω i crvena na GPIO 11 preko 330 Ω. Uređaj ostaje na protobordu "
+        "MB-102 prema odluci od 2. septembra. Završno povezivanje tastera i dioda "
+        "nije potvrđeno mjerenjem; u sačuvanim testovima korišćen je virtuelni "
+        "taster preko iste operaterske logike. Šema je data na Slici 5.1.", uvlaka=False)
     r.slika("slike/sl_sema.png",
             "Šema povezivanja mikrofona, tastera i signalnih dioda na modul "
             "ESP32-S3")
@@ -1078,21 +985,19 @@ def _realizacija(r) -> None:
         "Uz svaki prozor prijavljuje se i broj izgubljenih uzoraka u odnosu na "
         "prethodni prozor.")
     r.pasus(
-        "Ta razlika je važnija nego što izgleda. Kumulativni brojač "
-        "izgubljenih uzoraka pokazuje veliku vrijednost jer uređaj u praznom "
-        "hodu, dok čeka pritisak tastera, ne prazni kružni bafer. To nisu "
-        "izgubljeni mjerni uzorci. Mjerodavna je razlika po prozoru tokom "
-        "mjerenja, i ona je u svim prijavljenim rezultatima jednaka nuli.")
+        "U starijim mjerenjima kumulativni brojač uključivao je uzorke odbačene dok"
+        " uređaj čeka operatera. Aktuelni firmver prazni bafer i resetuje brojač na"
+        " početku sesije. Za prozore mjerenja provjerava se i razlika brojača, koja"
+        " je u dva završna zapisa nula. To je dokaz odsustva prijavljenih gubitaka,"
+        " a ne nezavisna provjera svakog I2S uzorka.")
 
     r.naslov("Izračunavanje obilježja", 2)
     r.pasus(
-        "Obilježje se računa u sljedećim koracima. Prozor od 10 s pokriva se "
-        "sa 39 preklapajućih segmenata dužine 8192 uzorka sa korakom od 4096. "
-        "Nad svakim segmentom primjenjuje se prozorska funkcija i brza "
-        "Furijeova transformacija, a kvadrati modula se usrednjavaju. Dobijeni "
-        "spektar se sažima u 96 logaritamski raspoređenih traka između 10 i "
-        "4000 Hz, logaritmuje i normalizuje oduzimanjem skalarne srednje "
-        "vrijednosti.")
+        "Prozor od 10 s pokriva se sa 38 potpunih preklapajućih segmenata dužine "
+        "8192 uzorka, sa korakom 4096. Preostalih 256 uzoraka ne ulazi u novi "
+        "potpuni segment. Primjenjuje se periodični Hanov prozor, a usrednjeni "
+        "spektar snage sažima se u 96 logaritamskih traka od 10 do 4000 Hz. Koristi"
+        " se logaritam osnove deset i oduzima srednja vrijednost vektora.")
     r.pasus(
         "Dobijeni vektor se standardizuje parametrima naučenim na računaru, "
         "poslije čega se računa kvadrirana Mahalanobisova udaljenost od "
@@ -1110,11 +1015,18 @@ def _realizacija(r) -> None:
             ["Izgubljenih uzoraka po prozoru", "0"],
         ], desno={1})
     r.pasus(
-        "Rezerva od oko četrnaest puta znači da uređaj obradi prozor od 10 s "
-        "za 0,72 s, pa ostaje dovoljno vremena za sve ostale poslove i za "
-        "znatno složeniji nastavak obrade ako bi bio potreban. Poklapanje sa "
-        "referentnom implementacijom na računaru na šest značajnih cifara "
-        "potvrđuje da je prenos obilježja na uređaj tačan.", uvlaka=False)
+        "Izmjerenih 716 ms odnosi se na računanje obilježja i ocjene, a ne na "
+        "ukupno vrijeme akvizicije, istraživačke telemetrije i donošenja alarma. "
+        "Oko 14 puta kraća obrada od trajanja prozora potvrđuje izvodljivost tog "
+        "računa, ali nije mjerenje najgoreg vremena izvršavanja cijelog sistema. "
+        "Navedena poklapanja sa referencom odnose se na konkretne ispitane ulaze.", uvlaka=False)
+
+    r.pasus("Osam traka ne sadrži nijednu FFT tačku i prije centriranja dobija "
+            "fiksnu vrijednost −20. Zbog toga oduzimanje sredine ne uklanja potpuno "
+            "uticaj pojačanja. Na sintetičkom širokopojasnom signalu, udvostručavanje "
+            "amplitude u neizmijenjenom C kodu pomjera popunjene trake za približno "
+            "0,05, a prazne za −0,55 jedinica obilježja. Ova računarska provjera "
+            "ne mjeri uticaj na fizičku detekciju.")
 
     r.naslov("Organizacija memorije", 2)
     r.pasus(
@@ -1170,21 +1082,17 @@ def _realizacija(r) -> None:
         "vremensku odluku, kapiju pouzdanosti i sažetak kalibracije. Računar "
         "te zapise samo prima i provjerava; on ne učestvuje u odlučivanju.")
     r.pasus(
-        "Provjera je namjerno stroga. Nepoznat zapis, nedostajuće polje, "
-        "vrijednost koja nije konačan broj ili redoslijed koji krši protokol "
-        "obaraju cio zapis mjerenja kao nevalidan. Tokom razvoja je to više "
-        "puta oborilo mjerenja koja su na prvi pogled izgledala uredno, i "
-        "svaki takav slučaj je zabilježen.")
+        "Nedostajuće obavezno polje, neispravna vrijednost ili redoslijed "
+        "parsiranih protokolarnih zapisa obaraju validnost mjerenja. Dijagnostički "
+        "tekst izvan tog ugovora može ostati neparsiran, kao zapis CALTRIM. Zato "
+        "prazan spisak grešaka ne dokazuje provjeru svake linije serijskog izlaza.")
     r.pasus(
-        "U razvojnoj konfiguraciji uređaj dodatno emituje i sam vektor od 96 "
-        "obilježja, kao i pet potvektora po prozoru. Ti podaci se čuvaju uz "
-        "svaki zapis mjerenja i omogućavaju da se svaka odluka naknadno "
-        "rekonstruiše na računaru, bez ponavljanja fizičkog eksperimenta.")
+        "Ti podaci omogućavaju naknadnu analizu obilježja bez novog snimanja, uz "
+        "provjeru potpunosti manifesta. Ne zamjenjuju sirovi zvuk pri izmjeni "
+        "frontenda, niti predstavljaju novo fizičko mjerenje.")
 
 
-# ==========================================================================
 # 6. PROTOKOL I POLITIKE
-# ==========================================================================
 def _protokol(r) -> None:
     r.naslov("Protokol mjerenja i politike odlučivanja")
     r.pasus(
@@ -1202,12 +1110,11 @@ def _protokol(r) -> None:
         "praga su dvije različite stvari, i to mjerenje ih je prvi put "
         "razdvojilo.")
     r.pasus(
-        "Uzrok je fizički. Kalibracija je gledala 100 s, a ventilator izluta "
-        "izvan tog opsega kroz deset minuta rada. Nivo signala pritom ostaje "
-        "praktično nepromijenjen — ne mijenja se jačina nego položaj "
-        "harmonijskih linija, što uho ne primjećuje, a Mahalanobisova "
-        "udaljenost preko 96 traka vidi kao veliku promjenu. Pored toga, prag "
-        "izveden iz dvije uzastopne kalibracije razlikovao se šesnaest puta.")
+        "Kalibracija je obuhvatila 100 s zvuka, a kasniji normalni prozori prelaze "
+        "tako izveden prag. Analize bilježe osjetljivost uskih spektralnih traka i "
+        "razliku pragova do šesnaest puta između ponavljanja. Promjenljiv zvuk, "
+        "položaj postavke i kovarijansa mogu doprinositi toj osjetljivosti; "
+        "eksperimenti ne izdvajaju jedinstven fizički uzrok.")
     r.pasus(
         "Iz toga slijedi pravilo koje je usvojeno i nije se mijenjalo: prag se "
         "izvodi iz odvojenog, dovoljno dugog perioda u kojem su prisutna samo "
@@ -1223,13 +1130,12 @@ def _protokol(r) -> None:
         "usaglašenosti. Ako je koeficijent varijacije tih ocjena veći od 0,6, "
         "kalibracija se odbija.")
     r.pasus(
-        "Ovo pravilo je u praksi oborilo veliki broj kalibracija, i uzrok je "
-        "detaljno izmjeren. Devet od deset isječaka je uvijek uredno, a strada "
-        "tačno jedan, i uvijek u istom uskom pojasu od 66 do 75 Hz, što "
-        "odgovara frekvenciji obrtanja ventilatora. Rasipanje te jedne trake "
-        "kroz deset isječaka iznosi 0,08 dB u snimku koji prolazi, a 0,23 do "
-        "0,33 dB u odbijenima. Dovoljan je, dakle, jedan skok od oko 0,7 dB u "
-        "jednoj od 96 traka da kalibracija padne.")
+        "U analiziranim odbijenim kalibracijama najveći doprinos dolazi iz jednog "
+        "isječka i uske trake oko 66–75 Hz. Rasipanje te trake iznosi oko 0,08 "
+        "jedinica obilježja u prihvaćenom, a 0,23–0,33 u odbijenim zapisima. "
+        "Odstupanje od približno 0,7 prati veliki porast ocjene. Bez tahometra taj "
+        "pojas ne treba izjednačiti sa potvrđenom frekvencijom obrtanja, niti "
+        "opaženo odstupanje tumačiti kao opšti prag osjetljivosti.")
     r.pasus(
         "Razlog te osjetljivosti je što je kovarijansa naučena na drugim "
         "ventilatorima i u toj traci ima vrlo malu varijansu, pa "
@@ -1253,11 +1159,11 @@ def _protokol(r) -> None:
         "medijanom a odozgo na polovinu praga ulaska. Centar ostaje onaj koji "
         "je kapija kvaliteta prihvatila; ne mijenja se u ovoj fazi.")
     r.pasus(
-        "Razdvojeni pragovi ulaska i izlaska daju histerezu iz šeste faze "
-        "razvoja modela. Ograničenje odozgo na polovinu praga ulaska uvedeno "
-        "je poslije mjerenja u kojem je prag izlaska bio postavljen previsoko, "
-        "pa se alarm iz prve izazvane promjene nikada nije ugasio i sljedeća "
-        "dva bloka mjerenja nisu imala u šta da uđu.")
+        "Ograničenje izlaznog praga utiče na zadržavanje alarma: niži izlazni prag "
+        "otežava izlazak i može produžiti epizodu. Ako medijana DERIVE ocjena "
+        "premaši polovinu ulaznog praga, firmver odbija nekompatibilne granice. U "
+        "završnom testu tonom oporavak nije izmjeren, pa ovo pravilo nije potvrda "
+        "oporavka poslije svake promjene.")
     r.pasus(
         "Izvedeni prag se zatim provjerava na 22 dodatna, **vremenski "
         "kasnija** normalna prozora. Provjera je stroga: nijedan alarm nije "
@@ -1281,11 +1187,11 @@ def _protokol(r) -> None:
 
     r.naslov("Kapija pouzdanosti", 2)
     r.pasus(
-        "Prozor od 10 s dijeli se na pet potprozora, i za svaki se računa "
-        "obilježje. Ako se ta obilježja međusobno previše razlikuju, prozor je "
-        "interno nestabilan i njegova ocjena nije pouzdana mjera stanja "
-        "mašine. Takav prozor prelazi u posebno stanje i **ne ulazi u građenje "
-        "alarma**.")
+        "Prozor od 10 s dijeli se na pet potprozora sa sopstvenim obilježjima. Kada"
+        " ukupna ocjena premaši ulazni prag i potprozori se previše razlikuju, "
+        "kapija označava prozor kao nepouzdan. HOLD prekida niz uzastopnih "
+        "prekoračenja. Za ocjene ispod ili na ulaznom pragu ova kapija ne uvodi "
+        "HOLD, pa nije opšti filter svih nestabilnih prozora.")
     r.pasus(
         "Granica te nestabilnosti izvodi se po sesiji, kao najveća "
         "izmjerena nestabilnost među deset kalibracionih prozora pomnožena sa "
@@ -1305,11 +1211,11 @@ def _protokol(r) -> None:
 
     r.naslov("Vremensko pravilo i semantika događaja", 2)
     r.pasus(
-        "Alarm se podiže tek poslije tri uzastopna pouzdana prozora iznad "
-        "praga ulaska, a gasi se kada ocjena padne ispod praga izlaska. "
-        "Poslije dvanaest alarmnih prozora, dakle oko dva minuta neprekidnog "
-        "odstupanja, izdaje se dodatna oznaka trajnog odstupanja. Stanje "
-        "pritom ostaje anomalija.")
+        "Alarm se podiže poslije tri uzastopne pouzdane ocjene strogo veće od "
+        "ulaznog praga, a gasi se kada ocjena bude manja ili jednaka izlaznom "
+        "pragu. Trajno odstupanje prijavljuje se na dvanaestom mjerenom alarmnom "
+        "prozoru, uključujući prozor ulaska. HOLD pauzira brojač, pa dvanaest "
+        "prozora nije nužno dva minuta neprekidnog zidnog vremena.")
     r.pasus(
         "Namjerno se razlikuje trajno akustičko odstupanje od terminalnog "
         "problema. Terminalno stanje rezervisano je za grešku senzora ili "
@@ -1331,10 +1237,11 @@ def _protokol(r) -> None:
         "smetnje i završni oporavak. Oznake uslova upisuju se na računaru u "
         "trenutku kada operater unese komandu.")
     r.pasus(
-        "Prvi i posljednji prozor svakog bloka označavaju se kao prelazni i "
-        "izbacuju se iz metrika. Razlog je što se oznaka uslova upisuje na "
-        "granici, pa prozor od 10 s koji je zahvata sadrži oba stanja. Bez tog "
-        "pravila bi granični prozori sistematski kvarili obje strane poređenja.")
+        "Host označava naredni DET zapis poslije svake promjene uslova kao "
+        "prelazni. Takvi prozori, nepotvrđeni uslovi i nevalidni protokolarni "
+        "zapisi izostavljaju se iz metrika. Ne odbacuju se automatski i prvi i "
+        "posljednji prozor svakog bloka. Oznake se vezuju za vrijeme prijema "
+        "telemetrije, pa ostaje nesigurnost sinhronizacije sa stvarnom pobudom.")
     r.pasus(
         "Uz svako mjerenje čuva se potpuna evidencija porijekla: identifikator "
         "izmjene izvornog koda, kontrolna suma razlike u odnosu na tu izmjenu, "
@@ -1344,9 +1251,7 @@ def _protokol(r) -> None:
         "za tačno određeno stanje sistema.")
 
 
-# ==========================================================================
 # 7. REZULTATI
-# ==========================================================================
 def _rezultati(r) -> None:
     r.naslov("Rezultati")
     r.pasus(
@@ -1382,21 +1287,21 @@ def _rezultati(r) -> None:
             ["ToyCarEmu", "0,376 ± 0,066", "0,552 ± 0,094", "0,518 ± 0,094"],
         ], desno={1, 2, 3})
     r.pasus(
-        "Za ventilator, koji je predmet ovog rada, postignut je AUC 0,867 uz "
-        "standardizovani pAUC pri stopi lažnih uzbuna do 0,1 od 0,667. "
-        "Postavljeni cilj od 0,80 je time premašen. Konfiguracija ugrađena u "
-        "firmver koristi deset kalibracionih isječaka i za nju je izmjeren AUC "
-        "0,856 ± 0,024 na 20 podjela; ta razlika je cijena kraće kalibracije i "
-        "navodi se odvojeno da se ne bi predstavljala jača konfiguracija od "
-        "one koja stvarno radi na uređaju.", uvlaka=False)
+        "U ovoj razvojnoj evaluaciji fan postiže AUC 0,867 i standardizovani pAUC "
+        "0,667, iznad postavljenog cilja AUC 0,80. Konfiguracija sa deset prozora "
+        "daje 0,856 ± 0,024 na drugom skupu od 20 podjela. Razlika se ne može "
+        "pripisati isključivo broju kalibracionih prozora jer protokoli nisu "
+        "identični. Rasipanje preko podjela mjeri osjetljivost na izbor "
+        "kalibracije; podjele ponovo koriste iste snimke i nisu nezavisni fizički "
+        "eksperimenti.", uvlaka=False)
 
     r.naslov("Mjerenje na uređaju preko zvučnika", 2)
     r.pasus(
-        "Prije nego što je nabavljen ventilator, uređaj je provjeravan "
-        "reprodukcijom snimaka iz skupa podataka preko zvučnika. To mjerenje "
-        "je dalo AUC 0,716 umjesto 0,864, i uzrok je izmjeren, a ne "
-        "pretpostavljen. Rasipanje ocjena kroz akustički kanal daje "
-        "Tabela 7.2.")
+        "Prije mjerenja fizičkog ventilatora izvedene su probe reprodukcijom DCASE "
+        "snimaka preko zvučnika. Dobijen je AUC oko 0,716, dok je razvojna "
+        "digitalna evaluacija davala oko 0,864. Postavke nisu identične, pa razlika"
+        " nije izolovana procjena greške mikrofona ili firmvera. Tabela 7.2 "
+        "prikazuje zabilježene ocjene u dva puta signala.")
     r.tabela(
         "Rasipanje ocjena kroz akustički kanal",
         ["Put signala", "Ocjena normalnog", "Ocjena anomalije"],
@@ -1410,12 +1315,11 @@ def _rezultati(r) -> None:
         "je zatrpan. Isti uređaj zaustavljenu mašinu prepoznaje bez greške, "
         "jer je ta promjena mnogo grublja od šuma kanala.", uvlaka=False)
     r.pasus(
-        "Kontrolisanim sintetičkim kvarom rastuće jačine izmjeren je i prag "
-        "osjetljivosti cijelog lanca. Anomalija iz skupa podataka odgovara "
-        "kvaru jačine oko −30 dB, a preko zvučnika je potrebno oko −15 dB da "
-        "bi se alarm podigao. Razlika od oko 15 dB objašnjava sve prolaze bez "
-        "detekcije i mjerljivo razdvaja tvrdnju „model ne valja“ od tvrdnje "
-        "„ovaj kvar je pretih za ovaj put zvuka“.")
+        "Dodatna proba koristila je sintetičku akustičku pobudu različite jačine. U"
+        " toj postavci izraženiji alarmni odziv dobijen je približno na −15 dB, "
+        "naspram ranijeg poređenja oko −30 dB. To su odnosi jačina u generisanoj "
+        "pobudi, a ne fizička jačina kvara ili apsolutna osjetljivost u dB SPL. Bez"
+        " kalibrisanog akustičkog izvora ne prenose se na druge mašine.")
     r.pasus(
         "Reprodukcija zvučnikom je konfaund kojeg u stvarnoj primjeni nema, "
         "jer uređaj tamo sluša mašinu direktno, bez dvostrukog prolaza kroz "
@@ -1474,38 +1378,28 @@ def _rezultati(r) -> None:
         "Ocjene po označenim uslovima, mjerenje sa izazvanom promjenom "
         "(prag ulaska 8084)",
         ["Uslov", "Prozora", "Nepouzdanih", "Alarmnih", "Medijana ocjene"],
-        [
-            ["Normalna osnova", "5", "0", "0", "1 190"],
-            ["Izazvana promjena 1", "5", "4", "0", "26 399"],
-            ["Oporavak 1", "5", "0", "0", "2 837"],
-            ["Izazvana promjena 2", "5", "3", "0", "60 050"],
-            ["Oporavak 2", "5", "1", "0", "2 663"],
-            ["Izazvana promjena 3", "5", "2", "**2**", "14 389"],
-            ["Oporavak 3", "5", "0", "2", "3 636"],
-            ["Razgovor", "5", "4", "0", "36 838"],
-            ["Oporavak poslije razgovora", "5", "1", "0", "3 039"],
-            ["Vrata", "3", "1", "0", "4 366"],
-            ["Završni oporavak", "6", "1", "0", "2 864"],
-        ], desno={1, 2, 3, 4})
+        thesis_rows("paper"), desno={1, 2, 3, 4})
     r.pasus(
-        "Model je promjenu vidio u sva tri bloka: medijane 26 399, 60 050 i "
-        "14 389 naspram normalne 1190. Alarm ipak nije podignut u prva dva "
-        "bloka, jer je kapija pouzdanosti odbila četiri odnosno tri od pet "
-        "prozora kao nestabilne, pa brojač uzastopnih prekoračenja nikada nije "
-        "stigao do tri. Treći blok je bio najmirniji i alarm je podignut "
-        "poslije tri uzastopna pouzdana prozora.", uvlaka=False)
+        "Medijane ocjena u tri bloka iznose 30 255, 62 344 i 19 844, naspram 1146 u"
+        " normalnoj osnovi, nakon izostavljanja prelaznih prozora. U prva dva bloka"
+        " tri od četiri prihvatljiva prozora imaju oznaku HOLD. Alarm je "
+        "registrovan u trećem bloku, dok unaprijed zadati kriterij detekcije u sva "
+        "tri bloka nije zadovoljen.", uvlaka=False)
     r.pasus(
-        "Ovo nije promašaj detekcije nego projektovano ponašanje. Papirić se "
-        "drži rukom, pa izazvana promjena po konstrukciji nije konstantna, a "
-        "sistem odbija da nestabilan prozor proglasi anomalijom. Alarm se "
-        "zatim prenio dva prozora u fazu oporavka i ugasio se kada je ocjena "
-        "pala ispod praga izlaska, uz medijanu vremena oporavka od 10,1 s.")
+        "GUIDED25 izvještaj ima ishod FAIL: detekcija je ostvarena u jednom od tri "
+        "bloka, a alarm je prenesen u oporavak. Odbacivanje nestabilnih prozora "
+        "odgovara implementiranoj logici, ali time nije ispunjen cilj eksperimenta."
+        " Držanje papirića rukom je moguće objašnjenje nestabilnosti; bez "
+        "nezavisnog mjerenja pobude nije potvrđen jedini uzrok. U skupu "
+        "prihvatljivih prozora oporavak sadrži jedan alarmni prozor, uz prijavljenu"
+        " medijanu oporavka 10,08 s.")
     r.pasus(
-        "Razgovor i otvaranje vrata nisu podigli alarm iako su im ocjene bile "
-        "visoke, 36 838 odnosno 4366. Četiri od pet prozora razgovora "
-        "proglašena su nepouzdanim. To je tražena osobina: smetnja se odbija "
-        "kao nepouzdana, umjesto da bude protumačena kao stanje mašine. Cijela "
-        "trasa mjerenja prikazana je na Slici 7.1.")
+        "U označenim blokovima razgovora i vrata nema alarma. Medijane "
+        "prihvatljivih prozora iznose 38 307 i 49 549. Sva četiri prozora razgovora"
+        " i jedan od dva prozora vrata imaju HOLD oznaku. Ovi kratki blokovi "
+        "pokazuju ponašanje u datoj postavci, ali ne procjenjuju opštu otpornost na"
+        " buku. Slika 7.1 prikazuje sve DET prozore radi kontinuiteta, dok Tabela "
+        "7.4 izostavlja prelazne i nepotvrđene prozore.")
     r.slika("slike/sl_run_papiric.png",
             "Trasa ocjene tokom mjerenja sa izazvanom promjenom protoka; "
             "označeni su prag ulaska, prag izlaska, nepouzdani prozori i "
@@ -1513,46 +1407,38 @@ def _rezultati(r) -> None:
 
     r.naslov("Mjerenje sa konstantnom promjenom", 3)
     r.pasus(
-        "Da bi se provjerilo ponašanje pri promjeni koja jeste konstantna, "
-        "izvedeno je drugo mjerenje u kojem je izvor promjene bio konstantan "
-        "ton od 1 kHz sa zvučnika, na fiksnoj jačini i položaju. Kalibracija "
-        "je u ovom mjerenju prošla bez izbacivanja isječaka, sa koeficijentom "
-        "varijacije 0,43. Izvedeni prag ulaska iznosi 21 810, a prag izlaska "
-        "10 905. Ocjene po označenim uslovima daje Tabela 7.5.")
+        "Drugo mjerenje koristi reprodukovani ton od 1 kHz. Kalibracija je "
+        "prihvaćena bez izbacivanja isječaka, sa koeficijentom varijacije 0,43; "
+        "pragovi iznose 21 810 i 10 905. U zapisima je uslov označen kao konstantan"
+        " ton, ali postoje bilješke o promjeni jačine tokom probe. Tabela 7.5 zato "
+        "opisuje označeni blok, a ne pobudu nezavisno izmjerene i stalne amplitude.")
     r.tabela(
         "Ocjene po označenim uslovima, mjerenje sa konstantnim tonom "
         "(prag ulaska 21 810)",
         ["Uslov", "Prozora", "Nepouzdanih", "Alarmnih", "Medijana", "Opseg"],
-        [
-            ["Normalna osnova", "6", "0", "0", "7 164", "6 712 – 8 171"],
-            ["Konstantan ton", "45", "8", "14", "22 629", "6 890 – 87 152"],
-            ["Poslije tona", "51", "8", "51", "32 884", "12 266 – 127 539"],
-        ], desno={1, 2, 3, 4})
+        thesis_rows("tone"), desno={1, 2, 3, 4})
     r.pasus(
-        "Alarm je podignut poslije tri uzastopna pouzdana prozora iznad praga, "
-        "dakle poslije oko 30 s od trenutka kada je ton postao dovoljno jak. "
-        "Poslije dvanaest alarmnih prozora, odnosno oko dva minuta, emitovana "
-        "je oznaka trajnog odstupanja. Kroz cijelo mjerenje nije izgubljen "
-        "nijedan uzorak, a istraživačka telemetrija je kompletna za svih 125 "
-        "prozora.", uvlaka=False)
+        "Alarm se podiže kada se ostvare tri uzastopna pouzdana prekoračenja. To "
+        "odgovara približno 30 s trajanja tri prozora, ali nije izmjerena latencija"
+        " od prvog uključivanja tona. Događaj trajnog odstupanja nastaje na "
+        "dvanaestom mjerenom alarmnom prozoru, uključujući prozor ulaska; HOLD "
+        "pauzira taj brojač. Nema prijavljenih gubitaka uzoraka. Manifest sadrži "
+        "125 istraživačkih prozora, odnosno 10 CAL i 115 DET prozora; ne sadrži "
+        "obilježja cijelih DERIVE i VERIFY faza.", uvlaka=False)
     r.pasus(
-        "Prvih devet prozora tona dalo je ocjene između 6890 i 15 582, dakle "
-        "unutar normalnog opsega, jer je zvučnik bio na premaloj jačini. "
-        "Poslije pojačanja ocjena skače na stabilnih 30 000 do 33 000. To je "
-        "koristan negativan podatak: promjena mora biti dovoljno jaka u odnosu "
-        "na sopstveni šum ventilatora, a prag nije apsolutna osjetljivost. "
-        "Trasa cijelog mjerenja je na Slici 7.2.")
+        "Prvih devet prozora označenih tonom ostaje ispod ulaznog praga. Neki "
+        "premašuju raniji opseg normalne osnove, pa se ne mogu opisati kao da su "
+        "svi u tom opsegu. Kasnije ocjene rastu. Bez zapisa tačnog trenutka "
+        "promjene jačine i kalibrisanog izvora ne može se izdvojiti odnos doze i "
+        "odziva. Slika 7.2 prikazuje cijelu trasu, uključujući prelazne prozore.")
     r.slika("slike/sl_run_ton.png",
-            "Trasa ocjene tokom mjerenja sa konstantnim tonom; alarm se "
-            "podiže poslije tri uzastopna pouzdana prozora, a oznaka trajnog "
-            "odstupanja poslije dvanaest")
+            "Trasa probe tonom: tri pouzdana prekoračenja za ulaz, dvanaesti mjereni "
+            "alarmni prozor za trajno odstupanje")
     r.pasus(
-        "Poslije gašenja tona ocjena je pala sa oko 40 000 na 12 266 do "
-        "19 561, dakle ispod praga ulaska ali iznad praga izlaska, pa je alarm "
-        "ostao zaključan do kraja mjerenja. Histereza je radila kako je "
-        "projektovana, ali je mjerenje završeno prije nego što je ocjena pala "
-        "ispod praga izlaska, pa vrijeme oporavka za ovaj izvor promjene nije "
-        "izmjereno.")
+        "Pred kraj zapisa ocjena pada sa približno 40 000 na 12 266–19 561, ispod "
+        "ulaznog, ali iznad izlaznog praga. Alarm ostaje aktivan. Iz ovog pada se "
+        "ne može odrediti tačno vrijeme gašenja izvora, a vrijeme završnog oporavka"
+        " nije izmjereno.")
 
     r.naslov("Sažetak fizičkih mjerenja", 2)
     r.pasus(
@@ -1560,41 +1446,32 @@ def _rezultati(r) -> None:
         "pored drugog.", uvlaka=False)
     r.tabela(
         "Sažetak dva validna mjerenja na ventilatoru",
-        ["Veličina", "Izazvana promjena protoka", "Konstantan ton"],
+        ["Veličina", "Izazvana promjena protoka", "Ton od 1 kHz"],
         [
             ["Kalibracija", "prihvaćena poslije izbacivanja 2 isječka", "prihvaćena bez izbacivanja"],
             ["Koeficijent varijacije", "0,84 → 0,43", "0,43"],
             ["Prag ulaska / izlaska", "8 084 / 3 707", "21 810 / 10 905"],
-            ["Prozora nadzora", "65", "115"],
+            ["DET prozora ukupno / u metrici", "65 / 43", "115 / 99"],
             ["Alarmnih prozora / epizoda", "3 / 2", "64 / 2"],
             ["Medijana oporavka", "10,1 s", "nije izmjerena"],
             ["Izgubljenih uzoraka", "0", "0"],
             ["Trajno odstupanje prijavljeno", "ne", "da"],
         ])
     r.pasus(
-        "Oba mjerenja su označena kao validan fizički rezultat, što znači da "
-        "su prošla sve provjere protokola: potpun rukohvat sa firmverom, "
-        "prihvaćenu kalibraciju, potpunu i saglasnu telemetriju i odsustvo "
-        "izgubljenih uzoraka.", uvlaka=False)
+        "Oznaka validnog fizičkog rezultata potvrđuje prihvatljivost zapisa za "
+        "analizu. Ona nije isto što i prolaz kriterija eksperimenta: GUIDED25 proba"
+        " sa papirićem ima ishod FAIL. Sažetak koristi 43 od 65 DET prozora prvog "
+        "mjerenja i 99 od 115 drugog. HOLD prozori ostaju u tabeli kao odbijene "
+        "odluke, a nisu naknadno uklonjeni radi boljih rezultata.", uvlaka=False)
 
     r.naslov("Provjere na računaru", 2)
     r.pasus(
-        "Uz fizička mjerenja, sistem se provjerava i automatski. Skup testova "
-        "na računaru sadrži 478 provjera i pokriva poređenje implementacija u "
-        "Pythonu i u jeziku C preko dijeljene biblioteke, ugovore protokola, "
-        "politike odlučivanja i oba fizička mjerenja kao zamrznutu regresiju. "
-        "Poseban alat provjerava da su brojevi u firmveru, u zamrznutim "
-        "politikama i u alatima za obradu međusobno saglasni.")
-    r.pasus(
-        "Ove provjere ne dokazuju ništa fizičko i to je izričito zapisano i u "
-        "samoj konfiguraciji neprekidne integracije. Uspješna izgradnja i "
-        "zeleni testovi ne dokazuju ni upis firmvera, ni rad na pločici, ni "
-        "ponašanje pored stvarne mašine.")
+        "Prošlo je 478 testova protokola, politika i poređenja sa C kodom, kao i "
+        "provjera šeme konfiguracije. Ove provjere ne zamjenjuju fizičku "
+        "validaciju uređaja.")
 
 
-# ==========================================================================
 # 8. DISKUSIJA
-# ==========================================================================
 def _diskusija(r) -> None:
     r.naslov("Diskusija i ograničenja")
     r.pasus(
@@ -1603,51 +1480,41 @@ def _diskusija(r) -> None:
 
     r.naslov("Šta rezultati pokazuju", 2)
     r.pasus(
-        "Osnovna tvrdnja koju mjerenja podržavaju je da je moguće napraviti "
-        "samostalan akustički nadzor rotacione mašine na mikrokontroleru "
-        "vrijednosti nekoliko desetina evra, bez mreže i bez računara u "
-        "putanji odluke. Uređaj sam uči normalno stanje mašine koju nikada "
-        "nije čuo, sam izvodi prag iz perioda u kojem su prisutna samo "
-        "normalna stanja, i pouzdano prijavljuje konstantnu akustičku "
-        "promjenu.")
+        "Mjerenja pokazuju da se statistički detektor sa učenjem lokalnog centra i "
+        "praga može izvršavati na ESP32-S3. Postojeći zapisi potvrđuju odluke "
+        "uređaja u dvije završne probe. Proba papirićem ipak ne zadovoljava sve "
+        "kriterije, a poslije tona oporavak ostaje neizmjeren. Zato rezultat "
+        "predstavlja funkcionalni prototip sa dokumentovanim ograničenjima.")
     r.pasus(
-        "Druga tvrdnja tiče se odnosa modela i politike oko njega. Kroz cio "
-        "rad je model bio bolji nego što je sistem bio upotrebljiv. "
-        "Razdvajanje izazvane promjene od normalnog rada bilo je gotovo "
-        "savršeno već u prvom fizičkom testu, dok je istovremeno 90 % "
-        "normalnih prozora bilo iznad praga. Poboljšanja koja su sistem "
-        "učinila upotrebljivim nisu bila poboljšanja modela nego politike: "
-        "odvojen period za izvođenje praga, nezavisna provjera tog praga, "
-        "histereza, kapija pouzdanosti i pravilo o odbacivanju najviše dva "
-        "kalibraciona isječka.")
+        "Prvi fizički test dobro razdvaja ocjene izazvane promjene i normalnog "
+        "rada, ali 54 od 60 normalnih prozora prelazi tadašnji prag. Taj primjer "
+        "razdvaja rangiranje od odluke pri fiksnom pragu. Kasnije promjene uvode "
+        "odvojeno izvođenje i provjeru praga, histerezu, kapiju pouzdanosti i "
+        "ograničeno odbacivanje kalibracionih isječaka. Dvije prihvaćene "
+        "kalibracije ne potvrđuju da je problem pragova uopšteno riješen.")
     r.pasus(
-        "Treća tvrdnja tiče se vrijednosti provjera koje se aktiviraju rijetko. "
-        "Provjera praga na odvojenom periodu djelovala je kao formalnost sve "
-        "dok nije oborila robusno pravilo koje je na papiru izgledalo bolje od "
-        "usvojenog. To je najjasnija potvrda da kapija koja se ne aktivira "
-        "godinama i dalje ima svrhu.")
+        "Odbijanje robusnog praga tokom VERIFY faze pokazuje praktičnu ulogu "
+        "odvojene provjere. Pravilo koje daje prihvatljiv fit na ranijem normalnom "
+        "periodu može podbaciti na kasnijem. Taj rezultat podržava zadržavanje "
+        "provjere, ali ne dokazuje da prolaz kratkog VERIFY perioda garantuje "
+        "dugoročnu pouzdanost.")
 
     r.naslov("Poređenje sa postojećim radovima", 2)
     r.pasus(
-        "U odnosu na objavljena rješenja zadatka DCASE, ovaj rad ne "
-        "konkuriše po tačnosti. Vodeći sistemi koriste ansamble dubokih "
-        "modela sa samonadziranim predtreniranjem i postižu znatno više "
-        "vrijednosti harmonijske sredine preko svih mašina. Doprinos ovog rada "
-        "je u drugoj ravni: pokazuje šta se pokvari kada se jedan takav "
-        "pristup, sveden na najjednostavniji oblik, stvarno pusti da radi bez "
-        "nadzora na mikrokontroleru.")
+        "Referentni radovi [1]–[3] daju postavku zadatka, podatke i poređenja "
+        "algoritama. Ovaj rad dodaje opis lokalnog učenja i provjere praga na "
+        "mikrokontroleru. Brojke nisu direktno uporedive sa službenim rang-listama "
+        "zbog drugačijih kalibracionih podjela, izabranog tipa mašine i korišćenja "
+        "razvojnog skupa.")
     r.pasus(
-        "U odnosu na postojeće radove iz oblasti minijaturnog mašinskog "
-        "učenja, razlika je u tome što se ovdje ne prijavljuje samo da model "
-        "staje u memoriju i radi u realnom vremenu. Prijavljuje se i kako se "
-        "prag izvodi bez ijedne anomalije, kako se prepoznaje da mjerenje nije "
-        "pouzdano, i šta uređaj radi kada dokaza nema.")
+        "Praktični doprinos je u povezivanju izračunavanja obilježja sa kontrolom "
+        "kvaliteta, kalibracijom i zapisom odluka. Pregled literature u ovom radu "
+        "nije sistematski pregled svih ugrađenih ASD sistema i ne uspostavlja "
+        "prvenstvo takve arhitekture.")
 
     r.naslov("Ograničenja", 2)
     r.pasus(
-        "Ograničenja su navedena bez ublažavanja, jer bi njihovo izostavljanje "
-        "učinilo rezultate neupotrebljivim za bilo koga ko bi htio da ih "
-        "ponovi.")
+        "Obim izvedenih mjerenja ograničava sljedeće zaključke:")
     r.stavke([
         "**Jedna vrsta mašine.** Izbor obilježja je pobjeda za ventilator, a "
         "izmjereno je da nije opšte poboljšanje. Po harmonijskoj sredini preko "
@@ -1659,9 +1526,9 @@ def _diskusija(r) -> None:
         "**Izazvana promjena nije potvrđen kvar.** Papirić uz usisnu stranu i "
         "pušteni ton su kontrolisane, bezbjedne promjene. Nazivati ih kvarom "
         "bez nezavisne stručne potvrde bilo bi netačno.",
-        "**Mali uzorci.** Pojedini blokovi mjerenja imaju po pet prozora. "
-        "Vrijednosti izvedene iz njih imaju širok interval povjerenja i "
-        "predstavljaju funkcionalnu provjeru, ne procjenu stope.",
+        "**Mali uzorci.** Pojedini blokovi imaju samo dva do pet prihvatljivih "
+        "prozora. Njihove deskriptivne statistike predstavljaju kratku funkcionalnu"
+        " provjeru. Intervali povjerenja za dugoročnu detekciju nisu procijenjeni.",
         "**Stopa lažnih uzbuna nije procijenjena dugoročno.** Odsustvo alarma "
         "tokom nekoliko desetina minuta normalnog rada nije dokaz male "
         "dugoročne stope; jednostrana gornja granica pri takvom trajanju "
@@ -1669,79 +1536,73 @@ def _diskusija(r) -> None:
         "**Vrijeme oporavka poslije jakog izvora promjene nije izmjereno**, "
         "jer je mjerenje završeno dok je ocjena još bila između praga izlaska "
         "i praga ulaska.",
-        "**Osjetljivost kapije kvaliteta kalibracije.** Jedan isječak od "
-        "deset, sa odstupanjem od oko 0,7 dB u jednoj od 96 traka, dovoljan je "
-        "da obori kalibraciju. Pravilo o odbacivanju dva isječka liječi "
-        "posljedicu, ne uzrok.",
-        "**Numeričke politike nisu zamrznute za proizvodnju.** Pravilo "
-        "izvođenja praga je potvrđeno na dva mjerenja, ali zamrzavanje za "
-        "proizvodnu upotrebu traži novu verziju politike i novo, unaprijed "
-        "prijavljeno mjerenje.",
+        "**Osjetljivost provjere kalibracije.** U analiziranim zapisima odstupanje "
+        "uske trake za približno 0,7 jedinica logaritamskog obilježja prati veliki "
+        "porast ocjene. To nije izmjeren opšti prag osjetljivosti. Odbacivanje "
+        "najviše dva isječka ublažava problem u jednoj sesiji, bez dokaza da "
+        "uklanja njegov uzrok.",
+        "**Razvojni izbor politike.** Pragovi i centri fitovani su iz normalnih "
+        "podataka. Ipak, tokom razvoja su pregledani ishodi ranijih anomalnih i "
+        "fizičkih proba, pa zabrana anomalija u fitu nije dokaz da je cijeli izbor "
+        "politike bio nezavisan od tih ishoda. Politika ostaje DEVELOPMENT i nema "
+        "potvrđenu dugoročnu stopu lažnih alarma.",
     ])
 
     r.naslov("Šta nije provjereno na hardveru", 2)
     r.pasus(
-        "Sljedeće stavke su realizovane u kodu i provjerene na računaru, ali "
-        "nisu potvrđene na potpuno sastavljenom hardveru, pa se tako i "
-        "prijavljuju: potpuno samostalan rad sa zalemljenim tasterom i "
-        "signalnim diodama, ponašanje pri prekidu veze sa mikrofonom, "
-        "ponašanje pri nestanku napajanja i pri ponovnom pokretanju, i "
-        "mjerenje potrošnje cijelog lanca. Nijedan uspješan test na računaru "
-        "ne zamjenjuje te provjere.")
+        "Na hardveru nisu potvrđeni potpuno samostalan interfejs sa tasterom i "
+        "diodama, kontrolisani prekid I2S veze, ponašanje pri gubitku napajanja i "
+        "potrošnja cijelog lanca. NVS modul postoji, ali razvojna politika ne "
+        "dozvoljava čuvanje i vraćanje profila: poslije restarta potrebno je novo "
+        "učenje. Ove stavke ostaju ograničenja rada, bez pretpostavke da će dodatna"
+        " mjerenja biti izvedena.")
 
 
-# ==========================================================================
 # 9. ZAKLJUČAK
-# ==========================================================================
 def _zakljucak(r) -> None:
     r.naslov("Zaključak")
     r.pasus(
-        "U radu je realizovan samostalan uređaj za nenadgledanu detekciju "
-        "anomalija zvuka rotacionih mašina na mikrokontroleru ESP32-S3 sa "
-        "jednim MEMS mikrofonom. Opšti oblik varijacije normalnog rada uči se "
-        "unaprijed na računaru iz 990 snimaka ispravnog rada, a sve što je "
-        "specifično za konkretnu mašinu — centar, prag i granica pouzdanosti — "
-        "uređaj mjeri sam, u prvim minutima rada pored te mašine.")
+        "Realizovan je prototip detektora akustičkih odstupanja ventilatora na "
+        "ESP32-S3 sa jednim MEMS mikrofonom. Globalni statistički model izveden je "
+        "iz 990 normalnih snimaka, dok uređaj uči lokalni centar i pragove. Završni"
+        " vođeni postupak od komande za početak do nadzora traje oko 13,57 min u "
+        "obje zabilježene sesije.")
     r.pasus(
-        "Postavljeni istraživački cilj od AUC 0,80 je premašen: na referentnom "
-        "skupu za ventilator postignut je AUC 0,867 uz standardizovani pAUC od "
-        "0,667. Na stvarnom ventilatoru potvrđeno je da uređaj samostalno "
-        "nauči normalno stanje, izvede prag iz perioda u kojem su prisutna "
-        "samo normalna stanja, odbije nepouzdan prozor umjesto da ga tumači, i "
-        "pouzdano prijavi konstantnu akustičku promjenu, uz obradu od 716 ms "
-        "po prozoru od 10 s i bez ijednog izgubljenog uzorka.")
+        "Razvojni cilj AUC 0,80 premašen je konfiguracijom sa deset kalibracionih "
+        "prozora (0,856), dok odvojena referenca sa dvadeset prozora daje 0,867. "
+        "Fizička proba tonom potvrđuje alarm i trajno odstupanje. Proba papirićem "
+        "detektuje jedan od tri bloka i ima ishod FAIL. Obrada obilježja i ocjene "
+        "traje oko 716 ms po prozoru; u završnim zapisima nema prijavljenih "
+        "gubitaka uzoraka. Ovi nalazi ne potvrđuju dijagnozu kvara, ponovljivost "
+        "kalibracije ili dugoročnu stopu lažnih alarma.")
     r.pasus(
-        "Rad pokazuje i nešto što se rjeđe prijavljuje. Kroz cijeli razvoj "
-        "usko grlo nije bio model nego politika odlučivanja oko njega. "
-        "Dvanaest varijanti ocjenjivača donijelo je sedam poena, jedna "
-        "promjena obilježja petnaest, a upotrebljivost sistema donijela su "
-        "pravila koja uopšte ne mijenjaju model: odvojen period za izvođenje "
-        "praga, nezavisna provjera tog praga na kasnijim podacima, histereza, "
-        "kapija pouzdanosti i ograničeno odbacivanje kalibracionih isječaka.")
+        "Razvoj je obuhvatio promjene modela i pravila odlučivanja. Bolje "
+        "rangiranje ocjena nije bilo dovoljno za upotrebljiv prag na uređaju. "
+        "Zasebno izvođenje i provjera praga omogućili su prihvatanje dvije završne "
+        "sesije, ali ograničenja kapije pouzdanosti i oporavka i dalje ostaju.")
     r.pasus(
-        "Zabilježeni su i negativni rezultati, sa mehanizmom a ne samo sa "
-        "brojkom: šest unaprijed navedenih alternativnih obilježja od kojih "
-        "nijedno ne pobjeđuje, dvije standardne tehnike vremenskog filtriranja "
-        "koje pogoršavaju sistem jer su napravljene za obrnut zadatak, i jedno "
-        "robusno pravilo praga koje je oborila sopstvena provjera na pločici. "
-        "Taj posljednji slučaj je ujedno i najjača potvrda da provjere koje se "
-        "rijetko aktiviraju imaju smisla.")
+        "Prikazani su i negativni ili nedovoljno uvjerljivi rezultati alternativnih"
+        " obilježja i vremenskih pravila. Posebno je značajno odbijanje robusnog "
+        "praga tokom zasebnog normalnog VERIFY perioda. Ti nalazi objašnjavaju "
+        "izbor konačne konfiguracije, ali ne dokazuju da su odbačeni postupci "
+        "neupotrebljivi u drugim postavkama.")
 
     r.naslov("Pravci daljeg rada", 2)
     r.pasus("Iz izmjerenih ograničenja proizlaze sljedeći pravci:", uvlaka=False)
     r.stavke([
-        "**Drugi primjerak i druga prostorija.** To je jedini put do bilo "
-        "kakve tvrdnje o generalizaciji, i najvažniji sljedeći korak.",
+        "**Nezavisne postavke.** Drugi primjerci ventilatora i druga akustička "
+        "okruženja potrebni su za procjenu generalizacije izvan postojeće postavke.",
         "**Duže normalno mjerenje.** Stopa lažnih uzbuna traži red veličine "
         "duže mjerenje od dosadašnjih da bi se mogla procijeniti sa smislenim "
         "intervalom.",
         "**Izbor obilježja po tipu mašine.** Izmjereno je da se izbor može "
         "napraviti samo iz izvornog domena, bez ijedne ciljne oznake, i da "
         "takav izbor nadmašuje bilo koji fiksni.",
-        "**Uzrok osjetljivosti kapije kvaliteta.** Ispad u uskom pojasu oko "
-        "frekvencije obrtanja je izmjeren i objašnjen kao svojstvo "
-        "Mahalanobisove udaljenosti sa stranom kovarijansom, ali nije "
-        "uklonjen.",
+        "**Spektralne trake i kovarijansa.** Osam najnižih traka ne sadrži FFT "
+        "tačku, pa fiksna logaritamska donja granica narušava potpunu nezavisnost "
+        "od pojačanja. Vrijedi odvojeno ispitati spajanje praznih traka i "
+        "ograničavanje uticaja slabo varijabilnih komponenti. Svaka takva izmjena "
+        "traži novi model i novu provjeru.",
         "**Trajno čuvanje naučenog profila.** Modul za upis u trajnu memoriju "
         "je realizovan i provjeren na računaru, ali se u razvojnoj "
         "konfiguraciji namjerno ne koristi dok politika ne bude zamrznuta.",
@@ -1750,9 +1611,7 @@ def _zakljucak(r) -> None:
     ])
 
 
-# ==========================================================================
 # literatura, biografija, prilozi
-# ==========================================================================
 def _literatura(r) -> None:
     r.naslov("Literatura", numerisi=False)
     r.prazan()
@@ -1780,11 +1639,13 @@ def _literatura(r) -> None:
         "doi: 10.5281/zenodo.5770113.",
         "P. C. Mahalanobis, „On the generalised distance in statistics“, "
         "*Proc. Natl. Inst. Sci. India*, vol. 2, br. 1, str. 49–55, 1936.",
-        "Espressif Systems, *ESP32-S3 Series Datasheet*, dostupno na: "
-        "https://www.espressif.com/ (pristupljeno u avgustu 2026).",
-        "Espressif Systems, *ESP-IDF Programming Guide v5.5*, dostupno na: "
-        "https://docs.espressif.com/projects/esp-idf/ (pristupljeno u avgustu "
-        "2026).",
+        "Espressif Systems, *ESP32-S3-WROOM-1 & ESP32-S3-WROOM-1U Datasheet*, v1.8."
+        " Dostupno: "
+        "https://www.espressif.com/sites/default/files/documentation/esp32-s3-wroom-1_wroom-1u_datasheet_en.pdf"
+        " (pristupljeno 6. septembra 2026).",
+        "Espressif Systems, *ESP-IDF Programming Guide v5.5, ESP32-S3*. Dostupno: "
+        "https://docs.espressif.com/projects/esp-idf/en/v5.5/esp32s3/ (pristupljeno"
+        " 6. septembra 2026).",
         "InvenSense, *INMP441 Omnidirectional Microphone with Bottom Port and "
         "I2S Digital Output — Datasheet*, dokument DS-INMP441.",
         "F. Pedregosa et al., „Scikit-learn: Machine learning in Python“, "

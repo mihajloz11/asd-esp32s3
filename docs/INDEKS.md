@@ -1,13 +1,13 @@
 # Indeks dokumentacije
 
-**Ažurirano:** 27.08.2026.
+**Ažurirano:** 06.09.2026.
 
 Repo ima mnogo dokumenata jer je metodologija tražila da se svaki pokušaj i
 svaki negativan rezultat zapišu. Zato je lako naletjeti na stariji fajl i
 zaključiti pogrešno stanje. Ova tabela kaže **šta je aktuelno, a šta je
 istraživački trag**.
 
-Pravilo: kad se dva dokumenta razilaze, **noviji datirani snapshot pobjeđuje**.
+Ako se dokumenti razilaze, mjerodavni su izvorni zapisi za rezultate i konkretna verzija koda za ponašanje. Datum novijeg teksta sam po sebi nije dokaz. Revizija od 06.09.2026. ispravlja tumačenje završnih proba bez prepisivanja sirovih artefakata.
 Dokumenti označeni kao istorijski imaju baner na vrhu i **ne opisuju trenutno
 stanje** — čuvaju se jer objašnjavaju *zašto* je nešto odbačeno.
 
@@ -19,6 +19,7 @@ stanje** — čuvaju se jer objašnjavaju *zašto* je nešto odbačeno.
 |---|---|
 | [`../KONTEKST.md`](../KONTEKST.md) | kontekst i pravila rada na projektu |
 | [`../README.md`](../README.md) | gdje je projekat sada, ukratko |
+| [Revizija 06.09.2026.](../results/repository_audit/2026-09-06/README.md) | nalazi pregleda, provjera brojki i priprema objave |
 | [`PREOSTALO.md`](PREOSTALO.md) | **jedina aktuelna lista preostalog rada** |
 | [`../plan-master-rada.md`](../plan-master-rada.md) | metodologija i plan master rada |
 | [`cilj-modela.md`](cilj-modela.md) | nepromjenjivi cilj i kriterij uspjeha |

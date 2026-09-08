@@ -1,6 +1,6 @@
 """Pravi slike za master rad iz stvarnih podataka iz repozitorijuma.
 
-Nijedna brojka na slikama nije upisana rucno. Izvori:
+Trase se citaju iz CSV-a; istorijske AUC vrijednosti su navedene uz izvor.
 
   data/dcase2026_dev/fan/train/*.wav                spektar u dvije rezolucije
   results/physical_fan/run_20260827T213148_*/       trasa mjerenja sa papiricem
@@ -156,8 +156,8 @@ def sl_sema() -> None:
         ax.plot([30, 62], [y, y], color="black", linewidth=0.7)
 
     ax.text(50, 1.6, "GPIO 10 → тастер → GND        "
-            "GPIO 2 → зелена LED        GPIO 11 → црвена LED",
-            ha="center", fontsize=7.5)
+            "GPIO 2 → 100 Ω → зелена LED → GND        GPIO 11 → 330 Ω → црвена LED → GND",
+            ha="center", fontsize=6)
     ax.text(17, 6.4, "100 nF + 10 µF уз VDD", ha="center", fontsize=7,
             style="italic")
     ax.text(17, 4.2, "везе краће од 10 cm", ha="center", fontsize=7,

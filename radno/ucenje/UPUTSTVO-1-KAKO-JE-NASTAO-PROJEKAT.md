@@ -1,5 +1,8 @@
 # Uputstvo 1 — kako je nastao projekat, šta je gdje, i kojim redom se čita
 
+> Razvojni materijal. Za ispravljeno tumačenje završnih proba i filter prozora
+> važi [revizija rezultata od 06.09.2026.](../../docs/rezultat-finalna-validacija-2026-08-27.md). Starije brojke i planovi ovdje nisu novi dokazi.
+
 **Napisano:** 01.09.2026. · **Za koga:** za tebe za šest mjeseci, za mentora, za
 komisiju, i za bilo koga ko prvi put otvara repo.
 
