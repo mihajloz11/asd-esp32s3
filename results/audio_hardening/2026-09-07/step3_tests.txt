@@ -1,0 +1,34 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\mihaj\Desktop\master new\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\mihaj\Desktop\master-psd-nonempty
+collecting ... collected 26 items
+
+pc/tests/test_audio_stats_c.py::test_resets_partition_concurrent_losses_without_erasing_updates PASSED [  3%]
+pc/tests/test_audio_stats_c.py::test_snapshot_cannot_mix_heartbeat_and_capture_count PASSED [  7%]
+pc/tests/test_audio_stats_c.py::test_capture_and_reader_errors_are_not_lost PASSED [ 11%]
+pc/tests/test_audio_stats_c.py::test_peak_reset_does_not_lose_a_concurrent_maximum PASSED [ 15%]
+pc/tests/test_audio_pcm_c.py::test_every_pcm_bin_keeps_existing_gain_and_rounding PASSED [ 19%]
+pc/tests/test_audio_pcm_c.py::test_full_slot_range_saturates_without_sign_wrap PASSED [ 23%]
+pc/tests/test_audio_liveness_contract.py::test_audio_data_path_has_total_deadline_and_no_infinite_wait PASSED [ 26%]
+pc/tests/test_audio_liveness_contract.py::test_silence_is_not_treated_as_a_read_error PASSED [ 30%]
+pc/tests/test_audio_liveness_contract.py::test_psd_live_maps_bounded_failures_to_named_fail_closed_reasons PASSED [ 34%]
+pc/tests/test_audio_quality_state_c.py::test_default_policy_matches_versioned_normal_only_record PASSED [ 38%]
+pc/tests/test_audio_quality_state_c.py::test_valid_normal_pcm_passes_and_metrics_match PASSED [ 42%]
+pc/tests/test_audio_quality_state_c.py::test_normal_only_40cm_level_is_above_liveness_floor PASSED [ 46%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples0-1000-0-0-1] PASSED [ 50%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples1-1000-0-0-3] PASSED [ 53%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples2-1000-0-0-3] PASSED [ 57%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples3-1000-0-0-4] PASSED [ 61%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples4-1000-0-0-6] PASSED [ 65%]
+pc/tests/test_audio_quality_state_c.py::test_pcm_reject_fixtures_are_fail_closed[samples5-1000-20-21-7] PASSED [ 69%]
+pc/tests/test_audio_quality_state_c.py::test_nonfinite_metrics_are_sensor_fault_and_stop[dc] PASSED [ 73%]
+pc/tests/test_audio_quality_state_c.py::test_nonfinite_metrics_are_sensor_fault_and_stop[rms] PASSED [ 76%]
+pc/tests/test_audio_quality_state_c.py::test_nonfinite_metrics_are_sensor_fault_and_stop[rms_dbfs] PASSED [ 80%]
+pc/tests/test_audio_quality_state_c.py::test_feature_nonfinite_guard PASSED [ 84%]
+pc/tests/test_audio_quality_state_c.py::test_only_ok_can_continue_and_public_tokens_are_stable PASSED [ 88%]
+pc/tests/test_audio_quality_state_c.py::test_low_level_is_observation_only_during_wait PASSED [ 92%]
+pc/tests/test_audio_quality_state_c.py::test_clip_level_is_owned_by_validated_policy PASSED [ 96%]
+pc/tests/test_audio_quality_state_c.py::test_phase_specific_stop_state_integration PASSED [100%]
+
+============================= 26 passed in 7.16s ==============================

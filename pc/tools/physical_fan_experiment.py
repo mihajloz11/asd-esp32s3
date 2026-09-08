@@ -246,34 +246,18 @@ PCM_LEVEL_ABS_TOL = 1.0
 TERMINAL_DRAIN_TIMEOUT_S = 2.5
 FINAL_BUFFER_DRAIN_TIMEOUT_S = 0.50
 FINAL_BUFFER_QUIET_S = 0.10
-# Koliko se najduze ceka kad je research paket ostao otvoren.
-#
-# Izmjereno 23.08.2026 nad `run_20260823T202145`: jedan paket je 1 FEATURE96
-# (1337 B) + 5 SUBSEG96 (1234 B) = 7507 bajta, sto je 652 ms na 115200 baud --
-# vise od cijelog `FINAL_BUFFER_DRAIN_TIMEOUT_S`. Gore od toga, razmak IZMEDJU
-# redova istog paketa ide do 141 ms, a `FINAL_BUFFER_QUIET_S` je 100 ms, pa je
-# drenaza kraj paketa tumacila kao kraj prenosa.
-#
-# Posljedica je bila da posljednjem DET prozoru fale grupe 4 i 5, pa manifest
-# javi `complete 64 / expected 65` i cio run padne na
-# `research_pairs_or_checksum_invalid` iako je mjerenje bilo ispravno. To nije
-# bilo pitanje srece nego aritmetike: 500 ms budzeta za 652 ms prenosa.
-#
-# Ovo NE slabi dokaz -- ne prihvata se nepotpun paket, nego se dovrsi citanje
-# onoga sto je uredjaj vec poslao, i to ograniceno.
+# a 7507-byte research packet needs about 652 ms at 115200 baud.
+# allow bounded completion across inter-line gaps up to 141 ms.
 FINAL_BUFFER_OPEN_PACKAGE_TIMEOUT_S = 3.0
 TERMINAL_FIRMWARE_STATES = {
     "SENSOR_ERROR", "CALIBRATION_REJECTED", "RECALIBRATION_REQUIRED",
 }
 FIRMWARE_STATES = TERMINAL_FIRMWARE_STATES | {
     "NO_MACHINE", "CALIBRATED_NORMAL", "ANOMALY",
-    # Od q1.6.0: prozor koji je kapija pouzdanosti proglasila nemjerljivim.
-    # Nije dijagnoza ambijentalne buke i ne gasi aktivan alarm.
+    # held observations preserve an active alarm; they do not classify noise.
     "OBSERVATION_HOLD",
 }
-# Dogadjaji koji po prirodi nemaju upareni STATE red: javljaju se DOK stanje
-# stoji, a ne kad se mijenja. Host ih prihvata samo ako se slazu sa stanjem u
-# kojem uredjaj vec jeste.
+# these events occur within a state, without a paired transition.
 UNPAIRED_EVENT_STATES = {
     "OBSERVATION_HOLD_WARNING": {"OBSERVATION_HOLD", "ANOMALY"},
     "ANOMALY_SUSTAINED": {"ANOMALY"},
@@ -283,8 +267,7 @@ QUALITY_REJECT_RESULTS = {
     "INSUFFICIENT_LEVEL", "CLIPPING", "DROPPED_SAMPLES", "INVALID_ARGUMENT",
     "AUDIO_TIMEOUT", "AUDIO_READ_ERROR",
 }
-# Razlozi zaustavljanja toka koje uvodi Faza 2. Nisu kvar kvaliteta signala
-# nego zakljucak hijerarhije, pa se drze odvojeno od QUALITY_REJECT_RESULTS.
+# presence and calibration stops are distinct from invalid audio.
 PRESENCE_STOP_REASONS = {"FAN_STOPPED", "PRESENCE_LOST"}
 CALIBRATION_STOP_REASONS = {"UNSTABLE_CALIBRATION", "VERIFY_NORMAL_REJECT"}
 FLOW_STOP_REASONS = (

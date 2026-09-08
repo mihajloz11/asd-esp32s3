@@ -1,0 +1,20 @@
+{
+  "protocol": "psd-nonempty-v1",
+  "status": "frozen before target anomaly feature extraction",
+  "candidates": ["baseline_log96", "nonempty_log96"],
+  "new_band_rule": "ceil logarithmic edges to FFT bins; advance each edge at least one bin; keep bins 6 through 2047 exactly once",
+  "unchanged": ["Welch8192/hop4096", "log10(mean power + 1e-20)", "scalar centering", "source-only standardization", "LedoitWolf", "mean target-normal center"],
+  "primary_k": 10,
+  "secondary_k": 20,
+  "splits": 100,
+  "split_random_state": 20260809,
+  "amplitude_gains": [0.25, 0.5, 1, 2, 4],
+  "gain_scope": "floating-point scaling without ADC clipping, fixed calibration at gain 1",
+  "offline_screen": {
+    "max_auc_mean_drop_at_k10": 0.01,
+    "max_standardized_pauc_mean_drop_at_k10": 0.01,
+    "max_broadband_c_feature_gain_error": 0.0001
+  },
+  "decision": "report both candidates even if the new one loses; no tuning after target readout; a passing screen is not a hardware validation",
+  "limitations": ["previously explored development dataset", "reused clips across calibration splits", "no physical fan raw audio for re-extraction", "no alarm-threshold or physical paper-strip claim"]
+}

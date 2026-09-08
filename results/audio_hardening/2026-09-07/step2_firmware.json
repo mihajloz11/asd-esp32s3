@@ -1,0 +1,138 @@
+{
+  "candidate": {
+    "flash_files": {
+      "0x0": {
+        "file": "bootloader/bootloader.bin",
+        "sha256": "113ce41590dfe772cb045250c422736cead355daf34ba85b4a6b841b40dd8d4a",
+        "bytes": 20832
+      },
+      "0x10000": {
+        "file": "esp32s3_asd.bin",
+        "sha256": "a7ccd93704c4a26b1632950829fcaee88f851a7221c2169feb63b57899c129b3",
+        "bytes": 355184
+      },
+      "0x8000": {
+        "file": "partition_table/partition-table.bin",
+        "sha256": "da0dca3a141aed416925915f80c6a3c5dd53fe3a5d1a4c9357926475e0f85504",
+        "bytes": 3072
+      }
+    },
+    "flash_settings": {
+      "flash_mode": "dio",
+      "flash_size": "32MB",
+      "flash_freq": "80m"
+    }
+  },
+  "rollback": {
+    "flash_files": {
+      "0x0": {
+        "file": "bootloader/bootloader.bin",
+        "sha256": "20d1a8febb46436b9acc965c848eea67a14e5005d4785e7e5378b415ef3d82a4",
+        "bytes": 20832
+      },
+      "0x10000": {
+        "file": "esp32s3_asd.bin",
+        "sha256": "9ac2caca2c5010747547d4bb942aae96f700221588a4a6863b5c01948d967813",
+        "bytes": 354784
+      },
+      "0x8000": {
+        "file": "partition_table/partition-table.bin",
+        "sha256": "da0dca3a141aed416925915f80c6a3c5dd53fe3a5d1a4c9357926475e0f85504",
+        "bytes": 3072
+      }
+    },
+    "flash_settings": {
+      "flash_mode": "dio",
+      "flash_size": "32MB",
+      "flash_freq": "80m"
+    }
+  },
+  "compiler_flags": {
+    "psd_features_c.c": {
+      "-DASD_PSD_NONEMPTY_BANDS=1": true,
+      "-DASD_PSD_LIVE": true,
+      "-DASD_RESEARCH_TELEMETRY": true
+    },
+    "psd_live.c": {
+      "-DASD_PSD_NONEMPTY_BANDS=1": true,
+      "-DASD_PSD_LIVE": true,
+      "-DASD_RESEARCH_TELEMETRY": true
+    }
+  },
+  "embedded_model_arrays": {
+    "source_mean": true,
+    "source_scale": true,
+    "precision": true
+  },
+  "candidate_model_fingerprint": "9018365b6ceccc6b2a285b7a3b7ccf703425b3ac528e1e1feddf2d03ba3c12b1",
+  "build_description": {
+    "project_name": "esp32s3_asd",
+    "project_version": "fw-final-v1.0-10-gee88fc4-dirty",
+    "git_revision": "v5.5.5-34-g21f3b71cbbf",
+    "target": "esp32s3"
+  },
+  "source_sha256": {
+    "app_main.c": "8534de8e58eaf83d7cc85d934643a2aae18444100059b7c8305b51709bfaeecd",
+    "asd_calibration_quality.c": "d9469214a210d1fec7a7880a330e7088f0ece78ac4afb8a81df5946628ee8117",
+    "asd_calibration_quality.h": "23fbdb9138c48d280bb6ec8cacff7949971aa1e3a31f4812818e6d8f02401a5d",
+    "asd_cmd.c": "d6691e95cf3ac29df91239f82e25123ce13e900b3ac5e83f97e47530e5a7348d",
+    "asd_cmd.h": "7ce3b2f96de035be5ff9de51c0e8eef5ee8eb9d36b832190ccfbabdcdc5155d0",
+    "asd_commissioning.c": "b23510cc441de281ee9b8c3426403ec4b3395baf5387b267a4bbfc06134bbe76",
+    "asd_commissioning.h": "7d2e29189eaac96918bf548c032b0b32ca1227d84e9897b2ca74b38ea3944218",
+    "asd_events.c": "76d01b02372393966ae5f57734e88eb9f1cdab9626a9680a928149a30d5ef12d",
+    "asd_events.h": "135464445ede9cae831eba9b0db481c54963f4f37b4b6d5a58ef42a0bf1d9337",
+    "asd_interference.c": "cc1734daa635dd2f1a7a560fcf8c7e877e135f11b74dcf26cd1f6c4c83962f7c",
+    "asd_interference.h": "bce80b8184590841e69454deb88b99114d47a5c19c42967de3c69b08f869a12d",
+    "asd_operator.c": "f4eb5b2ce5174d3e1007e0de7f96c823aa1fdc921f5b860e6778a6038a7baa2a",
+    "asd_operator.h": "da44ad7e3fd36dae5d687bfbdee3d765ea161d78d7efb21982cc8064c590e981",
+    "asd_profile_nvs.c": "3442232a063279a6d1baa8114ff2b30a49a22d2259e07a276184229e5b57f433",
+    "asd_profile_nvs.h": "f25b641f993e3a50b20b0a09da417c7545d4d3ee306d47df7bf37a1619a304b9",
+    "asd_profile_runtime.c": "cc1e3b67521dd938c05a06592cf401c5b923bc87348de3c677010a2307a2832f",
+    "asd_profile_runtime.h": "d520f5ef9b01b10245a12ff099e9948eb44484a6f040edd1288444d75df6b6ec",
+    "asd_profile_store.c": "5e1205e2801863a92532213b4658dbc7b2a8553ae9f4144e729c9715608480e3",
+    "asd_profile_store.h": "8485f7faae39c5279ab87c3cd7da8af9917a6ebe8000cdd1fcbed3ac081eeeb1",
+    "asd_robust_fit.c": "6403dd8752757c73b382ca20ea7370a70acda62fa15dd182e9f956de75b4d3e6",
+    "asd_robust_fit.h": "430eed657dc028cbd67b0bd2ce84b35c7043d7c7437282cf3db300cdf52fd654",
+    "asd_temporal.c": "c8c8457b3bcb2d6fcb08e28154c6de9a9ce90fb7f97e234134cc7e90fc554fcd",
+    "asd_temporal.h": "b2a2eb9cf33dd1fdff19324c55c2dbcb60fefe019d2e5679ff7d1f00a02cfc1e",
+    "audio_i2s.c": "7170acb3f60a995cfa3c5778a4aa9aae94afe7319c52aaa4a8b4cd274cdd2715",
+    "audio_i2s.h": "2da44f53bbc22001633231df41bb2d33d77e1838a285ce4d8564ce118895507d",
+    "audio_pcm.h": "c6e84673d58981028f001a2f177d2945a5cb2d33d931deae43358159222dc418",
+    "audio_quality_state.c": "48a98829cdc91f71386d0dcb0750980cb1159e80318fafb3c0bb1700d42c8de8",
+    "audio_quality_state.h": "34376c3465bb5cb3b49ba46ac99a281a98c2f1c3d917660e5631ddca7f5a6dcb",
+    "calib_gamma.c": "5133d2745a1c46ec8d466c648610e13853e253b6cc37cf65978e3a9ea39e7d6f",
+    "calib_gamma.h": "813b4b7910f14d142ed01df853c2f46150a1dda99fbe0d9c9a4fc66603ae5c47",
+    "CMakeLists.txt": "934d81f7ed45e63f9c32f8ca2c4dfbebff20f9433ed4f08907603c042ab14043",
+    "eval_mode.c": "8ae1388f9026a2d8cb62e612a4881dc94be595b6dfdc498de7f09eb0a334450f",
+    "eval_mode.h": "b0cc632fb6db9ed422cfd57d5412dc5f06b12d947a9285e10772541d0e9e30f9",
+    "features_c.c": "60268296568325fdd5ed90d689bed8aed441b0cb94b8e814c3a86c140654d881",
+    "features_c.h": "e529ee716397de5c8e4f11928d9fe55f100890acb2399515d14b3276bb2683d6",
+    "ina226.c": "b58f13c28cd9f5299784a6e727a623ac9c7a5bfd5fa6fe2201c08859417f3850",
+    "ina226.h": "8d00e0426cf6284f703d2072e8f51da0d437d7e0bf6e2f30d90e329dba0d11d2",
+    "ina226_test.c": "f7568fdbff2d21ad9319427e457ffbfd9b2ea11e3beefcee5fb397c2c9937af1",
+    "ina226_test.h": "7353406d058eac74f96cc91b1d1978beb4e057a150d06223995d510c079bdbb5",
+    "live_adapt.c": "256df3706a1fb66a6afbfb336603bc507312c85c80ec3df16ebea72b613eefe5",
+    "live_adapt.h": "342552236d12598d6856f0f0985f37f2879d2125b50bed6a04d8acd30d59dfae",
+    "live_capture.c": "097b42b84d7717e7b3b292bbf5eae04b578ea1149f50fea95910d496648b1895",
+    "live_capture.h": "5dd34117ca68c536f8086b2a40fc7ea42e118c8c3f2803fba26a856e0ea01aa1",
+    "mel_data.h": "0c0f4bc5342138d1021798a6dff19ebd5cb60a49b8c73cfee4cf8979879a35fd",
+    "mic_test.c": "dfc2bfba3bf276e8603b5d31d5b83f6cf462d7e26aedc6a33261c5ab75b2b401",
+    "mic_test.h": "f3ac91980f41bd373be0769968c74e2f56b16d9536fb7a7ba30d82a821bf7b86",
+    "model_data.h": "317db8b3f8d23bf3f10993793aa654cfba4984bd9dea1a7be1a4ad23d92951da",
+    "pins.h": "85496ccb031010cc65315085261fb617c41a34dd293953b031136b51d3f11dcc",
+    "psd_features_c.c": "d60b199e29f2a56328ea67cb34436b523d1af3e32b93cd54dc53e89306e3e0ab",
+    "psd_features_c.h": "469f0511df85ef12313de79c10095de5c7852ebf26023ae1314697306c44e829",
+    "psd_live.c": "6c9e0184b55fcc154dec599d0681061164fe1eb5041e03d6b59e08c8815d9fa7",
+    "psd_live.h": "12eeb19631d0ba7ee4654adfced458af2b9469623e73c3eab742b95fb17475e4",
+    "psd_model_data.h": "d6a812b097943cc5a1446bab066266dd1dc156714b7471980c4260f48a9d8403",
+    "psd_model_nonempty_data.h": "26d121311f3bc13cb493eb9245cc08c732d37f227c113599ed04442a6eeeb64a",
+    "psd_model_select.h": "6d53120a4b8e6417b57a05ee96b5efe1f19eccd07b398919f2857ccf31919a70",
+    "psd_verify.c": "433c0af0d16f1ac1067a9025ddd0c99fff1ad35fecdf0bef8773633c20164b68",
+    "psd_verify.h": "7fa17075bdb411d3400b633de940c3e6fc96145257d0d2d8aab78c752ec9fd28",
+    "tflm_infer.h": "5e5a479fadedf1b924f4322d28ad6a421af1922a8885c9db7edd0fccf3b6dca8"
+  },
+  "sdkconfig_sha256": "d46741f78fea39913858100ee01d2a74c311980258e9d4480e2cf547a43bbf53",
+  "dependencies_lock_sha256": "39a0a4b92f9be4c9ee1e0e4ceb70dc2ab10261486530a0084e36354c6d3270ce",
+  "hardware_flashed": false,
+  "physical_validation": false
+}

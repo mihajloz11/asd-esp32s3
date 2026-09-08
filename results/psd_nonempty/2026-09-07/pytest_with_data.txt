@@ -1,0 +1,32 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\mihaj\Desktop\master new\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\mihaj\Desktop\master-psd-nonempty
+collecting ... collected 16 items
+
+pc/tests/test_features_c.py::test_pc_vs_c_logmel[noise] [noise] max|PC-C| = 4.77e-06 dB
+PASSED
+pc/tests/test_features_c.py::test_pc_vs_c_logmel[sine] [sine] max|PC-C| = 1.54e-03 dB
+PASSED
+pc/tests/test_features_c.py::test_pc_vs_c_logmel[chirp_loud] [chirp_loud] max|PC-C| = 3.72e-03 dB
+PASSED
+pc/tests/test_features_c.py::test_pc_vs_c_real_wav [real: section_00_source_train_normal_0000_spd_1.wav] max|PC-C| = 3.81e-05 dB
+PASSED
+pc/tests/test_features_c.py::test_streaming_equals_batch [streaming] frames=311 max|batch-stream| = 0.00e+00
+PASSED
+pc/tests/test_features_c.py::test_numpy_vs_librosa_melfb PASSED
+pc/tests/test_psd_features_c.py::test_psd_sidecar_keeps_final_feature_bit_identical_and_groups_38_segments PASSED
+pc/tests/test_psd_features_c.py::test_psd_real_wav_pc_vs_c segments=38 max|PC-C|=9.537e-07
+PASSED
+pc/tests/test_psd_features_c.py::test_psd_stream_matches_batch segmenti batch=38 stream=38 max|batch-stream|=0.000e+00
+PASSED
+pc/tests/test_psd_features_c.py::test_psd_score_pc_vs_c score C=139.7908 PC=139.7909 rel=4.366e-07
+PASSED
+pc/tests/test_psd_nonempty.py::test_nonempty_map_covers_original_frequency_range_once PASSED
+pc/tests/test_psd_nonempty.py::test_baseline_matches_original_frequency_mask_reference PASSED
+pc/tests/test_psd_nonempty.py::test_candidate_gain_invariance_and_sidecar_consistency PASSED
+pc/tests/test_psd_nonempty.py::test_frontend_selects_matching_model[False] PASSED
+pc/tests/test_psd_nonempty.py::test_frontend_selects_matching_model[True] PASSED
+pc/tests/test_psd_nonempty.py::test_exported_header_preserves_frozen_float32_parameters PASSED
+
+============================= 16 passed in 8.97s ==============================

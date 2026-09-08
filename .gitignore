@@ -47,3 +47,19 @@ radovi/telfor2026/primjeri/*.pdf
 # Finalni PDF za predaju dodati rucno sa `git add -f`.
 radovi/telfor2026/preview/
 radovi/telfor2026/telfor2026_asd_esp32s3.pdf
+
+# preview strana radova (generisano, ne treba u istoriji)
+radovi/*/preview/
+# Master rad: PDF i Word konverzije sablona se regenerisu iz izvora.
+# Uputstvo mentora (v8) i originalni FTN sabloni (.doc/.dot) ostaju u repou.
+radovi/master-rad/master_rad_asd_esp32s3_*.pdf
+radovi/master-rad/sablon/ftn-*.docx
+
+# local credentials and review outputs
+.env
+.env.*
+!.env.example
+*.pem
+firmware/esp32s3_asd/build-*/
+dist/
+~$*
