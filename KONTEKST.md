@@ -74,7 +74,7 @@ autoriteta je ovaj:
 | Zaključani protokol fizičkog runa | [`docs/protokol-fizicki-ventilator.md`](docs/protokol-fizicki-ventilator.md) |
 | Vođeni 25-minutni test | [`docs/GUIDED25-TEST-VENTILATORA.md`](docs/GUIDED25-TEST-VENTILATORA.md) |
 | Rezultat prvog fizičkog testa | [`docs/rezultat-fan01-2026-08-16.md`](docs/rezultat-fan01-2026-08-16.md) |
-| Sve zamke koje su već koštale vremena (P1–P19) | [`docs/problemi-i-rjesenja.md`](docs/problemi-i-rjesenja.md) |
+| Sve zamke koje su već koštale vremena (P1–P28) | [`docs/problemi-i-rjesenja.md`](docs/problemi-i-rjesenja.md) |
 | Hronologija svega urađenog | [`docs/DNEVNIK-NEXT-LEVEL.md`](docs/DNEVNIK-NEXT-LEVEL.md), [`docs/dnevnik-projekta.md`](docs/dnevnik-projekta.md) |
 | Elektronika i lemljenje | [`radno/elektronika/plan-dvije-plocice.md`](radno/elektronika/plan-dvije-plocice.md) + `radno/elektronika/sema-sklopa.pdf` |
 
@@ -115,7 +115,8 @@ Ono što je i dalje **nedokazano** (i mora ostati tako napisano):
 - oporavak poslije jakog stimulusa nije izmjeren — run B je završen dok je skor
   bio između izlaznog i ulaznog praga;
 - I2S liveness, power-loss i NVS persistence nisu fizički testirani;
-- E5/INA226 strujni put nije završen;
+- E5/INA226 strujni put nije završen; mjerni firmware je napisan 21–22.09.2026.
+  na grani `measurement/e5-ina226`, ali nije flešovan ni mjeren na ploči;
 - samostalan demo bez PC-a nije odrađen.
 
 ---
@@ -250,7 +251,7 @@ CI **ne dokazuje** ništa fizičko i to je eksplicitno zapisano u samom workflow
 
 ## 11. Zamke koje su već koštale vremena
 
-Puna lista je P1–P27 u [`docs/problemi-i-rjesenja.md`](docs/problemi-i-rjesenja.md).
+Puna lista je P1–P28 u [`docs/problemi-i-rjesenja.md`](docs/problemi-i-rjesenja.md).
 Najskuplje:
 
 - **P2** promjena build moda bez `reconfigure` → build tiho ostane u starom modu;

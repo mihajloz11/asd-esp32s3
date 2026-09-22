@@ -103,10 +103,12 @@ odvojivim kontaktima ili ga drži na breadboardu.
 
 ## ⚠️ Provjeriti prije lemljenja
 
-1. **Otpornici 220–330 Ω za LED — NISU u porudžbini** (bili su na spisku "iz firme").
-   Bez njih **ne vezuj LED na GPIO** — spržićeš pin. Donesi 2 komada s posla.
-   *(Napomena: `sema-povezivanja.md` piše 220 Ω, `porudzbina-elektromodul.md` piše 330 Ω —
-   oba rade, 330 Ω je sigurniji i tamniji.)*
+1. **Otpornici za LED — NISU u porudžbini** (bili su na spisku "iz firme").
+   Bez njih **ne vezuj LED na GPIO** — spržićeš pin.
+   *(Riješeno 02.09.2026: treba po jedan komad od **dvije** vrijednosti —
+   **100 Ω uz zelenu**, **330 Ω uz crvenu**. Razlog i računica su u
+   [uredjaj-na-protobordu.md](uredjaj-na-protobordu.md); raniji „220 Ω" iz
+   `sema-povezivanja.md` više ne važi.)*
 2. **Ženski headeri nisu naručeni** — na ploči 4×6 moduli idu ili direktno zalemljeni
    (nepovratno) ili preko žica. Ako hoćeš da INMP441 ostane vadiv, uzmi ženski header
    (~30 din) prije faze 2.

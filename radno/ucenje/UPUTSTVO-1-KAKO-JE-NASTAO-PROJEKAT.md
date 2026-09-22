@@ -293,7 +293,7 @@ Nekoliko problema koji su svaki koštali po run:
   uveden limit pokušaja.
 
 Svi su zapisani sa simptomom, uzrokom, rješenjem i dokazom u
-[`problemi-i-rjesenja.md`](../../docs/problemi-i-rjesenja.md) (P1–P27). Ta baza je jedan od
+[`problemi-i-rjesenja.md`](../../docs/problemi-i-rjesenja.md) (P1–P28). Ta baza je jedan od
 najkorisnijih dijelova repoa.
 
 ### Etapa 10 (26.–27.08.) — finalna validacija: devet runova, dva validna

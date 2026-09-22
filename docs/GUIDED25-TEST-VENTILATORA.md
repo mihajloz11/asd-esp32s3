@@ -2,7 +2,10 @@
 
 Ovo je **DEVELOPMENT validacija**, ne garancija da je razdvajanje papirića i
 svake moguće spoljne buke već dokazano. Finalizovani rezultat je strogo
-`PASS` ili `FAIL`; nedostatak dokaza je `FAIL`. Najviše su dozvoljena tri pokušaja.
+`PASS` ili `FAIL`; nedostatak dokaza je `FAIL`. Dozvoljeno je najviše **pet**
+pokušaja (`attempt_limit` u `pc/config/guided25_workflow_v1.json`; podignuto
+`3 → 5` kroz `recovery_amendment` 26.08.2026, vidi
+[P27](problemi-i-rjesenja.md#p27--hard-deadline-od-25-min-obara-run-prije-kraja-plana)).
 
 ## Prije početka
 
@@ -22,7 +25,7 @@ Za dvoklik pokretanje, preflight, read-only pregled i rezervne komande vidi
 ```
 
 Dashboard neće dozvoliti početak ako nema svježe UART telemetrije, GUIDED25
-capability-ja, IDLE stanja, run direktorija ili ako je pokušaj veći od 3.
+capability-ja, IDLE stanja, run direktorija ili ako je pokušaj veći od 5.
 GUIDED25 automatski zahtijeva kompletan `FEATURE96`/`SUBSEG96` zapis.
 
 ## Tačni klikovi
@@ -36,7 +39,8 @@ tokom učenja prekida sesiju; tokom nadzora traži novo učenje.
 
 Tokom SETTLE/CENTER/DERIVE/VERIFY ništa ne diraj i ne pričaj. Firmware koristi
 najviše 8 settle, 10 center, 44 derive i 22 verify prozora od 10 s. Planirani
-najgori zbir je 22:50, a preostalih 2:10 do hard roka pokriva procesni overhead.
+najgori zbir je 22:50. Hard deadline više ne postoji — `hard_deadline_seconds`
+je `null` od 27.08.2026, pa tok nije vremenski ograničen (P27).
 Live DEVELOPMENT firmware izvodi `T_enter` kao p99 i `T_exit` kao p75 iz
 DERIVE bloka. Nema `SETTHR` komande: kasnija PC laboratorija ne smije
 retroaktivno promijeniti ovaj run. Kad panel kaže da je commissioning prošao,
@@ -65,16 +69,20 @@ kraja odbrojavanja. Potvrde su jednokratne, vezane za trenutno prikazanu fazu
 i redoslijed; host u `events.csv` čuva njihov UTC timestamp. Automatska
 `condition` oznaka bez oba operaterova klika nije dovoljan dokaz. Ako pogriješiš fazu, nestane telemetrija ili neko pomjeri postavku,
 klikni **„Prekini i sačuvaj”**. Pauza tokom mjerenja je namjerno zabranjena jer
-bi pokvarila vremenski dokaz. Hard deadline je 25:00 od `SESSION STARTED`;
-prekoračenje automatski prekida host run, ali čuva artefakte.
+bi pokvarila vremenski dokaz. **Automatskog prekida po vremenu nema.** Raniji
+hard deadline od 25:00 je uklonjen jer puni commissioning tok (~14 min) sa
+planom od 11 faza više nije stajao u 1 500 s i obarao je ispravne runove
+(P27). Ime „GUIDED25" je ostalo iz tog perioda. Runovi 27.08. trajali su
+`1 509 s` i `2 000 s` i oba su završena planski.
 
 ## Lampice i prolaz
 
 - zelena kratko bljeska: IDLE/čeka taster;
 - zelena brzo treperi: učenje/commissioning, ništa ne diraj;
 - zelena stalno: normalan nadzor;
-- zelena sporo pulsira: runtime je u `OBSERVATION_HOLD`; to se prikazuje, ali
-  zbog isključene interference politike nije kriterijum niti dokaz klasifikacije govora;
+- zelena sporo pulsira: runtime je u `OBSERVATION_HOLD`; kapija pouzdanosti je
+  uključena (v3), ali je i dalje `DEVELOPMENT` — HOLD je vidljiv hostu i nije
+  dokaz klasifikacije govora;
 - crvena stalno: aktivna anomalija;
 - obje daju dvostruki obrazac: fault, test prekini.
 
@@ -88,11 +96,16 @@ se pravi tek nakon što host finalizuje kompletan par FEATURE96 + 5xSUBSEG96 za
 svaki prozor i provjeri SHA-256 NPZ artefakta. Nedostatak bilo kog obaveznog
 dokaza je `FAIL`, ne lažni PASS niti blagi `INCONCLUSIVE`.
 
-Aktivna interference politika je i dalje DEVELOPMENT-disabled. Ovaj test može
+Interference politika je `v3` i **uključena** (`enabled = 1`,
+`asd_interference.c`), ali označena kao `DEVELOPMENT`. Apsolutna granica se ne
+prenosi između sesija: izvodi se u svakoj sesiji kao `max(CAL normal) × 1,25`
+iz normal-only prozora, pa papirić, govor i vrata ne ulaze u fit. Na runovima
+27.08. je govor i vrata odbila kao nestabilne prozore
+([DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md)). Ovaj test i dalje može
 dokazati samo **opaženu toleranciju** na konkretan govor i vrata u ovoj sobi;
 ne dokazuje da postoji klasifikator govora/HOLD-a za svaku spoljnu buku.
 
-Za drugi/treći pokušaj promijeni `--session-id` i `--attempt 2` ili `3`.
+Za svaki naredni pokušaj promijeni `--session-id` i `--attempt` (`2` do `5`).
 Pokušaj se ponavlja samo zbog dokumentovane proceduralne/tehničke greške, ne
-da bi se birao najljepši rezultat. Poslije tri pokušaja ne mijenjati pragove
+da bi se birao najljepši rezultat. Poslije posljednjeg pokušaja ne mijenjati pragove
 prema papiriću; analizirati sačuvane 96+5x96 podatke.

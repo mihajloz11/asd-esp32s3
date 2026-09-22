@@ -1,8 +1,15 @@
 # Preostali rad
 
-Ažurirano 06.09.2026. Posljednji firmware ostaje zamrznut. Dodatna fizička
-mjerenja nisu planirana u ovom završnom ciklusu; neprovjerena svojstva
-navode se kao ograničenja, bez obećanja naknadnih rezultata.
+Ažurirano 22.09.2026. Firmware finalnog detektora ostaje zamrznut i ne dira se.
+Neprovjerena svojstva navode se kao ograničenja, bez obećanja naknadnih
+rezultata.
+
+**Izuzetak, otvoren 21.09.2026:** E5 mjerenje potrošnje je ponovo pokrenuto, na
+odvojenoj grani `measurement/e5-ina226`, kao mjerni overlay (`ASD_E5_MEASURE`)
+nad neizmijenjenim PSD modelom i audio izvorom. Build prolazi; ploča još nije
+flešovana ni mjerena. To ne mijenja nijedan objavljen rezultat i ne ulazi u
+finalni put dok se ne izmjeri. Detalji: `results/mjerenje_2026-09-21/` na toj
+grani, i [`docs/INDEKS.md`](INDEKS.md), odjeljak „Rad u toku van `master`-a".
 
 ## Završeno
 
@@ -26,7 +33,8 @@ Detalji: [revizija projekta](../results/repository_audit/2026-09-06/README.md).
 
 Samostalan sklop sa fizičkim tasterom i LED, prekid I2S veze, nestanak
 napajanja, potrošnja cijelog detektora, dug normalan rad i nova akustička
-postavka nisu potvrđeni završnim probama. DEVELOPMENT politika ne čuva
+postavka nisu potvrđeni završnim probama. Priprema za mjerenje potrošnje je u
+toku (gore), ali dok nema očitanja sa ploče, potrošnja ostaje neizmjerena. DEVELOPMENT politika ne čuva
 profil u NVS; nakon restarta slijedi novo učenje. Postojeći storage testovi
 nisu dokaz rada pri fizičkom prekidu napajanja.
 

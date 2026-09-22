@@ -7,9 +7,11 @@ postavku, a učenje počinje tek poslije klika u dashboardu.
 
 ## Obavezno prije narednog runa: flashuj popravku
 
-Ploča je 26.08.2026 flešovana buildom koji sadrži P20 telemetrijsku popravku,
-normal-only sesijsku HOLD kalibraciju v3 i hard-stop start-gate. Ako se poslije
-izmjene koda pravi novi build, `reconfigure` i flash su ponovo obavezni.
+Mjerodavan je build od 27.08.2026 — isti binarni fajl je pustio oba validna
+runa tog dana. Sadrži P20 telemetrijsku popravku, normal-only sesijsku HOLD
+kalibraciju v3, frozen CAL centar sa empirijskim p99 pragom (P26) i uklonjen
+hard-stop start-gate (P27). Ako se poslije izmjene koda pravi novi build,
+`reconfigure` i flash su ponovo obavezni.
 
 ```powershell
 $env:ASD_PSD_LIVE = "1"; $env:ASD_RESEARCH_TELEMETRY = "1"
@@ -28,8 +30,9 @@ Set-Location "$HOME\Desktop\master new"
 .\POKRENI-GUIDED25.cmd preflight
 ```
 
-SHA-256 trenutno flešovanog builda je
-`A1778C599A3E2154D960C197AA34E891531688137A657C01A5D16A1ED5718D17`;
+SHA-256 mjerodavnog builda je
+`9AC2CACA2C5010747547D4BB942AAE96F700221588A4A6863B5C01948D967813`
+(354 784 B; `provenance.json` oba validna runa 27.08.);
 ako preflight ispiše drugi heš, source/build i ploča više nisu isti dokaz.
 
 ## Najkraći put
@@ -47,7 +50,7 @@ ako preflight ispiše drugi heš, source/build i ploča više nisu isti dokaz.
    snimaju logovi. Browser se otvara automatski na `http://127.0.0.1:8772/`.
 
 Prije pokretanja launcher otvara COM port samo za read-only provjeru i zahtijeva
-tačan `asd-quality-v1.5.0`, `IDLE`, `GUIDED25=1`, research telemetriju,
+tačan `asd-quality-v1.6.0`, `IDLE`, `GUIDED25=1`, research telemetriju,
 `workflow_pending=DEFAULT`, zatvoren DEVELOPMENT persistence gate i `dropped=0`.
 Ako bilo šta od toga nedostaje, pravi run se ne pokreće.
 
@@ -101,9 +104,9 @@ GUIDED25 sam dodaje `--research-telemetry-required` i zaključani
 - Tokom SETTLE/CENTER/DERIVE/VERIFY ne prilazi i ne pričaj.
 - Kad piše da je kalibracija gotova, klikni **2. Kreni sa mjerenjem**.
 - Dugme ostaje server-side blokirano ako nema validnog
-  `INTERFERENCE ... source=CAL_NORMAL_ONLY` zapisa ili ako cijeli plan + 20 s
-  rezerve više ne mogu stati u hard stop. To nije upozorenje koje se može
-  preskočiti.
+  `INTERFERENCE ... source=CAL_NORMAL_ONLY` zapisa. To nije upozorenje koje se
+  može preskočiti. Vremenske kapije više nema: otkako je `hard_deadline_seconds`
+  `null` (P27), `monitoring_start_allowed` je bezuslovno tačno.
 - Panel sam vremenski označava svaki uslov i prikazuje odbrojavanje. Ne klikći
   START/END unutar faza: radi radnju u tačno prikazanom okviru.
 - Ako nešto nije urađeno tačno po uputstvu, klikni **Prekini i sačuvaj**.
@@ -117,13 +120,20 @@ Panel sada sam prijavljuje ono što run obara, dok se pokušaj još može prekin
 | `RESEARCH TELEMETRIJA JE POKVARENA` | Bar jedan `FEATURE96`/`SUBSEG96` red je stigao isprepletan; host će run odbiti kao `invalid_research_telemetry` | Odmah **Prekini i sačuvaj**, provjeri da je flashovan build sa [P20](problemi-i-rjesenja.md#p20) popravkom, pa ponovi pokušaj |
 | `PROPUSTENE POTVRDE` | Faza je prošla bez `START` i `END` klika i više se ne može potvrditi | Run je već pao; prekini i ponovi |
 | `UREDJAJ JE JOS U ALARMU` | U tekućoj fazi alarm obara run, a dok traje, sljedeći papirić nema u šta da uđe | Skloni papirić **i ruku**, odmakni se korak, sačekaj da poruka nestane |
-| `KALIBRACIJA JE GOTOVA — KLIKNI "2. KRENI SA MJERENJEM"` | Hard stop teče, a mjerenje još nije počelo | Klikni odmah; vidi budžet ispod |
-| `HARD STOP ZA mm:ss` | Manje od tri minuta do automatskog prekida | Ne oklijevaj sa potvrdama |
+| `KALIBRACIJA JE GOTOVA — KLIKNI "2. KRENI SA MJERENJEM"` | Commissioning je prošao, a mjerenje još nije počelo | Klikni odmah — ne zato što ističe rok, nego da postavka ne odstoji |
 
-### Budžet vremena — 22.08. je preživio sa 30 s rezerve
+Odbrojavanje do roka i poruka `HARD STOP ZA mm:ss` više se ne prikazuju: panel
+ih crta samo kad `hard_deadline_seconds` nije `null`.
 
-Hard stop od `1500 s` teče od **početka sesije** (pritisak tastera), ne od
-početka mjerenja. Izmjereno u runu 22.08.2026:
+### Budžet vremena — istorijski, rok je ukinut 27.08.
+
+**Hard deadline više ne postoji.** `hard_deadline_seconds` je `null`, nadzorni
+thread se ne pokreće, preflight ne traži rezervu, a limit pokušaja je podignut
+`3 → 5` ([P27](problemi-i-rjesenja.md#p27--hard-deadline-od-25-min-obara-run-prije-kraja-plana)).
+Runovi 27.08. trajali su `1 509 s` i `2 000 s` i oba su završena planski.
+
+Tabela ispod ostaje kao izmjereni zapis runa 22.08.2026, kad je rok od `1500 s`
+još važio i objašnjava zašto je ukinut:
 
 | Dionica | Trajanje |
 |---|---|
@@ -134,9 +144,10 @@ početka mjerenja. Izmjereno u runu 22.08.2026:
 | ukupno | `1470 s` od `1500 s` |
 
 Najgori dozvoljeni commissioning je `840 s`, a plan je fiksnih `530 s` — znači
-operateru za odluku ostaje najviše oko `130 s`, a potrošeno je `126 s`. Prošlo je
-samo zato što se ploča tog puta ustalila prije roka. Klikni čim se pojavi poruka
-da je kalibracija gotova.
+operateru je za odluku ostajalo najviše oko `130 s`, a potrošeno je `126 s`.
+Prošlo je samo zato što se ploča tog puta ustalila prije roka. Upravo je ta
+rezerva od 30 s bila razlog da se rok ukine. Svejedno klikni čim se pojavi
+poruka da je kalibracija gotova — duže čekanje nema svrhe.
 
 ### Naučeno iz runa 22.08.2026 (`paper_blocks_passed: 1/3`)
 
@@ -175,21 +186,22 @@ sve što je od njega daleko. Ne traži da smetnja bude stalna ni jednolična —
 govor preko cijelog prozora od deset sekundi doda energiju u trake u kojima
 ventilator nema ništa, pa vektor odlazi dalje od centra nego kod papirića.
 
-Gate koji bi smetnju razlikovao od kvara postoji (`asd_interference.c`), ali mu
-je politika namjerno isključena (`enabled = 0`, pragovi `0.0`) dok se ne izvedu
-iz fizičkih normal-only podataka. Dok je tako, `ambient_speech` može oboriti
-run, i to je **izmjereno ograničenje jednog mikrofona**, ne kvar. Govori tiše i
-dalje od mikrofona nego 22.08.; ako i tada padne, to je rezultat koji se
-prijavljuje, a ne popravlja štelovanjem pragova.
+Gate koji smetnju razlikuje od kvara (`asd_interference.c`) je od v3
+**uključen** (`enabled = 1`), ali i dalje `DEVELOPMENT`. Apsolutna granica se ne
+prenosi između sesija: izvodi se u svakoj sesiji kao `max(CAL normal) × 1,25` iz
+normal-only prozora, pa papirić, govor i vrata ne ulaze u fit. Na runovima
+27.08. je nestabilne prozore govora i vrata odbila u `OBSERVATION_HOLD` umjesto
+da ih proglasi alarmom. Brojke gore su izmjerene 22.08., prije te kapije, i
+pokazuju koliko je jedan mikrofon ranjiv bez nje. Ako `ambient_speech` i sada
+obori run, to je rezultat koji se prijavljuje, a ne popravlja štelovanjem
+pragova.
 
-Planirani najgori tok traje `22:50`; hard stop je `25:00`. Izmjereno trajanje
-jednog prozora je `9,981 s`, pa sa WAIT fazom najgori tok stvarno iznosi
-`23:03` — rezerva do hard stopa je oko dva minuta. Zato poslije poruke da je
-kalibracija gotova odmah klikni **2. Kreni sa mjerenjem**. Panel dodatno traži
-da u tom trenutku preostalih 25 minuta pokriva svih 530 s mjerenja i 20 s
-rezerve; ako ne pokriva, odbija start umjesto da svjesno proizvede nepotpun
-run. Ne ponavljaj pokušaj zbog lošeg rezultata, nego samo zbog zapisane
-tehničke/proceduralne greške. Ukupno su dozvoljena najviše tri pokušaja.
+Planirani najgori tok traje `22:50`. Izmjereno trajanje jednog prozora je
+`9,981 s`, pa sa WAIT fazom najgori tok stvarno iznosi `23:03`. To više nije
+kapija — vremenske provjere start-gatea su uklonjene sa rokom (P27), pa panel
+ne odbija start zbog isteklog vremena. Ne ponavljaj pokušaj zbog lošeg
+rezultata, nego samo zbog zapisane tehničke/proceduralne greške. Ukupno je
+dozvoljeno najviše pet pokušaja.
 
 Jedan ishod nije kvar ni greška operatera. `threshold_enter` je `p99` od 44
 DERIVE prozora, što za taj broj prozora ispada tačno **najveći** izmjereni

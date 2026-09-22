@@ -1,6 +1,17 @@
 # Šema povezivanja — INMP441 + INA226 na ESP32-S3 (N32R16V)
 
-Vizuelna šema: [sema-povezivanja.svg](sema-povezivanja.svg)
+> **Mjerodavno je samo poglavlje 1 (mikrofon), 3, 4 i 5.** Za INA226 i mjerenje
+> potrošnje (poglavlje 2) važi [plan-dvije-plocice.md](plan-dvije-plocice.md),
+> sekcija 4.1: **`VCC` ide PRIJE šanta** (čvor `3V3 IZVOR`, zajedno sa `IN+`), a
+> **`VBS` na `IN−`** (čvor `3V3 POTROŠAČ`). Raniji raspored iz ovog fajla —
+> `VCC` iza šanta i `VBS` nepovezan — daje `bus_mv` i `pwr_uw` jednake nuli i
+> ne smije se koristiti. Isto upozorenje nosi i zapis stvarnog ožičenja na
+> grani `measurement/e5-ina226`.
+>
+> Vizuelna šema [sema-povezivanja.svg](sema-povezivanja.svg) još crta stari
+> raspored `VCC` i nema `VBS`; nije preslikana, koristi crteže iz
+> [sema-sklopa.pdf](sema-sklopa.pdf).
+
 Šema zalemljenog sklopa (dvije ploče, 7 strana A4): [sema-sklopa.pdf](sema-sklopa.pdf) ·
 podjela i spisak komponenti: [plan-dvije-plocice.md](plan-dvije-plocice.md)
 Sve ide na protoboard MB-102, žice do mikrofona **< 10 cm**.
@@ -11,7 +22,7 @@ INMP441 breakout ima 6 pinova. Povezuješ ovako:
 
 | INMP441 pin | Ide na | Napomena |
 |---|---|---|
-| **VDD** | 3V3 | + **100 nF keramika i 10 µF** između VDD i GND, ŠTO BLIŽE mikrofonu |
+| **VDD** | 3V3 | + **470 nF keramika i 10 µF** između VDD i GND, ŠTO BLIŽE mikrofonu — zalemljeni na padove mikrofona ([uredjaj-na-protobordu.md](uredjaj-na-protobordu.md)) |
 | **GND** | GND | |
 | **SCK** (nekad piše BCLK) | **GPIO 4** | I2S bit clock |
 | **WS** (nekad LRCL) | **GPIO 5** | I2S word select |
@@ -22,7 +33,7 @@ INMP441 breakout ima 6 pinova. Povezuješ ovako:
 INMP441                            ESP32-S3
 ┌──────────┐                      ┌──────────────┐
 │ VDD ●────┼──────┬──── 3V3 ──────┤ 3V3          │
-│          │  100nF + 10µF        │              │
+│          │  470nF + 10µF        │              │
 │ GND ●────┼──────┴──── GND ──────┤ GND          │
 │ SCK ●────┼─────────────────────►│ GPIO 4       │
 │ WS  ●────┼─────────────────────►│ GPIO 5       │
@@ -40,24 +51,31 @@ napajanjem** ploče. Dvije veze: mjerna (shunt) + I2C (očitavanje).
 
 | INA226 pin | Ide na | Napomena |
 |---|---|---|
-| **VCC** | 3V3 (S3) | napajanje logike samog senzora |
-| **GND** | GND (zajednička masa sa izvorom i S3!) | |
+| **IN+** | + izvora 3,3 V | čvor `3V3 IZVOR`; izvor: lab. napajanje ili AMS1117 iz punjača 5 V |
+| **VCC** | **isti čvor kao IN+** | napajanje logike senzora — **prije šanta**, da ne ulazi u mjerenu struju tereta |
+| **IN−** | **3V3 pin ploče S3** | čvor `3V3 POTROŠAČ`; + **≥470 µF elektrolit** između IN− i GND (rizik C7 — brownout) |
+| **VBS** | **isti čvor kao IN−** | ulaz za napon magistrale. Ako visi, `bus_mv` i `pwr_uw` su nula i cijelo E5 mjerenje je neupotrebljivo |
+| **ALE** | nepovezan | alarmni izlaz, ne koristi se |
+| **GND** | GND (zajednička masa sa izvorom i S3!) | zvjezdasta masa, ne preko šina protoborda |
 | **SDA** | **GPIO 8** | I2C (moduli imaju pull-up otpornike na sebi) |
 | **SCL** | **GPIO 9** | I2C, ovaj modul je potvrđen na adresi `0x44` |
-| **IN+** | + izvora 3.3 V | izvor: lab. napajanje / baterija + regulator |
-| **IN−** | **3V3 pin ploče S3** | + **≥470 µF elektrolit** između IN− i GND (rizik C7 — brownout) |
+
+Silk redoslijed pinova na modulu: `IN+ · IN− · VBS · ALE · SDA · SCL · GND · VCC`.
 
 ```
-  3.3 V izvor                INA226                     ESP32-S3
+  3,3 V izvor                INA226                     ESP32-S3
 ┌────────────┐          ┌──────────────┐            ┌──────────────┐
-│         + ●┼─────────►│ IN+     IN− ●┼─────┬─────►│ 3V3 (napaja  │
-│            │          │   (shunt)    │  ≥470µF    │  cijelu ploču)│
-│         − ●┼────┬─────┤ GND          │     │      │              │
-└────────────┘    │     │ VCC ●────────┼─── (3V3)   │              │
-                  │     │ SDA ●────────┼───────────►│ GPIO 8       │
-                  └─────┤ SCL ●────────┼───────────►│ GPIO 9       │
-                   GND  └──────────────┘        ────┤ GND          │
-                  (zajednička masa za sve!)         └──────────────┘
+│         + ●┼─────┬───►│ IN+     IN− ●┼─────┬─────►│ 3V3 (napaja  │
+│            │     │    │   (shunt)    │     │      │  cijelu ploču)│
+│            │     └───►│ VCC     VBS ●┼─────┤      │              │
+│         − ●┼────┬─────┤ GND          │  ≥470µF    │              │
+└────────────┘    │     │ SDA ●────────┼───────────►│ GPIO 8       │
+                  │     │ SCL ●────────┼───────────►│ GPIO 9       │
+                  │     │ ALE ● nepov. │            │              │
+                  └─────┴──────────────┴────────────┤ GND          │
+                   GND (zvjezdasta masa za sve!)    └──────────────┘
+
+  IN+ i VCC = čvor 3V3 IZVOR       IN− i VBS = čvor 3V3 POTROŠAČ
 ```
 
 **Pravila za E5 mjerenje (iz plana, sekcija 6.2/D2):**
@@ -75,10 +93,14 @@ napajanjem** ploče. Dvije veze: mjerna (shunt) + I2C (očitavanje).
 
 ## 3. Opciono: LED + taster (demo na odbrani)
 
+Uređaj ima **dvije** LED — `PIN_LED` i `PIN_LED_ALARM` u `pins.h`. Otpornik
+prati LED, ne pin (izbor i računica: [uredjaj-na-protobordu.md](uredjaj-na-protobordu.md)):
+
 | Šta | Ide na | Napomena |
 |---|---|---|
-| LED (+ otpornik 220 Ω na katodu→GND) | **GPIO 2** | svijetli = normal, gasi = anomalija |
-| Taster | **GPIO 10** ↔ GND | interni pull-up; bira izvor: mikrofon / klipovi sa flasha |
+| **Zelena** LED — status (+ **100 Ω** anoda→otpornik, katoda→GND) | **GPIO 2** | pet obrazaca: IDLE kratko bljeska, učenje brzo treperi, nadzor stalno, `OBSERVATION_HOLD` sporo pulsira, fault dvostruki puls |
+| **Crvena** LED — alarm (+ **330 Ω**) | **GPIO 11** | svijetli dok traje odstupanje; treperi u fail-closed stanju |
+| Taster | **GPIO 10** ↔ GND | interni pull-up. **Ne smije biti pritisnut pri uključenju** — firmware to čita kao ulazak u EVAL mod |
 
 ## 4. Šta NIKAKO
 

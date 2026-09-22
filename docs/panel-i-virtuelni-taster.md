@@ -58,7 +58,7 @@ virtuelni ostaje da čeka sljedeći.
 Čita se sa **oba porta** — native USB (COM3, VID 303A) i CH343 most na UART0
 (COM4) — direktno iz RX FIFO-a, bez instaliranja drajvera i bez VFS
 preusmjeravanja. TX put ostaje netaknut, jer od njega zavisi zaključani
-live protokol `asd-quality-v1.5.0`.
+live protokol (od 24.08.2026. `asd-quality-v1.6.0`).
 
 ---
 
@@ -67,7 +67,7 @@ live protokol `asd-quality-v1.5.0`.
 Na svaku promjenu režima lampice uređaj ispiše jedan red:
 
 ```
-FLAGS protocol=asd-quality-v1.5.0 mode=READY state=CALIBRATED_NORMAL waiting=0
+FLAGS protocol=asd-quality-v1.6.0 mode=READY state=CALIBRATED_NORMAL waiting=0
       learning=0 learned=1 anomaly=0 hold=0 fault=0 green=on red=off
 ```
 

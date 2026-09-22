@@ -222,5 +222,8 @@ INA226). Granice DSP-a i inference se tako ne vide — za njih trebaju markeri.
 elektroliti su već na stolu. Zašto dvije različite vrijednosti otpornika i zašto
 uređaj ostaje na protobordu: [uredjaj-na-protobordu.md](uredjaj-na-protobordu.md).
 
-**Firmware:** markeri faza na GPIO 12/13/14 još nisu implementirani — to je
-`gpio_set_level` na ulazu i izlazu iz tri postojeće faze u `psd_live.c`.
+**Firmware:** markeri faza na GPIO 12/13/14 su implementirani 22.09.2026. na
+grani `measurement/e5-ina226` — `e5_measure.c` iza `ASD_E5_MEASURE` flaga radi
+`gpio_set_level` pri svakoj promjeni faze: `GPIO 12` = `CAPTURE_WAIT`,
+`GPIO 13` = `DSP`, `GPIO 14` = `SCORE`. **U `master`-u ih nema**, i nisu
+flešovani ni provjereni analizatorom.

@@ -1,6 +1,6 @@
 # Indeks dokumentacije
 
-**Ažurirano:** 06.09.2026.
+**Ažurirano:** 22.09.2026.
 
 Repo ima mnogo dokumenata jer je metodologija tražila da se svaki pokušaj i
 svaki negativan rezultat zapišu. Zato je lako naletjeti na stariji fajl i
@@ -34,6 +34,7 @@ Stoje u [`../radno/ucenje/`](../radno/) — vidi [`../radno/README.md`](../radno
 | [`UPUTSTVO-1-KAKO-JE-NASTAO-PROJEKAT.md`](../radno/ucenje/UPUTSTVO-1-KAKO-JE-NASTAO-PROJEKAT.md) | mapa ključnih fajlova + hronologija u 11 etapa: šta je urađeno, izmjereno i zašto je promijenjeno |
 | [`UPUTSTVO-2-TEORIJA-OD-NULE.md`](../radno/ucenje/UPUTSTVO-2-TEORIJA-OD-NULE.md) | zvuk, Furijeova transformacija, Welch/PSD, ML, Mahalanobis, metrike, TFLite/TFLM, I2S drajver, rječnik |
 | [`UPUTSTVO-3-LITERATURA.md`](../radno/ucenje/UPUTSTVO-3-LITERATURA.md) | naučni radovi: gdje se koji koristi u projektu i šta u njemu treba pročitati |
+| [`UPUTSTVO-4-PREZENTACIJA-MENTORU.md`](../radno/ucenje/UPUTSTVO-4-PREZENTACIJA-MENTORU.md) | **projekat u sedam koraka**: postavka → model → firmware → problemi → testovi → rezultati → ograničenja; isti redoslijed služi za učenje i za izlaganje mentoru |
 
 ## Aktuelno stanje i protokoli
 
@@ -46,7 +47,7 @@ Stoje u [`../radno/ucenje/`](../radno/) — vidi [`../radno/README.md`](../radno
 | [`KAKO-SAMOSTALNO-POKRENUTI-GUIDED25.md`](KAKO-SAMOSTALNO-POKRENUTI-GUIDED25.md) | operatersko uputstvo za launcher | aktuelno |
 | [`kanonska-evaluacija.md`](kanonska-evaluacija.md) | usvojeni razvojni benchmark bez curenja | aktuelno |
 | [`odluka-finalni-model.md`](odluka-finalni-model.md) | finalni model, rezerva, kriteriji prihvatanja | aktuelno |
-| [`problemi-i-rjesenja.md`](problemi-i-rjesenja.md) | baza znanja P1–P19 | živi dokument |
+| [`problemi-i-rjesenja.md`](problemi-i-rjesenja.md) | baza znanja P1–P28 | živi dokument |
 | [`handoff.md`](handoff.md) | predaja stanja u novu sesiju | živi dokument |
 
 ## Faze dorade poslije FAN01 (implementacioni zapisi)
@@ -73,10 +74,23 @@ Svaki je zapis jedne faze, ne opšti status. Zbirni status je u
 | [`rezultat-fan01-2026-08-16.md`](rezultat-fan01-2026-08-16.md) | prvi valjan fizički test ventilatora |
 | [`preregistracija-fan01.md`](preregistracija-fan01.md) | preregistracija tog runa (pisana prije runa) |
 | [`hardver-verifikacija.md`](hardver-verifikacija.md) | šta je izmjereno na pločici (09.08.) |
-| [`e5-mjerenje-01-rezultat.md`](../radno/elektronika/e5-mjerenje-01-rezultat.md) | prvo mjerenje potrošnje |
-| [`e5-povezivanje-i-mjerenje.md`](../radno/elektronika/e5-povezivanje-i-mjerenje.md) | postavka E5 mjerenja |
+| [`e5-mjerenje-01-rezultat.md`](../radno/elektronika/e5-mjerenje-01-rezultat.md) | prvo mjerenje potrošnje (11.08.) |
+| [`e5-povezivanje-i-mjerenje.md`](../radno/elektronika/e5-povezivanje-i-mjerenje.md) | postupak E5 mjerenja; **šema u njemu je zastarjela**, vidi banner na vrhu |
 | [`panel-i-virtuelni-taster.md`](panel-i-virtuelni-taster.md) | panel i virtuelni taster |
 | [`faza2-semantika-dogadjaja.md`](faza2-semantika-dogadjaja.md) | prisustvo mašine, režim, semantika događaja |
+
+## Rad u toku van `master`-a
+
+Ove stavke **nisu u `master`-u** i ne opisuju stanje koda u ovom checkoutu.
+Navedene su da se ne bi tražile na pogrešnom mjestu.
+
+| Grana | Sadržaj | Stanje |
+|---|---|---|
+| `measurement/e5-ina226` | E5 firmware (`e5_measure.c` iza `ASD_E5_MEASURE`), host alat `pc/tools/e5_capture.py`, eksperiment kit `results/mjerenje_2026-09-21/` (POCNI-OVDJE, POVEZIVANJE, EXPERIMENT, BUILD/FLASH skripte, backup postojeće aplikacije) | build prolazi (381 488 B); **nije flešovan ni mjeren na ploči** |
+
+Zapis stvarno spojenog ožičenja je na toj grani u
+`results/mjerenje_2026-09-21/POVEZIVANJE.md` i mjerodavniji je od šeme u
+`radno/elektronika/sema-povezivanja.md`.
 
 ## Put do modela (istraživanje)
 
@@ -102,6 +116,7 @@ Zašto je odvojen: [`../radno/README.md`](../radno/README.md).
 | [`sema-cjeline.svg`](../radno/elektronika/sema-cjeline.svg) | šema u tri panela: mjerna ploča · uređaj · spajanje za mjerenje |
 | [`sema-sklopa.pdf`](../radno/elektronika/sema-sklopa.pdf) | crteži sklopa, 7 strana A4 (generiše `make_sema_sklopa.py`) |
 | [`sema-povezivanja.md`](../radno/elektronika/sema-povezivanja.md) | pinout INMP441 + INA226 |
+| [`kondenzatori.md`](../radno/elektronika/kondenzatori.md) | koji kondenzator gdje ide, zašto nijedan nije obavezan i zašto 470 µF kvari E5 mjerenje |
 | [`lemljenje.md`](../radno/elektronika/lemljenje.md) | procedura lemljenja (ažurirana na dvije ploče) |
 | [`lemljenje-kratko.md`](../radno/elektronika/lemljenje-kratko.md) | kratka lista za lemljenje |
 | [`hardver-lista.md`](../radno/elektronika/hardver-lista.md) | inventar imamo/kupiti |

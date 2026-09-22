@@ -1,5 +1,29 @@
 # E5 povezivanje i mjerenje potrošnje
 
+> **Status 22.09.2026 — šema u ovom fajlu je ZASTARJELA, postupak nije.**
+>
+> Dvije stvari su se promijenile poslije 11.08.:
+>
+> 1. **Ožičenje.** `plan-dvije-plocice.md` sekcija 4.1 je ispravila raspored:
+>    `VCC` senzora ide **prije** šanta (na `IN+`), a `VBS` na `IN−`. Šema u
+>    poglavlju „Konačna šema" ispod stavlja `VCC` na `IN−` i to više ne važi —
+>    tako spojeno, `VCC` INA226 troši kroz šant i ulazi u mjerenu struju.
+>    Stvarno spojena ploča je zapisana na grani `measurement/e5-ina226`
+>    (`results/mjerenje_2026-09-21/POVEZIVANJE.md`) i koristi varijantu sa
+>    punjačem: **5,00 V na AMS1117 VIN**, limit `0,30 A`, a ne 3,30 V direktno
+>    na `IN+`. Obje varijante su uporedo opisane u
+>    [lemljenje-cjeline-i-mjerenje.md](lemljenje-cjeline-i-mjerenje.md).
+> 2. **Firmware.** „Puni E5 firmware" iz posljednjeg pasusa je napisan
+>    21–22.09.2026. i stoji na grani `measurement/e5-ina226`, **nije u
+>    `master`-u**: `e5_measure.c` iza `ASD_E5_MEASURE` flaga, sa komandama
+>    `E5ARM`, `E5CHECK`, `E5RUN`, `E5DUMP`, `E5SAVED`, `E5STOP`, `E5DISARM`,
+>    razdvajanjem energije po fazama `CAPTURE_WAIT`/`DSP`/`SCORE` i markerima na
+>    `GPIO 12/13/14`. Build prolazi (381 488 B), **nije flešovan ni testiran na
+>    ploči.** Postupak ispod (redoslijed uključivanja, limiti, USB pravila)
+>    ostaje važeći.
+>
+> ---
+>
 > **Status 11.08.2026: prvo mjerenje je izvedeno.** Rezultat, nalazi i sljedeći
 > koraci su u [`e5-mjerenje-01-rezultat.md`](e5-mjerenje-01-rezultat.md), sirovi
 > log u [`results/e5_mjerenje_01_uart.log`](../../results/e5_mjerenje_01_uart.log).
@@ -39,7 +63,11 @@ IN+ · IN− · VBS · ALE · SDA · SCL · GND · VCC
 `VBS` je ulaz za mjerenje napona magistrale. Za E5 ide na stranu potrošača,
 odnosno na isti čvor kao `IN−`. `ALE` je alarmni izlaz i ostaje nepovezan.
 
-## Konačna šema
+## Konačna šema — ZASTARJELO, vidi banner na vrhu
+
+Ispod je raspored iz avgusta. `VCC` je tu na `3V3_LOAD` (iza šanta), što je
+sekcija 4.1 u [plan-dvije-plocice.md](plan-dvije-plocice.md) ispravila.
+Čuva se zato što objašnjava zašto je prvo mjerenje ispalo kako jeste.
 
 ```text
 LAB +3,30 V ───────────── INA226 IN+
@@ -124,5 +152,10 @@ Jednokratni `ASD_INA_TEST` prolaz čuva u NVS-u:
 
 Mjerenja se prvo drže u RAM-u. Izvještaj se upisuje u flash tek nakon posljednjeg
 uzorka, tako da flash-upis ne ulazi u deset sačuvanih očitanja. Ovo je provjera
-strujnog puta; puni E5 firmware će kasnije integrisati energiju odvojeno za
-idle, snimanje, DSP i inferencu.
+strujnog puta.
+
+Puni E5 firmware koji integriše energiju odvojeno po fazama **je napisan**
+(21–22.09.2026), ali stoji na grani `measurement/e5-ina226` i nije flešovan.
+Njegove faze su `CAPTURE_WAIT`, `DSP` i `SCORE` (plus `OTHER`/`MIXED`), a ne
+podjela „idle / snimanje / DSP / inferenca" iz avgustovskog plana. Protokol
+mjerenja je u `results/mjerenje_2026-09-21/EXPERIMENT.md` na toj grani.

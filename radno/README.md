@@ -32,8 +32,9 @@ Sve što opisuje **fizičku izradu uređaja i mjerenje potrošnje**:
 | `sema-povezivanja.md`, `sema-povezivanja.svg` | pinout INMP441 + INA226 |
 | `sema-sklopa.pdf`, `sema-lemljenje.svg` | crteži sklopa |
 | `make_sema_sklopa.py` | generiše `sema-sklopa.pdf` i `img/sema-sklopa-s{1..7}.png` |
-| `e5-povezivanje-i-mjerenje.md` | postavka E5 mjerenja potrošnje |
-| `e5-mjerenje-01-rezultat.md` | prvo mjerenje: 34,73 mA, naponski kanal odstupa |
+| `kondenzatori.md` | **koji kondenzator gdje ide i da li uopšte treba** — 470 nF + 10 µF na mikrofon, 470 µF na mjernu ploču |
+| `e5-povezivanje-i-mjerenje.md` | postupak E5 mjerenja potrošnje; **šema u njemu je zastarjela** (banner na vrhu) |
+| `e5-mjerenje-01-rezultat.md` | prvo mjerenje 11.08.: 34,73 mA, naponski kanal odstupa |
 | `ina226-provjera.md` | dijagnostika INA226 |
 | `hardver-lista.md`, `hardware.md` | inventar i kompatibilnost |
 | `porudzbina-elektromodul.md`, `donijeti-sa-posla.md` | nabavka |
@@ -42,6 +43,11 @@ Sve što opisuje **fizičku izradu uređaja i mjerenje potrošnje**:
 `make_sema_sklopa.py` putanje računa u odnosu na sam skript
 (`DOCS = Path(__file__).parent`, `IMG = DOCS / "img"`), pa radi i poslije ovog
 premještanja bez izmjene.
+
+**E5 firmware i eksperiment kit nisu u `master`-u.** Stoje na grani
+`measurement/e5-ina226` (`results/mjerenje_2026-09-21/`), zajedno sa zapisom
+stvarno spojenog ožičenja `POVEZIVANJE.md` — vidi
+[`docs/INDEKS.md`](../docs/INDEKS.md), odjeljak „Rad u toku van `master`-a".
 
 **Ostalo je u `docs/`:** [`hardver-verifikacija.md`](../docs/hardver-verifikacija.md)
 — to su mjerenja koja nose tvrdnje rada (PC↔uređaj, latencija, `dropped=0`), pa
@@ -57,6 +63,7 @@ datiranih dokumenata na jedno mjesto.
 | `UPUTSTVO-1-KAKO-JE-NASTAO-PROJEKAT.md` | mapa ključnih fajlova + hronologija u 11 etapa |
 | `UPUTSTVO-2-TEORIJA-OD-NULE.md` | zvuk, Furije, Welch/PSD, ML, Mahalanobis, metrike, TFLite/TFLM, I2S drajver, rječnik |
 | `UPUTSTVO-3-LITERATURA.md` | naučni radovi: gdje se koji koristi i šta u njemu čitati |
+| `UPUTSTVO-4-PREZENTACIJA-MENTORU.md` | projekat u sedam koraka: postavka → model → firmware → problemi → testovi → rezultati → ograničenja; za učenje i za izlaganje mentoru |
 
 Ako se dokument iz ovog foldera raziđe sa datiranim izvorom u `docs/`,
 **datirani izvor pobjeđuje** — pravilo iz [`docs/INDEKS.md`](../docs/INDEKS.md).

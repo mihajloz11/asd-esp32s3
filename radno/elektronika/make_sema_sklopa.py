@@ -9,14 +9,16 @@
 
 Izvori istine:
   - firmware/esp32s3_asd/main/pins.h        (GPIO mapa)
-  - docs/sema-povezivanja.md                (napajanje, INA226 shunt, rizik C7)
-  - docs/plan-dvije-plocice.md              (podjela komponenti po pločama)
-  - docs/img/inmp441-2.jpg                  (okrugli modul 12,0 x 14,0 mm, 2x3 pada)
-  - docs/img/ina226.jpeg                    (20,5 x 19,4 mm, 1x8, jedan R100)
-  - docs/img/ams1117.webp                   (plavi modul, 2+2 pina)
+  - radno/elektronika/plan-dvije-plocice.md (podjela komponenti + tačna topologija
+                                             INA226: VCC prije šanta, VBS na IN−)
+  - radno/elektronika/sema-povezivanja.md   (pinout INMP441, rizik C7)
+  - radno/elektronika/img/inmp441-2.jpg     (okrugli modul 12,0 x 14,0 mm, 2x3 pada)
+  - radno/elektronika/img/ina226.jpeg       (20,5 x 19,4 mm, 1x8, jedan R100)
+  - radno/elektronika/img/ams1117.webp      (plavi modul, 2+2 pina)
   - Espressif ESP32-S3-DevKitC-1 v1.1 user guide (J1/J3 tabele)
 
-Izlaz: docs/sema-sklopa.pdf (7 strana A4) + docs/img/sema-sklopa-s{1..7}.png
+Izlaz: sema-sklopa.pdf (7 strana A4) + img/sema-sklopa-s{1..7}.png
+  (pored samog skripta — putanje se računaju iz Path(__file__).parent)
   1  podjela na dvije ploče + interfejs od 4 žice
   2  ploča U — logička šema
   3  ploča U — fizički raspored, uvećano
@@ -532,7 +534,7 @@ def page_schema_u(pdf):
            "zidni punjač 5 V."],
           fc="#fff7ed", ec=C_WARN, tc=C_WARN, fs=5.4, lh=5.6)
 
-    footer(ax, "Strana 2/7 — logička šema ploče U.  Izvor: pins.h + docs/sema-povezivanja.md", "")
+    footer(ax, "Strana 2/7 — logička šema ploče U.  Izvor: pins.h + plan-dvije-plocice.md", "")
     save(pdf, fig, 2)
 
 
@@ -1003,7 +1005,7 @@ def page_print_1to1(pdf):
     panel(ax, nx, 110, 130, 40, "Ovo je predloženi raspored, ne izmjereni",
           ["Obrisi S3 ploče (63,0 × 25,5 mm) i razmak headera (22,86 mm) su iz zvanične",
            "Espressif dokumentacije. Obrisi INA226 (20,5 × 19,4 mm) i AMS1117 (≈ 20 × 10 mm)",
-           "su iz fotografija modula u docs/img — razmak njihovih pinova nije potvrđen",
+           "su iz fotografija modula u img/ — razmak njihovih pinova nije potvrđen",
            "mjerenjem. Izmjeri ih lenjirom na svojim komadima prije nego išta zalemiš."],
           fc="#fff7ed", ec=C_WARN, tc=C_WARN, fs=5.3, lh=5.4)
 

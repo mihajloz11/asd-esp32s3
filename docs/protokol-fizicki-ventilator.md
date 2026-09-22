@@ -1,11 +1,29 @@
 # Zaključani protokol stvarnog fizičkog ventilatora
 
-**Verzija:** `physical-fan-v1.8.0`
+**Verzija:** `physical-fan-v1.9.0`
 
-**Datum zaključavanja:** 09.08.2026, bumpovano 16.08.2026. i 20.08.2026.
-**Firmware:** fail-closed `ASD_PSD_LIVE`, serijski protokol `asd-quality-v1.5.0`.
-V1.5 je host-testiran i ESP-IDF build prolazi; flash/runtime potvrda ovog bumpa
-ostaje za naredni fizički test.
+**Datum zaključavanja:** 09.08.2026, bumpovano 16.08.2026, 20.08.2026. i 24.08.2026.
+**Firmware:** fail-closed `ASD_PSD_LIVE`, serijski protokol `asd-quality-v1.6.0`.
+V1.6 je potvrđen i na pločici: isti binarni fajl (354 784 B, SHA-256
+`9ac2caca…8d967813`) pustio je oba validna runa 27.08.2026.
+
+> **Izmjene u v1.9.0** (24.08.2026, detaljno:
+> [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md)): kapija pouzdanosti je
+> uključena (`asd_interference` v3, `enabled = 1`), ali HOLD sada postaje
+> **vidljiv hostu** umjesto da mu obori run. Ranija verzija bi oborila svaki
+> naredni run kroz dva nezavisna lanca: `asd_temporal_suspend()` je pri HOLD-u
+> postavljao `run = 0`, pa je host replay očekivao `uzastopnih=1` i prijavljivao
+> `invalid_firmware_telemetry`; a `STATE ... to=OBSERVATION_HOLD` je bio naziv
+> koji host nije poznavao. `ANOMALY_SUSTAINED` i `OBSERVATION_HOLD_WARNING` se
+> javljaju dok stanje stoji, pa nemaju upareni `STATE` red i više se ne obaraju
+> kao `unknown_or_unpaired_EVENT`. Novi zapis koristi
+> `physical-fan-artifacts-v1.9.0`; offline reader i dalje čuva istorijske parove
+> v1.6↔q1.3, v1.7↔q1.4 i v1.8↔q1.5, kao i `THRFIT` rječnik koji firmware više ne
+> emituje, ali ga runovi 26–27.08. sadrže.
+>
+> **GUIDED25 hard deadline je uklonjen 27.08.** (`hard_deadline_seconds: null`,
+> limit pokušaja `3 → 5`) — vidi
+> [P27](problemi-i-rjesenja.md#p27--hard-deadline-od-25-min-obara-run-prije-kraja-plana).
 
 > **Izmjene u v1.8.0:** bounded audio read uvodi imenovane razloge
 > `AUDIO_TIMEOUT` i `AUDIO_READ_ERROR`, oba fail-closed u `SENSOR_ERROR`.
@@ -95,7 +113,7 @@ je dokaz stanja hardvera, ali nije eksperimentalni run.
 ## 2. Fail-closed kalibracioni ugovor
 
 Firmware emituje ASCII zapise `QUALITY`, `STATE` i `EVENT` sa protokolom
-`asd-quality-v1.5.0`. Prije ulaska u kalibraciju i za svaki kalibracioni klip
+`asd-quality-v1.6.0`. Prije ulaska u kalibraciju i za svaki kalibracioni klip
 provjeravaju se broj vraćenih uzoraka, konačne numeričke vrijednosti, stuck/zero signal,
 nivo, clipping i `dropped_delta`. Nevalidan rezultat zaustavlja tok; ne postoji
 više put „upozori i nastavi“.

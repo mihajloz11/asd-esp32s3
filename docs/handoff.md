@@ -30,15 +30,16 @@ Otpornost na buku okoline (koraci, razgovor) i dvomikrofonski pristup:
   [rezultat-fan01-2026-08-16.md](rezultat-fan01-2026-08-16.md).
 - `cold-start-04` je istorijski ostavljen netaknut; read-only recompute sada
   ispravno primjenjuje K1 i daje `calibration_rejected:loo_cv_above_max`.
-- Trenutni ugovor je host `physical-fan-v1.8.0` / artifacts v1.8 uz live
-  `asd-quality-v1.5.0`. Offline čitanje čuva tačne istorijske v1.6/q1.3 i
-  v1.7/q1.4 parove.
+- Trenutni ugovor je host `physical-fan-v1.9.0` / artifacts v1.9 uz live
+  `asd-quality-v1.6.0` (od 24.08.2026). Offline čitanje čuva tačne istorijske
+  parove v1.6/q1.3, v1.7/q1.4 i v1.8/q1.5.
 - Softver ima multi-session reset, `96 + 5×96` research telemetriju, odvojeni
   CENTER/DERIVE/VERIFY commissioning, apsolutne enter/exit pragove, bounded
   audio read i verzionisani NVS storage format sa CRC-om; DEVELOPMENT runtime
   je namjerno RAM-only i ne radi NVS load/save.
-- `OBSERVATION_HOLD` je implementirana arhitektura, ali interference policy je
-  `enabled=false` dok normal-only podaci ne zamrznu numeričku granicu.
+- `OBSERVATION_HOLD` je od v3 **uključen** (`enabled = 1`), ali i dalje
+  `DEVELOPMENT`: apsolutna granica se ne zamrzava, nego se izvodi u svakoj
+  sesiji kao `max(CAL normal) × 1,25` iz normal-only prozora.
 - PC suite 22.08. prolazi sa `444 passed, 5 skipped` (pet preskočenih traže
   raspakovan DCASE `fan` skup; sa njim je `449 passed`); ESP-IDF 5.5.5 `ASD_PSD_LIVE` build
   prolazi, bin je 349 728 B. Taj build još nije flashovan niti potvrđen na
@@ -230,7 +231,7 @@ izmjereni, PC↔uređaj zatvoren na živom mikrofonu.)*
 
 ## Zamke koje su već koštale vremena
 
-Puna lista u [problemi-i-rjesenja.md](problemi-i-rjesenja.md) (P1–P19). Najskuplje:
+Puna lista u [problemi-i-rjesenja.md](problemi-i-rjesenja.md) (P1–P28). Najskuplje:
 
 - **P2** promjena build moda bez `reconfigure` — build tiho ostane u starom modu
 - **P4** task watchdog upisuje tekst usred base64 toka → pokvaren WAV
