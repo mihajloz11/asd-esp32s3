@@ -63,3 +63,6 @@ radovi/master-rad/sablon/ftn-*.docx
 firmware/esp32s3_asd/build-*/
 dist/
 ~$*
+
+# Windows/OneDrive smeće
+desktop.ini

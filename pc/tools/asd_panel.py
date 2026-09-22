@@ -540,7 +540,9 @@ class PanelState:
     def guided_monitoring_gate(self) -> tuple[bool, list[str]]:
         reasons = []
         if self.attempt < 1 or self.attempt > GUIDED25["acceptance"]["attempt_limit"]:
-            reasons.append("pokusaj nije 1..3")
+            reasons.append(
+                f"pokusaj nije 1..{GUIDED25['acceptance']['attempt_limit']}"
+            )
         if self.last_line_at == 0 or time.time() - self.last_line_at > 15:
             reasons.append("telemetrija nije svjeza")
         if self.flags.get("protocol") != "asd-quality-v1.6.0":

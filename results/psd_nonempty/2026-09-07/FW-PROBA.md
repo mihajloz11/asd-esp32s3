@@ -44,8 +44,10 @@ Lokalni paket je u `dist/psd-nonempty-2026-09-07/` eksperimentalnog foldera:
 - `manifest.json`: adrese, veličine, hash-evi, provjerene zastavice i otisak modela.
 
 Isti manifest je sačuvan kao [firmware_package.json](firmware_package.json).
-Paket se pravi alatom `pc/tools/package_psd_nonempty.py`; on ne otvara COM
-port niti flešuje uređaj. Stari app SHA-256 mora biti
+Paket je napravljen alatom `pc/tools/package_psd_nonempty.py`; on ne otvara COM
+port niti flešuje uređaj. **Taj alat nije u `master`-u** — stoji na granama
+`codex/psd-nonempty-bands` i `codex/psd-covariance-study`, pa se paket u ovom
+checkoutu ne može ponovo napraviti bez prelaska na jednu od njih. Stari app SHA-256 mora biti
 `9ac2caca2c5010747547d4bb942aae96f700221588a4a6863b5c01948d967813`.
 
 ## Naredna fizička proba
