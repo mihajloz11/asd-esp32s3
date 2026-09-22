@@ -7,9 +7,23 @@ idf_component_register(
          "features_c.c" "calib_gamma.c" "tflm_infer.cc"
          "eval_mode.c" "mic_test.c" "ina226.c" "ina226_test.c" "live_capture.c" "live_adapt.c"
          "psd_features_c.c" "psd_live.c" "psd_verify.c"
+         "e5_measure.c"
     INCLUDE_DIRS "."
-    REQUIRES driver esp_timer fatfs nvs_flash
+    REQUIRES driver esp_timer fatfs nvs_flash esp_app_format
 )
+
+# Optional E5 measurement overlay. Link wrappers preserve the model source.
+if(DEFINED ENV{ASD_E5_MEASURE})
+    if(NOT DEFINED ENV{ASD_PSD_LIVE})
+        message(FATAL_ERROR "ASD_E5_MEASURE requires ASD_PSD_LIVE")
+    endif()
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE ASD_E5_MEASURE)
+    target_link_libraries(${COMPONENT_LIB} INTERFACE
+        "-Wl,--wrap=audio_read_exact"
+        "-Wl,--wrap=asd_psd_stream_push_hop"
+        "-Wl,--wrap=asd_psd_stream_finish_sidecar"
+        "-Wl,--wrap=asd_psd_score")
+endif()
 
 # Eval build bez tastera:  set ASD_EVAL_MODE=1  pa idf.py build
 if(DEFINED ENV{ASD_EVAL_MODE})

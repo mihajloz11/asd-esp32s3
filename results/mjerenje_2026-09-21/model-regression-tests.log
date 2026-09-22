@@ -1,0 +1,16 @@
+
+=================================== ERRORS ====================================
+______________ ERROR collecting pc/tests/test_psd_features_c.py _______________
+ImportError while importing test module 'C:\Users\mihajlo.zivkovic\Documents\master rad\esp32s3\pc\tests\test_psd_features_c.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pc\tests\test_psd_features_c.py:12: in <module>
+    import soundfile as sf
+E   ModuleNotFoundError: No module named 'soundfile'
+=========================== short test summary info ===========================
+ERROR pc/tests/test_psd_features_c.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 10.23s

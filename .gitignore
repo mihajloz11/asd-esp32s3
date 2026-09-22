@@ -41,9 +41,18 @@ models/*.npz
 results/*.wav
 .venv-ci/
 .venv-bare/
+results/mjerenje_2026-09-21/backup/*.bin
+results/mjerenje_2026-09-21/build/
 radovi/telfor2026/sablon/*.pdf
 radovi/telfor2026/primjeri/*.pdf
 # Render za provjeru izgleda (render_check.py) — regenerise se iz .docx.
 # Finalni PDF za predaju dodati rucno sa `git add -f`.
 radovi/telfor2026/preview/
 radovi/telfor2026/telfor2026_asd_esp32s3.pdf
+
+# preview strana radova (generisano, ne treba u istoriji)
+radovi/*/preview/
+# Master rad: PDF i Word konverzije sablona se regenerisu iz izvora.
+# Uputstvo mentora (v8) i originalni FTN sabloni (.doc/.dot) ostaju u repou.
+radovi/master-rad/master_rad_asd_esp32s3_*.pdf
+radovi/master-rad/sablon/ftn-*.docx

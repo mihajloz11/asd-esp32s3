@@ -32,6 +32,11 @@ esp_err_t ina226_init(uint8_t addr);
 /* Sirovo čitanje 16-bitnog registra (dijagnostika). */
 esp_err_t ina226_read_reg(uint8_t reg, uint16_t *out);
 
+#ifdef ASD_E5_MEASURE
+/* Measurement-only single-shot configuration; no changes to legacy modes. */
+esp_err_t ina226_e5_trigger(uint16_t config);
+#endif
+
 /* Napon na šantu [µV] — predznakom označava smjer struje. */
 esp_err_t ina226_shunt_uv(int32_t *out);
 

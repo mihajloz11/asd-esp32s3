@@ -1,0 +1,96 @@
+FLAGS protocol=asd-quality-v1.6.0 mode=IDLE state=NO_MACHINE waiESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x28 (SPI_FAST_FLASH_BOOT)
+Saved PC:0x40378302
+SPIWP:0xee
+Octal Flash Mode Enabled
+For OPI Flash, Use Default Flash Boot Mode
+mode:SLOW_RD, clock div:1
+load:0x3fce2820,len:0x14f0
+load:0x403c8700,len:0xd24
+load:0x403cb700,len:0x2eec
+entry 0x403c8924
+I (32) boot: ESP-IDF v5.5.5-34-g21f3b71cbbf 2nd stage bootloader
+I (32) boot: compile time Aug 14 2026 23:42:30
+I (32) boot: Multicore bootloader
+I (34) boot: chip revision: v0.2
+I (37) boot: efuse block revision: v1.3
+I (40) boot.esp32s3: Boot SPI Speed : 80MHz
+I (44) boot.esp32s3: SPI Mode       : SLOW READ
+I (48) boot.esp32s3: SPI Flash Size : 32MB
+I (52) boot: Enabling RNG early entropy source...
+I (57) boot: Partition Table:
+I (59) boot: ## Label            Usage          Type ST Offset   Length
+I (66) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (72) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (79) boot:  2 factory          factory app      00 00 00010000 00400000
+I (85) boot:  3 storage          Unknown data     01 81 00410000 01400000
+I (92) boot: End of partition table
+I (95) esp_image: segment 0: paddr=00010020 vaddr=3c030020 size=18bb0h (101296) map
+I (127) esp_image: segment 1: paddr=00028bd8 vaddr=3fc95a00 size=034d8h ( 13528) load
+I (131) esp_image: segment 2: paddr=0002c0b8 vaddr=40374000 size=03f60h ( 16224) load
+I (136) esp_image: segment 3: paddr=00030020 vaddr=42000020 size=28f3ch (167740) map
+I (178) esp_image: segment 4: paddr=00058f64 vaddr=40377f60 size=0da28h ( 55848) load
+I (195) esp_image: segment 5: paddr=00066994 vaddr=50000000 size=00020h (    32) load
+I (202) boot: Loaded app from partition at offset 0x10000
+I (202) boot: Disabling RNG early entropy source...
+I (214) octal_psram: vendor id    : 0x0d (AP)
+I (214) octal_psram: dev id       : 0x03 (generation 4)
+I (214) octal_psram: density      : 0x05 (128 Mbit)
+I (216) octal_psram: good-die     : 0x01 (Pass)
+I (220) octal_psram: Latency      : 0x01 (Fixed)
+I (225) octal_psram: VCC          : 0x00 (1.8V)
+I (229) octal_psram: SRF          : 0x01 (Fast Refresh)
+I (234) octal_psram: BurstType    : 0x01 (Hybrid Wrap)
+I (239) octal_psram: BurstLen     : 0x01 (32 Byte)
+I (243) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
+I (248) octal_psram: DriveStrength: 0x00 (1/1)
+I (253) MSPI Timing: Enter psram timing tuning
+I (258) esp_psram: Found 16MB PSRAM device
+I (261) esp_psram: Speed: 80MHz
+I (264) cpu_start: Multicore app
+I (1119) esp_psram: SPI SRAM memory test OK
+I (1127) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
+I (1127) cpu_start: Pro cpu start user code
+I (1127) cpu_start: cpu freq: 240000000 Hz
+I (1129) app_init: Application information:
+I (1133) app_init: Project name:     esp32s3_asd
+I (1138) app_init: App version:      on-device-verified-78-g14aaebb-
+I (1144) app_init: Compile time:     Aug 27 2026 21:25:11
+I (1149) app_init: ELF file SHA256:  fdef2bdb0...
+I (1153) app_init: ESP-IDF:          v5.5.5-34-g21f3b71cbbf
+I (1159) efuse_init: Min chip rev:     v0.0
+I (1162) efuse_init: Max chip rev:     v0.99 
+I (1167) efuse_init: Chip rev:         v0.2
+I (1170) heap_init: Initializing. RAM available for dynamic allocation:
+I (1177) heap_init: At 3FCD1770 len 00017FA0 (95 KiB): RAM
+I (1182) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+I (1187) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+I (1192) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+I (1198) esp_psram: Adding pool of 16384K of PSRAM memory to heap allocator
+W (1205) spi_flash: Octal flash chip is using but dio mode is selected, will automatically switch to Octal mode
+I (1214) spi_flash: detected chip: mxic (opi)
+I (1218) spi_flash: flash io: opi_str
+I (1222) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1228) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1235) main_task: Started on CPU0
+I (1235) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+I (1245) main_task: Calling app_main()
+I (1245) asd: PSRAM: 16777216 B
+I (1255) asd: free heap: 16914407 B
+I (1255) asd: I2C idle: SDA=1 SCL=1
+I (1255) asd: I2C poslije probe: SDA=1 SCL=1
+I (1265) asd: INA226 OK na 0x44 (SDA GPIO 8, SCL GPIO 9)
+W (1265) i2s_common: dma frame num is out of dma buffer size, limited to 1023
+W (1945) psdlive: DEVELOPMENT policy: NVS profile load/save je zabranjen
+FLAGS protocol=asd-quality-v1.6.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 hold=0 fault=0 green=flash_2s red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+I (1955) psdlive: === SAMOSTALNI PSD DETEKTOR ===
+I (1965) psdlive: model: 96 traka, matrica 96x96 iz flesa, naucen na 990 normalnih snimaka ventilatora
+I (1975) psdlive: 1) pusti ventilator koji radi NORMALNO
+I (1975) psdlive: 2) pritisni taster ILI posalji PRESS sa konzole -> ucenje 10 x 10 s = 100 s, lampica treperi
+I (1985) psdlive: 3) lampica stalno svijetli = naucio; tek tada izazovi kvar
+I (1995) psdlive: pritisni taster (GPIO10) ili posalji PRESS da pocne ucenje
+FLAGS protocol=asd-quality-v1.6.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 hold=0 fault=0 green=flash_2s red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+FLAGS protocol=asd-quality-v1.6.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 hold=0 fault=0 green=flash_2s red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+FLAGS protocol=asd-quality-v1.6.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 hold=0 fault=0 green=flash_2s red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+FLAGS protocol=asd-quality-v1.6.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 hold=0 fault=0 green=flash_2s red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0

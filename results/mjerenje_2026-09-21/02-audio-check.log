@@ -1,0 +1,25 @@
+FLAGS protocol=asd-quality-v1.6.0 mode=IDLE state=NO_MACHINE waiFLAGS protocol=asd-quality-v1.6.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 hold=0 fault=0 green=flash_2s red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+VBUTTON protocol=asd-quality-v1.6.0 source=console event=SHORT result=accepted
+BUTTON protocol=asd-quality-v1.6.0 event=SHORT mode=IDLE command=START_LEARNING discards=0
+SESSION protocol=asd-quality-v1.6.0 action=STARTED source=BUTTON reason=OPERATOR_REQUEST discards_calibration=0
+STATE protocol=asd-quality-v1.6.0 from=NO_MACHINE to=NO_MACHINE reason=BOOT_FAIL_CLOSED
+FLAGS protocol=asd-quality-v1.6.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 hold=0 fault=0 green=blink_5hz red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+COMMISSION protocol=asd-quality-v1.6.0 policy=asd-commissioning-policy-v1.0.0-development developmental=1 action=STARTED phase=SETTLE index=0 total=60 result=NONE score_valid=0 score=0 level_dbfs=-999 tonalness_proxy=0 feature_drift=0
+FLAGS protocol=asd-quality-v1.6.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 hold=0 fault=0 green=blink_5hz red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+COMMISSION protocol=asd-quality-v1.6.0 policy=asd-commissioning-policy-v1.0.0-development developmental=1 action=WINDOW phase=SETTLE index=1 total=60 result=NONE score_valid=0 score=0 level_dbfs=-53.0381165 tonalness_proxy=2.80838823 feature_drift=0
+FLAGS protocol=asd-quality-v1.6.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 hold=0 fault=0 green=blink_5hz red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+FLAGS protocol=asd-quality-v1.6.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 hold=0 fault=0 green=blink_5hz red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+COMMISSION protocol=asd-quality-v1.6.0 policy=asd-commissioning-policy-v1.0.0-development developmental=1 action=WINDOW phase=SETTLE index=2 total=60 result=NONE score_valid=0 score=0 level_dbfs=-53.8618851 tonalness_proxy=2.70012331 feature_drift=0.114864349
+FLAGS protocol=asd-quality-v1.6.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 hold=0 fault=0 green=blink_5hz red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+FLAGS protocol=asd-quality-v1.6.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 hold=0 fault=0 green=blink_5hz red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+COMMISSION protocol=asd-quality-v1.6.0 policy=asd-commissioning-policy-v1.0.0-development developmental=1 action=WINDOW phase=SETTLE index=3 total=60 result=NONE score_valid=0 score=0 level_dbfs=-53.7016907 tonalness_proxy=2.57302952 feature_drift=0.173600242
+FLAGS protocol=asd-quality-v1.6.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 hold=0 fault=0 green=blink_5hz red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+VBUTTON protocol=asd-quality-v1.6.0 source=console event=LONG result=accepted
+BUTTON protocol=asd-quality-v1.6.0 event=LONG mode=LEARNING command=ABORT discards=0
+FLAGS protocol=asd-quality-v1.6.0 mode=LEARNING state=NO_MACHINE waiting=0 learning=1 learned=0 anomaly=0 hold=0 fault=0 green=blink_5hz red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0
+COMMISSION protocol=asd-quality-v1.6.0 policy=asd-commissioning-policy-v1.0.0-development developmental=1 action=WINDOW phase=CENTER_LEARNING index=4 total=60 result=NONE score_valid=0 score=0 level_dbfs=-53.2862015 tonalness_proxy=2.69799995 feature_drift=0.145102218
+SESSION protocol=asd-quality-v1.6.0 action=ABORTED source=BUTTON reason=OPERATOR_LONG_PRESS discards_calibration=0
+SESSION protocol=asd-quality-v1.6.0 action=ENDED source=FIRMWARE reason=NO_MACHINE discards_calibration=0
+I (123965) psdlive: sesija zavrsena u stanju NO_MACHINE; taster pokrece novo ucenje
+I (123975) psdlive: pritisni taster (GPIO10) ili posalji PRESS da pocne ucenje
+FLAGS protocol=asd-quality-v1.6.0 mode=IDLE state=NO_MACHINE waiting=1 learning=0 learned=0 anomaly=0 hold=0 fault=0 green=flash_2s red=off guided25_available=1 workflow_pending=DEFAULT research_telemetry=1 profile_persistence_allowed=0 dropped=0

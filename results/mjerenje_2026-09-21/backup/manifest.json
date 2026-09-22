@@ -1,0 +1,20 @@
+{
+  "original_flash_region_bytes": 4259840,
+  "original_flash_region_sha256": "3b2972c423fb948ef311feca3dfdd580dd6ad4bc04daaca13a14328531dd4918",
+  "original_app_bytes": 354784,
+  "original_app_sha256": "9ac2caca2c5010747547d4bb942aae96f700221588a4a6863b5c01948d967813",
+  "original_app_matches_validated_20260827": true,
+  "base_commit": "34f4fc23e654c80b47a365fcbbca091c487b6a55",
+  "protected_source_sha256_lf": {
+    "psd_live.c": "87813e6662cb14f74eca0ce1f0d88858739b7a4b2707f040564b34ff80ce7590",
+    "psd_features_c.c": "d6be622e0a481c14e0e98d51a83e8261473578ee4ff344c6ee5a68d9d00459a8",
+    "psd_features_c.h": "1f70ce0abcee25ebab2ee701d060435faf4500bb037b7c52162c5b0ef755f227",
+    "psd_model_data.h": "94e754b6210f4fcbce1990d2e25f11c09947e9cd75fd18d52f47dd96ac279c12",
+    "audio_i2s.c": "852dca12bb886a21aa1df3de2dd99ad5830a82110290764b91793944998902f6",
+    "audio_quality_state.c": "f9318a0acc1a75dbac3ba633a3888d36c3419b8199a893a2208257277c716fcd",
+    "asd_commissioning.c": "6c9a7128b5dd05cbb9e25edebc4a0ecc266c5dd8d6bd4caea2a0d7c5e8671ef3",
+    "asd_temporal.c": "610638c6a0fe4aefa7dccaec2611b81a76ebbb630a55f665b550121e2b6ae8fd",
+    "asd_interference.c": "a1b0efe5cc243e2337b9392054bc782c3c54647f3bbbab84ddbc5792b0660927"
+  },
+  "restore": "esptool --chip esp32s3 --port COM3 write_flash 0x10000 backup/original-app.bin; app only, do not erase NVS"
+}

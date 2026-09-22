@@ -1,5 +1,6 @@
 /* Vidi asd_cmd.h. */
 #include "asd_cmd.h"
+#include "e5_measure.h"
 
 #include <stdatomic.h>
 #include <stdio.h>
@@ -50,6 +51,7 @@ static void emit_vbutton(const char *event, const char *result) {
 }
 
 static void dispatch(const char *cmd) {
+    if (e5_measure_command(cmd)) return;
     if (strcmp(cmd, "PRESS") == 0) {
         atomic_store(&pending_event, ASD_BTN_SHORT);
         emit_vbutton("SHORT", "accepted");

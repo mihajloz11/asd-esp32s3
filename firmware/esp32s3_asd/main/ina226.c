@@ -63,6 +63,12 @@ static esp_err_t write_reg(uint8_t reg, uint16_t val) {
     return i2c_master_transmit(dev, tx, sizeof(tx), 200);
 }
 
+#ifdef ASD_E5_MEASURE
+esp_err_t ina226_e5_trigger(uint16_t config) {
+    return write_reg(REG_CONFIG, config);
+}
+#endif
+
 int ina226_bus_scan(uint8_t *first_address) {
     if (bus_up() != ESP_OK) {
         ESP_LOGE(TAG, "ne mogu da podignem I2C bus");

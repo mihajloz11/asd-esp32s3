@@ -27,6 +27,7 @@
 #include "eval_mode.h"
 #include "mic_test.h"
 #include "ina226_test.h"
+#include "e5_measure.h"
 #include "live_capture.h"
 #include "live_adapt.h"
 #include "psd_live.h"
@@ -79,6 +80,7 @@ static void probe_ina226(void) {
                  INA226_I2C_ADDRESS_MIN, INA226_I2C_ADDRESS_MAX);
     }
     ESP_ERROR_CHECK(i2c_del_master_bus(bus_handle));
+    e5_measure_start(found_address);
 }
 
 static void process_clip(void) {
