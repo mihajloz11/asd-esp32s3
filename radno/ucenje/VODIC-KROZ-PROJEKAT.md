@@ -16,6 +16,8 @@ Najbrže učenje: prvo pročitaj odjeljke 1–8 i ispričaj put signala svojim r
 
 
 <!-- BEGIN KEY CODE -->
+Zvuk · **→** I2S / PCM · **→** Welch / 96 brojeva · **→** Skor · **→** Pouzdano i trajno? · **→** Alarm
+
 ### Ključni kod: Ulaz u samostalni PSD tok
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\firmware\esp32s3_asd\main\app_main.c`
@@ -65,6 +67,16 @@ PCM je, recimo, `[0, 100, 180, 100, 0, -100, ...]`. To još nijesu frekvencije. 
 
 
 <!-- BEGIN KEY CODE -->
+### Kako talas postaje niz brojeva
+
+Pritisni „Sljedeći uzorak”. Svaka tačka je jedno očitavanje amplitude. Pokreni animaciju da vidiš kako se niz puni.
+
+Sljedeći uzorak · Pokreni animaciju · Vrati na početak
+
+**Zapamti:** PCM pamti visinu talasa u trenucima uzorkovanja, a ne spisak frekvencija.
+
+Usporena ilustracija: 16 tačaka po periodi izmišljenog talasa. Naš mikrofon daje 16000 uzoraka u sekundi. Prikazane amplitude su normalizovane, nijesu sirovi I2S bitovi.
+
 ### Ključni kod: Frekvencija uzorkovanja i kapacitet bafera
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\firmware\esp32s3_asd\main\audio_i2s.h`
@@ -161,6 +173,16 @@ Za `fs = 16000 Hz`, Nyquistova granica je **8000 Hz**. U praksi ne oslanjamo se 
 
 
 <!-- BEGIN KEY CODE -->
+### Nyquist: isti uzorci mogu skrivati drugi ton
+
+Izaberi ton. Plava linija je originalni idealni kosinus; tačke su uzorci pri 16 kHz. Iznad granice se pojavljuje narandžasti ton sa istim uzorcima.
+
+Ton · 2 kHz · 6 kHz · 10 kHz · 14 kHz
+
+**Zapamti:** Kada uzorci već izgledaju isto, FFT ne može pogoditi koji je originalni ton bio prisutan.
+
+Matematička ilustracija idealnog uzorkovanja, bez anti-alias filtriranja. Ne simulira interni filter INMP441 mikrofona.
+
 ### Ključni kod: Jednostrani spektar: binovi do N/2
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\firmware\esp32s3_asd\main\psd_features_c.c`
@@ -199,6 +221,66 @@ Raniji FFT 1024 plus mel sažimanje mogao je izgubiti fine spektralne razlike. N
 
 
 <!-- BEGIN KEY CODE -->
+### PCM → prozor → FFT: prođi kroz jedan račun
+
+**8192 je broj uzoraka koji zajedno ulaze u jedan FFT.** Nije frekvencija, broj sekundi ni broj traka modela. Ovdje računamo stvarni FFT izmišljenog zvuka sastavljenog od tonova 100 i 110 Hz.
+
+Prethodni korak · Sljedeći korak · Pokreni animaciju · Počni ponovo
+
+**Dvije upotrebe riječi prozor:** vremenski prozor je izabranih 8192 uzorka; Hann prozor je lista 8192 težine kojima ih množimo. FFT zatim dobija tih 8192 umnožaka.
+
+Primjer koristi 16 kHz i periodični Hann kao projekat. FFT radi u JavaScriptu sa decimalnim brojevima; ovo nije izvršavanje C firmvera niti novo mjerenje ventilatora. Brojevi PCM-a prikazani su kao normalizovani float.
+
+### Pojedinačno: snimak, Hann i njihov proizvod
+
+Sve tri slike imaju istu vremensku osu: cijelih 512 ms. Pomjeri uzorak od ruba do sredine i gledaj zašto ga Hann na različitim mjestima različito umanjuje.
+
+Indeks uzorka n
+
+**Ulaz u FFT je treća slika.** Hann nije novi snimljeni zvuk, nego unaprijed izračunata lista težina. U sredini težina iznosi 1, pa tamo uzorak ostaje isti.
+
+Linije su radi preglednosti nacrtane pomoću 801 tačke. Račun koristi svih 8192 uzorka. Označena tačka i ispis koriste tačan izabrani uzorak, ne samo tačke crteža.
+
+### Zumiraj jedan bin: šta tačno stoji u njemu?
+
+Pomjeraj bin oko dvije komponente. **Bin je jedno mjesto u FFT rezultatu**, označeno indeksom `k`. Uz njega je vezana frekvencija `k × 16000 / 8192`. Narandžasti stub je izabrani bin.
+
+Indeks bina k
+
+**Zapamti:** jedan ulazni PCM broj pripada jednom trenutku. Jedan izlazni FFT bin opisuje jednu frekvencijsku tačku koristeći **svih 8192 ulazna uzorka**. Nema pravila „prvi uzorak postaje prvi bin”.
+
+Za bin k algoritam sabira doprinose cijelog segmenta, poredeći ih sa sinusom i kosinusom te frekvencije. Ako signal sadrži sličnu komponentu, doprinosi se manje poništavaju i bin ima veću amplitudu. FFT je brz način da se taj račun uradi za sve binove.
+
+Prikazujemo skaliranu snagu (Re² + Im²), kao za jedan Hann segment u našem spektru snage. Bin nije savršen pravougaoni filter: ton može doprinijeti i susjednim binovima. Sa realnim ulazom od 8192 uzorka imamo 4097 nenegativnih binova, k=0…4096, do 8000 Hz.
+
+### Zašto 8192: ista dva tona, duže posmatranje
+
+Oba računa koriste isti sintetički zvuk, 16 kHz i Hann. Mijenja se samo broj stvarnih uzoraka. Izaberi jedan ton, pa dva bliska tona.
+
+Zvuk · 100 Hz + 110 Hz · Samo 100 Hz
+
+**1024:** 64 ms zvuka, binovi na 15,625 Hz. **8192:** 512 ms zvuka, binovi na 1,953 Hz. Duži snimak pomaže razlikovanju bliskih tonova, ali opis obuhvata duži dio vremena.
+
+**Veza sa našim izborom:** ventilator ima ponavljajuće tonske komponente. Finiji spektralni opis pomogao je ispitivanom PSD pristupu, a račun je stao na ESP32. Broj 8192 je i stepen dvojke, pogodan za naš FFT. Ovo poređenje objašnjava kompromis; ne dokazuje da je 8192 najbolji za svaki zvuk, niti da je samo N donio sav razvojni dobitak.
+
+Oba grafa imaju istu skalu frekvencije i snage. Isprekidane oznake su stvarne frekvencije sintetisanih tonova. Hann širi vrhove, pa razmak binova nije isto što i garantovana razlučivost. Trake vremena ispod pokazuju dužine posmatranja, ne izmjereno kašnjenje alarma.
+
+### Promijeni N, a uzorkovanje ostaje 16 kHz
+
+Dužina FFT-a · 1024 · 2048 · 4096 · 8192 · 16384
+
+Tačke su FFT binovi u opsegu 100–200 Hz. Gušće tačke znače finiji razmak; ovo nije simulacija razdvajanja dva tona.
+
+**Tekst koraka animacije:**
+
+- 1 / 4 · PCM: niz amplituda po vremenu. Ispod je uvećano prvih 160 uzoraka (10 ms). To je samo mali dio ulaza, ne cijelih 8192.
+
+- 2 / 4 · Izdvoji 8192 uzorka, od indeksa 0 do 8191. Oni pokrivaju 512 ms pri 16000 uzoraka/s. Svaki uzorak čeka svoje mjesto u FFT ulazu.
+
+- 3 / 4 · Primijeni Hann: x[n] × w[n]. Rubovi se utišavaju, sredina zadržava punu težinu. To smanjuje problem naglog spoja kraja i početka segmenta.
+
+- 4 / 4 · FFT mijenja opis: sa amplituda kroz vrijeme prelazimo na kompleksne vrijednosti po frekvenciji. Iz njih računamo snagu i crtamo binove. Ovdje vidiš samo opseg 60–150 Hz.
+
 ### Ključni kod: Tri glavne konstante
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\firmware\esp32s3_asd\main\psd_features_c.h`
@@ -270,6 +352,12 @@ Krajnji rubovi cijelog snimka nemaju sve susjede; preklapanje nije čarobno potp
 
 
 <!-- BEGIN KEY CODE -->
+### Isti uzorak, dvije različite težine
+
+Položaj uzorka u zajedničkom dijelu
+
+Plavo: segment [A B]. Narandžasto: segment [B C]. Mijenjaj položaj uzorka i gledaj kako se težine dopunjuju. Za Welch prosječimo snage, ne sabiramo prozore da vratimo originalni signal.
+
 ### Ključni kod: Pravljenje Hann težina
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\firmware\esp32s3_asd\main\psd_features_c.c`
@@ -346,6 +434,26 @@ Ne računamo FFT dužine 160000. Računamo 38 manjih preklopljenih FFT-ova i pro
 
 
 <!-- BEGIN KEY CODE -->
+### PSD: jedan pomiješan zvuk, dvije frekvencije
+
+Pomjeraj jačinu komponente od 300 Hz. Istovremeno gledaj oblik talasa lijevo i raspored snage desno.
+
+Amplituda tona 300 Hz · Pokreni animaciju
+
+**Zapamti:** Lijevo pitaš „kako se zvuk mijenja kroz vrijeme?”, desno „gdje mu je snaga po frekvenciji?”.
+
+Idealna suma sinusoida od 100 i 300 Hz. Desno je teorijska srednja snaga A²/2 svake komponente, a ne rezultat FFT-a ili stvarno mjerenje. Stvarni konačni prozori daju šire vrhove.
+
+### Welch: više spektara → jedan prosjek
+
+Dodaj spektar sljedećeg segmenta. Siva linija pokazuje trenutni segment; plava prosjek svih do sada dodatih segmenata.
+
+Dodaj sljedeći segment · Pokreni animaciju · Vrati na početak
+
+**Zapamti:** Ponavljajuća struktura ostaje u prosjeku; promjenljiva kolebanja se ublažavaju.
+
+Sintetički spektri za prikaz prosječenja, bez izračunavanja FFT-a. U projektu prosječimo 38 preklopljenih segmenata; oni nijesu nezavisni. Prosjek ne garantuje uklanjanje svake buke.
+
 ### Ključni kod: Hann → FFT → snaga
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\firmware\esp32s3_asd\main\psd_features_c.c`
@@ -413,6 +521,8 @@ U fizički korišćenoj verziji **8 od 96 intervala nema FFT bin** i dobija vrij
 
 
 <!-- BEGIN KEY CODE -->
+
+
 ### Ključni kod: STFT snaga → mel filteri → logaritam — istorijski frontend
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\pc\asd\features.py`
@@ -462,6 +572,16 @@ Tri slična računa imaju različitu svrhu:
 
 
 <!-- BEGIN KEY CODE -->
+### Glasnije nije isto što i drugačiji oblik
+
+Mijenjaj zajedničku jačinu ili uključi promjenu jedne trake. Desno se od svake vrijednosti oduzima zajednička sredina.
+
+Zajednički log-pomak · Promijeni samo treću traku
+
+**Zapamti:** Zajednički pomak nestaje centriranjem. Promjena odnosa među trakama ostaje.
+
+Četiri izmišljene log-vrijednosti umjesto 96. Idealizovano, bez praznih traka i poda; u fizički korišćenom baselineu otpornost na glasnoću nije savršena.
+
 ### Ključni kod: Prosjek snage, logaritam i uklanjanje nivoa
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\firmware\esp32s3_asd\main\psd_features_c.c`
@@ -507,6 +627,14 @@ Konkretno: traka sa vrijednostima 9, 10 i 11 malo varira, a traka sa 2, 10 i 18 
 
 Oblak normalnih tačaka može biti izdužen ukoso. Običan lenjir taj oblik ignoriše. Nama treba udaljenost koja pita: „Da li je ovo odstupanje veliko u odnosu na način na koji normalan zvuk inače varira?”
 
+
+<!-- BEGIN KEY CODE -->
+### Isti lenjir, različita neobičnost
+
+Koliko snažno trake rastu zajedno
+
+Ilustrativne dvije dimenzije, nije mjerenje našeg ventilatora. Matrica je [[1, ρ], [ρ, 1]]. Elipsa označava isti Mahalanobisov skor 4. Prikazane tačke imaju istu euklidsku udaljenost od centra.
+<!-- END KEY CODE -->
 ## 10. Mahalanobis i Ledoit–Wolf
 
 **Mahalanobisova udaljenost** pita: „Koliko je ova promjena neobična u odnosu na normalne promjene?” Ako jedna traka u normalnom radu često odstupa za 10, pomak od 3 nije naročit. Ako druga obično odstupa samo za 0,2, pomak od 3 je velik. Uz to se gleda da li se trake mijenjaju zajedno kao inače. Zato dvije jednako udaljene tačke na običnom grafiku mogu dobiti različit skor.
@@ -536,6 +664,16 @@ Postupak zato malo ublaži izmjerene veze i ekstremno mala rasipanja. **Regulari
 
 
 <!-- BEGIN KEY CODE -->
+### Ledoit–Wolf: ublaži nesigurne veze
+
+Pomjeraj jačinu skupljanja. Izdužena elipsa postepeno postaje pravilnija: vrlo uski smjer više ne dobija ekstremnu težinu.
+
+Ilustrativno skupljanje
+
+**Zapamti:** Skupljanje stabilizuje procjenu kovarijanse. Ne uči gdje je kvar.
+
+Dvodimenzionalni primjer: (1 − α) × kovarijansa + α × I, sa varijansama 1. U pravom Ledoit–Wolf postupku α se procjenjuje iz podataka; ne bira se ovim klizačem.
+
 ### Ključni kod: Standardizacija i Ledoit–Wolf na normalnim podacima
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\pc\tools\gen_psd_model_header.py`
@@ -609,6 +747,8 @@ Zašto ne prilagođavamo centar stalno? Zato što bi uređaj postepeni kvar moga
 
 
 <!-- BEGIN KEY CODE -->
+
+
 ### Ključni kod: Početni CAL centar prije moguće K1 korekcije
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\firmware\esp32s3_asd\main\psd_live.c`
@@ -692,6 +832,14 @@ Ako je skor visok i nestabilnost prevelika, HOLD zaustavlja gradnju novog alarma
 
 
 <!-- BEGIN KEY CODE -->
+### Ručno isprobaj pravilo alarma
+
+Ilustrativni pragovi: ulaz 100, izlaz 50. Jedan klik predstavlja jedan približno 10-sekundni prozor.
+
+Skor 120 · pouzdan · Skor 80 · pouzdan · Skor 40 · pouzdan · Skor 120 · HOLD · Počni ponovo
+
+Pojednostavljen prikaz vremenskog pravila i HOLD-a. Ne simulira cijeli firmware: greške senzora, odsustvo mašine, commissioning i trajni događaji imaju dodatnu logiku.
+
 ### Ključni kod: Histereza i brojanje prekoračenja
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\firmware\esp32s3_asd\main\asd_temporal.c`
@@ -771,6 +919,28 @@ Ovo ne dokazuje da mikrofon savršeno mjeri fizički pritisak, da clipping nije 
 
 
 <!-- BEGIN KEY CODE -->
+### Dokaz slaganja: jedan snimak, dva računa
+
+Prođi korake redom. Ključ je da PC i pločica dobiju iste uzorke, ne dva slična snimka.
+
+Sljedeći korak · Vrati na početak
+
+**Zapamti:** Isti ulaz + iste postavke → poređenje izlaza ima smisla.
+
+Šema stvarne metode provjere. Brojevi u zelenoj kutiji su ilustrativni; istorijska izmjerena greška i fajlovi navedeni su u tekstu iznad.
+
+**Tekst koraka animacije:**
+
+- 1. Pločica snimi jedan PCM niz iz mikrofona. Taj niz je zajednički ulaz za poređenje.
+
+- 2. Pločica iz tog PCM-a izračuna svojih 96 obilježja.
+
+- 3. Prenese isti PCM i svoj rezultat na PC. Kontrolni zbir provjerava preneseni niz.
+
+- 4. PC nad tim PCM-om ponovi račun sa istim postavkama.
+
+- 5. Upoređujemo odgovarajuća obilježja i tražimo najveću apsolutnu razliku. Male float razlike nijesu isto što i bit-identičnost.
+
 ### Ključni kod: Test istog WAV-a kroz Python i C
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\pc\tests\test_psd_features_c.py`
@@ -833,6 +1003,16 @@ Finalni PSD tok ne izvršava AE niti TFLM inferencu. U `app_main.c` grana `ASD_P
 
 
 <!-- BEGIN KEY CODE -->
+### Autoenkoder: original → uski kod → rekonstrukcija
+
+Uporedi ulaz i rekonstrukciju. Isprobaj anomaliju koju mreža takođe dobro kopira: mala greška tada nije dokaz normalnog rada.
+
+Primjer · Normalan zvuk, dobra kopija · Anomalija, loša kopija · Anomalija, dobra kopija
+
+**Zapamti:** Autoenkoderov skor mjeri grešku kopiranja. To nije direktna mjera zdravlja mašine.
+
+Izmišljeni vektori od četiri broja, bez izvršavanja neuronske mreže. Služe samo da pokažu ideju i mogući promašaj.
+
 ### Ključni kod: Istorijski Keras autoenkoder
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\pc\asd\model.py`
@@ -897,6 +1077,16 @@ Primjer: od 10 anomalnih snimaka označimo 8 → TPR je 80%. Od 100 normalnih po
 
 
 <!-- BEGIN KEY CODE -->
+### Prag: više detekcija ili manje lažnih alarma?
+
+Svaka tačka je jedan snimak. Plavo označava stvarno normalne snimke, narandžasto stvarne anomalije. Sve desno od praga označavamo kao anomaliju.
+
+Prag skora
+
+**Zapamti:** Niži prag hvata više anomalija, ali može označiti i više normalnih snimaka.
+
+Mali izmišljeni skup za objašnjenje TPR/FPR. Ovo je odluka po jednom skoru, bez pravila tri prozora; nije stvarni ROC rezultat projekta.
+
 ### Ključni kod: Računanje ROC AUC i pAUC
 
 **Puna putanja:** `C:\Users\mihaj\Desktop\master new\pc\asd\eval.py`

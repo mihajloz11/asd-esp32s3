@@ -6,6 +6,8 @@ import html
 import re
 import markdown
 import runpy
+import ast
+from html.parser import HTMLParser
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -71,6 +73,70 @@ def markdown_excerpts(number):
                       f'**Redovi:** {start}–{end}. Doslovni isječak; okolni kod je izostavljen.\n\n'
                       f'```{language}\n{code}\n```')
     return '\n\n'.join(blocks)
+
+
+class LessonMarkdown(HTMLParser):
+    """Prenosi tekst ilustracija u MD; SVG crteže zamjenjuju postojeće slike."""
+    def __init__(self):
+        super().__init__()
+        self.parts = []
+        self.skip = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ('svg', 'script', 'style'):
+            self.skip += 1
+        if self.skip:
+            return
+        if tag == 'h3':
+            self.parts.append('\n\n### ')
+        elif tag in ('p', 'div'):
+            self.parts.append('\n\n')
+        elif tag in ('b', 'strong'):
+            self.parts.append('**')
+        elif tag == 'code':
+            self.parts.append('`')
+        elif tag in ('button', 'label', 'option', 'span'):
+            self.parts.append(' ')
+        elif tag == 'br':
+            self.parts.append('\n')
+
+    def handle_endtag(self, tag):
+        if tag in ('svg', 'script', 'style'):
+            self.skip -= 1
+            return
+        if self.skip:
+            return
+        if tag in ('h3', 'p', 'div'):
+            self.parts.append('\n\n')
+        elif tag in ('b', 'strong'):
+            self.parts.append('**')
+        elif tag == 'code':
+            self.parts.append('`')
+        elif tag in ('button', 'label', 'option', 'span'):
+            self.parts.append(' · ')
+
+    def handle_data(self, data):
+        if not self.skip:
+            self.parts.append(data)
+
+    def markdown(self):
+        text = re.sub(r'[ \t]+', ' ', ''.join(self.parts))
+        text = '\n'.join(line.strip().strip('·').strip() for line in text.splitlines())
+        return re.sub(r'\n{3,}', '\n\n', text).strip()
+
+
+def lesson_markdown(fragment):
+    parser = LessonMarkdown()
+    parser.feed(fragment)
+    return parser.markdown()
+
+
+def animation_steps(script, name):
+    match = re.search(r'const ' + re.escape(name) + r'\s*=\s*(\[.*?\]);', script, re.S)
+    if not match:
+        raise ValueError(f'Nedostaju koraci animacije: {name}')
+    return '\n\n**Tekst koraka animacije:**\n\n' + '\n\n'.join(
+        f'- {text}' for text in ast.literal_eval(match.group(1)))
 
 diagrams = {
 1: '''<div class="flow" aria-label="Put signala"><span>Zvuk</span><b>→</b><span>I2S / PCM</span><b>→</b><span>Welch / 96 brojeva</span><b>→</b><span>Skor</span><b>→</b><span>Pouzdano i trajno?</span><b>→</b><span>Alarm</span></div>''',
@@ -160,7 +226,15 @@ for chunk in chunks[1:]:
     title, body = chunk.split('\n', 1)
     number = int(title.split('.')[0])
     nav.append(f'<a href="#s{number}">{html.escape(title)}</a>')
-    addition = markdown_excerpts(number)
+    # Isti tekst ilustracija i isti redosljed kao u HTML-u, bez ručnog prepisivanja.
+    addition = lesson_markdown(diagrams.get(number, ''))
+    if number == 4:
+        addition += animation_steps(fft_lesson['JS'], 'chainText')
+    if number == 13:
+        addition += animation_steps(visuals['JS'], 'parityDescriptions')
+    code_text = markdown_excerpts(number)
+    if code_text:
+        addition += '\n\n' + code_text
     if number in static_images:
         filename, caption, _ = static_images[number]
         addition += f'\n\n![{caption}]({filename})\n\n*{caption}.*'
