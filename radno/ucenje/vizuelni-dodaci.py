@@ -71,8 +71,8 @@ DIAGRAMS[16] = lab('roc', 'Prag: više detekcija ili manje lažnih alarma?',
 JS = r'''
 // Ilustracije imaju eksplicitno pokretanje. U pozadini se automatski zaustavljaju.
 const lessonTimers = new Map();
-function stopLesson(id){if(lessonTimers.has(id)){clearInterval(lessonTimers.get(id));lessonTimers.delete(id)}const b=$(id);b.textContent='Pokreni animaciju';b.setAttribute('aria-pressed','false')}
-function toggleLesson(id,step,ms){if(lessonTimers.has(id)){stopLesson(id);return}$(id).textContent='Zaustavi animaciju';$(id).setAttribute('aria-pressed','true');lessonTimers.set(id,setInterval(step,ms))}
+function stopLesson(id){if(lessonTimers.has(id)){lessonTimers.delete(id)}const b=$(id);b.textContent='Pokreni animaciju';b.setAttribute('aria-pressed','false')}
+function toggleLesson(id,step,ms){if(lessonTimers.has(id)){stopLesson(id);return}$(id).textContent='Zaustavi animaciju';$(id).setAttribute('aria-pressed','true');lessonTimers.set(id,{step,ms,elapsed:0})}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)[...lessonTimers.keys()].forEach(stopLesson)});
 const lessonObserver=typeof IntersectionObserver==='undefined'?null:new IntersectionObserver(entries=>{for(const e of entries)if(!e.isIntersecting)e.target.querySelectorAll('button[aria-pressed="true"]').forEach(b=>{if(lessonTimers.has(b.id))stopLesson(b.id)})});
 document.querySelectorAll('.visual-lesson').forEach(e=>lessonObserver?.observe(e));
@@ -87,7 +87,7 @@ function drawAlias(){const s=$('aliasPlot'),f=+$('aliasHz').value,fa=f>8000?1600
 $('aliasHz').addEventListener('change',drawAlias);
 let tonePhase=0;
 function drawSpectrum(){const s=$('spectrumPlot'),a=+$('toneAmp').value/100;s.replaceChildren();txt(s,25,28,'VRIJEME · suma dva tona');txt(s,428,28,'FREKVENCIJA · snaga po tonu');line(s,35,143,345,143);line(s,425,238,715,238);const points=[];for(let i=0;i<=600;i++){let t=i/600*.02;const value=Math.sin(2*Math.PI*100*t+tonePhase)+a*Math.sin(2*Math.PI*300*t+3*tonePhase);points.push([35+i/600*310,143-value*45])}curve(s,points,'#087e8b',2);for(const [x,p,label,col]of[[483,.5,'100 Hz','#087e8b'],[629,a*a/2,'300 Hz','#bb5e17']]){el(s,'rect',{x:x-18,y:238-p*340,width:36,height:p*340,fill:col});txt(s,x-24,263,label);txt(s,x-18,Math.max(50,228-p*340),p.toFixed(3))}txt(s,35,263,'0');txt(s,295,263,'20 ms');$('spectrumReadout').textContent=`100 Hz: amplituda 1 → snaga 0,500. 300 Hz: amplituda ${a.toFixed(2)} → snaga ${(a*a/2).toFixed(3)}. Dupla amplituda znači četiri puta veću snagu.`}
-$('toneAmp').addEventListener('input',drawSpectrum);$('tonePlay').addEventListener('click',()=>toggleLesson('tonePlay',()=>{tonePhase+=.12;drawSpectrum()},100));
+$('toneAmp').addEventListener('input',drawSpectrum);$('tonePlay').addEventListener('click',()=>toggleLesson('tonePlay',()=>{tonePhase+=.04;drawSpectrum()},33));
 let welchCount=1;
 function syntheticPower(segment,k){const baseline=.12+.7*Math.exp(-(((k-9)/2)**2))+.42*Math.exp(-(((k-25)/3)**2));return Math.max(.015,baseline+.1*Math.sin(k*1.7+segment*2.3)+.07*Math.cos(k*.9+segment*1.2))}
 function drawWelch(){const s=$('welchPlot');s.replaceChildren();const current=[],average=[];for(let k=0;k<36;k++){let mean=0;for(let j=0;j<welchCount;j++)mean+=syntheticPower(j,k);mean/=welchCount;current.push([40+k*19,225-syntheticPower(welchCount-1,k)*175]);average.push([40+k*19,225-mean*175])}txt(s,30,28,'Sivo: posljednji segment · plavo: prosjek '+welchCount+' segmenta');line(s,40,225,715,225);curve(s,current,'#adb8b8',2);curve(s,average,'#087e8b',3);txt(s,40,259,'niže frekvencije');txt(s,585,259,'više frekvencije');$('welchReadout').textContent=`Dodato ${welchCount}/38 spektara. Za svaki frekvencijski bin sabiramo snage pa dijelimo brojem segmenata. Ne prosječimo PCM talase.`}

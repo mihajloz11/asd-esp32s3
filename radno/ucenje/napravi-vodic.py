@@ -92,7 +92,7 @@ css = '''
 js = r'''
 const $=id=>document.getElementById(id);
 const ns='http://www.w3.org/2000/svg';
-function el(svg,tag,attrs,text){const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e}
+function el(svg,tag,attrs,text){const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,(k==='fill'||k==='stroke')?studioColor(v):v);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e}
 function line(s,x1,y1,x2,y2,c='#b5c9c4',w=1){return el(s,'line',{x1,y1,x2,y2,stroke:c,'stroke-width':w})}
 function txt(s,x,y,t){return el(s,'text',{x,y},t)}
 function drawFFT(){const n=+$('fftN').value,df=16000/n,s=$('fftPlot');s.replaceChildren();line(s,40,125,680,125);for(let f=100;f<=200;f+=25){line(s,40+(f-100)*6.4,120,40+(f-100)*6.4,130);txt(s,28+(f-100)*6.4,154,f+' Hz')}for(let k=Math.ceil(100/df);k*df<=200;k++){let x=40+(k*df-100)*6.4;line(s,x,65,x,122,'#087e8b',2);el(s,'circle',{cx:x,cy:65,r:3,fill:'#087e8b'})}txt(s,40,30,'Isti frekvencijski opseg, drugačiji razmak binova');$('fftReadout').textContent=`N = ${n} → segment ${(n/16).toFixed(0)} ms → razmak ${df.toFixed(3)} Hz. Hop pri 50% preklapanja: ${(n/32).toFixed(0)} ms.`}
@@ -109,6 +109,12 @@ for chapter, visual in visuals['DIAGRAMS'].items():
     diagrams[chapter] = diagrams.get(chapter, '') + visual
 css += visuals['CSS']
 js += visuals['JS']
+fft_lesson = runpy.run_path(str(HERE / 'fft-lekcija.py'))
+diagrams[4] = fft_lesson['HTML'] + diagrams.get(4, '')
+js += fft_lesson['JS']
+studio = runpy.run_path(str(HERE / 'studio-izgled.py'))
+css += studio['CSS']
+js += studio['JS']
 
 
 def svg_frame(title, body, height=310):
@@ -175,7 +181,8 @@ for chunk in chunks[1:]:
 page = f'''<!doctype html>
 <html lang="sr-Latn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Jednostavan vodič kroz ESP32-S3 detektor zvuka ventilatora, sa stvarnim kodom i interaktivnim ilustracijama."><title>Od zvuka do alarma · vodič kroz projekat</title><style>{css}</style></head>
 <body><aside><p class="brand">Od zvuka<br>do alarma.</p><small>ESP32-S3 · vodič za razumijevanje<br>i razgovor sa profesorom</small><nav aria-label="Sadržaj">{''.join(nav)}</nav></aside>
-<main><header><p class="tag">Tvoj projekat, korak po korak</p><h1>Razumij prvo.<br>Onda pokaži u kodu.</h1><p>Od mikrofona i uzoraka do spektra, modela i odluke. Kratke cjeline, pitanja za samoprovjeru i 13 interaktivnih ilustracija kroz cijeli vodič.</p><p class="caption">Provjereno prema lokalnom kodu i zapisima 23.09.2026. · Finalni tok: ASD_PSD_LIVE · Sve radi lokalno, bez interneta. Isječci su preuzeti iz stvarnih fajlova; ilustracije su obrazovne, nijesu eksperimentalni rezultati.</p><div class="toolbar"><button id="print">Štampaj / sačuvaj PDF</button><button id="codes">Zatvori sve isječke koda</button><a href="VODIC-KROZ-PROJEKAT.md">Markdown verzija</a></div></header><noscript>Tekst i kod možeš čitati bez JavaScripta. Interaktivne ilustracije zahtijevaju uključen JavaScript.</noscript>{''.join(sections)}<footer>Izvor teksta: VODIC-KROZ-PROJEKAT.md. Za osvježavanje isječaka poslije promjene koda pokreni napravi-vodic.py. Brojevi redova pripadaju stanju pri generisanju.</footer></main><script>{js}</script></body></html>'''
+<main><header><p class="tag">Tvoj projekat, korak po korak</p><h1>Razumij prvo.<br>Onda pokaži u kodu.</h1><p>Od mikrofona i uzoraka do spektra, modela i odluke. Kratke cjeline, pitanja za samoprovjeru i 17 interaktivnih ilustracija kroz cijeli vodič.</p><p class="caption">Provjereno prema lokalnom kodu i zapisima 23.09.2026. · Finalni tok: ASD_PSD_LIVE · Sve radi lokalno, bez interneta. Isječci su preuzeti iz stvarnih fajlova; ilustracije su obrazovne, nijesu eksperimentalni rezultati.</p><div class="toolbar"><button id="print">Štampaj / sačuvaj PDF</button><button id="codes">Zatvori sve isječke koda</button><a href="VODIC-KROZ-PROJEKAT.md">Markdown verzija</a></div></header><noscript>Tekst i kod možeš čitati bez JavaScripta. Interaktivne ilustracije zahtijevaju uključen JavaScript.</noscript>{''.join(sections)}<footer>Izvor teksta: VODIC-KROZ-PROJEKAT.md. Za osvježavanje isječaka poslije promjene koda pokreni napravi-vodic.py. Brojevi redova pripadaju stanju pri generisanju.</footer></main><script>{js}</script></body></html>'''
+page = page.replace('</header>', '</header>' + studio['HEADER'], 1)
 md_path.write_text(''.join(updated), encoding='utf-8')
 output = HERE / 'VODIC-KROZ-PROJEKAT.html'
 output.write_text(page, encoding='utf-8')
