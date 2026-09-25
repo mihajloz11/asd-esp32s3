@@ -155,14 +155,7 @@ Za oblik jednog ponavljanja talasa trebaju uzorci dovoljno gusto raspoređeni. A
 
 **Kažem:** „PCM pokazuje kako se amplituda mijenja kroz vrijeme. FFT isti komad zvuka predstavlja kao kombinaciju frekvencija. Umjesto da gledam svaki uzorak, gledam koliko su zastupljene pojedine frekvencije.“
 
-```text
-PCM u vremenu                  FFT → snaga po frekvenciji
-amplituda                      snaga
-  /\/\_/\/\                      │       █
- /        \                      │   █   █       █
-────────────→ vrijeme            └──────────────────→ Hz
-  8192 uzorka                        50  100     200
-```
+![PCM signal i njegov spektar snage](slike/pcm-fft.png)
 
 **Prozor/segment** je 8192 uzastopna PCM uzorka, odnosno `8192/16000 = 0,512 s` zvuka. **Bin** je jedna pozicija FFT rezultata, vezana za frekvenciju `k × fs/N`. Npr. bin 512 odgovara `512 × 16000/8192 = 1000 Hz`. Ton između binova doprinosi susjednim binovima; bin nije savršena izolovana kutijica koja prihvata samo jednu frekvenciju.
 
@@ -208,16 +201,7 @@ Nijesmo dokazali da je 8192 univerzalno optimalno. Uspjeh je rezultat promjene c
 
 **Kažem:** „Prije FFT-a postepeno stišam krajeve segmenta Hann prozorom. Time ublažavam vještački nagli prekid na granicama. Sljedeći segment počinje na polovini prethodnog, tako da zvuk koji je bio blizu slabije ponderisanog kraja bude bliže sredini drugog segmenta.“
 
-```text
-PCM blokovi:   A          B          C          D
-segment 1:    [A          B]                  8192 uzorka
-segment 2:               [B          C]       pomak 4096
-segment 3:                          [C          D]
-
-Hann težine u svakom segmentu:     0  /‾‾\  0
-                                       1
-isti blok B ulazi u dva segmenta, svaki put sa drugim težinama
-```
+![Preklapanje segmenata i Hann težine istog bloka B](slike/hann-preklapanje.png)
 
 Ne odsijecam krajeve i ne čuvam posebnu nepreklopljenu sredinu. Koristim cijeli ponderisani segment. U sredini dugog snimka uzorci se pojavljuju u dva susjedna segmenta; početak i kraj imaju rubne izuzetke. Kod Welch-a prosječim **snage spektara**, ne spajam nazad audio signal, pa ovo nije dokaz savršene rekonstrukcije talasa.
 
@@ -323,15 +307,9 @@ Ovo nije potpuna otpornost na udaljenost, šum ili glasnoću. U zamrznutoj imple
 
 **Kažem:** „Prije finalnog PSD-a koristio sam log-mel spektrogram. STFT znači da FFT ponavljam kroz vrijeme i zadržavam svaki rezultat, pa vidim i frekvenciju i vrijeme. Mel filteri zatim grupišu frekvencije u preklopljene trake.“
 
-```text
-             STFT: sačuvam svaki trenutak      Welch: prosječim kroz vrijeme
-vrijeme 1 → [slabo, jako, slabo]             ┐
-vrijeme 2 → [slabo, jako, jako ]             ├→ jedan prosječan spektar
-vrijeme 3 → [slabo, jako, slabo]             ┘
+![STFT snaga po segmentima i Welch prosjek](slike/stft-welch.png)
 
-mel filteri:       /\    /\      /\          ponderisani preklopljeni trouglovi
-                 /  \  /  \    /  \         širi prema višim frekvencijama
-```
+![Preklopljeni mel filteri na frekvencijskoj osi](slike/mel-filteri.png)
 
 Mel traka sabira frekvencijske komponente sa različitim težinama. Na nižim frekvencijama raspored je gušći, a na višim širi, prema mel skali povezanoj sa ljudskim sluhom. To je sažimanje zvuka, nije model koji sam odlučuje šta je anomalija.
 
