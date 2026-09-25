@@ -2,7 +2,7 @@
 
 **Datum:** 20.08.2026.
 
-**Plan:** [PLAN-DORADA-POSLIJE-FAN01.md](PLAN-DORADA-POSLIJE-FAN01.md)
+**Plan:** [PLAN-DORADA-POSLIJE-FAN01.md](../privatno/planovi/PLAN-DORADA-POSLIJE-FAN01.md)
 
 **Live ugovor na dan pisanja (20.08.2026):** `physical-fan-v1.8.0` /
 `physical-fan-artifacts-v1.8.0` ↔ `asd-quality-v1.5.0`
@@ -10,7 +10,7 @@
 > **Zamijenjeno 24.08.2026.** Aktuelan par je `physical-fan-v1.9.0` /
 > `physical-fan-artifacts-v1.9.0` ↔ `asd-quality-v1.6.0` — vidi
 > [protokol-fizicki-ventilator.md](protokol-fizicki-ventilator.md) i
-> [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md). Ostatak ovog dokumenta je
+> [DNEVNIK-NEXT-LEVEL.md](../privatno/dnevnici/DNEVNIK-NEXT-LEVEL.md). Ostatak ovog dokumenta je
 > zapis stanja od 20.08. i ne prepisuje se.
 
 **Zaključak:** softverska arhitektura, testovi i ESP-IDF build su završeni;

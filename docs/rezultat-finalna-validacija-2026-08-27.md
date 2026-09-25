@@ -370,7 +370,7 @@ izolovana kao jedini uzrok promašaja. Potpuno samostalan interfejs, prekid I2S,
 power-loss i potrošnja cijelog lanca nisu potvrđeni. Dodatna mjerenja se ne
 podrazumijevaju kao uslov za završetak dokumentovanja postojećih rezultata.
 
-Ažurirana lista: [`PREOSTALO.md`](PREOSTALO.md).
+Ažurirana lista: [`PREOSTALO.md`](../privatno/planovi/PREOSTALO.md).
 
 ---
 

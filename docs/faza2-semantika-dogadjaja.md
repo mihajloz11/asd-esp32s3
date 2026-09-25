@@ -3,7 +3,7 @@
 **Datum:** 11.08.2026 · **Modul:** [`asd_events.c`](../firmware/esp32s3_asd/main/asd_events.c) /
 [`.h`](../firmware/esp32s3_asd/main/asd_events.h) · **Protokol:** `asd-events-v1.0.0`
 **Testovi:** [`pc/tests/test_asd_events_c.py`](../pc/tests/test_asd_events_c.py) — 89 testova
-**Plan:** [PLAN-NEXT-LEVEL.md](PLAN-NEXT-LEVEL.md), sekcija 4
+**Plan:** [PLAN-NEXT-LEVEL.md](../privatno/planovi/PLAN-NEXT-LEVEL.md), sekcija 4
 
 ---
 
@@ -145,7 +145,7 @@ varira sa udaljenošću i opterećenjem, što DCASE normalizacija skriva.
 ## 7. Zatvaranje Faze 2 — 14.08.2026.
 
 Sve četiri preostale stavke su urađene i provjerene na uređaju
-([DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md), blok B):
+([DNEVNIK-NEXT-LEVEL.md](../privatno/dnevnici/DNEVNIK-NEXT-LEVEL.md), blok B):
 
 1. ✅ `asd_decide()` je **jedini izvor odluke u DET fazi**; ad-hoc brojači iz
    `psd_live.c` su uklonjeni. Faza 1 i dalje drži WAIT/CAL gate-ove — namjerna

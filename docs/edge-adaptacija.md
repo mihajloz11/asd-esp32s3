@@ -4,7 +4,7 @@
 > realizovanu neuralnu deployment fazu i njena mjerenja. Finalni uređaj koristi
 > `psd_shape` + Mahalanobis bez TFLM-a; trenutno stanje je u
 > [odluka-finalni-model.md](odluka-finalni-model.md) i
-> [PREOSTALO.md](PREOSTALO.md).
+> [PREOSTALO.md](../privatno/planovi/PREOSTALO.md).
 
 Kako DCASE AE (PC, fp32, batch) postaje firmware koji radi na 512 KB SRAM-a.
 Svaki korak ispod je implementiran u repou; brojevi za tiny32 su IZMJERENI, ostali

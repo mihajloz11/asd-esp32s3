@@ -8,7 +8,7 @@
 > Obavezno se bilježi i **šta nije radilo** (slijepe ulice), jer to je često
 > vrednija informacija od konačnog rješenja.
 >
-> Živi dnevnik rada (šta je urađeno kog dana) je [dnevnik-projekta.md](dnevnik-projekta.md).
+> Živi dnevnik rada (šta je urađeno kog dana) je [dnevnik-projekta.md](../privatno/dnevnici/dnevnik-projekta.md).
 > Ovdje idu samo problemi.
 
 ## Indeks
@@ -586,7 +586,7 @@ preskočeni blok je obično djelimičan, pa se ostatak istog bloka normalno
 obrađuje. `dropped` ne broji odbačene uzorke.
 
 **Zašto na izvoru, a ne popuštanjem gate-a.** Popuštanje bi bilo
-`warn and continue`, što je u [PLAN-NEXT-LEVEL.md](PLAN-NEXT-LEVEL.md)
+`warn and continue`, što je u [PLAN-NEXT-LEVEL.md](../privatno/planovi/PLAN-NEXT-LEVEL.md)
 eksplicitno zabranjen anti-patern. Ovako mjerni prozor počinje kad se senzor
 ustali, a svaki blok koji uđe u lanac se i dalje ocjenjuje punim gate-om.
 
@@ -652,8 +652,8 @@ oštećena ili zaliven port:
 - membrana ne pretvara zvuk → nikakav akustički signal se ne vidi, ni sinus na
   1 kHz blizu pune skale. **Točno ono što je izmjereno.**
 
-Ovo je i unaprijed predviđen rizik: [lemljenje.md](../radno/elektronika/lemljenje.md) i
-[hardver-lista.md](../radno/elektronika/hardver-lista.md) izričito kažu **„ne dirati sound port"**, i
+Ovo je i unaprijed predviđen rizik: [lemljenje.md](../privatno/elektronika/lemljenje.md) i
+[hardver-lista.md](../privatno/elektronika/hardver-lista.md) izričito kažu **„ne dirati sound port"**, i
 zato su kupljena dva komada. Rastvarači, ultrazvučno čišćenje i bilo koja
 tečnost u portu su za MEMS mikrofon zabranjeni — izopropanol može rastvoriti ili
 deformisati membranu, a i kad ne ošteti, ostavlja ostatak.
@@ -733,12 +733,12 @@ modul #1 je kroz 31 s neprekidnog kucanja dao raspon 1,2 dB i peak ≤ 20.
 
 Time je potvrđena i dijagnoza: podatkovni put je cijelo vrijeme radio, akustički
 nije postojao. Uzrok — izopropanol u sound portu — ostaje najvjerovatnije
-objašnjenje, i pravilo „ne dirati sound port" iz [lemljenje.md](../radno/elektronika/lemljenje.md)
+objašnjenje, i pravilo „ne dirati sound port" iz [lemljenje.md](../privatno/elektronika/lemljenje.md)
 stoji.
 
 **Šta je ovo odblokiralo:** validnu kalibraciju na uređaju, cijelu DET fazu i
 mjerenje lažnih alarma. Sve troje je isti dan prešlo iz `BLOCKED_HARDWARE` u
-`PASS` — vidi [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md), blok A.
+`PASS` — vidi [DNEVNIK-NEXT-LEVEL.md](../privatno/dnevnici/DNEVNIK-NEXT-LEVEL.md), blok A.
 
 **Pouka koja ostaje.** Bring-up mikrofona se ne dokazuje sirovim nivoom, jer
 tiha soba i mrtav akustički put daju sličan broj. Dokazuje se **kontrolisanom

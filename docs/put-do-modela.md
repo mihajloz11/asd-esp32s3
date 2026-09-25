@@ -305,7 +305,7 @@ od near kanala samog. `psd_masked` je pao **ispod slučajnog pogađanja** (0,45)
 razlog je poučan: maska potiskuje trake u kojima je far uporediv sa near, a
 ventilator je glasan u **oba** kanala. Maska je time potiskivala baš signal.
 Ovo je treći put da neka varijanta near−far pada — prvi je bilo prosto
-oduzimanje ([PLAN-NEXT-LEVEL.md](PLAN-NEXT-LEVEL.md), sekcija 2.4).
+oduzimanje ([PLAN-NEXT-LEVEL.md](../privatno/planovi/PLAN-NEXT-LEVEL.md), sekcija 2.4).
 
 **Tranzijentni put (`transient`).** Sam po sebi 0,565. Anomalije ovog
 ventilatora su tonalne i širokopojasne, a spectral flux i crest mjere udarnost.
