@@ -66,6 +66,20 @@ void asd_psd_init(void) {
     }
 
     const double ratio = PSD_MAX_HZ / PSD_MIN_HZ;
+#ifdef ASD_PSD_NONEMPTY_BANDS
+    /* Eksperiment: svaka granica napreduje bar jedan bin, pa nijedna traka nije
+     * prazna i nivo vise ne curi kroz fiksnu vrijednost -20. Isti opseg,
+     * binovi 6..2047 tacno jednom (results/psd_nonempty/2026-09-07). */
+    int first = (int)ceil(PSD_MIN_HZ * ASD_PSD_N_FFT / PSD_SR);
+    for (int band = 0; band < ASD_PSD_BANDS; band++) {
+        double hi = PSD_MIN_HZ * pow(ratio, (double)(band + 1) / ASD_PSD_BANDS);
+        int end = (int)ceil(hi * ASD_PSD_N_FFT / PSD_SR);
+        if (end <= first) end = first + 1;
+        band_start[band] = (uint16_t)first;
+        band_len[band] = (uint16_t)(end - first);
+        first = end;
+    }
+#else
     for (int band = 0; band < ASD_PSD_BANDS; band++) {
         double lo = PSD_MIN_HZ * pow(ratio, (double)band / ASD_PSD_BANDS);
         double hi = PSD_MIN_HZ * pow(ratio, (double)(band + 1) / ASD_PSD_BANDS);
@@ -80,6 +94,7 @@ void asd_psd_init(void) {
         band_start[band] = (uint16_t)(first < 0 ? 0 : first);
         band_len[band] = (uint16_t)count;
     }
+#endif
 }
 
 /* Jedan Welch segment: prozor je vec u fft_re (bez prozorske funkcije). */
