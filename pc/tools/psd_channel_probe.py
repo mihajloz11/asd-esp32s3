@@ -103,7 +103,6 @@ def main():
     clips = train + test
     n_tr = len(train)
     dom = np.array([c.domain for c in clips])
-    lab = np.array([c.label for c in clips])
     is_test = np.arange(len(clips)) >= n_tr
     src = (dom == "source") & ~is_test
     X = psd[src]
@@ -144,7 +143,7 @@ def main():
     d_dig = feats["digitalno_m12"] - feats["digitalno_clean"]
     d_rec = feats["snimljeno_m12"] - feats["snimljeno_clean"]
 
-    print(f"\npromjena po traci koju kvar pravi (log10 snage):")
+    print("\npromjena po traci koju kvar pravi (log10 snage):")
     print(f"{'traka':>5} {'Hz':>13} {'digitalno':>10} {'snimljeno':>10} {'ostalo %':>9}")
     order = np.argsort(np.abs(d_dig))[::-1][:15]
     for b in sorted(order):

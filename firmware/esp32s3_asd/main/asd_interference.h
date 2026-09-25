@@ -21,12 +21,9 @@ typedef enum {
 typedef struct {
     int enabled;
     int developmental;
-    /* Tonalnost je iskljucena iz odluke i to nije stelovanje brojke nego
-     * posljedica onoga sto mjeri: koliko se tonalni potpis prozora razlikuje od
-     * kalibracionog. Stvarna promjena na masini ga pomjeri isto kao i tudji
-     * zvuk, pa je to detektor PROMJENE -- a promjenu skor vec mjeri. Kapija
-     * pouzdanosti mora gledati nesto ortogonalno, a to je slaganje podsegmenata
-     * unutar istog prozora. Granica se svejedno cuva i biljezi. */
+    /* Tonalnost je iskljucena iz odluke: pomjera je i stvarna promjena na
+     * masini, pa bi bila jos jedan detektor promjene. Kapija gleda slaganje
+     * podsegmenata unutar prozora. Granica se ipak cuva i biljezi. */
     int use_tonalness_delta;
     float max_abs_tonalness_delta;
     /* V3 ne prenosi apsolutnu granicu iz drugog polozaja mikrofona. Svaka

@@ -1,31 +1,14 @@
-/* Faza 4 — vremenska odluka na nivou odstupanja.
+/* Faza 4: vremenska odluka na nivou odstupanja. Bez ESP-IDF zavisnosti.
  *
- * Host-testabilno, bez ESP-IDF zavisnosti, isti obrazac kao
- * `audio_quality_state.c`, `asd_events.c` i `asd_operator.c`.
+ * Pravilo je izvedeno iz normalnih podataka (derive_temporal_policy.py ->
+ * asd_temporal_policy_v1.json): tri uzastopna prozora iznad ulaza, izlaz uz
+ * histerezu. EWMA i CUSUM su izmjereni i odbaceni, jer prenose kratku pobudu
+ * kroz vise prozora (5,40 laznih alarma na sat naspram 0). Histereza je
+ * prepolovila epizode na drugom ventilatoru (11,16 -> 5,40 na sat).
+ * U firmveru su ulaz i izlaz apsolutni pragovi iz commissioninga.
  *
- * ZAŠTO POSTOJI. Do sada je alarm palio poslije 3 uzastopna prozora iznad
- * praga. To je bila razumna pretpostavka, ali nikad izmjerena. Faza 4 ju je
- * izmjerila na normalnim podacima
- * ([`derive_temporal_policy.py`](../../../pc/tools/derive_temporal_policy.py) →
- * [`asd_temporal_policy_v1.json`](../../../pc/config/asd_temporal_policy_v1.json))
- * i rezultat je bio djelimično suprotan očekivanju:
- *
- *   - **EWMA i CUSUM su GORI**, ne bolji. Oba PRENOSE kratku pobudu kroz više
- *     prozora, pa jedan glasan udarac drži statistiku iznad praga dovoljno
- *     dugo da dopuni niz od tri. Izmjereno: 3 uzastopna prozora daju 0 lažnih
- *     alarma na sat i reakciju 0,004 na pobudu od jednog prozora, dok
- *     EWMA(0,4) daje 5,40 lažnih na sat i reakciju 0,59. CUSUM je najgori,
- *     0,72. Oba su odbačena mjerenjem, ne mišljenjem.
- *   - **Histereza pomaže**, i to tamo gdje je najvažnije. Uz isti broj lažnih
- *     alarma (0) i isto kašnjenje (3 prozora), izlazni prag na 0,7 ulaznog
- *     prepolovljuje alarmne epizode kad se akustika pomjeri: 11,16 → 5,40
- *     epizoda na sat na klipovima DRUGOG fizičkog ventilatora.
- *   - **Prag je slabija karika od pravila.** U 10 od 40 kalibracija pomjeraj
- *     od 3 sd nikad ne dosegne prag `sredina + 3 sd LOO`, bez obzira na
- *     vremensko pravilo. To je nalaz o pragu i ostaje otvoren.
- *
- * ŠTA OVO NE RADI. Ne odlučuje o prisustvu mašine i ne tvrdi uzrok. Zove ga
- * `asd_events.c` na nivou `DEVIATION`, tek pošto viši nivoi hijerarhije prođu.
+ * Ne odlucuje o prisustvu i ne tvrdi uzrok; zove ga asd_events.c na nivou
+ * DEVIATION.
  */
 #ifndef ASD_TEMPORAL_H
 #define ASD_TEMPORAL_H
@@ -64,13 +47,9 @@ void asd_temporal_init(asd_temporal_t *det, const asd_temporal_policy_t *policy)
  * kalibracija. */
 void asd_temporal_reset(asd_temporal_t *det);
 
-/* Pauzira uspon ka alarmu, ali ZADRŽAVA alarm koji već traje.
- *
- * Zove se kad viši nivo hijerarhije privremeno preuzme odluku — konkretno kad
- * nivo padne ispod gate-a prisustva, pa se odstupanje ne ocjenjuje. Alarm se
- * ne smije obrisati samo zato što je mašina na trenutak utihnula: ništa ga
- * nije poništilo, a tiho gašenje bi značilo da uređaj zaboravi odstupanje koje
- * je stvarno izmjerio. */
+/* Pauzira uspon ka alarmu, ali ZADRZAVA alarm koji traje. Zove se kad visi
+ * nivo hijerarhije preuzme odluku, npr. kad nivo padne ispod gate-a
+ * prisustva. */
 void asd_temporal_suspend(asd_temporal_t *det);
 
 /* Jedan prozor ulazi, stanje alarma izlazi (1 = u alarmu).
