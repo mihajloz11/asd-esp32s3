@@ -1,5 +1,35 @@
 # Eksperimentalni FW sa nepraznim trakama
 
+> **Dopuna 25.09.2026. — implementacija je sada u ovom repou**, na grani
+> `claude/psd-nonempty-bands`, iza zastavice `ASD_PSD_NONEMPTY_BANDS`.
+> Codex grane i `package_psd_nonempty.py` iz teksta ispod nisu potrebni.
+>
+> - Zaglavlje modela pravi `pc/tools/export_psd_nonempty.py` iz
+>   `nonempty_log96_model.npz` (hash iz `frozen.json`); otisak `9018365b…`,
+>   isti kao u paketu od 07.09.
+> - ESP-IDF v5.5.5, `ASD_PSD_LIVE` + `ASD_RESEARCH_TELEMETRY` + zastavica:
+>   build prolazi, aplikacija 354 480 B. Tri niza modela u ELF-u su
+>   bit-identična zamrznutom modelu; bin sadrži
+>   `EXPERIMENTAL frontend=nonempty_log96` i novi otisak, a ne stari.
+>   (Komponente u toj provjeri su sa GitHub-a, pa veličina ne mora biti ista
+>   kao u lokalnom buildu.)
+> - Bez zastavice ista grana daje stari front-end i stari model; jedina razlika
+>   prema `master`-u je zasićenje audio uzoraka (`audio_pcm.h`, +48 B).
+> - Host upisuje `psd_nonempty_bands_build_flag_confirmed` u `provenance.json`.
+> - Host testovi: `pc/tests/test_psd_nonempty_c.py`, `pc/tests/test_audio_pcm_c.py`.
+>
+> Build za probu, u ESP-IDF PowerShell okruženju:
+>
+> ```powershell
+> Set-Location firmware/esp32s3_asd
+> $env:ASD_PSD_LIVE = '1'; $env:ASD_RESEARCH_TELEMETRY = '1'; $env:ASD_PSD_NONEMPTY_BANDS = '1'
+> idf.py -B build reconfigure build flash monitor
+> ```
+>
+> Za povratak na testirani firmware: ukloniti `ASD_PSD_NONEMPTY_BANDS` iz
+> okruženja i ponovo `idf.py reconfigure build` (P2), ili flešovati sačuvani
+> rollback paket. Fizička proba još nije urađena.
+
 Build je prošao. Aplikacija ima **355 104 B**, a SHA-256 je
 `c78770f2552e6c8fc6e53e2d4fd539020e5765d16504706499a728ca90beeb8c`.
 Esptool potvrđuje checksum i validacioni hash slike. Provjerene su sve tri

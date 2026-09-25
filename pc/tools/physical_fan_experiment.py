@@ -140,6 +140,8 @@ RELEVANT_FILES = (
     FIRMWARE_DIR / "main" / "psd_features_c.c",
     FIRMWARE_DIR / "main" / "psd_features_c.h",
     FIRMWARE_DIR / "main" / "psd_model_data.h",
+    FIRMWARE_DIR / "main" / "psd_model_nonempty_data.h",
+    FIRMWARE_DIR / "main" / "audio_pcm.h",
     ROOT / "pc" / "config" / "asd_quality_policy_v1.json",
     ROOT / "pc" / "config" / "asd_presence_policy_v1.json",
     ROOT / "pc" / "config" / "asd_commissioning_policy_v1.json",
@@ -378,6 +380,16 @@ def build_has_research_telemetry() -> bool:
     )
 
 
+def build_has_nonempty_bands() -> bool:
+    """Eksperimentalni front-end; takav run se ne mijesa sa starim buildom."""
+    ninja = FIRMWARE_DIR / "build" / "build.ninja"
+    if not ninja.is_file():
+        return False
+    return "-DASD_PSD_NONEMPTY_BANDS" in ninja.read_text(
+        encoding="utf-8", errors="replace",
+    )
+
+
 def collect_provenance(args: argparse.Namespace, ports: list[dict[str, Any]]) -> dict[str, Any]:
     build_bin = FIRMWARE_DIR / "build" / "esp32s3_asd.bin"
     project_json = FIRMWARE_DIR / "build" / "project_description.json"
@@ -419,6 +431,7 @@ def collect_provenance(args: argparse.Namespace, ports: list[dict[str, Any]]) ->
         "firmware": {
             "psd_live_build_flag_confirmed": build_is_psd_live(),
             "research_telemetry_build_flag_confirmed": build_has_research_telemetry(),
+            "psd_nonempty_bands_build_flag_confirmed": build_has_nonempty_bands(),
             "build_bin": str(build_bin.relative_to(ROOT)),
             "build_bin_sha256": sha256_file(build_bin),
             "build_bin_bytes": build_bin.stat().st_size if build_bin.is_file() else None,
