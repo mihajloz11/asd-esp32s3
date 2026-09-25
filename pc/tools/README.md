@@ -15,6 +15,7 @@ Putanje se ne mijenjaju jer na njih upućuju dokumenti i sačuvani rezultati.
 | Analiza fizičkih proba | `analyze_trial_features.py`, `diag_calibration_loo.py`, `probe_psd_gain.py` |
 | PC ↔ uređaj | `psd_verify_compare.py`, `live_compare.py`, `mic_capture.py` |
 | Revizija repoa | `audit_repository.py`, `audit_git_history.py`, `verify_frozen_artifacts.py` |
+| Kopija za predaju | `napravi_predaju.py` (bez `privatno/` i `radovi/`, sa provjerom curenja) |
 
 ## Probe preko zvučnika (avgust 2026)
 
