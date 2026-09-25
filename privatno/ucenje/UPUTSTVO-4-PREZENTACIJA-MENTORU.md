@@ -13,7 +13,7 @@ Brojke su iz revizije 06.09.2026. Ako ti treba dublje: hronologija u 11 etapa je
 u [`UPUTSTVO-1`](UPUTSTVO-1-KAKO-JE-NASTAO-PROJEKAT.md), teorija u
 [`UPUTSTVO-2`](UPUTSTVO-2-TEORIJA-OD-NULE.md).
 
-> Ne šalji profesoru `privatno/planovi/sazetak-za-mentora.md` — odbačeni prijedlog teme iz jula.
+> Ne šalji profesoru `privatno/istorija/planovi/sazetak-za-mentora.md` — odbačeni prijedlog teme iz jula.
 
 ---
 
@@ -43,7 +43,7 @@ nikad mijenjan: **AUC ≥ 0,80** na ventilatoru, uz protokol bez curenja podatak
 Oprema: ESP32-S3, mikrofon INMP441, ventilator, sve na protobordu MB-102.
 Podaci za učenje: DCASE 2026 dev skup, 990 normalnih snimaka ventilatora.
 
-**Otvori:** [`cilj-modela.md`](../../docs/cilj-modela.md)
+**Otvori:** [`cilj-modela.md`](../../docs/model/cilj-modela.md)
 
 > **Kaži:** „Kriterij AUC ≥ 0,80 je zapisan na početku i nije mijenjan poslije
 > rezultata."
@@ -66,7 +66,7 @@ Kako je posao podijeljen: na PC-u se unaprijed nauči samo *oblik varijacije*
 zvuka ventilatora uopšte — kovarijansa 96×96 iz 990 normalnih snimaka. Na licu
 mjesta se uči *centar* (kako baš ovaj primjerak zvuči) i prag.
 
-**Otvori:** [`put-do-modela.md`](../../docs/put-do-modela.md) — svi pokušaji,
+**Otvori:** [`put-do-modela.md`](../../docs/model/put-do-modela.md) — svi pokušaji,
 uključujući neuspjele
 
 > **Kaži:** „Obilježje nosi više od backenda. Dvanaest promjena scoring-a dalo
@@ -164,7 +164,7 @@ skupi tri uzastopna prekoračenja.
 nestabilni. Tražena osobina, ali četiri prozora govora i dva vrata nisu dokaz
 opšte otpornosti.
 
-**Otvori:** [`rezultat-finalna-validacija-2026-08-27.md`](../../docs/rezultat-finalna-validacija-2026-08-27.md)
+**Otvori:** [`rezultat-finalna-validacija-2026-08-27.md`](../../docs/probe/rezultat-finalna-validacija-2026-08-27.md)
 
 > **Kaži:** „Ton je prošao, papirić je FAIL. Model je promjenu vidio, pravilo
 > odlučivanja je nije propustilo dalje."
@@ -184,7 +184,7 @@ opšte otpornosti.
   revizijom 06.09., potvrđeno numerički, uticaj na tačnost nije izmjeren —
   **model nisam mijenjao pred predaju.**
 
-**Otvori:** [`PREOSTALO.md`](../planovi/PREOSTALO.md)
+**Otvori:** [`PREOSTALO.md`](../PREOSTALO.md)
 
 > **Kaži:** „Zadnju stavku sam našao sam, pregledom sopstvenog rada pred predaju.
 > Nisam je krpio da rezultat izgleda bolje."

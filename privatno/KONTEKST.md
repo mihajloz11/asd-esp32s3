@@ -5,10 +5,15 @@ od pogrešnog ili zastarjelog stanja.
 
 **Revizija 06.09.2026.** Aktuelan pregled je u
 [README-u](../README.md), [nalazima revizije](../results/repository_audit/2026-09-06/README.md)
-i [preostalim stavkama](planovi/PREOSTALO.md). Stariji sažeci ispod ostaju kontekst
+i [preostalim stavkama](PREOSTALO.md). Stariji sažeci ispod ostaju kontekst
 razvoja; kod i sirovi artefakti imaju prednost. Papirić ima GUIDED25 FAIL,
 validna telemetrija nije prolaz probe, a oporavak nakon tona nije izmjeren.
 Posljednji firmware se čuva bez izmjena i novih fizičkih proba.
+
+**25.09.2026:** `docs/` je podijeljen na `model/`, `uredjaj/` i `probe/`, a
+`privatno/` na aktuelno (ovaj fajl, `PREOSTALO.md`, `ideje.md`, `elektronika/`,
+`ucenje/`) i `istorija/`. Mapa starih putanja je na dnu
+[`docs/README.md`](../docs/README.md).
 
 ---
 
@@ -24,8 +29,8 @@ udaljenost od lokalnog centra u kovarijansi naučenoj na PC-u
 u finalnom putu. Uređaj se sam kalibriše na ventilatoru koji nikad nije čuo i
 sam javlja odstupanje, bez računara.
 
-Metodologija i plan rada: [`plan-master-rada.md`](planovi/plan-master-rada.md).
-Nepromjenjivi cilj modela: [`docs/cilj-modela.md`](../docs/cilj-modela.md).
+Prvobitni plan (jul, AE/TFLM smjer, istorijski): [`plan-master-rada-jul.md`](istorija/planovi/plan-master-rada-jul.md).
+Nepromjenjivi cilj modela: [`docs/model/cilj-modela.md`](../docs/model/cilj-modela.md).
 
 ---
 
@@ -66,24 +71,23 @@ autoriteta je ovaj:
 
 | Pitanje | Autoritativni izvor |
 |---|---|
-| Šta još treba uraditi | [`privatno/planovi/PREOSTALO.md`](planovi/PREOSTALO.md) |
-| **Finalna validacija firmvera na pločici** | [`docs/rezultat-finalna-validacija-2026-08-27.md`](../docs/rezultat-finalna-validacija-2026-08-27.md) |
+| Šta još treba uraditi | [`privatno/PREOSTALO.md`](PREOSTALO.md) |
+| **Finalna validacija firmvera na pločici** | [`docs/probe/rezultat-finalna-validacija-2026-08-27.md`](../docs/probe/rezultat-finalna-validacija-2026-08-27.md) |
 | Gdje je projekat sada, ukratko | [`README.md`](../README.md) |
-| Konsolidacija svih faza poslije FAN01 | [`docs/DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md`](../docs/DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md) |
+| Konsolidacija svih faza poslije FAN01 | [`docs/uredjaj/dorada-poslije-fan01.md`](../docs/uredjaj/dorada-poslije-fan01.md) |
 | Status kritičnih nalaza revizije | [`privatno/revizije/REVIEW-KRITICNO-2026-08-20.md`](revizije/REVIEW-KRITICNO-2026-08-20.md) |
-| Zaključani protokol fizičkog runa | [`docs/protokol-fizicki-ventilator.md`](../docs/protokol-fizicki-ventilator.md) |
-| Vođeni 25-minutni test | [`docs/GUIDED25-TEST-VENTILATORA.md`](../docs/GUIDED25-TEST-VENTILATORA.md) |
-| Rezultat prvog fizičkog testa | [`docs/rezultat-fan01-2026-08-16.md`](../docs/rezultat-fan01-2026-08-16.md) |
+| Zaključani protokol fizičkog runa | [`docs/probe/protokol-fizicki-ventilator.md`](../docs/probe/protokol-fizicki-ventilator.md) |
+| Vođeni 25-minutni test | [`docs/probe/guided25.md`](../docs/probe/guided25.md) |
+| Rezultat prvog fizičkog testa | [`docs/probe/rezultat-fan01-2026-08-16.md`](../docs/probe/rezultat-fan01-2026-08-16.md) |
 | Sve zamke koje su već koštale vremena (P1–P28) | [`docs/problemi-i-rjesenja.md`](../docs/problemi-i-rjesenja.md) |
 | Hronologija svega urađenog | [`privatno/dnevnici/DNEVNIK-NEXT-LEVEL.md`](dnevnici/DNEVNIK-NEXT-LEVEL.md), [`privatno/dnevnici/dnevnik-projekta.md`](dnevnici/dnevnik-projekta.md) |
-| Elektronika i lemljenje | [`privatno/elektronika/plan-dvije-plocice.md`](elektronika/plan-dvije-plocice.md) + `privatno/elektronika/sema-sklopa.pdf` |
+| Elektronika, sklop i potrošnja | [`privatno/elektronika/README.md`](elektronika/README.md) |
 
-**Puni indeks sa oznakom aktuelno/istorijsko:** [`docs/INDEKS.md`](../docs/INDEKS.md).
+**Puni indeks sa oznakom aktuelno/istorijsko:** [`docs/README.md`](../docs/README.md).
 
-Dokumenti sa banerom „ISTORIJSKI" na vrhu (`PLAN.md`, `PLAN-NEXT-LEVEL.md`,
-`PLAN-ZAVRSNICA.md`, `sazetak-za-mentora.md`, `edge-adaptacija.md`,
-`rad-poglavlje-3-teorija.md`, `analiza-stanja-i-sljedeci-koraci-2026-08-09.md`)
-su **istraživački trag, ne današnja TODO lista**. Iz njih se ne izvlači trenutni status.
+Sve u [`privatno/istorija/`](istorija/) (stari planovi, handoff, nacrti
+poglavlja) i `docs/model/istrazivanja/edge-adaptacija.md` je **istraživački
+trag, ne današnja TODO lista**. Iz njih se ne izvlači trenutni status.
 
 ---
 
@@ -102,7 +106,7 @@ Ovo je izmjereno, ne prepisano:
 kalibriše, sam izvodi prag iz normal-only prozora, odbija nepouzdan prozor
 (`OBSERVATION_HOLD`) i prijavljuje konstantnu promjenu (`ANOMALY`,
 `ANOMALY_SUSTAINED`). Detalji i sve granice:
-[`docs/rezultat-finalna-validacija-2026-08-27.md`](../docs/rezultat-finalna-validacija-2026-08-27.md).
+[`docs/probe/rezultat-finalna-validacija-2026-08-27.md`](../docs/probe/rezultat-finalna-validacija-2026-08-27.md).
 
 Ono što je i dalje **nedokazano** (i mora ostati tako napisano):
 
@@ -147,7 +151,7 @@ Trening/evaluacija/artefakti za firmware: vidi „Workflow" u [`README.md`](../R
 
 Fizički vođeni test: `POKRENI-GUIDED25.cmd` → `pc/tools/guided25_launcher.ps1`;
 uputstvo za operatera u
-[`docs/KAKO-SAMOSTALNO-POKRENUTI-GUIDED25.md`](../docs/KAKO-SAMOSTALNO-POKRENUTI-GUIDED25.md).
+[`docs/probe/guided25.md`](../docs/probe/guided25.md).
 
 ---
 
@@ -161,12 +165,12 @@ pc/tools/       generatori C headera, benchmarci, host eksperiment
 pc/config/      zaključane politike (*.json) — CI provjerava saglasnost sa firmverom
 pc/tests/       host testovi + PC↔C parity preko ctypes
 firmware/esp32s3_asd/main/   ESP-IDF v5.x izvori
-docs/           dokumentacija (vidi docs/INDEKS.md)
+docs/           dokumentacija (vidi docs/README.md)
 models/         PSD .npz/meta + istorijski .keras/.tflite artefakti
 results/        results.csv, logovi, fizički runovi, kanonska evaluacija
 data/           DCASE 2026 dev skup (gitignored)
-privatno/       lično, ne ide uz predaju: KONTEKST, planovi, dnevnici, revizije,
-                učenje, elektronika, fotografije; vidi privatno/README.md
+privatno/       lično, ne ide uz predaju: KONTEKST, PREOSTALO, ideje, dnevnici,
+                revizije, učenje, elektronika, istorija; vidi privatno/README.md
 radovi/         rukopisi (master, TELFOR); ne ide uz predaju dok nisu objavljeni
 ```
 

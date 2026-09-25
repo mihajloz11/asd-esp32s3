@@ -25,7 +25,7 @@ Sažeci u radovima koriste samo `protocol_valid=1`, `condition_confirmed=1`
 i `transition_window=0`. HOLD prozori ostaju u metrikama. To daje 43/65
 i 99/115 DET prozora. Grafikoni prikazuju i ostale DET zapise radi kontinuiteta.
 Stari generisani sažeci ostaju izvorni artefakti; za ispravljeno tumačenje
-koristiti [pregled proba](../docs/rezultat-finalna-validacija-2026-08-27.md).
+koristiti [pregled proba](../docs/probe/rezultat-finalna-validacija-2026-08-27.md).
 
 Razvojni AUC, simulacija vremenskog pravila, PC–C poređenje, replay i fizička
 proba predstavljaju različite vrste dokaza. Njihove brojeve ne treba spajati

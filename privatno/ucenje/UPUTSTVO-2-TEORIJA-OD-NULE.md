@@ -1,7 +1,7 @@
 # Uputstvo 2 — teorija od nule: zvuk, Furije, ML, metrike, TFLite, drajver
 
 > Razvojni materijal. Za ispravljeno tumačenje završnih proba i filter prozora
-> važi [revizija rezultata od 06.09.2026.](../../docs/rezultat-finalna-validacija-2026-08-27.md). Starije brojke i planovi ovdje nisu novi dokazi.
+> važi [revizija rezultata od 06.09.2026.](../../docs/probe/rezultat-finalna-validacija-2026-08-27.md). Starije brojke i planovi ovdje nisu novi dokazi.
 
 **Napisano:** 01.09.2026. · **Za koga:** za razumijevanje, ne za citiranje.
 
@@ -125,7 +125,7 @@ gubimo vremensku rezoluciju.
 
 Za mašinu koja lupa (ventil, udar ležaja) izbor bi bio suprotan — i to je tačno
 razlog zašto naš model *ne* generalizuje na `valve` i `slider`
-([`put-do-modela.md`](../../docs/put-do-modela.md), faza 4b).
+([`put-do-modela.md`](../../docs/model/put-do-modela.md), faza 4b).
 
 ---
 
@@ -228,7 +228,7 @@ Zanimljiv izmjeren detalj iz našeg skupa: tri „brzine" (`spd_1/2/3`) DCASE
 ventilatora **imaju istu obrtnu frekvenciju** (vrhovi 68,4 / 76,2 / 78,1 Hz se
 poklapaju unutar jednog bina), a razlikuju se samo po širokopojasnom nivou. Zato
 je cijela ideja „kalibracija po radnom režimu" pala na nulu razlike
-([`put-do-modela.md`](../../docs/put-do-modela.md), faza 6).
+([`put-do-modela.md`](../../docs/model/put-do-modela.md), faza 6).
 
 ---
 
@@ -574,7 +574,7 @@ AUC je istraživačka metrika. Za uređaj se prijavljuju:
 | `dropped` | izgubljenih audio uzoraka | **0** |
 | `compute_ms` | vrijeme računa po prozoru od 10 s | 716–728 ms |
 
-> Pravilo iz [`cilj-modela.md`](../../docs/cilj-modela.md): *„Za stvarni uređaj AUC nije
+> Pravilo iz [`cilj-modela.md`](../../docs/model/cilj-modela.md): *„Za stvarni uređaj AUC nije
 > dovoljan."*
 
 ### 10.5 Zašto se rezultati prijavljuju kao „± std" i sa uparenim seedovima

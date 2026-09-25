@@ -1,5 +1,5 @@
 """Generiše samostalni HTML iz vodiča i stvarnih isječaka lokalnog koda.
-Pokretanje iz korijena: .venv/Scripts/python.exe radno/ucenje/napravi-vodic.py
+Pokretanje iz korijena: .venv/Scripts/python.exe privatno/ucenje/napravi-vodic.py
 """
 from pathlib import Path
 import html

@@ -1,19 +1,19 @@
 # Uputstvo 3 — literatura: koji radovi, gdje se koriste, šta u njima čitati
 
 > Razvojni materijal. Za ispravljeno tumačenje završnih proba i filter prozora
-> važi [revizija rezultata od 06.09.2026.](../../docs/rezultat-finalna-validacija-2026-08-27.md). Starije brojke i planovi ovdje nisu novi dokazi.
+> važi [revizija rezultata od 06.09.2026.](../../docs/probe/rezultat-finalna-validacija-2026-08-27.md). Starije brojke i planovi ovdje nisu novi dokazi.
 
 **Napisano:** 01.09.2026.
 
 > **Prvo, pošteno:** PDF-ovi ovih radova **nisu preuzeti u repo**. U projektu
 > postoje samo citati i linkovi — u
-> [`../../plan-master-rada.md`](../planovi/plan-master-rada.md) (sekcije 2 i 12),
-> [`istrazivanje-psd-model.md`](../../docs/istrazivanje-psd-model.md) (dno) i u spisku
+> [`../../plan-master-rada.md`](../istorija/planovi/plan-master-rada-jul.md) (sekcije 2 i 12),
+> [`istrazivanje-psd-model.md`](../../docs/model/istrazivanja/istrazivanje-psd-model.md) (dno) i u spisku
 > literature master rada
 > ([`../../radovi/master-rad/rad_tekst.py`](../../radovi/master-rad/rad_tekst.py),
 > funkcija `_literatura`). Ovaj dokument ih sabira na jedno mjesto i za svaki
 > kaže **zašto postoji u ovom radu** i **šta u njemu treba pročitati**.
-> Preuzimanje PDF-ova: vidi [odjeljak 5](#5-kako-preuzeti-pdf-ove).
+> Preuzimanje PDF-ova: vidi [odjeljak 8](#8-kako-preuzeti-pdf-ove).
 
 Oznake važnosti:
 
@@ -78,7 +78,7 @@ kojih je DCASE 2026 sastavljen — citiraju se, ne koriste direktno.
 udaljenost, uslovi) i **spisak tipova kvarova**. To je jedini dio koji ti treba
 da bi u radu mogao napisati *šta „anomalija" u ovom skupu zapravo jeste* — a to
 je važno, jer je izmjereno da DCASE anomalija odgovara kvaru od oko −30 dB, što
-je vrlo suptilno ([`put-do-modela.md`](../../docs/put-do-modela.md), faza 5).
+je vrlo suptilno ([`put-do-modela.md`](../../docs/model/put-do-modela.md), faza 5).
 
 ---
 
@@ -137,7 +137,7 @@ rad popunjava.
   put koji je odrađen za istorijski TFLM mod; domen (EKG) nije bitan.
 - [15] i [16] — za tabelu poređenja: šta jesu i **šta nisu** uradili (nema DCASE
   protokola, nema domain-shift evaluacije, nije MCU klasa…). Ta tabela je u
-  [`../../plan-master-rada.md`](../planovi/plan-master-rada.md), sekcija 2.3.
+  [`../../plan-master-rada.md`](../istorija/planovi/plan-master-rada-jul.md), sekcija 2.3.
 - [18] — **poglavlja o kvantizaciji i o TFLM areni**, ako želiš temeljno
   razumijevanje umjesto samo upotrebe.
 
@@ -145,8 +145,8 @@ rad popunjava.
 
 ## 5. Radovi na koje se projekat oslanjao u istraživanju modela
 
-Ovi se pominju u [`istrazivanje-psd-model.md`](../../docs/istrazivanje-psd-model.md) i
-[`put-do-modela.md`](../../docs/put-do-modela.md) kao potvrda ili kontrast nalazima.
+Ovi se pominju u [`istrazivanje-psd-model.md`](../../docs/model/istrazivanja/istrazivanje-psd-model.md) i
+[`put-do-modela.md`](../../docs/model/put-do-modela.md) kao potvrda ili kontrast nalazima.
 
 | # | Rad | Link | Zašto |
 |---|---|---|---|

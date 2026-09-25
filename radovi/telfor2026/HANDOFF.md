@@ -50,7 +50,7 @@ uključujući proba koja nije prošla i uzrok koji se vidi u podacima.
 | Jedna epizoda po probi, 130 s do trajnog odstupanja | `firmware_events.csv` obje probe |
 | Ulazni prag = maksimum 44 DERIVE prozora | `serial.log`, `COMMISSION … phase=COMMISSION_DERIVE` |
 | Nivo nasuprot obliku, 1 kHz traka, 36 prozora, 12 266–19 561 | `results/trial_features/2026-09-25/summary.json` |
-| 716–728 ms, 354 784 B, PC↔C 9,5e−7, PC↔uređaj 1,7e−6 | `docs/rezultat-finalna-validacija-2026-08-27.md`, `docs/hardver-verifikacija.md` |
+| 716–728 ms, 354 784 B, PC↔C 9,5e−7, PC↔uređaj 1,7e−6 | `docs/probe/rezultat-finalna-validacija-2026-08-27.md`, `docs/uredjaj/hardver-verifikacija.md` |
 
 Minute u tekstu (20,5, 23,3, 29,4) računate su od početka CAL faze, isto
 kao osa Sl. 2.

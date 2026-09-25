@@ -46,6 +46,8 @@
 ---
 
 <a name="p1"></a>
+<a id="p1"></a>
+
 ## P1 — DCASE 2026 klipovi su stereo, a pipeline ih je čitao kao mono
 
 **Datum:** 19.07.2026 · **Oblast:** PC pipeline / eval klipovi · **Status:** riješeno
@@ -70,6 +72,8 @@ WAV-a. Ovo je bio jedini razlog neslaganja; featuring lanac je od početka bio i
 ---
 
 <a name="p2"></a>
+<a id="p2"></a>
+
 ## P2 — Eval build ostaje "zalijepljen": promjena env varijable ne prekonfiguriše CMake
 
 **Datum:** 19.07.2026, ponovo potvrđeno 06.08 · **Oblast:** build sistem · **Status:** riješeno
@@ -108,6 +112,8 @@ flagove**, ne pamćenje o tome šta je zadnje buildovano.
 ---
 
 <a name="p3"></a>
+<a id="p3"></a>
+
 ## P3 — Konstantan score bez mikrofona izgleda kao potpuno ispravan rad
 
 **Datum:** 06.08.2026 · **Oblast:** dijagnostika · **Status:** riješeno (postao dijagnostički alat)
@@ -135,6 +141,8 @@ statistiku signala.
 ---
 
 <a name="p4"></a>
+<a id="p4"></a>
+
 ## P4 — Task watchdog upisuje svoj tekst usred base64 toka
 
 **Datum:** 06.08.2026 · **Oblast:** I2S bring-up / serijski prenos · **Status:** riješeno
@@ -192,6 +200,8 @@ ili ide potpuno odvojenim kanalom.
 ---
 
 <a name="p5"></a>
+<a id="p5"></a>
+
 ## P5 — Skript je snimio neispravan WAV bez ijedne greške
 
 **Datum:** 06.08.2026 · **Oblast:** alat (`pc/tools/mic_capture.py`) · **Status:** riješeno
@@ -218,6 +228,8 @@ Neispravan snimak zvuka izgleda kao realan zvuk.
 ---
 
 <a name="p6"></a>
+<a id="p6"></a>
+
 ## P6 — Rizik C1 zatvoren: `>>14` je tačan shift za INMP441
 
 **Datum:** 06.08.2026 · **Oblast:** I2S · **Status:** zatvoreno, potvrđeno mjerenjem
@@ -250,6 +262,8 @@ kompromis u korist rezolucije, a ne podrazumijevana vrijednost.
 ---
 
 <a name="p7"></a>
+<a id="p7"></a>
+
 ## P7 — `i2s_common: dma frame num is out of dma buffer size, limited to 1023`
 
 **Datum:** 06.08.2026 · **Oblast:** I2S drajver · **Status:** benigno, dokumentovano
@@ -269,6 +283,8 @@ validirani u E4 mjerenjima.
 ---
 
 <a name="p8"></a>
+<a id="p8"></a>
+
 ## P8 — INA226 se ne javlja: obje I2C linije su tvrdo vezane na 3V3
 
 **Datum:** 06.08.2026 · **Oblast:** I2C bring-up · **Status:** RIJEŠENO 10.08.2026
@@ -345,6 +361,8 @@ linija ide isključivo open-drain, gdje neuspjeh znači samo da linija ostane vi
 ---
 
 <a name="p9"></a>
+<a id="p9"></a>
+
 ## P9 — Tri dijagnostička testa zaredom dala pogrešan zaključak
 
 **Datum:** 06.08.2026 · **Oblast:** metodologija · **Status:** riješeno (pouka)
@@ -370,6 +388,8 @@ usmjerava sljedeći sat rada u pogrešnom pravcu.
 ---
 
 <a name="p10"></a>
+<a id="p10"></a>
+
 ## P10 — Kalibracija uči ventilator laptopa kao „normalno stanje"
 
 **Datum:** 08.08.2026 · **Oblast:** on-device kalibracija · **Status:** riješeno
@@ -405,6 +425,8 @@ trenutku**. Alat koji pokreće mjerenje je i sam izvor smetnje.
 ---
 
 <a name="p11"></a>
+<a id="p11"></a>
+
 ## P11 — Jednostrani prag ne vidi pola stvarnih promjena u okruženju
 
 **Datum:** 08.08.2026 · **Oblast:** detekcija · **Status:** riješeno
@@ -449,6 +471,8 @@ dvostran, ili se referentno stanje mora poklapati sa domenom treninga.
 ---
 
 <a name="p12"></a>
+<a id="p12"></a>
+
 ## P12 — Windows konzola zaustavila eksperiment na BHS Unicode ispisu
 
 **Datum:** 09.08.2026 · **Oblast:** PC alati · **Status:** riješeno
@@ -473,6 +497,8 @@ postaviti UTF-8 prije prvog ispisa.
 ---
 
 <a name="p13"></a>
+<a id="p13"></a>
+
 ## P13 — Spojeni DCASE klipovi prave lažnu anomaliju na šavu
 
 **Datum:** 09.08.2026 · **Oblast:** živi demo · **Status:** riješeno
@@ -493,7 +519,7 @@ pa svaki šav upadne usred nekog prozora.
 kalibraciju i za normalnu dionicu. To odgovara i stvarnoj primjeni: ventilator
 u ustaljenom režimu.
 
-**Dokaz.** Vidi [hardver-verifikacija.md](hardver-verifikacija.md), poređenje
+**Dokaz.** Vidi [hardver-verifikacija.md](uredjaj/hardver-verifikacija.md), poređenje
 prolaza 1 (miješane brzine) i prolaza 2 (jedna brzina).
 
 **Pouka.** Sintetički demo materijal mora biti provjeren isto kao i kod. Kad
@@ -503,6 +529,8 @@ ovdje nije bio.
 ---
 
 <a name="p14"></a>
+<a id="p14"></a>
+
 ## P14 — Sintetički kvar je bio bas koji zvučnik ne reprodukuje
 
 **Datum:** 09.08.2026 · **Oblast:** eksperiment · **Status:** riješeno
@@ -548,6 +576,8 @@ mjerenje ne prati očekivanje, prvo se provjerava artefakt, pa tek onda teorija.
 ---
 
 <a name="p15"></a>
+<a id="p15"></a>
+
 ## P15 — Tranzijent pri uključenju mikrofona ruši prolaz u prvom bloku
 
 **Datum:** 11.08.2026 · **Oblast:** I2S / fail-closed kalibracija · **Status:** riješeno
@@ -586,7 +616,7 @@ preskočeni blok je obično djelimičan, pa se ostatak istog bloka normalno
 obrađuje. `dropped` ne broji odbačene uzorke.
 
 **Zašto na izvoru, a ne popuštanjem gate-a.** Popuštanje bi bilo
-`warn and continue`, što je u [PLAN-NEXT-LEVEL.md](../privatno/planovi/PLAN-NEXT-LEVEL.md)
+`warn and continue`, što je u [PLAN-NEXT-LEVEL.md](../privatno/istorija/planovi/PLAN-NEXT-LEVEL.md)
 eksplicitno zabranjen anti-patern. Ovako mjerni prozor počinje kad se senzor
 ustali, a svaki blok koji uđe u lanac se i dalje ocjenjuje punim gate-om.
 
@@ -606,6 +636,8 @@ tranzijent pojavljuje samo na stvarnom senzoru.
 ---
 
 <a name="p16"></a>
+<a id="p16"></a>
+
 ## P16 — Mikrofon ne čuje zvučnik iako audio stiže na izlaz
 
 **Datum:** 11.08.2026 · **Oblast:** akustički put · **Status:** RIJEŠENO 13.08.2026 — mikrofon #1 je bio mrtav, modul #2 radi
@@ -652,8 +684,8 @@ oštećena ili zaliven port:
 - membrana ne pretvara zvuk → nikakav akustički signal se ne vidi, ni sinus na
   1 kHz blizu pune skale. **Točno ono što je izmjereno.**
 
-Ovo je i unaprijed predviđen rizik: [lemljenje.md](../privatno/elektronika/lemljenje.md) i
-[hardver-lista.md](../privatno/elektronika/hardver-lista.md) izričito kažu **„ne dirati sound port"**, i
+Ovo je i unaprijed predviđen rizik: [lemljenje.md](../privatno/elektronika/sklop/lemljenje.md) i
+[inventar.md](../privatno/elektronika/nabavka/inventar.md) izričito kažu **„ne dirati sound port"**, i
 zato su kupljena dva komada. Rastvarači, ultrazvučno čišćenje i bilo koja
 tečnost u portu su za MEMS mikrofon zabranjeni — izopropanol može rastvoriti ili
 deformisati membranu, a i kad ne ošteti, ostavlja ostatak.
@@ -733,7 +765,7 @@ modul #1 je kroz 31 s neprekidnog kucanja dao raspon 1,2 dB i peak ≤ 20.
 
 Time je potvrđena i dijagnoza: podatkovni put je cijelo vrijeme radio, akustički
 nije postojao. Uzrok — izopropanol u sound portu — ostaje najvjerovatnije
-objašnjenje, i pravilo „ne dirati sound port" iz [lemljenje.md](../privatno/elektronika/lemljenje.md)
+objašnjenje, i pravilo „ne dirati sound port" iz [lemljenje.md](../privatno/elektronika/sklop/lemljenje.md)
 stoji.
 
 **Šta je ovo odblokiralo:** validnu kalibraciju na uređaju, cijelu DET fazu i
@@ -748,6 +780,8 @@ zaustavljen u poznatom trenutku. Isti test razlikuje i #1 i #2, bez tumačenja.
 ---
 
 <a name="p17"></a>
+<a id="p17"></a>
+
 ## P17 — Prag se između dvije kalibracije razlikuje 16×
 
 **Datum:** 14.08.2026 · **Oblast:** kalibracija / prag · **Status:** OTVORENO
@@ -764,7 +798,7 @@ zvučnika, ista soba, razmak nekoliko sati:
 kalibracionih klipova, `sd` je izuzetno osjetljiv na jedan odskočen klip: u
 prolazu 1 najveći LOO score je bio 5430 uz medijanu reda 200, pa je `sd` sam
 odnio prag na 5687. Član `sredina + 3 sd` je uveden 09.08. upravo zato što je
-`p90` bio sistematski prenizak ([hardver-verifikacija.md](hardver-verifikacija.md)),
+`p90` bio sistematski prenizak ([hardver-verifikacija.md](uredjaj/hardver-verifikacija.md)),
 i on tu ulogu i dalje ispunjava — ali unosi novu osjetljivost.
 
 **Zašto je ovo važno, a ne kozmetika.** Prag od 5687 na tom prolazu znači da
@@ -814,6 +848,8 @@ preko zvučnika.
 ---
 
 <a name="p18"></a>
+<a id="p18"></a>
+
 ## P18 — EWMA i CUSUM propuštaju baš onu buku koju je trebalo da filtriraju
 
 **Datum:** 14.08.2026 · **Oblast:** vremenska odluka · **Status:** riješeno (odbačeni mjerenjem)
@@ -856,6 +892,8 @@ nulom, sa komentarom zašto. Da se ne „otkriju" ponovo za pola godine kao nova
 ideja.
 
 <a name="p19"></a>
+<a id="p19"></a>
+
 ## P19 — Sopstveno računanje na laptopu kontaminiralo probu lažnih alarma
 
 **Datum:** 14.08.2026 · **Oblast:** metodologija mjerenja · **Status:** riješeno (pouka)
@@ -897,6 +935,8 @@ alarma iz tog prolaza.
 ---
 
 <a name="p20"></a>
+<a id="p20"></a>
+
 ## P20 — FLAGS iz drugog taska upada usred FEATURE96 reda
 
 **Datum:** 22.08.2026 · **Oblast:** UART / protokol · **Status:** riješeno u kodu,
@@ -944,6 +984,8 @@ može zaključati odavde i ostaje poznat rizik pri padu.
 ---
 
 <a name="p21"></a>
+<a id="p21"></a>
+
 ## P21 — Run traži 20 potvrda faza, a panel ih nije tražio
 
 **Datum:** 22.08.2026 · **Oblast:** operaterski tok · **Status:** riješeno
@@ -975,6 +1017,8 @@ i `::test_snapshot_carries_confirmation_and_research_integrity_to_the_page`.
 ---
 
 <a name="p22"></a>
+<a id="p22"></a>
+
 ## P22 — Alarm iz prvog papirića progutao sljedeća dva bloka
 
 **Datum:** 22.08.2026 · **Oblast:** protokol mjerenja · **Status:** djelimično
@@ -1017,6 +1061,8 @@ mijenja, mijenja se uz bump verzije politike i novi preregistrovani retest.
 ---
 
 <a name="p23"></a>
+<a id="p23"></a>
+
 ## P23 — Jedan klip od deset propadne na 66 Hz i obori K1
 
 **Datum:** 23.08.2026 · **Oblast:** kalibracija / mjerna postavka · **Status:**
@@ -1282,6 +1328,8 @@ preflight ga ne traži.
 bez `guided25_hard_deadline` prekida.
 
 ---
+
+<a id="p28"></a>
 
 ## P28 — Revizija pred objavu, 06.09.2026.
 
