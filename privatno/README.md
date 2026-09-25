@@ -52,7 +52,7 @@ razilaze sa `docs/` ili `results/`, izvor pobjeđuje.
 | [UPUTSTVO-4-PREZENTACIJA-MENTORU.md](ucenje/UPUTSTVO-4-PREZENTACIJA-MENTORU.md) | projekat u sedam koraka, za izlaganje |
 | [VODIC-KROZ-PROJEKAT.md](ucenje/VODIC-KROZ-PROJEKAT.md), [.html](ucenje/VODIC-KROZ-PROJEKAT.html) | interaktivni vodič sa objašnjenjima i kodom |
 | [VODIC-ZA-RAZGOVOR-SA-PROFESOROM.md](ucenje/VODIC-ZA-RAZGOVOR-SA-PROFESOROM.md) | priprema za razgovor sa mentorom |
-| `fft-lekcija.py`, `napravi-vodic.py`, `vizuelni-dodaci.py`, `studio-izgled.py`, `*.svg` | generatori i ilustracije vodiča |
+| `fft-lekcija.py`, `napravi-vodic.py`, `vizuelni-dodaci.py`, `studio-izgled.py`, `nacrtaj-skice.py`, `slike/`, `*.svg` | generatori i ilustracije vodiča |
 | `stari-pregledi/` | HTML pregledi iz jula, prije PSD smjera |
 
 ## `elektronika/` — sklapanje, lemljenje, potrošnja
