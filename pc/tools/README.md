@@ -22,7 +22,7 @@ Putanje se ne mijenjaju jer na njih upućuju dokumenti i sačuvani rezultati.
 Prije fizičkog ventilatora uređaj je slušao DCASE snimke sa zvučnika:
 `psd_live_demo.py`, `psd_continuous_test.py`, `psd_severity_test.py`,
 `psd_channel_probe.py`, `false_alarm_test.py`, `check_fault_type.py`.
-Rezultati su u `results/false_alarm/` i u `docs/put-do-modela.md`.
+Rezultati su u `results/false_alarm/` i u `docs/model/put-do-modela.md`.
 
 ## Istorija istraživanja (jul–avgust 2026)
 
@@ -36,5 +36,5 @@ njihove brojke.
 | Mahalanobis nad log-mel i PSD | `bench_adapt.py`, `bench_backends.py`, `bench_blend.py`, `bench_deploy.py`, `bench_domain.py`, `bench_frontend.py`, `bench_modes.py`, `bench_pool.py`, `bench_research*.py`, `bench_final*.py`, `bench_periodicity.py` (izvor `psd_shape`) |
 | Praćenje sweep-ova | `gen_dashboard.py`, `live_dashboard.py`, `live_monitor.py`, `progress.py`, `fan_seed_dash.py`; PowerShell skripte u `pc/` |
 
-Istorija odluka: [put do modela](../../docs/put-do-modela.md),
-[odluka o finalnom modelu](../../docs/odluka-finalni-model.md).
+Istorija odluka: [put do modela](../../docs/model/put-do-modela.md),
+[odluka o finalnom modelu](../../docs/model/odluka-finalni-model.md).

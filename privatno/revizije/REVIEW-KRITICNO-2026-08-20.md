@@ -84,8 +84,8 @@ NVS-a. To nije skriveni deployment put niti blocker za isti fizički run:
 
 Izvori:
 
-- [DORADA-FAZA4-COMMISSIONING-LAB-2026-08-20.md](../../docs/DORADA-FAZA4-COMMISSIONING-LAB-2026-08-20.md)
-- [DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md](../../docs/DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md)
+- [DORADA-FAZA4-COMMISSIONING-LAB-2026-08-20.md](../../docs/uredjaj/dorada-poslije-fan01-faze.md)
+- [DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md](../../docs/uredjaj/dorada-poslije-fan01.md)
 
 ### 4. Razgovor nije uslovljen aktivnim HOLD-om
 
@@ -102,7 +102,7 @@ Izvori:
 
 - [asd_interference_policy_v1.json](../../pc/config/asd_interference_policy_v1.json)
 - [guided_test.py](../../pc/asd/guided_test.py)
-- [DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md](../../docs/DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md)
+- [DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md](../../docs/uredjaj/dorada-poslije-fan01.md)
 
 ### 5. GUIDED25 i puni commissioning protokol su razdvojeni i brojčano usklađeni
 
@@ -124,7 +124,7 @@ Izvori:
 
 - [guided25_workflow_v1.json](../../pc/config/guided25_workflow_v1.json)
 - [asd_commissioning.c](../../firmware/esp32s3_asd/main/asd_commissioning.c)
-- [DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md](../../docs/DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md)
+- [DORADA-SISTEMA-POSLIJE-FAN01-2026-08-20.md](../../docs/uredjaj/dorada-poslije-fan01.md)
 
 ## Šta ostaje otvoreno
 

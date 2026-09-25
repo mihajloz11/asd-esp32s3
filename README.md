@@ -30,8 +30,8 @@ uzoraka. Jedan ventilator, jedna prostorija i vještačke pobude ne potvrđuju
 dijagnozu kvara niti dugoročnu pouzdanost. Razvojni rezultati nisu nezavisni
 test konačnog izbora modela.
 
-Brojke i izvori: [završne fizičke probe](docs/rezultat-finalna-validacija-2026-08-27.md).
-Mapa dokumentacije: [docs/INDEKS.md](docs/INDEKS.md).
+Brojke i izvori: [završne fizičke probe](docs/probe/rezultat-finalna-validacija-2026-08-27.md).
+Mapa dokumentacije: [docs/README.md](docs/README.md).
 
 ## Struktura
 
@@ -44,7 +44,7 @@ Mapa dokumentacije: [docs/INDEKS.md](docs/INDEKS.md).
 | [pc/config](pc/config/) | zaključane politike izvedene iz normalnih podataka |
 | [results](results/README.md) | rezultati, sirovi zapisi i mapa dokaza |
 | [models](models/) | metapodaci modela; veliki modeli i keševi nisu u Gitu |
-| [docs](docs/INDEKS.md) | odluke, protokoli, rezultati i razvojna istorija |
+| [docs](docs/README.md) | odluke, protokoli, rezultati i razvojna istorija |
 
 ## PC provjere
 

@@ -5,7 +5,7 @@ Trase se citaju iz CSV-a; istorijske AUC vrijednosti su navedene uz izvor.
   data/dcase2026_dev/fan/train/*.wav                spektar u dvije rezolucije
   results/physical_fan/run_20260827T213148_*/       trasa mjerenja sa papiricem
   results/physical_fan/run_20260827T220338_*/       trasa mjerenja sa tonom
-  docs/put-do-modela.md                             AUC po fazama razvoja
+  docs/model/put-do-modela.md                       AUC po fazama razvoja
 
 Izlaz: radovi/master-rad/slike/*.png
 
@@ -196,7 +196,7 @@ def sl_rezolucija() -> None:
 
 
 def sl_napredak() -> None:
-    """Najbolji izmjereni AUC po fazama razvoja (izvor: docs/put-do-modela.md)."""
+    """Najbolji izmjereni AUC po fazama razvoja (izvor: docs/model/put-do-modela.md)."""
     faze = ["1. мреже", "2. mel\nстатистика", "3. оцењивач",
             "4. обележје", "5. шест\nалтернатива"]
     auc = [0.530, 0.674, 0.716, 0.864, 0.857]

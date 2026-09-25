@@ -21,7 +21,7 @@
 | E4 latencija | ✔ KOMPLETNO: S3 vs ESP32 2.76× (platforma); esp-nn on/off na S3 1.33× (čist PIE) — results/e4_latency.md |
 | Puna on-device AUC | ✔ 60 klipova na S3: AUC 0.596, score-ovi vs PC max 2.2e-04 |
 | E6 on-device gamma prag | ✔ device 0.77090 vs PC 0.77064 = rel 0.03% — kalibracija radi na čipu |
-| **Hardver (INMP441, INA226, AMS1117, pasive, demo)** | ✔ **stigao 04.08.2026** — vidi privatno/elektronika/hardver-lista.md |
+| **Hardver (INMP441, INA226, AMS1117, pasive, demo)** | ✔ **stigao 04.08.2026** — vidi privatno/elektronika/nabavka/inventar.md |
 | E5 energija — strujni lanac | ✔ **11.08 — INA226 na 0x44, 34,73 mA, potvrđeno nezavisno**; e5-mjerenje-01-rezultat.md |
 | **Živi zvuk (INMP441 na S3)** | ✔ **06.08 — mikrofon radi**, rms 158.7 / peak 1020 / clipped 0 / dropped 0; WAV verifikovan sumom |
 | Rizik C1 (`>>14` shift) | ✔ zatvoren mjerenjem sirovog 32-bit peaka — 15.6 dB rezerve do klipovanja |
@@ -204,7 +204,7 @@ Napomena: seed run pao prvi put (laptop sleep) — riješeno keep_awake.ps1 wake
 
 **Isporučeno sve sa spiska, 3.118 RSD** (2.578 roba + 540 dostava, ~27 €) — u budžetu
 plana (≤18 € je bila stara procjena bez E5/demo dijela; sa AMS1117 i demo komponentama
-ispalo 27 €). Detaljan inventar: privatno/elektronika/hardver-lista.md.
+ispalo 27 €). Detaljan inventar: privatno/elektronika/nabavka/inventar.md.
 
 2× INMP441, 1× INA226, set od 120 elektrolita, 3× keramika 470 nF, AMS1117 3.3 V LDO,
 2× muška pin letvica 40 pin, prototipna ploča 4×6, LED crvena + zelena, arkadni taster
@@ -282,7 +282,7 @@ IN+/IN− tek poslije), pa živi ASD rad sa LED-om kad stignu otpornici.
 
 ### 06.08 (nastavak) — ŽIVI ASD LANAC: PC↔uređaj na mikrofonu + prilagođavanje praga
 
-INA226 odložen (čeka multimetar, vidi [ina226-provjera.md](../elektronika/ina226-provjera.md)),
+INA226 odložen (čeka multimetar, vidi [ina226-provjera.md](../elektronika/e5-potrosnja/ina226-provjera.md)),
 pa je urađeno sve što zavisi samo od mikrofona.
 
 **1. Živi rad, 60 s.** Prvi put pun lanac nad stvarnim zvukom umjesto klipova
@@ -478,17 +478,17 @@ odmah poslije kalibracije, iako je svirao isti normalan zvuk. Uzrok nije utvrđe
 
 ## SLJEDEĆI KORACI (prioritet)
 
-1. **Mihajlo:** poslati sažetak mentoru (privatno/planovi/sazetak-za-mentora.md) — kritični put
-2. ~~naručiti 2× INMP441 + INA226~~ ✔ **stiglo 04.08** (privatno/elektronika/hardver-lista.md)
+1. **Mihajlo:** poslati sažetak mentoru (privatno/istorija/planovi/sazetak-za-mentora.md) — kritični put
+2. ~~naručiti 2× INMP441 + INA226~~ ✔ **stiglo 04.08** (privatno/elektronika/nabavka/inventar.md)
 3. **Mihajlo:** donijeti 2× otpornik 220–330 Ω s posla (jedino što fali za LED demo)
 4. Zalemiti header na INMP441 #1 → živi audio lanac → test WAV u Audacity (rizik C1);
-   procedura: privatno/elektronika/lemljenje.md
+   procedura: privatno/elektronika/sklop/lemljenje.md
 5. **Napisati INA226 I2C drajver** (~pola dana) — bez njega E5 ne kreće iako je senzor tu
 6. Klasični ESP32 build + flash (`set-target esp32`) → prva polovina E4 matrice
    (PIE ablation: S3 esp-nn vs ESP32 generic)
 7. esp-nn on/off na samom S3 (Kconfig) → druga polovina E4
 8. 5-seed treninzi preko noći (run_sweep -Seed 1..4)
-9. E5 energija: AMS1117 → INA226 → 3V3, USB otkačen (šema u privatno/elektronika/sema-povezivanja.md)
+9. E5 energija: AMS1117 → INA226 → 3V3, USB otkačen (šema u privatno/elektronika/sklop/sema-povezivanja.md)
 10. Pisanje: poglavlje 2 (pregled literature) i 3 (teorija) — materijal spreman
     u teorija-ucenje.html
 
@@ -526,7 +526,7 @@ iznad 0,80 i sa samo 5 kalibracionih klipova (0,834 ± 0,047).
 Float32 daje identičan AUC. Model je 96 × 96 matrica (36 864 B), 768 B source
 normalizacije i 384 B lokalnog centra. Još nisu urađeni C front-end, PC↔C test,
 on-device mjerenje ni konačna normal-only kalibracija praga. Kod je u
-`pc/tools/bench_periodicity.py`, a puna analiza u `docs/istrazivanje-psd-model.md`.
+`pc/tools/bench_periodicity.py`, a puna analiza u `docs/model/istrazivanja/istrazivanje-psd-model.md`.
 
 U istom bloku eksportovan je normal-only float32 model iz tačno 990 source
 normalnih klipova (`models/fan_psd_shape_meta.json` + ignorisani NPZ) i generisan
@@ -576,5 +576,5 @@ umjesto breadboard razvoda i zvjezdasta masa.
 Privremena procjena potrošnje u mirovanju: `3,22 V × 34,73 mA ≈ 112 mW`.
 
 Puni izvještaj sa planom sljedećih eksperimenata (A–F) je u
-`privatno/elektronika/e5-mjerenje-01-rezultat.md`, sirovi log u
+`privatno/elektronika/e5-potrosnja/e5-mjerenje-01-rezultat.md`, sirovi log u
 `results/e5_mjerenje_01_uart.log`.

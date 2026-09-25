@@ -279,26 +279,26 @@ def _skracenice(r) -> None:
     r.naslovni_blok([("Lista skraćenica", 14, True)], velika=True)
     r.prazan()
     r.kdi_tabela([
-        ("ASD", "*Anomalous Sound Detection* — detekcija anomalija zvuka"),
-        ("AUC", "*Area Under the ROC Curve* — površina ispod ROC krive"),
-        ("pAUC", "*partial AUC* — parcijalna površina ispod ROC krive"),
+        ("ASD", "*Anomalous Sound Detection*, detekcija anomalija zvuka"),
+        ("AUC", "*Area Under the ROC Curve*, površina ispod ROC krive"),
+        ("pAUC", "*partial AUC*, parcijalna površina ispod ROC krive"),
         ("CAL", "faza kalibracije u toku rada uređaja"),
         ("DCASE", "*Detection and Classification of Acoustic Scenes and Events*"),
         ("DET", "faza detekcije u toku rada uređaja"),
         ("DMA", "*Direct Memory Access*"),
-        ("FFT", "*Fast Fourier Transform* — brza Furijeova transformacija"),
-        ("I2S", "*Inter-IC Sound* — serijska sabirnica za digitalni zvuk"),
-        ("I2C", "*Inter-Integrated Circuit* — serijska sabirnica"),
-        ("LOO", "*leave-one-out* — izostavljanje po jednog uzorka"),
-        ("MAD", "*Median Absolute Deviation* — medijana apsolutnog odstupanja"),
+        ("FFT", "*Fast Fourier Transform*, brza Furijeova transformacija"),
+        ("I2S", "*Inter-IC Sound*, serijska sabirnica za digitalni zvuk"),
+        ("I2C", "*Inter-Integrated Circuit*, serijska sabirnica"),
+        ("LOO", "*leave-one-out*, izostavljanje po jednog uzorka"),
+        ("MAD", "*Median Absolute Deviation*, medijana apsolutnog odstupanja"),
         ("MEMS", "*Micro-Electro-Mechanical Systems*"),
-        ("NVS", "*Non-Volatile Storage* — trajna memorija u ESP-IDF okruženju"),
-        ("PSD", "*Power Spectral Density* — spektralna gustina snage"),
+        ("NVS", "*Non-Volatile Storage*, trajna memorija u ESP-IDF okruženju"),
+        ("PSD", "*Power Spectral Density*, spektralna gustina snage"),
         ("PSRAM", "*Pseudo-Static RAM*"),
-        ("RMS", "*Root Mean Square* — efektivna vrijednost"),
+        ("RMS", "*Root Mean Square*, efektivna vrijednost"),
         ("SRAM", "*Static RAM*"),
         ("UART", "*Universal Asynchronous Receiver-Transmitter*"),
-        ("dBFS", "*decibels relative to full scale* — decibeli u odnosu na "
+        ("dBFS", "*decibels relative to full scale*, decibeli u odnosu na "
                  "punu skalu"),
     ])
 
@@ -350,8 +350,8 @@ def _uvod(r) -> None:
         "MEMS mikrofonu. Podjela posla je sljedeća. Opšti oblik varijacije "
         "normalnog rada uči se unaprijed na računaru, iz velikog korpusa "
         "snimaka ispravnih mašina; taj naučeni opis se ugrađuje u firmver kao "
-        "nepromjenjiva tabela. Sve što je specifično za konkretnu mašinu — "
-        "njen centar, njen prag i njena granica pouzdanosti — uređaj mjeri sam, "
+        "nepromjenjiva tabela. Sve što je specifično za konkretnu mašinu, "
+        "njen centar, njen prag i njena granica pouzdanosti, uređaj mjeri sam, "
         "na licu mjesta, u prvim minutima rada pored te mašine.")
     r.pasus(
         "Za obuku opšteg modela ne koriste se anomalni snimci. Za izvođenje "
@@ -403,8 +403,8 @@ def _uvod(r) -> None:
         "sistema.", uvlaka=False)
     r.pasus(
         "Četvrto poglavlje je hronološki prikaz razvoja modela, sa svim "
-        "izmjerenim pokušajima — od autoenkodera do konačnog spektralnog "
-        "obilježja — uključujući i one koji nisu uspjeli, jer oni objašnjavaju "
+        "izmjerenim pokušajima, od autoenkodera do konačnog spektralnog "
+        "obilježja, uključujući i one koji nisu uspjeli, jer oni objašnjavaju "
         "zašto konačno rješenje radi. Peto poglavlje opisuje realizaciju na "
         "platformi ESP32-S3: prihvat zvuka, izračunavanje obilježja, "
         "organizaciju memorije i strukturu firmvera.")
@@ -412,7 +412,7 @@ def _uvod(r) -> None:
         "Šesto poglavlje uvodi protokol mjerenja i politike odlučivanja: "
         "kapiju kvaliteta kalibracije, izvođenje i provjeru praga, kapiju "
         "pouzdanosti i vremensko pravilo alarma. Sedmo poglavlje donosi "
-        "rezultate — na referentnom skupu, na uređaju i na stvarnom "
+        "rezultate na referentnom skupu, na uređaju i na stvarnom "
         "ventilatoru. Osmo poglavlje raspravlja o rezultatima i navodi "
         "ograničenja, a deveto poglavlje daje zaključak i pravce daljeg rada.")
 
@@ -431,8 +431,8 @@ def _teorija(r) -> None:
     r.pasus(
         "Detekcija anomalija zvuka mašina svodi se na sljedeće: na osnovu "
         "kratkog zvučnog isječka odrediti da li mašina radi normalno. "
-        "Otežavajuća okolnost je što se anomalije ne mogu unaprijed prikupiti "
-        "— kvarovi su rijetki, raznovrsni i skupi da bi se namjerno izazivali. "
+        "Otežavajuća okolnost je što se anomalije ne mogu unaprijed prikupiti, "
+        "jer su kvarovi rijetki, raznovrsni i skupi da bi se namjerno izazivali. "
         "Zbog toga se model uči isključivo iz normalnih snimaka, a anomalija "
         "se definiše kao odstupanje od naučenog opisa normalnog stanja.")
     r.pasus(
@@ -500,8 +500,8 @@ def _teorija(r) -> None:
         "se bira analitički tako da minimizuje očekivanu kvadratnu grešku.")
     r.pasus(
         "Ovaj postupak nije kozmetički detalj. U četvrtom poglavlju je "
-        "izmjereno da je jedan raniji negativan rezultat — obilježje sa više "
-        "dimenzija koje je izgledalo lošije — zapravo bio posljedica loše "
+        "izmjereno da je jedan raniji negativan rezultat, obilježje sa više "
+        "dimenzija koje je izgledalo lošije, zapravo bio posljedica loše "
         "uslovljene kovarijanse, a ne loše ideje. Kada je skupljanje uvedeno, "
         "veći broj dimenzija prestao je da bude kazna.")
 
@@ -594,19 +594,19 @@ def _koncept(r) -> None:
     r.pasus(
         "Uređaj se poslije uključenja nalazi u stanju čekanja i ne donosi "
         "nikakve zaključke. Kalibracija se pokreće isključivo svjesnom "
-        "radnjom operatera — pritiskom na taster — i to je namjerno, jer "
+        "radnjom operatera, pritiskom na taster. To je namjerno, jer "
         "automatsko pokretanje bi omogućilo da uređaj nauči neispravno stanje "
         "kao normalno. Poslije pokretanja tok prolazi kroz sljedeće faze:")
     r.stavke([
-        "`SETTLE` — kratko smirivanje poslije uključenja mikrofona, jer "
+        "`SETTLE`: kratko smirivanje poslije uključenja mikrofona, jer "
         "prelazna pojava pri uključenju kvari prvi blok mjerenja;",
-        "`CENTER_LEARNING` — deset isječaka od po 10 s iz kojih se računa "
+        "`CENTER_LEARNING`: deset isječaka od po 10 s iz kojih se računa "
         "lokalni centar;",
-        "`COMMISSION_DERIVE` — 44 prozora u kojima su prisutna samo normalna "
+        "`COMMISSION_DERIVE`: 44 prozora u kojima su prisutna samo normalna "
         "stanja i iz kojih se izvodi prag;",
-        "`COMMISSION_VERIFY` — 22 dodatna, vremenski kasnija normalna "
+        "`COMMISSION_VERIFY`: 22 dodatna, vremenski kasnija normalna "
         "prozora na kojima se izvedeni prag provjerava;",
-        "`MONITORING` — redovan nadzor, u kojem se centar i prag više ne "
+        "`MONITORING`: redovan nadzor, u kojem se centar i prag više ne "
         "mijenjaju.",
     ])
     r.pasus(
@@ -646,7 +646,7 @@ def _koncept(r) -> None:
 
 # 4. RAZVOJ MODELA
 def _model(r) -> None:
-    r.naslov("Razvoj modela — svi izmjereni pokušaji")
+    r.naslov("Razvoj modela: svi izmjereni pokušaji")
     r.pasus(
         "Ovo poglavlje prikazuje put od prvog pokušaja do konačnog rješenja, "
         "sa svim međurezultatima. Neuspjeli pokušaji nisu izostavljeni, iz dva "
@@ -674,7 +674,7 @@ def _model(r) -> None:
         "standardna devijacija preko podjela, a poređenja se rade na istim "
         "podjelama za sve metode.")
 
-    r.naslov("Faza 1 — neuronske mreže", 2)
+    r.naslov("Faza 1: neuronske mreže", 2)
     r.pasus(
         "Polazno stanje bio je autoenkoder, standardna osnova takmičenja "
         "DCASE. Mjerenja su data u Tabeli 4.1.")
@@ -698,7 +698,7 @@ def _model(r) -> None:
         " režime, sa promjenama unutar jedne mašine. Ovaj mehanizam nije izdvojen "
         "posebnim eksperimentom, pa se navodi kao tumačenje.")
 
-    r.naslov("Faza 2 — statistika nad mel sažetkom", 2)
+    r.naslov("Faza 2: statistika nad mel sažetkom", 2)
     r.pasus(
         "Mreža je napuštena. Isječak se sažima u srednju vrijednost i "
         "standardnu devijaciju po mel traci, kovarijansa se uči unaprijed na "
@@ -724,7 +724,7 @@ def _model(r) -> None:
         "jer traži stotine snimaka, a centar se mjeri na licu mjesta jer je za "
         "njega dovoljno desetak.", uvlaka=False)
 
-    r.naslov("Faza 3 — sistematska runda nad ocjenjivačem", 2)
+    r.naslov("Faza 3: sistematska runda nad ocjenjivačem", 2)
     r.pasus(
         "Sprovedeno je šest serija eksperimenata nad zadnjim dijelom obrade, "
         "sve na uparenim izborima kalibracionih isječaka. U Tabeli 4.3 "
@@ -755,7 +755,7 @@ def _model(r) -> None:
         "Dvanaest varijanti staje na AUC 0,716. Taj plato je bio jasan signal "
         "da uzrok ograničenja nije u ocjenjivaču.")
 
-    r.naslov("Faza 4 — promjena obilježja i proboj", 2)
+    r.naslov("Faza 4: promjena obilježja i proboj", 2)
     r.pasus(
         "Do ovog trenutka svi pristupi dijelili su isti log-mel ulaz sa "
         "prozorom od 1024 uzorka i 128 mel traka. Prešlo se na spektar visoke "
@@ -835,7 +835,7 @@ def _model(r) -> None:
         "na drugi tip mašine, obilježje bi se biralo po tipu, a takav izbor je "
         "moguće napraviti bez ijedne ciljne oznake, samo iz izvornog domena.")
 
-    r.naslov("Faza 5 — poređenje alternativnih obilježja", 2)
+    r.naslov("Faza 5: poređenje alternativnih obilježja", 2)
     r.pasus(
         "U narednoj rundi poređeno je sedam kandidata sa osnovnim obilježjem na "
         "istih dvadeset kalibracionih podjela. Lista je fiksirana prije te runde "
@@ -845,7 +845,7 @@ def _model(r) -> None:
         "Sedam alternativa i osnovno obilježje (*k* = 10, 20 podjela)",
         ["Kandidat", "Ideja", "AUC", "Razlika"],
         [
-            ["`psd_shape`", "dosadašnje obilježje", "0,856 ± 0,024", "—"],
+            ["`psd_shape`", "dosadašnje obilježje", "0,856 ± 0,024", "/"],
             ["`psd_order`", "spektar u jedinicama reda", "0,639", "−0,217"],
             ["`psd_regime`", "zaseban centar po režimu", "0,856", "0,000"],
             ["`psd_logratio`", "odnos dva kanala", "0,719", "−0,137"],
@@ -881,10 +881,10 @@ def _model(r) -> None:
         "Negativni nalazi ostaju ograničeni na ispitane konfiguracije i ne "
         "isključuju druge dvokanalne ili tranzijentne pristupe.")
 
-    r.naslov("Faza 6 — vremensko pravilo odlučivanja", 2)
+    r.naslov("Faza 6: vremensko pravilo odlučivanja", 2)
     r.pasus(
         "Ova faza ne mijenja obilježje nego način na koji se od niza ocjena "
-        "pravi alarm. Dotadašnje pravilo — tri uzastopna prozora iznad praga — "
+        "pravi alarm. Dotadašnje pravilo, tri uzastopna prozora iznad praga, "
         "uvedeno je kao razumna pretpostavka i nikada nije bilo izmjereno. "
         "Očekivanje je bilo da će eksponencijalno usrednjavanje i kumulativna "
         "suma biti nadogradnja. Izmjerena pravila poredi Tabela 4.8.")
@@ -904,7 +904,7 @@ def _model(r) -> None:
         "usrednjavanja pobuda od jednog prozora ostaje u statistici nekoliko "
         "prozora i sama dopuni niz od tri, a kod kumulativne sume se "
         "akumulira. Obje su napravljene da uhvate **mali trajni** pomjeraj u "
-        "šumu, a ovdje je zadatak obrnut — odbaciti **veliku kratku** pobudu.",
+        "šumu, a ovdje je zadatak obrnut: treba odbaciti **veliku kratku** pobudu.",
         uvlaka=False)
     r.pasus(
         "U ovoj ranijoj simulaciji histereza smanjuje broj epizoda na drugoj mašini"
@@ -921,11 +921,11 @@ def _model(r) -> None:
         ["Faza", "Najbolji AUC", "Prava prepreka"],
         [
             ["1. Neuronske mreže", "0,530", "zadatak učenja ne odgovara zadatku detekcije"],
-            ["2. Statistika nad mel sažetkom", "0,674", "—"],
+            ["2. Statistika nad mel sažetkom", "0,674", "/"],
             ["3. Ocjenjivač", "0,716", "uslovljenost kovarijanse, pa plato"],
             ["4. **Obilježje**", "**0,864**", "**rezolucija po frekvenciji**"],
-            ["5. Sedam alternativa", "0,857", "nijedna ne pobjeđuje — prepreka nije obilježje"],
-            ["6. Vremensko pravilo", "—", "pravilo alarma; usvojena histereza"],
+            ["5. Sedam alternativa", "0,857", "nijedna ne pobjeđuje, prepreka nije obilježje"],
+            ["6. Vremensko pravilo", "/", "pravilo alarma; usvojena histereza"],
         ], desno={1})
     r.slika("slike/sl_napredak.png",
             "Najbolji razvojni AUC po fazama; različiti protokoli ograničavaju direktno"
@@ -1307,7 +1307,7 @@ def _rezultati(r) -> None:
         ["Put signala", "Ocjena normalnog", "Ocjena anomalije"],
         [
             ["Računar, digitalni zvuk", "79", "117"],
-            ["Uređaj, preko zvučnika", "1 300 – 4 000", "2 500 – 4 100"],
+            ["Uređaj, preko zvučnika", "1 300–4 000", "2 500–4 100"],
         ], desno={1, 2})
     r.pasus(
         "Anomalija iz skupa podataka pomjera ocjenu za oko 48 %, a akustički "
@@ -1648,7 +1648,7 @@ def _literatura(r) -> None:
         "https://docs.espressif.com/projects/esp-idf/en/v5.5/esp32s3/ (pristupljeno"
         " 6. septembra 2026).",
         "InvenSense, *INMP441 Omnidirectional Microphone with Bottom Port and "
-        "I2S Digital Output — Datasheet*, dokument DS-INMP441.",
+        "I2S Digital Output*, tehnička specifikacija, dokument DS-INMP441.",
         "F. Pedregosa et al., „Scikit-learn: Machine learning in Python“, "
         "*J. Mach. Learn. Res.*, vol. 12, str. 2825–2830, 2011.",
         "P. Virtanen et al., „SciPy 1.0: Fundamental algorithms for "
@@ -1688,7 +1688,7 @@ def _prilozi(r) -> None:
     r.prazan()
 
     r.prilog("A")
-    r.naslov("Prilog A — sadržaj digitalnog priloga", 2, numerisi=False)
+    r.naslov("Prilog A: sadržaj digitalnog priloga", 2, numerisi=False)
     r.pasus(
         "Zbog obima, izvorni kod, zapisi mjerenja i sirovi podaci dostavljaju "
         "se u digitalnom obliku. Struktura priloga je sljedeća:", uvlaka=False)
@@ -1710,7 +1710,7 @@ radovi/         ovaj rad i rad za konferenciju
         uvlaka=False)
 
     r.prilog("B")
-    r.naslov("Prilog B — sažetak politika i njihovih verzija", 2, numerisi=False)
+    r.naslov("Prilog B: sažetak politika i njihovih verzija", 2, numerisi=False)
     r.pasus(
         "Tabela B.1 daje sve zaključane politike i njihove verzije.",
         uvlaka=False)
@@ -1739,7 +1739,7 @@ radovi/         ovaj rad i rad za konferenciju
         "pri svakoj izmjeni.", uvlaka=False)
 
     r.prilog("C")
-    r.naslov("Prilog C — primjer zapisa telemetrije", 2, numerisi=False)
+    r.naslov("Prilog C: primjer zapisa telemetrije", 2, numerisi=False)
     r.pasus(
         "Uređaj emituje strukturisane zapise sa izričitom oznakom verzije "
         "protokola. Listing C.1 je izvod iz stvarnog mjerenja, sa sažetkom "

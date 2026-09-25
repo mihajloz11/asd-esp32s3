@@ -1,7 +1,7 @@
 # Uputstvo 1 — kako je nastao projekat, šta je gdje, i kojim redom se čita
 
 > Razvojni materijal. Za ispravljeno tumačenje završnih proba i filter prozora
-> važi [revizija rezultata od 06.09.2026.](../../docs/rezultat-finalna-validacija-2026-08-27.md). Starije brojke i planovi ovdje nisu novi dokazi.
+> važi [revizija rezultata od 06.09.2026.](../../docs/probe/rezultat-finalna-validacija-2026-08-27.md). Starije brojke i planovi ovdje nisu novi dokazi.
 
 **Napisano:** 01.09.2026. · **Za koga:** za tebe za šest mjeseci, za mentora, za
 komisiju, i za bilo koga ko prvi put otvara repo.
@@ -9,7 +9,7 @@ komisiju, i za bilo koga ko prvi put otvara repo.
 Ovaj dokument ne uvodi nijednu novu brojku. Sve brojke ispod već postoje u
 datiranim dokumentima na koje se pokazuje; ovdje su samo poređane u priču.
 Ako se ovaj dokument ikad raziđe sa datiranim izvorom, **datirani izvor
-pobjeđuje** (pravilo iz [`INDEKS.md`](../../docs/INDEKS.md)).
+pobjeđuje** (pravilo iz [`README.md`](../../docs/README.md)).
 
 Prateća uputstva:
 
@@ -47,9 +47,9 @@ Ovo je kratka lista onoga bez čega projekat ne postoji.
 |---|---|
 | [`../../KONTEKST.md`](../KONTEKST.md) | pravila rada, zlatna pravila dokaza, gdje je istina |
 | [`../../README.md`](../../README.md) | gdje je projekat sada, u jednoj strani |
-| [`INDEKS.md`](../../docs/INDEKS.md) | mapa cijele dokumentacije: aktuelno vs istorijsko |
-| [`cilj-modela.md`](../../docs/cilj-modela.md) | nepromjenjivi cilj i kriterij uspjeha (AUC ≥ 0,80) |
-| [`../../plan-master-rada.md`](../planovi/plan-master-rada.md) | originalni plan i metodologija (jul 2026) |
+| [`README.md`](../../docs/README.md) | mapa cijele dokumentacije: aktuelno vs istorijsko |
+| [`cilj-modela.md`](../../docs/model/cilj-modela.md) | nepromjenjivi cilj i kriterij uspjeha (AUC ≥ 0,80) |
+| [`../../plan-master-rada.md`](../istorija/planovi/plan-master-rada-jul.md) | originalni plan i metodologija (jul 2026) |
 
 ### 1.2 PC strana — Python (učenje, mjerenje, alati)
 
@@ -209,8 +209,8 @@ na **2 od 7** mašina. Po harmonijskoj sredini (zvanična DCASE mjera) je *loši
 od mel osnove. Zato se tvrdnja u radu piše precizno: *„AUC 0,864 **za
 ventilator**"*, nikad „PSD je bolji za ASD uopšte".
 
-Puna priča sa svim brojkama: [`put-do-modela.md`](../../docs/put-do-modela.md),
-odluka: [`odluka-finalni-model.md`](../../docs/odluka-finalni-model.md).
+Puna priča sa svim brojkama: [`put-do-modela.md`](../../docs/model/put-do-modela.md),
+odluka: [`odluka-finalni-model.md`](../../docs/model/odluka-finalni-model.md).
 
 ### Etapa 6 (09.–14.08.) — model na pločici i mjerenje šta benchmark ne vidi
 
@@ -243,7 +243,7 @@ kratku* pobudu. Usvojena je histereza 1,0/0,7 + 3 uzastopna prozora.
 ### Etapa 7 (16.08.) — FAN01: prvi stvarni ventilator
 
 Prvi run u kojem INMP441 sluša pravi ventilator, a cijela telemetrija prolazi
-kroz zaključani host: [`rezultat-fan01-2026-08-16.md`](../../docs/rezultat-fan01-2026-08-16.md).
+kroz zaključani host: [`rezultat-fan01-2026-08-16.md`](../../docs/probe/rezultat-fan01-2026-08-16.md).
 
 **Dvije odvojene tvrdnje, i moraju ostati odvojene:**
 
@@ -255,7 +255,7 @@ Drugim riječima: rangiranje je bilo skoro savršeno, a upotrebljivost nula. To 
 najvažnija pouka cijelog projekta — AUC nije uređaj.
 
 Iz tog nalaza je nastao plan dorade
-([`PLAN-DORADA-POSLIJE-FAN01.md`](../planovi/PLAN-DORADA-POSLIJE-FAN01.md)).
+([`PLAN-DORADA-POSLIJE-FAN01.md`](../istorija/planovi/PLAN-DORADA-POSLIJE-FAN01.md)).
 
 ### Etapa 8 (16.–20.08.) — osam faza dorade: od modela ka uređaju
 
@@ -298,7 +298,7 @@ najkorisnijih dijelova repoa.
 
 ### Etapa 10 (26.–27.08.) — finalna validacija: devet runova, dva validna
 
-Puna analiza: [`rezultat-finalna-validacija-2026-08-27.md`](../../docs/rezultat-finalna-validacija-2026-08-27.md).
+Puna analiza: [`rezultat-finalna-validacija-2026-08-27.md`](../../docs/probe/rezultat-finalna-validacija-2026-08-27.md).
 
 **Run A (papirić):** uređaj se sam kalibrisao, sam izveo prag `8 084,49`, i
 podigao alarm u trećem bloku. U prva dva bloka **nije** podigao alarm iako je
@@ -380,7 +380,7 @@ cd firmware/esp32s3_asd && idf.py set-target esp32s3 && idf.py reconfigure build
 > build tiho ostane u starom modu. To je P2 i već je koštalo vremena.
 
 Vođeni fizički test sa ventilatorom: pokrenuti `POKRENI-GUIDED25.cmd`, uputstvo
-za operatera u [`KAKO-SAMOSTALNO-POKRENUTI-GUIDED25.md`](../../docs/KAKO-SAMOSTALNO-POKRENUTI-GUIDED25.md).
+za operatera u [`guided25.md`](../../docs/probe/guided25.md).
 
 ---
 
@@ -400,7 +400,7 @@ gotovo:
 - **nije dokazano da je detektovana promjena mehanički kvar** — papirić i ton su
   kontrolisane promjene. Jedan mikrofon to ne može tvrditi.
 
-Aktuelna lista: [`PREOSTALO.md`](../planovi/PREOSTALO.md).
+Aktuelna lista: [`PREOSTALO.md`](../PREOSTALO.md).
 
 ---
 

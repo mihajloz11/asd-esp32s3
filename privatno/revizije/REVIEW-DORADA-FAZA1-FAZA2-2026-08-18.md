@@ -2,11 +2,11 @@
 
 **Status:** analiza završena, popravke NISU primijenjene.
 **Razlog:** čeka se da se završi ostatak plana
-(`privatno/planovi/PLAN-DORADA-POSLIJE-FAN01.md`, faze 3–9) prije nego što se radi jedan fix-pass,
+(`privatno/istorija/planovi/PLAN-DORADA-POSLIJE-FAN01.md`, faze 3–9) prije nego što se radi jedan fix-pass,
 umjesto popravljanja komad po komad dok se plan još izvodi.
 **Opseg pregleda:** `git diff HEAD` u trenutku pisanja — necommit-ovana implementacija
-Faze 1 (K1 fail-closed gate, `docs/DORADA-FAZA1-K1-2026-08-16.md`) i Faze 2
-(multi-session host, `docs/DORADA-FAZA2-MULTI-SESSION-2026-08-16.md`).
+Faze 1 (K1 fail-closed gate, `docs/uredjaj/dorada-poslije-fan01-faze.md`) i Faze 2
+(multi-session host, `docs/uredjaj/dorada-poslije-fan01-faze.md`).
 
 ## Metodologija
 
@@ -65,7 +65,7 @@ zaista namijenjen za budući fajl per Faza 2 dokument).
 (`#define ASD_CALIBRATION_MAX_LOO_CV 0.6f`) i
 `pc/config/asd_commissioning_policy_v1.json:4` (`"max_loo_cv": 0.6`).
 
-`privatno/planovi/PLAN-DORADA-POSLIJE-FAN01.md:305` eksplicitno zabranjuje baš ovo: *"Ne kopirati
+`privatno/istorija/planovi/PLAN-DORADA-POSLIJE-FAN01.md:305` eksplicitno zabranjuje baš ovo: *"Ne kopirati
 `0,6` na više mjesta bez jednog verzionisanog izvora politike."* Jedina sinhronizacija
 je `pc/tests/test_asd_calibration_quality_c.py::test_c_policy_matches_versioned_pc_policy`,
 koji se **preskače** (`pytest.skip`) ako nema `gcc`/`clang` na mašini. Postojeći
@@ -166,7 +166,7 @@ potvrđuje. **Nema akcije.**
 
 ## Šta nije ni počelo
 
-Faze 3–9 iz `privatno/planovi/PLAN-DORADA-POSLIJE-FAN01.md`: razvojna telemetrija (96-dim
+Faze 3–9 iz `privatno/istorija/planovi/PLAN-DORADA-POSLIJE-FAN01.md`: razvojna telemetrija (96-dim
 sidecar), PC normal-only commissioning laboratorija, novi firmware state machine
 (`SETTLE → CENTER_LEARNING → COMMISSION_DERIVE → COMMISSION_VERIFY → MONITORING`), HOLD
 odluka bez lažne `AMBIENT_NOISE` dijagnoze, audio liveness/total-timeout, NVS profil,

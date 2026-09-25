@@ -1,7 +1,7 @@
 # DNEVNIK NEXT LEVEL IZVRŠENJA
 
 Ovaj dnevnik je append-style evidencija plana iz
-[`PLAN-NEXT-LEVEL.md`](../planovi/PLAN-NEXT-LEVEL.md). Brojke se unose onakve kakve jesu;
+[`PLAN-NEXT-LEVEL.md`](../istorija/planovi/PLAN-NEXT-LEVEL.md). Brojke se unose onakve kakve jesu;
 `PASS`, `FAIL`, `BLOCKED_HARDWARE` i `NOT_RUN` nisu međusobno zamjenjivi.
 
 ## 09.08.2026. — početno stanje
@@ -231,7 +231,7 @@ Sve što traži zvuk je time `BLOCKED_HARDWARE` do zamjene modulom #2.
 
 **Status:** `PASS_PC_BUILD` / `NOT_RUN` na uređaju
 
-Puna specifikacija: [faza2-semantika-dogadjaja.md](../../docs/faza2-semantika-dogadjaja.md).
+Puna specifikacija: [faza2-semantika-dogadjaja.md](../../docs/uredjaj/semantika-dogadjaja.md).
 
 ### Rezultati
 
@@ -292,7 +292,7 @@ Puna specifikacija: [faza2-semantika-dogadjaja.md](../../docs/faza2-semantika-do
 
 ## 13–14.08.2026. — mikrofon #2, i zatvaranje softverskih faza
 
-Plan izvršenja ovog bloka: [PLAN-ZAVRSNICA.md](../planovi/PLAN-ZAVRSNICA.md). Redoslijed je
+Plan izvršenja ovog bloka: [PLAN-ZAVRSNICA.md](../istorija/planovi/PLAN-ZAVRSNICA.md). Redoslijed je
 promijenjen u odnosu na `PLAN-NEXT-LEVEL.md` jer je zamjena mikrofona odblokirala
 hardverski put koji je bio glavno usko grlo; razlog je zapisan u samom planu.
 
@@ -469,7 +469,7 @@ Lampica i taster idu u zasebnom FreeRTOS tasku na 20 ms; bez toga bi se obrazac
 osvježavao tek svakih 256 ms i treperenje od 5 Hz se ne bi ni vidjelo.
 
 Ostaje `BLOCKED_HARDWARE`: taster i LED **nisu zalemljeni**. Otpornici 220–330 Ω
-su na spisku [donijeti-sa-posla.md](../elektronika/donijeti-sa-posla.md). Logika je pokrivena
+su na spisku [donijeti-sa-posla.md](../elektronika/nabavka/donijeti-sa-posla.md). Logika je pokrivena
 testovima, sam pritisak nije provjeren na pločici.
 
 ## Blok D — Faza 4: vremenska odluka
@@ -663,7 +663,7 @@ kontrolisanu promjenu protoka papirićem od normale, ali je tadašnji prag stavi
 na sat, ne alarmnih epizoda/h. Papirić nije potvrđen stvarni kvar.
 
 Poslije tog nalaza izvršen je plan
-[PLAN-DORADA-POSLIJE-FAN01.md](../planovi/PLAN-DORADA-POSLIJE-FAN01.md):
+[PLAN-DORADA-POSLIJE-FAN01.md](../istorija/planovi/PLAN-DORADA-POSLIJE-FAN01.md):
 
 - **Faza 1:** centralni K1 host/C gate, literalni terminalni UART redoslijed i
   read-only korekcija `cold-start-04`; originalni artefakt nije mijenjan.
@@ -716,7 +716,7 @@ to funkcionalni go/no-go, ne dokaz dugoročne pouzdanosti.
 ## 26–27.08.2026. — finalna validacija firmvera na pločici
 
 Devet runova, dva validna. Puna analiza sa svim brojkama:
-[`rezultat-finalna-validacija-2026-08-27.md`](../../docs/rezultat-finalna-validacija-2026-08-27.md).
+[`rezultat-finalna-validacija-2026-08-27.md`](../../docs/probe/rezultat-finalna-validacija-2026-08-27.md).
 
 Aktuelni live par je `physical-fan-v1.9.0` / `physical-fan-artifacts-v1.9.0` ↔
 `asd-quality-v1.6.0`. Offline reader i dalje čuva v1.6/q1.3, v1.7/q1.4 i

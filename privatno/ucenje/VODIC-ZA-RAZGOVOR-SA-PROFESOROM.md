@@ -400,7 +400,7 @@ Ovaj AE kod uzima normalni `train` split koji mu je dostavljen; ne treba na njeg
 | isti baseline, `int8` | 0,4694 |
 | `fan_tiny32_s0`, `fp32` | 0,4516 |
 
-Oko 0,5 znači približno slučajno rangiranje normalnih i anomalnih snimaka. **AUC nije procenat tačnosti.** Stariji pregled `docs/put-do-modela.md` navodi oko 0,451 kao početnu AE brojku; za pokazivanje konkretnog baseline reda koristim CSV i 0,4682, da ne miješam varijante.
+Oko 0,5 znači približno slučajno rangiranje normalnih i anomalnih snimaka. **AUC nije procenat tačnosti.** Stariji pregled `docs/model/put-do-modela.md` navodi oko 0,451 kao početnu AE brojku; za pokazivanje konkretnog baseline reda koristim CSV i 0,4682, da ne miješam varijante.
 
 ## 9. Keras, TFLite i ostali pokušaji
 
@@ -439,7 +439,7 @@ Uređajski neuronski tok otvaram u [C:\Users\mihaj\Desktop\master new\firmware\e
 |---|---|---|
 | AE baseline, tiny64, tiny32, tiny16, tiny32b4 | širinu, dubinu i usko grlo mreže | `pc/asd/model.py`, `SWEEP`; `results/results.csv` |
 | Naučeni embedding | mreža uči opis kroz razlikovanje mašina/režima | `pc/tools/train_embed.py` |
-| Samonadzirani/atributski klasifikator, uključujući brzine | pokušaj da pomoćni zadatak nauči korisniji opis | `pc/tools/train_ssl.py`; istorija u `docs/put-do-modela.md` |
+| Samonadzirani/atributski klasifikator, uključujući brzine | pokušaj da pomoćni zadatak nauči korisniji opis | `pc/tools/train_ssl.py`; istorija u `docs/model/put-do-modela.md` |
 | Mel statistika + različite udaljenosti | puna/dijagonalna kovarijansa, Ledoit–Wolf, PPCA, kNN, robustna kovarijansa, pooling, medijana centra | `pc/tools/bench_research.py` do `bench_research6.py` |
 | PSD, envelope i njihove kombinacije | promjena samog opisa signala | `pc/tools/bench_periodicity.py` |
 | Order, log-ratio, coherence, masked, transient varijante | dodatne fizički motivisane ideje | `pc/tools/evaluate_advanced.py`; `results/advanced/advanced_results.json` |
@@ -451,7 +451,7 @@ Pune putanje za dodatne pokušaje:
 - [C:\Users\mihaj\Desktop\master new\pc\tools\bench_research.py](<C:/Users/mihaj/Desktop/master new/pc/tools/bench_research.py>)
 - [C:\Users\mihaj\Desktop\master new\pc\tools\bench_research_final.py](<C:/Users/mihaj/Desktop/master new/pc/tools/bench_research_final.py>)
 - [C:\Users\mihaj\Desktop\master new\pc\tools\evaluate_advanced.py](<C:/Users/mihaj/Desktop/master new/pc/tools/evaluate_advanced.py>)
-- [C:\Users\mihaj\Desktop\master new\docs\put-do-modela.md](<C:/Users/mihaj/Desktop/master new/docs/put-do-modela.md>)
+- [C:\Users\mihaj\Desktop\master new\docs\model\put-do-modela.md](<C:/Users/mihaj/Desktop/master new/docs/model/put-do-modela.md>)
 
 **Konkretan drugi zadatak učenja:** u `train_ssl.py` cilj `Y` je oznaka radnog režima, a ne rekonstrukcija `X`. Zato se koristi klasifikacioni gubitak. Oznake brzine izvlači `attr_of()` iz imena snimka.
 
@@ -652,9 +652,9 @@ def test_psd_real_wav_pc_vs_c(clib):
 
 Ovo je **C biblioteka pokrenuta na PC-u**, ne samo po sebi dokaz izvršavanja na MCU-u. Za uređaj otvaram [C:\Users\mihaj\Desktop\master new\firmware\esp32s3_asd\main\psd_verify.c](<C:/Users/mihaj/Desktop/master new/firmware/esp32s3_asd/main/psd_verify.c>) i `ASD_PSD_VERIFY` granu iz `app_main.c`.
 
-U [C:\Users\mihaj\Desktop\master new\docs\istrazivanje-psd-model.md](<C:/Users/mihaj/Desktop/master new/docs/istrazivanje-psd-model.md>) sačuvana je PC↔C maksimalna razlika obilježja **9,54 × 10⁻⁷**. To je izmjerena razlika u tom testu; `2e-3` u prikazanom assert-u je dozvoljena tolerancija, ne izmjeren rezultat. Mala numerička razlika dokazuje slaganje računanja na provjerenom ulazu, ne kvalitet detekcije i ne ispravnost svakog novog snimanja.
+U [C:\Users\mihaj\Desktop\master new\docs\model\istrazivanja\istrazivanje-psd-model.md](<C:/Users/mihaj/Desktop/master new/docs/model/istrazivanja/istrazivanje-psd-model.md>) sačuvana je PC↔C maksimalna razlika obilježja **9,54 × 10⁻⁷**. To je izmjerena razlika u tom testu; `2e-3` u prikazanom assert-u je dozvoljena tolerancija, ne izmjeren rezultat. Mala numerička razlika dokazuje slaganje računanja na provjerenom ulazu, ne kvalitet detekcije i ne ispravnost svakog novog snimanja.
 
-**Provjera na samoj ploči:** [C:\Users\mihaj\Desktop\master new\docs\hardver-verifikacija.md](<C:/Users/mihaj/Desktop/master new/docs/hardver-verifikacija.md>), odjeljak „PC↔uređaj na živom mikrofonu“. Uređaj je poslao isti snimljeni PCM i svoj feature, a [C:\Users\mihaj\Desktop\master new\pc\tools\psd_verify_compare.py](<C:/Users/mihaj/Desktop/master new/pc/tools/psd_verify_compare.py>) je ponovio račun na PC-u. Sačuvani rezultat je `max |PC - uredjaj| = 1,698e-06`, uz provjeru prenosa snimka. Dokument je iz ranije faze: ovdje koristim dokaz numeričkog slaganja, ne njegove stare pragove i šire zaključke kao opis finalne politike.
+**Provjera na samoj ploči:** [C:\Users\mihaj\Desktop\master new\docs\uredjaj\hardver-verifikacija.md](<C:/Users/mihaj/Desktop/master new/docs/uredjaj/hardver-verifikacija.md>), odjeljak „PC↔uređaj na živom mikrofonu“. Uređaj je poslao isti snimljeni PCM i svoj feature, a [C:\Users\mihaj\Desktop\master new\pc\tools\psd_verify_compare.py](<C:/Users/mihaj/Desktop/master new/pc/tools/psd_verify_compare.py>) je ponovio račun na PC-u. Sačuvani rezultat je `max |PC - uredjaj| = 1,698e-06`, uz provjeru prenosa snimka. Dokument je iz ranije faze: ovdje koristim dokaz numeričkog slaganja, ne njegove stare pragove i šire zaključke kao opis finalne politike.
 
 ## 14. ROC, AUC i koje rezultate pokazujem
 
@@ -693,7 +693,7 @@ Ovo je zajednička ideja metrike prikazana u AE evaluaciji. Za noviju tabelu kan
 1. [C:\Users\mihaj\Desktop\master new\results\results.csv](<C:/Users/mihaj/Desktop/master new/results/results.csv>) — raniji AE i kvantizovane varijante. Pokazujem da slabo rangiranje postoji prije int8 konverzije.
 2. [C:\Users\mihaj\Desktop\master new\results\advanced\advanced_results.json](<C:/Users/mihaj/Desktop/master new/results/advanced/advanced_results.json>) — 20 razvojnih podjela: `psd_shape` AUC **0,8556**, pAUC **0,6393**; `psd_plus_transient` AUC **0,85676**. Dodatak transient obilježja ima mali numerički plus, ne dokazanu značajnu prednost. Zato ne kažem da je čisti PSD pobijedio baš svaku varijantu.
 3. [C:\Users\mihaj\Desktop\master new\results\canonical_evaluation\canonical-evaluation-v1.1.0_m7-e7dedc81_k20_s100_sr20260809_b2000_br20260810_ms92dcebb5_src285b8c84_dep3eec7eed_datae3eb5bd5_195c0f34f7e6\SUMMARY.md](<C:/Users/mihaj/Desktop/master new/results/canonical_evaluation/canonical-evaluation-v1.1.0_m7-e7dedc81_k20_s100_sr20260809_b2000_br20260810_ms92dcebb5_src285b8c84_dep3eec7eed_datae3eb5bd5_195c0f34f7e6/SUMMARY.md>) — 100 podjela, k=20: fan PSD **0,8666**, mel1280 **0,6270**, mel256 **0,5897**, sa istim backendom u tom poređenju. Ovo su statistički mel modeli, **ne AE**. Na ToyCar PSD je **0,4479**, pa ne tvrdim da je najbolji za sve mašine.
-4. [C:\Users\mihaj\Desktop\master new\docs\rezultat-finalna-validacija-2026-08-27.md](<C:/Users/mihaj/Desktop/master new/docs/rezultat-finalna-validacija-2026-08-27.md>) — ono što se stvarno desilo na fizičkom ventilatoru.
+4. [C:\Users\mihaj\Desktop\master new\docs\probe\rezultat-finalna-validacija-2026-08-27.md](<C:/Users/mihaj/Desktop/master new/docs/probe/rezultat-finalna-validacija-2026-08-27.md>) — ono što se stvarno desilo na fizičkom ventilatoru.
 
 Brojevi 0,8556 i 0,8666 nijesu kontradikcija: različiti su protokoli i podjele. Ovi skupovi su korišćeni tokom razvoja, pa postoje istorijska pristrasnost izbora modela i ograničenje nezavisnosti. **Učenje samo na normali nije isto što i potpuno slijep razvoj bez ikakvog uvida u anomalne rezultate.**
 
@@ -744,7 +744,7 @@ U njemu su već obuhvaćeni:
 
 **Kažem:** „Napravio sam i zalemio odvojenu mjernu ploču da bih izmjerio potrošnju kompletnog uređaja. Na njoj su regulator AMS1117-3.3 i INA226 sa šantom R100, odnosno 0,1 Ω. Prije konačnih brojeva provjeriću naponsko i strujno mjerenje, pa izmjeriti energiju tokom stvarnog rada detektora.“
 
-Lemljenje je trenutno stanje prema mojoj prijavi; samo po sebi ne potvrđuje tačnost mjerenja. Novija šema je ovdje: [C:\Users\mihaj\Desktop\master new\radno\elektronika\lemljenje-cjeline-i-mjerenje.md](<C:/Users/mihaj/Desktop/master new/radno/elektronika/lemljenje-cjeline-i-mjerenje.md>). Nosač je prototipna ploča 4 × 6 cm, moduli su na headerima, a dodatni 470 µF predviđen je kao vadiv.
+Lemljenje je trenutno stanje prema mojoj prijavi; samo po sebi ne potvrđuje tačnost mjerenja. Novija šema je ovdje: [C:\Users\mihaj\Desktop\master new\privatno\elektronika\sklop\lemljenje-cjeline-i-mjerenje.md](<C:/Users/mihaj/Desktop/master new/privatno/elektronika/sklop/lemljenje-cjeline-i-mjerenje.md>). Nosač je prototipna ploča 4 × 6 cm, moduli su na headerima, a dodatni 470 µF predviđen je kao vadiv.
 
 ```text
 5 V → AMS1117-3.3 → čvor IZVOR 3,3 V → IN+ [šant 0,1 Ω] IN− → ESP32 3V3
@@ -815,7 +815,7 @@ Novi tok ima `E5CHECK` za kontrolna očitanja, `E5RUN` za 60 s mjerenja i naknad
 
 Novi E5 koristi okidane konverzije, AVG=1, bus/shunt po 1,1 ms; stvarni razmak uzoraka dobija se iz vremena i I2C rada. Ne prepisujem mu staru konfiguraciju AVG=16 niti unaprijed tvrdim da postiže tačno 450 Hz. Mjerenje i samo opterećuje uređaj, pa treba procijeniti i taj doprinos.
 
-**Prethodni dokaz:** [C:\Users\mihaj\Desktop\master new\radno\elektronika\e5-mjerenje-01-rezultat.md](<C:/Users/mihaj/Desktop/master new/radno/elektronika/e5-mjerenje-01-rezultat.md>) — stari I2C test, oko 34,73 mA **bez audia i modela**, sa problemom naponskog očitanja 3,425 V naspram oko 3,22 V. To nije finalna potrošnja detektora. Nova ploča može poboljšati kontakte, ali ponovljeno mjerenje tek treba da potvrdi da je problem riješen.
+**Prethodni dokaz:** [C:\Users\mihaj\Desktop\master new\privatno\elektronika\e5-potrosnja\e5-mjerenje-01-rezultat.md](<C:/Users/mihaj/Desktop/master new/privatno/elektronika/e5-potrosnja/e5-mjerenje-01-rezultat.md>) — stari I2C test, oko 34,73 mA **bez audia i modela**, sa problemom naponskog očitanja 3,425 V naspram oko 3,22 V. To nije finalna potrošnja detektora. Nova ploča može poboljšati kontakte, ali ponovljeno mjerenje tek treba da potvrdi da je problem riješen.
 
 ## 17. Završetak razgovora i kratki podsjetnik
 

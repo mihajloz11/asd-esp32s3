@@ -909,7 +909,7 @@ Postoje tri odvojene provjere. Poređenje je pošteno samo kada oba računaju na
 
 **Testovi:** `pc/tests/test_psd_features_c.py`: `test_psd_real_wav_pc_vs_c`, `test_psd_stream_matches_batch`, `test_psd_score_pc_vs_c`. Prvi ima toleranciju 0,002 po feature-u, streaming zahtijeva tačno 0 razlike, a skor relativnu grešku ispod 2e-6. Nemoj miješati dozvoljenu toleranciju i stvarno izmjerenu grešku.
 
-Istorijski zapis u `docs/hardver-verifikacija.md`: najveća PC–C razlika feature-a oko **9,54e-7**, batch–streaming **0**, PC–pločica na živom zvuku **1,698e-6**. To su zabilježena mjerenja, ne novo fizičko mjerenje obavljeno pri pisanju ovog vodiča.
+Istorijski zapis u `docs/uredjaj/hardver-verifikacija.md`: najveća PC–C razlika feature-a oko **9,54e-7**, batch–streaming **0**, PC–pločica na živom zvuku **1,698e-6**. To su zabilježena mjerenja, ne novo fizičko mjerenje obavljeno pri pisanju ovog vodiča.
 
 **Pločica:** `psd_verify.c`, režim `ASD_PSD_VERIFY`. **PC:** `pc/tools/psd_verify_compare.py`; provjerava i FNV-1a kontrolni zbir prenesenog PCM-a. Sitne razlike očekujemo zbog float32 i redosljeda računanja.
 
@@ -981,7 +981,7 @@ Za čitanje tabele: **embedding** je opis zvuka koji mreža sama nauči; **kNN**
 | Napredne alternative | order, režimi, logratio, coherence i druge unaprijed navedene varijante | nije svaka fizički zanimljiva ideja dala bolje rezultate | `pc/tools/evaluate_advanced.py` |
 | Kasniji kandidati | neprazne trake, audio-hardening, druge regularizacije kovarijanse | dodatna PC istraživanja; ne zamjenjuju fizički provjereni baseline | `results/psd_nonempty`, `audio_hardening`, `psd_covariance` |
 
-Orijentacione istorijske brojke iz `docs/put-do-modela.md`: AE oko 0,451 AUC, embedding oko 0,495, neki mel statistički modeli oko 0,64–0,72, PSD oko 0,864 u tadašnjem protokolu. To nije dokaz da su neuronske mreže generalno loše; govori da ovi konkretni pokušaji nijesu bili najbolji u ovoj postavci. Objašnjenja njihovog neuspjeha tretiraj kao tumačenja potkrijepljena eksperimentima, ne univerzalne zakone.
+Orijentacione istorijske brojke iz `docs/model/put-do-modela.md`: AE oko 0,451 AUC, embedding oko 0,495, neki mel statistički modeli oko 0,64–0,72, PSD oko 0,864 u tadašnjem protokolu. To nije dokaz da su neuronske mreže generalno loše; govori da ovi konkretni pokušaji nijesu bili najbolji u ovoj postavci. Objašnjenja njihovog neuspjeha tretiraj kao tumačenja potkrijepljena eksperimentima, ne univerzalne zakone.
 
 Za finalno izlaganje koristi noviji pregled u `README.md`: **0,8556 ± 0,0240**, k=10, 20 podjela; odvojena PC referenca **0,8666 ± 0,0270**, k=20, 100 podjela. PSD nije pobijedio za svaku vrstu mašine: fokus ovog uređaja je ventilator. Razvojni benchmark nije nezavisan test cijelog procesa izbora modela.
 
@@ -1118,7 +1118,7 @@ Numeričko slaganje, vrijeme računanja, benchmark i fizička detekcija su četi
 | Govor i vrata u toj probi | bez alarma u malom posmatranom uzorku; ne dokazuje opštu otpornost na buku |
 | valid_physical_result | zapis je upotrebljiv za tumačenje; ne znači da je eksperiment prošao |
 
-Izvor: `docs/rezultat-finalna-validacija-2026-08-27.md`. Jedan ventilator i vještačke pobude ne dokazuju dijagnozu stvarnog mehaničkog kvara. `dropped=0` samo kaže da brojač nije prijavio izgubljene uzorke; bez validnog audio toka to nije dovoljan dokaz dobrog snimanja.
+Izvor: `docs/probe/rezultat-finalna-validacija-2026-08-27.md`. Jedan ventilator i vještačke pobude ne dokazuju dijagnozu stvarnog mehaničkog kvara. `dropped=0` samo kaže da brojač nije prijavio izgubljene uzorke; bez validnog audio toka to nije dovoljan dokaz dobrog snimanja.
 
 **Za profesora:** „Potvrdio sam da algoritam može samostalno raditi na mikrokontroleru i detektovati stabilnu promjenu zvuka u testiranoj postavci. Nestabilne pobude i razdvajanje uzroka promjene ostaju ograničenja, što se vidi i iz neuspjeha dijela testa sa papirićem.”
 
@@ -1145,6 +1145,6 @@ Ako zapneš, vrati se samo na taj odjeljak. Cilj nije da naučiš rečenice napa
 
 ## 20. Izvori za dalje čitanje
 
-Projektni izvori imaju prednost za tvrdnju šta smo stvarno uradili: `README.md`, `docs/put-do-modela.md`, `docs/odluka-finalni-model.md`, `docs/hardver-verifikacija.md`, `docs/rezultat-finalna-validacija-2026-08-27.md`, te navedeni kod. Starije tekstove koristi za istoriju; njihovi pragovi i zaključci ne zamjenjuju noviju završnu reviziju.
+Projektni izvori imaju prednost za tvrdnju šta smo stvarno uradili: `README.md`, `docs/model/put-do-modela.md`, `docs/model/odluka-finalni-model.md`, `docs/uredjaj/hardver-verifikacija.md`, `docs/probe/rezultat-finalna-validacija-2026-08-27.md`, te navedeni kod. Starije tekstove koristi za istoriju; njihovi pragovi i zaključci ne zamjenjuju noviju završnu reviziju.
 
 Za definiciju Welch postupka, preklapanje i razliku `density`/`spectrum`: [SciPy dokumentacija](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.welch.html). Za regularizaciju kovarijanse: [scikit-learn LedoitWolf](https://scikit-learn.org/stable/modules/generated/sklearn.covariance.LedoitWolf.html). To su dopunski izvori teorije, ne dokazi naših fizičkih mjerenja.

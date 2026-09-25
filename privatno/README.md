@@ -17,19 +17,31 @@ provjerava da ništa privatno nije procurilo.
 uključujući ovaj folder. Za javnu objavu napraviti **novi** repo iz izvezene
 kopije (nova istorija, jedan početni commit).
 
-## Kontekst i planovi
+## Raspored
+
+```
+privatno/
+  KONTEKST.md      ulazna tačka, pravila rada, gdje je istina
+  PREOSTALO.md     jedina aktuelna lista preostalog rada
+  ideje.md         ideje koje ne idu u kod
+  elektronika/     sklop, lemljenje, E5 potrošnja, nabavka, šeme
+  ucenje/          uputstva i vodiči za razumijevanje i odbranu
+  dnevnici/        hronologija rada (tracking)
+  revizije/        revizije iz avgusta (tracking)
+  istorija/        stari planovi, handoff, nacrti poglavlja
+  fotografije/     fotografije postavke (HEIC)
+```
+
+## Aktuelno
 
 | Fajl | Sadržaj |
 |---|---|
 | [KONTEKST.md](KONTEKST.md) | ulazna tačka i pravila rada na projektu (i za AI asistente) |
-| [planovi/PREOSTALO.md](planovi/PREOSTALO.md) | **jedina aktuelna lista preostalog rada** |
-| [planovi/plan-master-rada.md](planovi/plan-master-rada.md) | metodologija i plan master rada |
-| [planovi/future-work.md](planovi/future-work.md) | ideje koje ne idu u kod |
-| [planovi/handoff.md](planovi/handoff.md) | predaja stanja u novu sesiju |
-| [planovi/PLAN-DORADA-POSLIJE-FAN01.md](planovi/PLAN-DORADA-POSLIJE-FAN01.md) | plan dorade poslije prvog fizičkog testa |
-| `planovi/PLAN.md`, `PLAN-NEXT-LEVEL.md`, `PLAN-ZAVRSNICA.md`, `analiza-stanja-…`, `sazetak-za-mentora.md`, `novi plan.txt` | ISTORIJSKI planovi i prijedlog teme |
+| [PREOSTALO.md](PREOSTALO.md) | **jedina aktuelna lista preostalog rada** |
+| [ideje.md](ideje.md) | ideje za budući rad; ništa od toga nije u finalnom kodu |
+| [elektronika/README.md](elektronika/README.md) | šta važi za sklop i potrošnju sada, i mapa fajlova |
 
-## Dnevnici, revizije, nacrti
+## Tracking
 
 | Fajl | Sadržaj |
 |---|---|
@@ -37,9 +49,24 @@ kopije (nova istorija, jedan početni commit).
 | [dnevnici/DNEVNIK-NEXT-LEVEL.md](dnevnici/DNEVNIK-NEXT-LEVEL.md) | izvršenje plana NEXT LEVEL, append-style |
 | [revizije/REVIEW-KRITICNO-2026-08-20.md](revizije/REVIEW-KRITICNO-2026-08-20.md) | status kritičnih nalaza revizije |
 | [revizije/REVIEW-DORADA-FAZA1-FAZA2-2026-08-18.md](revizije/REVIEW-DORADA-FAZA1-FAZA2-2026-08-18.md) | review faza 1–2 |
+
+## `istorija/`
+
+Istraživački trag, ne današnja lista zadataka. Ne ažurira se.
+
+| Fajl | Sadržaj |
+|---|---|
+| [planovi/plan-master-rada-jul.md](istorija/planovi/plan-master-rada-jul.md) | prvobitni plan iz jula (AE/TFLM smjer); raniji nacrt istog plana (`novi plan.txt`) je izbačen jer je ovaj njegova proširena verzija |
+| [planovi/PLAN.md](istorija/planovi/PLAN.md) | plan od 09.08. |
+| [planovi/analiza-stanja-i-sljedeci-koraci-2026-08-09.md](istorija/planovi/analiza-stanja-i-sljedeci-koraci-2026-08-09.md) | analiza stanja 09.08. |
+| [planovi/PLAN-NEXT-LEVEL.md](istorija/planovi/PLAN-NEXT-LEVEL.md) | plan NEXT LEVEL (dnevnik izvršenja je u `dnevnici/`) |
+| [planovi/PLAN-DORADA-POSLIJE-FAN01.md](istorija/planovi/PLAN-DORADA-POSLIJE-FAN01.md) | plan dorade poslije prvog fizičkog testa |
+| [planovi/handoff-2026-08-22.md](istorija/planovi/handoff-2026-08-22.md) | predaja stanja u novu sesiju, 22.08. |
+| [planovi/PLAN-ZAVRSNICA.md](istorija/planovi/PLAN-ZAVRSNICA.md) | plan završnice |
+| [planovi/sazetak-za-mentora.md](istorija/planovi/sazetak-za-mentora.md) | prijedlog teme za mentora |
 | `nacrti/rad-poglavlje-2-pregled.md`, `rad-poglavlje-3-teorija.md` | stari nacrti poglavlja; tekst rada je u `radovi/master-rad/` |
 
-## `ucenje/` — uputstva za razumijevanje projekta
+## `ucenje/`
 
 Ne uvode nove brojke; sabiraju postojeće iz datiranih dokumenata. Ako se
 razilaze sa `docs/` ili `results/`, izvor pobjeđuje.
@@ -52,31 +79,16 @@ razilaze sa `docs/` ili `results/`, izvor pobjeđuje.
 | [UPUTSTVO-4-PREZENTACIJA-MENTORU.md](ucenje/UPUTSTVO-4-PREZENTACIJA-MENTORU.md) | projekat u sedam koraka, za izlaganje |
 | [VODIC-KROZ-PROJEKAT.md](ucenje/VODIC-KROZ-PROJEKAT.md), [.html](ucenje/VODIC-KROZ-PROJEKAT.html) | interaktivni vodič sa objašnjenjima i kodom |
 | [VODIC-ZA-RAZGOVOR-SA-PROFESOROM.md](ucenje/VODIC-ZA-RAZGOVOR-SA-PROFESOROM.md) | priprema za razgovor sa mentorom |
-| `fft-lekcija.py`, `napravi-vodic.py`, `vizuelni-dodaci.py`, `studio-izgled.py`, `nacrtaj-skice.py`, `slike/`, `*.svg` | generatori i ilustracije vodiča |
+| `napravi-vodic.py`, `vizuelni-dodaci.py`, `studio-izgled.py`, `fft-lekcija.py` | prave `VODIC-KROZ-PROJEKAT.html` i `*.svg` pored sebe |
+| `nacrtaj-skice.py` | pravi `slike/*.svg` i `slike/*.png` |
 | `stari-pregledi/` | HTML pregledi iz jula, prije PSD smjera |
-
-## `elektronika/` — sklapanje, lemljenje, potrošnja
-
-| Fajl | Sadržaj |
-|---|---|
-| [plan-dvije-plocice.md](elektronika/plan-dvije-plocice.md) | podjela: ploča U (uređaj) i ploča M (mjerna) |
-| [uredjaj-na-protobordu.md](elektronika/uredjaj-na-protobordu.md) | odluka 02.09.: MB-102, LED i taster na 3D držaču, otpornici |
-| [lemljenje-cjeline-i-mjerenje.md](elektronika/lemljenje-cjeline-i-mjerenje.md) | šta se lemi po cjelini, spajanje za E5 |
-| `lemljenje.md`, `lemljenje-kratko.md`, `lemljenje-kratko.html` | procedura lemljenja |
-| `sema-cjeline.svg`, `sema-povezivanja.md/.svg`, `sema-sklopa.pdf`, `sema-lemljenje.svg` | šeme; `make_sema_sklopa.py` pravi PDF i `img/sema-sklopa-s*.png` |
-| [kondenzatori.md](elektronika/kondenzatori.md) | koji kondenzator gdje ide i da li treba |
-| `e5-povezivanje-i-mjerenje.md`, `e5-mjerenje-01-rezultat.md`, `ina226-provjera.md` | E5 potrošnja; šema u prvom je zastarjela |
-| `hardver-lista.md`, `hardware.md`, `porudzbina-elektromodul.md`, `donijeti-sa-posla.md` | inventar i nabavka |
-| `img/` | fotografije modula, crteži, renderi |
-
-Pinovi za javnu verziju su u `firmware/esp32s3_asd/main/pins.h`.
 
 ## Ostalo
 
-- `fotografije/`: fotografije postavke (HEIC).
 - `../radovi/`: master i TELFOR rukopisi, šabloni fakulteta i liste za predaju.
   Ne izvoze se dok radovi nisu objavljeni i odbranjeni
   (`napravi_predaju.py --sa-radovima` ih uključuje, bez šablona i lista).
+- Javna dokumentacija je u [`../docs/README.md`](../docs/README.md).
 
 ## Rad van `master`-a
 
