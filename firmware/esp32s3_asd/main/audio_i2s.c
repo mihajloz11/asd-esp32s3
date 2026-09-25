@@ -1,4 +1,5 @@
 #include "audio_i2s.h"
+#include "audio_pcm.h"
 #include "pins.h"
 
 #include <string.h>
@@ -76,11 +77,11 @@ static void capture_task(void *arg) {
         }
 
         /* INMP441: 24-bit MSB u 32-bit slotu -> >>14 daje pun 16-bit opseg
-         * (provjeri amplitudu na WAV testu, rizik C1) */
+         * (rizik C1); van opsega zasicenje, vidi audio_pcm.h. */
         for (size_t i = off; i < n; i++) {
-            int32_t a = raw[i] < 0 ? -raw[i] : raw[i];
+            int32_t a = audio_pcm_raw_magnitude(raw[i]);
             if (a > raw_peak) raw_peak = a;
-            pcm[i - off] = (int16_t)(raw[i] >> 14);
+            pcm[i - off] = audio_pcm_from_raw(raw[i]);
         }
         size_t out = n - off;
         if (xRingbufferSend(ring, pcm, out * sizeof(int16_t), 0) != pdTRUE)
