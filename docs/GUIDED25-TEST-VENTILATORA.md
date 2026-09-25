@@ -101,7 +101,7 @@ Interference politika je `v3` i **uključena** (`enabled = 1`,
 prenosi između sesija: izvodi se u svakoj sesiji kao `max(CAL normal) × 1,25`
 iz normal-only prozora, pa papirić, govor i vrata ne ulaze u fit. Na runovima
 27.08. je govor i vrata odbila kao nestabilne prozore
-([DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md)). Ovaj test i dalje može
+([DNEVNIK-NEXT-LEVEL.md](../privatno/dnevnici/DNEVNIK-NEXT-LEVEL.md)). Ovaj test i dalje može
 dokazati samo **opaženu toleranciju** na konkretan govor i vrata u ovoj sobi;
 ne dokazuje da postoji klasifikator govora/HOLD-a za svaku spoljnu buku.
 

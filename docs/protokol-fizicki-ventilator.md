@@ -8,7 +8,7 @@ V1.6 je potvrđen i na pločici: isti binarni fajl (354 784 B, SHA-256
 `9ac2caca…8d967813`) pustio je oba validna runa 27.08.2026.
 
 > **Izmjene u v1.9.0** (24.08.2026, detaljno:
-> [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md)): kapija pouzdanosti je
+> [DNEVNIK-NEXT-LEVEL.md](../privatno/dnevnici/DNEVNIK-NEXT-LEVEL.md)): kapija pouzdanosti je
 > uključena (`asd_interference` v3, `enabled = 1`), ali HOLD sada postaje
 > **vidljiv hostu** umjesto da mu obori run. Ranija verzija bi oborila svaki
 > naredni run kroz dva nezavisna lanca: `asd_temporal_suspend()` je pri HOLD-u
@@ -53,7 +53,7 @@ V1.6 je potvrđen i na pločici: isti binarni fajl (354 784 B, SHA-256
 > STARTED` resetuje samo session-scope brojače, pragove i operator condition,
 > dok boot handshake, provenance i run totals ostaju sačuvani.
 
-> **Izmjene u v1.6.0** (detaljno: [DNEVNIK-NEXT-LEVEL.md](DNEVNIK-NEXT-LEVEL.md),
+> **Izmjene u v1.6.0** (detaljno: [DNEVNIK-NEXT-LEVEL.md](../privatno/dnevnici/DNEVNIK-NEXT-LEVEL.md),
 > blokovi B–D):
 >
 > - **Operater pokreće učenje.** Nema vremenskog autostarta — nijedna sesija,
@@ -61,7 +61,7 @@ V1.6 je potvrđen i na pločici: isti binarni fajl (354 784 B, SHA-256
 >   [psd_live.c](../firmware/esp32s3_asd/main/psd_live.c)). Radnja stiže sa
 >   fizičkog tastera **ili** kao `PRESS`/`HOLD` sa konzole; oba ulaza dijele
 >   isti put i isti `BUTTON` zapis. Lampica javlja kada je učenje gotovo —
->   puni tok demoa je u [PREOSTALO.md](PREOSTALO.md).
+>   puni tok demoa je u [PREOSTALO.md](../privatno/planovi/PREOSTALO.md).
 > - `EVENT` nosi `event`, `capability` i `level` (semantika Faze 2).
 > - Novi zapisi `PRESENCE`, `TEMPORAL`, `SESSION`, `BUTTON`. Prva dva
 >   objavljuju politike kojima host **nezavisno ponavlja** odluku uređaja.

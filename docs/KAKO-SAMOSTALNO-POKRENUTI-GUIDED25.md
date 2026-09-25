@@ -60,7 +60,7 @@ sam zatvara poslije 15 minuta.
 
 ## Isto iz PowerShella
 
-Iz `C:\Users\mihaj\Desktop\master new`:
+Iz korijena repoa:
 
 ```powershell
 $env:PYTHONUTF8 = "1"

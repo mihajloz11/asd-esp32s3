@@ -7,18 +7,11 @@
 #include <math.h>
 #include <string.h>
 
-/* Izvedeno iz normalnih podataka: pc/tools/derive_presence_policy.py, zaključano
- * u pc/config/asd_presence_policy_v1.json (`target_anomalies_used=false`).
- *
- * 11 dB nije sigma račun. Nivo po klipu u DCASE-u je normalizovan (sd 0,02 dB
- * preko 60 target klipova), pa je artefakt skupa i ne ulazi u marginu. Ulazi
- * samo varijacija unutar klipa, i to po TROJKAMA prozora, jer se odluka donosi
- * po tri uzastopna prozora. Najgori normalan pad po trojki je −7,90 dB
- * (source kontrola, 7400 trojki), plus 3 dB rezerve → 11 dB. Čisti 6σ bi dao
- * 3,87 dB i lažno bi palio, jer raspodjela ima težak rep u oba smjera.
- *
- * OGRANIČENJE: izvedeno iz snimaka, ne iz fizičkog ventilatora. Ponoviti kad
- * ventilator bude dostupan. */
+/* Margina od 11 dB, izvedena iz normalnih podataka (derive_presence_policy.py,
+ * asd_presence_policy_v1.json): najgori normalni pad nivoa preko tri uzastopna
+ * prozora je -7,90 dB, plus 3 dB rezerve. Cisti 6 sigma bi dao 3,87 dB i
+ * palio bi lazno, jer raspodjela ima tezak rep. Izvedeno iz snimaka, ne sa
+ * fizickog ventilatora. */
 #define DEFAULT_ABSENT_MARGIN_DB  11.0f
 #define DEFAULT_MIN_CONSECUTIVE   3
 
@@ -73,9 +66,8 @@ int asd_event_is_emittable(asd_event_t event) {
 }
 
 int asd_state_is_terminal(asd_state_t state) {
-    /* Iz ovih stanja se tok ne nastavlja: operater mora ponovo pokrenuti
-     * kalibraciju. Tiho nastavljanje bi bilo `warn and continue`, a automatska
-     * rekalibracija bi mogla naučiti kvar kao normalu (P10). */
+    /* Terminalna stanja: operater mora ponovo pokrenuti kalibraciju.
+     * Automatska rekalibracija mogla bi nauciti kvar kao normalu (P10). */
     return state == ASD_STATE_CALIBRATION_REJECTED ||
            state == ASD_STATE_SENSOR_ERROR ||
            state == ASD_STATE_RECALIBRATION_REQUIRED;
@@ -265,15 +257,9 @@ asd_decision_t asd_decide(asd_decision_ctx_t *ctx,
     float gate = cal->level_mean_dbfs - ctx->policy.absent_margin_db;
     if (obs->rms_dbfs < gate) {
         ctx->absent_run++;
-        /* Odstupanje se NE ocjenjuje dok je nivo ispod gate-a. Kad mašina
-         * utihne, score i tako skoči (izmjereno 08.08: 10 → 59), pa bi se bez
-         * ovoga prvo emitovala nepostojeća anomalija, a tek onda zaustavljanje.
-         * Hijerarhija znači da viši nivo guši niži.
-         *
-         * SUSPEND, ne RESET: uspon ka alarmu se prekida, ali alarm koji već
-         * traje se ne briše. Mašina koja na trenutak utihne ne poništava
-         * odstupanje koje je uređaj stvarno izmjerio, a tiho gašenje bi
-         * značilo da uređaj zaboravi alarm zbog jednog tihog prozora. */
+        /* Ispod gate-a se odstupanje ne ocjenjuje: kad masina utihne, ocjena i
+         * tako skoci, pa bi prvo izasla lazna anomalija. SUSPEND, ne RESET: uspon
+         * ka alarmu staje, ali alarm koji traje ne brise se zbog tihog prozora. */
         asd_temporal_suspend(&ctx->temporal);
         if (ctx->absent_run >= ctx->policy.min_consecutive) {
             return finish(ctx, previous, ASD_STATE_NO_MACHINE,
@@ -299,9 +285,8 @@ asd_decision_t asd_decide(asd_decision_ctx_t *ctx,
      * UNKNOWN_CHANGE umjesto SPEED_CHANGED ili MECHANICAL_ANOMALY. */
 
     /* --- 4) odstupanje ------------------------------------------------- */
-    /* Vremenska odluka je cijela u `asd_temporal.c` (Faza 4): koliko uzastopnih
-     * prozora, histereza pri izlasku, i zašto EWMA/CUSUM nisu uzeti. Ovdje
-     * ostaje samo prevod alarma u stanje i događaj. */
+    /* Vremenska odluka je u asd_temporal.c; ovdje ostaje prevod alarma u
+     * stanje i dogadjaj. */
     asd_interference_observation_t interference_observation = {
         .tonalness_delta = obs->tonalness_delta,
         .subsegment_instability = obs->subsegment_instability,

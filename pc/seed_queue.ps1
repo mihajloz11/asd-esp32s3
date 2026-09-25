@@ -1,6 +1,6 @@
 # 5-seed finalne tabele. Prvo fan seeds 1-4 (brz, kompletan 5-seed za fan),
 # zatim ostale masine seeds 1-4 (dugo - preko noci). Rezultati u results.csv.
-$root = "C:\Users\mihaj\Desktop\master new"
+$root = Split-Path -Parent $PSScriptRoot
 $py = (Resolve-Path "$root\.venv\Scripts\python.exe").Path
 # cekaj da MAHALA-int8 zavrsi (izbjegni konflikt pri upisu results.csv)
 while (-not (Test-Path "$root\results\mahala_int8_done.txt")) { Start-Sleep 30 }

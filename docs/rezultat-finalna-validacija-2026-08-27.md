@@ -89,6 +89,14 @@ Filter: validan protokol, potvrđen uslov, bez prelaznog prozora; HOLD ostaje uk
 Run metrike: 65 DET prozora sirovo, 43 za metrike, 3 alarmna prozora, 2 epizode,
 `6,98 %` vremena u alarmu, medijana oporavka `10,08 s`, `dropped=0`.
 
+> **Ispravka 25.09.2026.** Firmware je u ovoj probi emitovao jedan
+> `ANOMALY_ENTERED` (1260,3 s) i jedan `ANOMALY_CLEARED` (1300,2 s), dakle
+> jednu epizodu. Host prekida praćenje epizode na izbačenom prelaznom prozoru,
+> pa je ista epizoda izbrojana dva puta. Njegova „medijana oporavka" je razmak
+> između posljednjeg alarmnog i prvog normalnog prozora u metrici (jedan
+> prozor), a ne vrijeme od uklanjanja papirića. Alarm se ugasio u trećem
+> prozoru oporavka. Radovi koriste događaje sa uređaja.
+
 **Ishod papirića.** Medijane ocjene su 30 255, 62 344 i 19 844,
 naspram osnove 1146. U prva dva bloka tri od četiri prozora imaju HOLD,
 pa se ne ostvari uslov od tri uzastopna pouzdana prekoračenja. Alarm se javlja
@@ -151,6 +159,14 @@ Filter: validan protokol, potvrđen uslov, bez prelaznog prozora; HOLD ostaje uk
 Run metrike: 115 DET prozora sirovo, 99 za metrike, 64 alarmna prozora,
 2 epizode, `64,65 %` vremena u alarmu, `dropped=0`,
 `physical_result_status: valid_physical_result`.
+
+> **Ispravka 25.09.2026.** I ovdje uređaj prijavljuje jednu epizodu (jedan
+> `ANOMALY_ENTERED`, bez `ANOMALY_CLEARED`); drugu host dobija na prelaznom
+> prozoru. Obilježja iz research paketa pokazuju da je traka od 1 kHz ostala
+> oko 42 standardizovane jedinice iznad centra još 36 prozora poslije oznake
+> `recovery_after_tone`, do oko 1845 s: ton je i dalje svirao. Poslije toga
+> ocjene stoje između 12 266 i 19 561, iznad izlaznog praga. Analiza:
+> [trial_features](../results/trial_features/2026-09-25/README.md).
 
 Research paket je kompletan: 125 prozora očekivano, 125 kompletno,
 125 `FEATURE96` i 625 `SUBSEG96` zapisa,
@@ -354,7 +370,7 @@ izolovana kao jedini uzrok promašaja. Potpuno samostalan interfejs, prekid I2S,
 power-loss i potrošnja cijelog lanca nisu potvrđeni. Dodatna mjerenja se ne
 podrazumijevaju kao uslov za završetak dokumentovanja postojećih rezultata.
 
-Ažurirana lista: [`PREOSTALO.md`](PREOSTALO.md).
+Ažurirana lista: [`PREOSTALO.md`](../privatno/planovi/PREOSTALO.md).
 
 ---
 

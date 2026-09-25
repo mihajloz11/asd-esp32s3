@@ -1,33 +1,19 @@
-/* Faza 2 — prisustvo mašine, režim i semantika događaja.
+/* Faza 2: prisustvo masine, rezim i semantika dogadjaja.
  *
- * Host-testable, no ESP-IDF / I2S / PSD dependencies, same pattern as
- * audio_quality_state.c.  The live firmware feeds it one observation per
- * window; host tests feed the same API deterministic fixtures.
+ * Bez ESP-IDF zavisnosti; firmware i host testovi zovu isti API.
  *
- * THREE THINGS ARE KEPT SEPARATE, and conflating them is the mistake this
- * module exists to prevent:
+ * Tri stvari su namjerno razdvojene:
+ *   stanje (asd_state_t)   sta uredjaj JESTE, cinjenica o sopstvenom toku;
+ *   dogadjaj (asd_event_t) najuza tvrdnja koju dokazi podnose;
+ *   uzrok                  ovdje se ne pravi (trazi f0, near/far, tranzijente).
+ * Trajno odstupanje zato daje ANOMALY + UNKNOWN_CHANGE, nikad
+ * MECHANICAL_ANOMALY; asd_event_capability() to cuva u kodu.
  *
- *   status (asd_state_t)  — what the device IS: a fact about its own flow.
- *   event  (asd_event_t)  — what HAPPENED: the most specific claim that the
- *                           currently available evidence supports.
- *   cause                 — WHY it happened. Not produced here. Requires f0
- *                           (Faza 3), near/far (Faza 5) and the transient path
- *                           (Faza 6).
- *
- * Consequence: a sustained deviation from the calibrated centre yields
- * status ASD_STATE_ANOMALY (a fact) with event ASD_EVENT_UNKNOWN_CHANGE (a
- * conservative claim) — never ASD_EVENT_MECHANICAL_ANOMALY, which would be a
- * diagnosis this pipeline cannot yet justify.  asd_event_capability() encodes
- * that refusal in code so it cannot be forgotten.
- *
- * DECISION HIERARCHY, evaluated strictly in this order.  A level that fires
- * suppresses every level below it, because a lower level's input is
- * meaningless once a higher one is violated:
- *
- *   1. sensor health     — is the signal trustworthy at all?
- *   2. machine presence  — is the calibrated machine still there?
- *   3. operating regime  — which normal mode is it in?   (needs Faza 3)
- *   4. deviation         — does it depart from the calibrated centre?
+ * Hijerarhija odluke, strogo ovim redom; nivo koji okine gasi sve ispod:
+ *   1. zdravlje senzora
+ *   2. prisustvo masine
+ *   3. radni rezim (ceka Fazu 3)
+ *   4. odstupanje od centra
  */
 #ifndef ASD_EVENTS_H
 #define ASD_EVENTS_H
@@ -52,9 +38,9 @@ typedef enum {
     ASD_EVENT_UNKNOWN_CHANGE
 } asd_event_t;
 
-/* What must exist before an event may legally be emitted.  Reserved events are
- * part of the locked taxonomy so the serial contract does not change later, but
- * emitting one now would be an unsupported diagnosis. */
+/* Sta mora postojati da bi dogadjaj smio biti emitovan. Rezervisani
+ * dogadjaji su u zakljucanoj taksonomiji, ali bi njihovo emitovanje sada
+ * bila dijagnoza bez dokaza. */
 typedef enum {
     ASD_CAP_AVAILABLE = 0,       /* emittable with what exists today */
     ASD_CAP_NEEDS_F0,            /* Faza 3: fundamental frequency + confidence */
@@ -69,9 +55,8 @@ typedef enum {
     ASD_LEVEL_DEVIATION
 } asd_decision_level_t;
 
-/* Machine-presence gate.  Derived from normal-only data by
- * pc/tools/derive_presence_policy.py and locked in
- * pc/config/asd_presence_policy_v1.json.  Never tuned on target anomalies. */
+/* Gate prisustva, izveden samo iz normalnih podataka
+ * (derive_presence_policy.py -> asd_presence_policy_v1.json). */
 typedef struct {
     float absent_margin_db;   /* how far below the calibrated level counts as gone */
     int min_consecutive;      /* sustained windows before any event is emitted */
@@ -97,14 +82,10 @@ typedef struct {
     float subsegment_instability;
 } asd_observation_t;
 
-/* Carries the run counters so callers keep no ad-hoc state of their own.
- *
- * Odstupanje više ne broji ovaj modul nego `asd_temporal.c` (Faza 4): tamo
- * živi i histereza, i tamo je izmjereno zašto EWMA i CUSUM nisu uzeti. */
-/* Koliko uzastopnih alarmnih prozora znaci da odstupanje nije prolazno.
- * 12 x 10 s = dva minuta. Ovo NIJE prag detekcije izveden iz podataka nego
- * pogonska odluka kada odstupanje prestaje da bude epizoda i postaje stanje
- * koje trazi covjeka. Zato je konstanta, a ne kalibrisana brojka. */
+/* Brojaci toka zive ovdje, da pozivalac nema svoje stanje. Odstupanje
+ * broji asd_temporal.c (Faza 4). */
+/* 12 alarmnih prozora x 10 s = dva minuta. Pogonska odluka kada odstupanje
+ * postaje stanje koje trazi covjeka, a ne prag izveden iz podataka. */
 #define ASD_SUSTAINED_ANOMALY_WINDOWS 12u
 
 typedef struct {
@@ -125,12 +106,8 @@ typedef struct {
     int state_changed;     /* 1 = state differs from the previous observation */
     int observation_hold;  /* unreliable single-mic observation; no diagnosis */
     int hold_warning;      /* hold exceeded the DEVELOPMENT inspection limit */
-    /* 1 tacno u prozoru u kojem alarm napuni dva minuta MJERENOG vremena.
-     * Prozori koje je uredjaj sam proglasio nepouzdanim (OBSERVATION_HOLD) se
-     * ne broje -- tvrdnja o trajanju ne smije da se gradi od prozora za koje je
-     * receno da se ne mogu mjeriti. Tvrdnja je o TRAJANJU, ne o uzroku: i dalje
-     * se emituje ASD_EVENT_UNKNOWN_CHANGE, jer jedan mikrofon bez f0 ne moze
-     * reci da je kvar mehanicki. */
+    /* 1 u prozoru u kojem alarm napuni dva minuta MJERENOG vremena; HOLD
+     * prozori se ne broje. Tvrdnja je o trajanju, ne o uzroku (UNKNOWN_CHANGE). */
     int sustained_anomaly;
 } asd_decision_t;
 
@@ -148,21 +125,15 @@ asd_decision_t asd_decide(asd_decision_ctx_t *ctx,
 asd_capability_t asd_event_capability(asd_event_t event);
 int asd_event_is_emittable(asd_event_t event);
 
-/* Semantika Faze 2 za fail-closed odbijanja iz Faze 1 (WAIT/CAL gate-ovi).
- *
- * Ove faze ne prolaze kroz `asd_decide()`, jer tamo još nema kalibracije od
- * koje bi se odstupalo, ali njihov ishod ipak mora dobiti isti rječnik
- * događaja i nivoa. Preslikavanje živi ovdje, u testiranom modulu, a ne u
- * neprovjerenoj I2S petlji.
- *
- * Prenizak nivo daje `ASD_EVENT_NONE`, ne `FAN_STOPPED`: kad kalibracije nema,
- * uređaj nije ni čuo mašinu, pa ne smije tvrditi da je stala. */
+/* Semantika Faze 2 za fail-closed odbijanja u WAIT/CAL, koja ne prolaze
+ * kroz asd_decide(). Prenizak nivo daje ASD_EVENT_NONE, ne FAN_STOPPED:
+ * bez kalibracije uredjaj masinu nije ni cuo. */
 asd_event_t asd_event_for_quality_reject(asd_quality_reason_t reason);
 asd_decision_level_t asd_level_for_quality_reject(asd_quality_reason_t reason);
 
-/* Deterministic transition table.  Returns 1 for an allowed transition.
- * Notably forbidden: any path into CALIBRATED_NORMAL or ANOMALY without a
- * valid calibration, and any escape from a terminal state. */
+/* Deterministicka tabela prelaza, 1 = dozvoljen. Zabranjen je ulaz u
+ * CALIBRATED_NORMAL ili ANOMALY bez kalibracije i izlaz iz terminalnog
+ * stanja. */
 int asd_transition_allowed(asd_state_t from, asd_state_t to);
 int asd_state_is_terminal(asd_state_t state);
 

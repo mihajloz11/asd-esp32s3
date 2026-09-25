@@ -23,7 +23,6 @@ import re
 import threading
 import time
 import webbrowser
-from collections import deque
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 try:

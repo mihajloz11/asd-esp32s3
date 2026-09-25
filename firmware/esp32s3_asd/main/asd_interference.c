@@ -4,11 +4,9 @@
 #include <string.h>
 
 asd_interference_policy_t asd_interference_default_policy(void) {
-    /* V2 je prenijela apsolutnu granicu 1,400175 iz jednog polozaja mikrofona.
-     * U novom polozaju je vec cisti CAL dostigao 1,465162, pa je gate mjerio
-     * setap umjesto pouzdanosti prozora. V3 zadrzava isto unaprijed zadato
-     * normal-only pravilo `max(CAL normal) * 1,25`, ali apsolutnu brojku izvodi
-     * ponovo u svakoj sesiji. Papiric, govor i vrata ne ulaze u fit. */
+    /* V2 je prenosila apsolutnu granicu iz jednog polozaja mikrofona, pa je u
+     * drugom mjerila postavku umjesto pouzdanosti. V3 zadrzava pravilo
+     * max(CAL normal) * 1,25, ali granicu izvodi u svakoj sesiji. */
     asd_interference_policy_t policy = {
         .enabled = 1,
         .developmental = 1,

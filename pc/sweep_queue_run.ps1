@@ -1,4 +1,4 @@
-$root = "C:\Users\mihaj\Desktop\master new"
+$root = Split-Path -Parent $PSScriptRoot
 while (-not (Select-String -Path "$root\results\sweep_bearingEmu.log" -Pattern "GOTOVO" -Quiet -ErrorAction SilentlyContinue)) { Start-Sleep 60 }
 foreach ($m in @("gearboxEmu","sliderEmu","ToyCar","ToyCarEmu","valveEmu")) {
     cd "$root\pc"
