@@ -4,14 +4,11 @@
 #include <math.h>
 #include <string.h>
 
-/* These are engineering/sensor-health gates, not anomaly-model parameters.
- * LEVEL_FLOOR is deliberately only a digital-audio liveness floor.  Machine
- * presence is learned relative to the accepted CAL level; using the old
- * -60 dBFS absolute value here made commissioning depend on microphone
- * distance.  The -80 dBFS value was frozen from the normal-only 26.08.2026
- * SETTLE observation (-66.164 dBFS), before any target anomaly was shown.
- * STUCK/ZERO/NONFINITE checks still reject a dead microphone independently.
- * All values are registered in pc/config/asd_quality_policy_v1.json. */
+/* Inzenjerske granice zdravlja senzora, ne parametri modela. LEVEL_FLOOR
+ * provjerava samo da digitalni zvuk zivi; prisustvo masine se mjeri relativno
+ * na CAL nivo (P24). -80 dBFS je zamrznuto iz normal-only SETTLE mjerenja
+ * 26.08.2026 (-66,164 dBFS). STUCK/ZERO/NONFINITE nezavisno odbijaju mrtav
+ * mikrofon. Sve vrijednosti su u pc/config/asd_quality_policy_v1.json. */
 #define DEFAULT_LEVEL_FLOOR_DBFS  (-80.0f)
 #define DEFAULT_CLIP_LEVEL        32000
 #define DEFAULT_MAX_CLIP_FRAC     0.001f
