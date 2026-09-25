@@ -1,24 +1,13 @@
-/* Operaterski tok — taster koji pokreće učenje i lampica koja javlja dokle se
- * stiglo.
+/* Operaterski tok: taster pokrece ucenje, lampice javljaju dokle se stiglo.
  *
- * Host-testabilno, bez ESP-IDF/GPIO zavisnosti, isti obrazac kao
- * `audio_quality_state.c` i `asd_events.c`. Živi firmware dovodi sirovo stanje
- * pina i vrijeme; host testovi dovode iste ulaze kao determinističke fixture.
+ * Bez ESP-IDF/GPIO zavisnosti; firmware dovodi stanje pina i vrijeme, host
+ * testovi iste ulaze kao fixture.
  *
- * ZAŠTO POSTOJI. Do sada je uređaj kretao u kalibraciju čim se upali, pa je
- * operater morao da pogodi trenutak uključenja ventilatora. Taster to obrće:
- * uređaj čeka, operater pusti ventilator, provjeri da radi normalno, pa
- * pritisne. Lampica zatim javlja kad je učenje gotovo, jer bez nje operater ne
- * zna kada smije da izazove kvar.
- *
- * DVA PRAVILA KOJA OVAJ MODUL NOSI U KODU:
- *
- *   1. Kratak pritisak NIKAD ne odbacuje naučeni centar. Odbacivanje traži
- *      dug pritisak. Slučajan dodir tokom kalibracije ne smije da je pokvari.
- *   2. Nema automatskog ponovnog učenja. Svaki novi centar dolazi od
- *      eksplicitne radnje operatera i zapisuje se kao takav
- *      (docs/problemi-i-rjesenja.md P10 — tiha rekalibracija bi naučila kvar
- *      kao normalu).
+ * Dva pravila zive u kodu:
+ *   1. Kratak pritisak NIKAD ne odbacuje nauceni centar; za to treba dug
+ *      pritisak, da slucajan dodir ne pokvari kalibraciju.
+ *   2. Nema automatskog ponovnog ucenja. Svaki novi centar dolazi od
+ *      eksplicitne radnje operatera (P10).
  */
 #ifndef ASD_OPERATOR_H
 #define ASD_OPERATOR_H
@@ -89,11 +78,9 @@ asd_button_policy_t asd_button_default_policy(void);
 void asd_button_init(asd_button_t *btn, const asd_button_policy_t *policy,
                      int initial_pressed, uint32_t now_ms);
 
-/* Jedan uzorak pina ulazi, najviše jedan događaj izlazi. Deterministički:
- * isti niz (pressed, now_ms) uvijek daje isti niz događaja.
- *
- * `pressed` je LOGIČKI nivo (1 = pritisnut). Pretvaranje iz active-low pina
- * radi pozivalac, da modul ne zna ništa o hardveru. */
+/* Jedan uzorak pina ulazi, najvise jedan dogadjaj izlazi; isti niz
+ * (pressed, now_ms) uvijek daje isti niz dogadjaja. `pressed` je logicki
+ * nivo (1 = pritisnut); active-low pretvara pozivalac. */
 asd_button_event_t asd_button_update(asd_button_t *btn, int pressed,
                                      uint32_t now_ms);
 
@@ -104,10 +91,8 @@ asd_ui_mode_t asd_ui_mode(asd_flow_stage_t stage, asd_state_t state);
  * brojača, pa je obrazac isti bez obzira kada se pozove. */
 int asd_indicator_level(asd_ui_mode_t mode, uint32_t now_ms);
 
-/* Nivo alarmne (crvene) lampice. Svijetli samo dok traje odstupanje, i
- * treperi u fail-closed stanju. Redundantna je sa zelenom po informaciji,
- * ali razlikuje „ugašena zelena" od „uređaj mrtav" — što se na snimku
- * demoa inače ne vidi. */
+/* Crvena lampica: svijetli dok traje odstupanje, treperi u fail-closed
+ * stanju. Razlikuje "ugasena zelena" od "uredjaj mrtav". */
 int asd_alarm_level(asd_ui_mode_t mode, uint32_t now_ms);
 
 /* Šta pritisak znači u datom režimu. Ovdje živi pravilo da kratak pritisak

@@ -82,9 +82,9 @@ def main() -> None:
       th,td{border-color:#343a42} .card{background:#1e2126;border-color:#343a42}
       .neg{background:#4a2326}.pos{background:#1d3a26}.wait{color:#9aa4af}
     }"""
-    h = [f"<!DOCTYPE html><html lang='sr'><head><meta charset='utf-8'>",
+    h = ["<!DOCTYPE html><html lang='sr'><head><meta charset='utf-8'>",
          f"<title>ASD dashboard</title><style>{css}</style></head><body><div class='wrap'>",
-         f"<h1>Master rad — dashboard eksperimenata</h1>",
+         "<h1>Master rad — dashboard eksperimenata</h1>",
          f"<p>Generisano: {datetime.now():%d.%m.%Y %H:%M} · regeneracija: <code>python tools/gen_dashboard.py</code></p>"]
 
     # progres sweep-ova

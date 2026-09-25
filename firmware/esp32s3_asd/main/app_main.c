@@ -1,11 +1,9 @@
-/* ASD — glavna petlja, STREAMING arhitektura (radi na S3 i klasičnom ESP32):
- * [I2S capture task, core 0] -> ring buffer
- * [main loop, core 1] hop (512 uzoraka) -> log-mel frejm -> klizni vektor 640
- *                     -> AE int8 (TFLM) -> score -> agregacija po klipu -> LED
+/* Ulazna tacka firmvera. Mod se bira env varijablom pri `idf.py reconfigure`
+ * (main/CMakeLists.txt): ASD_PSD_LIVE je finalni samostalni detektor, a
+ * ASD_PSD_VERIFY, ASD_MIC_TEST i ASD_INA_TEST su pojedinacne provjere.
  *
- * RAM featuring puta: ~9 KB (asd_stream_t + vektor) — bez PSRAM zavisnosti;
- * PSRAM (ako postoji) koristi samo TFLM arena i audio ring buffer.
- * Mjerni hooks po fazi (E4): akumulirano vrijeme featuringa i inferencije po klipu.
+ * Bez zastavice radi istorijski AE/TFLM tok, cuvan zbog E4 mjerenja:
+ * [I2S capture, core 0] -> ring -> [core 1] log-mel -> AE int8 -> ocjena klipa.
  */
 #include <stdio.h>
 #include <string.h>

@@ -14,6 +14,7 @@ lokalni centar i pragovi uče se na uređaju iz normalnog rada konkretne postavk
 | Fizička proba papirićem | Prihvaćena kalibracija; GUIDED25 **FAIL**, detektovan 1/3 blokova i alarm prenesen u oporavak |
 | Fizička proba tonom od 1 kHz | Alarm i `ANOMALY_SUSTAINED`; kašnjenje od početka tona i završni oporavak nisu izmjereni |
 | Obrada na uređaju | Oko 716 ms za obilježje i ocjenu po prozoru od 10 s; nije vrijeme cijelog toka |
+| Naknadna analiza obilježja, 25.09.2026. | Papirić i ton detektovani po obliku spektra; ton je svirao još 36 prozora poslije oznake kraja; [detalji](results/trial_features/2026-09-25/README.md) |
 | Automatske provjere, 06.09.2026. | 478 testova prošlo; provjera protokola prošla |
 
 Obje završne probe imaju `valid_physical_result`: to označava upotrebljiv
@@ -31,7 +32,7 @@ Pregled projekta: [nalazi revizije](results/repository_audit/2026-09-06/README.m
 |---|---|
 | [firmware/esp32s3_asd](firmware/esp32s3_asd/) | ESP-IDF firmware; konačni režim `ASD_PSD_LIVE` |
 | [pc/asd](pc/asd/) | obrada, evaluacija, protokol i host alati |
-| [pc/tools](pc/tools/) | pokretanje proba, analiza i izvoznici modela |
+| [pc/tools](pc/tools/README.md) | pokretanje proba, analiza i izvoznici modela; aktuelni i istorijski alati |
 | [pc/tests](pc/tests/) | host provjere i poređenje sa C implementacijom |
 | [results](results/README.md) | rezultati, sirovi zapisi i mapa dokaza |
 | [models](models/) | metapodaci modela; veliki modeli i keševi nisu u Gitu |
@@ -89,7 +90,9 @@ a [preostale stavke](docs/PREOSTALO.md) razlikuju ograničenja od budućih ekspe
 
 [Master](radovi/master-rad/PREOSTALO-RAD.md) i
 [TELFOR](radovi/telfor2026/PREOSTALO-RAD.md) imaju usklađene rezultate i
-zasebne liste formalnih stavki za mentora. Dodatni fizički testovi nisu uslov
+zasebne liste formalnih stavki za mentora. TELFOR rad je prepisan
+25.09.2026. (rok 4. oktobar); master DOCX treba ponovo izgraditi kroz Word
+zbog ispravke broja alarmnih epizoda. Dodatni fizički testovi nisu uslov
 da se postojeći rezultati pošteno opišu.
 
 Repo sadrži istraživačku istoriju i dokumente koji još nisu predati.

@@ -31,20 +31,9 @@
 
 static const char *TAG = "psdlive";
 
-/* Jedan protokolarni red mora stici na UART neprekinut.
- *
- * ESP-IDF ostavlja `stdout` bez baferovanja, pa svaka konverzija odlazi na UART
- * zasebnim upisom. `emit_research_vector` jedan FEATURE96/SUBSEG96 red ispisuje
- * kroz 98 poziva, a UI task u međuvremenu emituje FLAGS iz svog konteksta.
- * Izmjereno u runu 22.08.2026: FLAGS se zalijepio usred niza brojeva, host
- * parser je u istom redu vidio dva `protocol=` i odbio ga kao
- * `duplicate_key:protocol` — 64 takva reda, pa je cijeli run pao na
- * `invalid_research_telemetry` iako je i kalibracija i detekcija radila.
- *
- * `flockfile` uzima isti FILE lock koji koristi i `printf` iz drugih taskova i
- * `ESP_LOGx` (koji ide preko `vprintf` na isti `stdout`), pa se pod njim ne
- * moze umetnuti ni jedan ni drugi. Zakljucava se cijeli red, ne pojedinacni
- * poziv. */
+/* Red sastavljen iz vise printf poziva mora stici na UART neprekinut.
+ * stdout nije baferovan, pa je FLAGS iz UI taska upadao usred FEATURE96 reda
+ * i obarao run (P20). flockfile uzima isti lock kao printf i ESP_LOGx. */
 #define EMIT_BEGIN() flockfile(stdout)
 #define EMIT_END()   funlockfile(stdout)
 
@@ -63,19 +52,10 @@ static const char *TAG = "psdlive";
  * odvojeni VERIFY fail-closed provjerava tri uzastopna lazna alarma. Nijedan
  * target-anomaly prozor ne ulazi u fit. */
 #define COMMISSION_ENTER_QUANTILE 0.99f
-/* Izlaz iz alarma je 23.08.2026 podignut sa p75 na p95 DERIVE raspodjele, i to
- * iskljucivo iz normal-only podataka -- nijedan papiric, govor ni vrata nisu
- * gledani. Razlog je izmjeren: run tog dana je imao enter 6341 i exit 341, a
- * najtisi normalan DET prozor je bio 463, pa se alarm iz prvog papirica NIKAD
- * nije ugasio i sljedeca dva bloka nisu imala u sta da udju.
- *
- * p75 znaci da cetvrtina ispravnih prozora stoji IZNAD izlaza, pa i najmanji
- * pomak okruzenja izmedju kalibracije i mjerenja zakljuca alarm zauvijek. p95
- * znaci da se 95 % ispravnih prozora vraca u normalu prvim prozorom.
- *
- * Simetrija je namjerno asimetricna: ulaz trazi TRI uzastopna prozora iznad
- * enter praga, a izlaz jedan ispod exit praga. Zato visi izlaz ne pravi
- * treperenje -- povratak u alarm i dalje kosta tri prozora. */
+/* Izlaz iz alarma je p95 DERIVE ocjena, izveden samo iz normalnog rada.
+ * Sa ranijim p75 cetvrtina normalnih prozora stajala je iznad izlaza, pa se
+ * alarm poslije prve pobude nije gasio (P22). Ulaz trazi tri prozora, a izlaz
+ * jedan, pa visi izlaz ne pravi treperenje. */
 #define COMMISSION_EXIT_QUANTILE  0.95f
 /* Histereza ne smije da se skupi: izlaz nikad iznad ove frakcije ulaza. */
 #define COMMISSION_EXIT_MAX_FRACTION 0.5f
@@ -93,10 +73,9 @@ static float center[DIM];
 static float feature[DIM];
 static asd_quality_policy_t quality_policy;
 
-/* Pet podsegmenata istog prozora. Od v2 se racunaju UVIJEK, ne samo u
- * razvojnom buildu: iz njih zivi `subsegment_instability`, jedina velicina
- * kojom kapija pouzdanosti razlikuje trajnu promjenu na masini od tudjeg zvuka.
- * Ne kostaju nove FFT-ove -- grupe su particija istih Welch segmenata. */
+/* Pet podsegmenata istog prozora, uvijek ukljuceni: iz njih se racuna
+ * `subsegment_instability` za kapiju pouzdanosti. Grupe dijele iste Welch
+ * segmente, pa nema dodatnih FFT-ova. */
 static asd_psd_sidecar_t window_sidecar;
 
 #ifdef ASD_RESEARCH_TELEMETRY
@@ -104,9 +83,8 @@ static asd_psd_sidecar_t window_sidecar;
 static uint64_t research_window_start_ms;
 static uint64_t research_window_end_ms;
 
-/* Isti FNV-1a obrazac kao `mic_test.c::asd_dump_pcm_block`, ali samo preko
- * 96 binary32 vrijednosti. Dev host ponovo pakuje parsirane round-trip decimale
- * kao little-endian float32 i odbija ostecen zapis. */
+/* FNV-1a preko 96 float32 vrijednosti; host iz decimala ponovo pravi
+ * float32 i odbija zapis ciji se hash ne slaze. */
 static uint32_t research_feature_fnv1a(const float *values) {
     const uint8_t *bytes = (const uint8_t *)values;
     uint32_t hash = 2166136261u;
@@ -206,18 +184,10 @@ static void emit_button(asd_ui_mode_t mode, asd_button_event_t event,
            asd_ui_command_discards_calibration(mode, command));
 }
 
-/* Softverski pandan lampicama. Obrazac zelene i crvene je čista funkcija
- * režima (`asd_indicator_level`/`asd_alarm_level`), pa se ovdje objavljuje sam
- * režim i imenovani obrazac — host onda crta istu lampicu koju bi vidio na
- * ploči, i kad nijedna dioda nije zalemljena.
- *
- * Emituje se SAMO na promjenu režima, ne na svaki treptaj: pet promjena po
- * sesiji umjesto deset redova u sekundi.
- *
- * Ime zapisa je namjerno izvan zaključanog rječnika `asd-quality-v1.4.0` —
- * host parser ga ne prepoznaje i preskače, pa red ne može ući u lanac
- * telemetrije koji odlučuje o valjanosti prolaza. Sva mjerodavna stanja i
- * dalje idu kroz `STATE`/`EVENT`. */
+/* Softverske lampice: obrazac je cista funkcija rezima, pa se salje rezim i
+ * ime obrasca, na promjenu i svakih 5 s. Host crta istu lampicu i bez
+ * zalemljenih dioda. FLAGS nije u zakljucanom rjecniku i ne utice na
+ * valjanost runa; mjerodavni su STATE i EVENT. */
 static const char *green_pattern(asd_ui_mode_t mode) {
     switch (mode) {
         case ASD_UI_IDLE:     return "flash_2s";
@@ -254,9 +224,8 @@ static void emit_quality(const char *phase, int index, int total,
                          const asd_quality_metrics_t *m,
                          asd_quality_reason_t reason, int feature_valid,
                          float tonalness_proxy) {
-    /* UART schema requires finite numerics even on a rejected fixture.  The
-     * result token carries the fault; unavailable diagnostics use explicit,
-     * finite sentinels and a not_computed gate. */
+    /* UART sema trazi konacne brojeve i za odbijen prozor: razlog nosi
+     * `result`, a nedostupna dijagnostika ide kao konacna zamjena. */
     float serial_rms = isfinite(m->rms_dbfs) ? m->rms_dbfs : -999.0f;
     float serial_dc = isfinite(m->dc) ? m->dc : 0.0f;
     int metrics_valid = isfinite(m->rms_dbfs) && isfinite(m->rms) && isfinite(m->dc);
@@ -348,17 +317,17 @@ static asd_state_t stop_unstable_calibration(
 }
 
 static float feature_tonalness_proxy(const float *feat) {
-    /* Peak prominence in the mean-centred log-PSD shape.  It is logged only;
-     * no threshold exists until a normal-only preregistration run. */
+    /* Najveca vrijednost centriranog log-PSD oblika. Samo se biljezi; prag za
+     * nju ne postoji. */
     float maximum = feat[0];
     for (int i = 1; i < DIM; i++)
         if (feat[i] > maximum) maximum = feat[i];
     return maximum;
 }
 
-/* Mahalanobis score and the centred tonalness proxy are theoretically
- * non-negative.  Binary32 accumulation may produce a tiny negative residue;
- * clamp only that explicit numerical tolerance and reject anything larger. */
+/* Mahalanobis ocjena i tonalnost su nenegativne, ali float32 sabiranje moze
+ * dati mali negativni ostatak. Ostatak u toleranciji ide na nulu, vece se
+ * odbija. */
 static int clamp_nonnegative_score(float *value) {
     if (!value || !isfinite(*value) || *value < -SCORE_NEGATIVE_TOL)
         return 0;
@@ -368,10 +337,8 @@ static int clamp_nonnegative_score(float *value) {
 
 /* --- operaterski tok ------------------------------------------------------ */
 
-/* Lampica i taster idu u zasebnom tasku, na 20 ms. Bez toga bi se obrazac
- * lampice osvježavao tek svakih 256 ms (koliko traje jedan audio blok), pa se
- * treperenje od 5 Hz ne bi ni vidjelo, a odskok tastera se ne bi mogao
- * odbounceovati. */
+/* LED i taster u zasebnom tasku, na 20 ms. Audio blok traje 256 ms, pa u
+ * glavnom toku ne bi bilo ni treptanja od 5 Hz ni debounce-a tastera. */
 static void ui_task(void *arg) {
     (void)arg;
     int last_flags_mode = -1;
@@ -382,9 +349,8 @@ static void ui_task(void *arg) {
         asd_ui_mode_t mode = asd_ui_mode(ui_stage, state);
         gpio_set_level(PIN_LED, asd_indicator_level(mode, t));
         gpio_set_level(PIN_LED_ALARM, asd_alarm_level(mode, t));
-        /* Na promjenu režima odmah, inače na 5 s. Ponavljanje postoji zbog
-         * hosta koji se zakači usred sesije: bez njega bi panel čekao prvu
-         * sljedeću promjenu da uopšte sazna šta lampica pokazuje. */
+        /* Odmah na promjenu rezima, inace svakih 5 s, da host prikljucen usred
+         * sesije brzo sazna stanje lampica. */
         if ((int)mode != last_flags_mode || (uint32_t)(t - last_flags_at) >= 5000u) {
             emit_flags(mode, state);
             last_flags_mode = (int)mode;
@@ -393,10 +359,8 @@ static void ui_task(void *arg) {
         /* Taster je na masu, sa unutrašnjim pull-upom: nizak nivo = pritisnut. */
         asd_button_event_t event =
             asd_button_update(&button, gpio_get_level(PIN_BUTTON) == 0, t);
-        /* Virtuelni pritisak sa konzole ulazi ovdje, na istom mjestu gdje i pin,
-         * i odatle dijeli cijeli put: `asd_ui_command`, `BUTTON` zapis i
-         * `ui_command`. Fizički taster ima prednost — ako je stigao pravi
-         * pritisak u istom ciklusu, virtuelni ostaje da čeka sljedeći. */
+        /* Virtuelni pritisak sa konzole ide istim putem kao pin. Fizicki taster
+         * ima prednost u istom ciklusu. */
         if (event == ASD_BTN_NONE)
             event = asd_cmd_take_event();
         if (event != ASD_BTN_NONE) {
@@ -422,11 +386,8 @@ static void wait_for_start(asd_state_t state) {
              PIN_BUTTON);
     for (;;) {
         if (take_command() == ASD_UI_CMD_START_LEARNING) return;
-        /* Prazni ring i dok se ceka. Capture task radi neprekidno, pa bi bez
-         * ovoga ring (2 s) bio pun poslije dvije sekunde i `dropped` bi rastao
-         * 16000 uzoraka/s cijelo vrijeme cekanja. Prelivanje dok niko ne mjeri
-         * nije kvar senzora, ali panel prije armiranja trazi `dropped=0`
-         * (asd_panel.py, arm_ready) pa se GUIDED25 ne bi mogao ni pokrenuti. */
+        /* Prazni ring i dok ceka: inace `dropped` raste 16000 uzoraka/s, a panel
+         * trazi `dropped=0` prije pokretanja GUIDED25. */
         (void)audio_flush();
         vTaskDelay(pdMS_TO_TICKS(UI_TICK_MS));
     }
@@ -436,10 +397,8 @@ static void wait_for_start(asd_state_t state) {
  * tada se sesija zatvara i odmah otvara nova, bez povratka u čekanje. */
 static int relearn_requested;
 
-/* 1 ako operater traži da se sesija u toku prekine. Dvije komande vode ovamo:
- * ABORT iz faze učenja i START_LEARNING iz nadzora. Obje se moraju POTROŠITI
- * ovdje — da se komanda ne izgubi, i da dug pritisak tokom nadzora zaista
- * pokrene novo učenje umjesto da bude progutan. */
+/* 1 ako operater prekida sesiju: ABORT tokom ucenja ili START_LEARNING
+ * tokom nadzora (novo ucenje). Komanda se trosi ovdje da se ne izgubi. */
 static int session_interrupted(void) {
     asd_ui_command_t command = take_command();
     if (command == ASD_UI_CMD_START_LEARNING) {
@@ -512,16 +471,13 @@ static asd_quality_reason_t capture_clip(float *out_feature,
     return ASD_QUALITY_OK;
 }
 
-/* Koliko se pet podsegmenata istog prozora medjusobno ne slazu, u
- * normalizovanim jedinicama modela:
+/* Neslaganje pet podsegmenata istog prozora, u jedinicama modela:
  *
  *   z_g[d] = (grupa_g[d] - norm_mean[d]) / norm_std[d]
- *   instability = mean_d( std_g( z_g[d] ) )
+ *   instability = mean_d( std_g( z_g[d] ) )   (populaciona sd, kao numpy)
  *
- * Trajna promjena na masini izgleda isto kroz cijeli prozor pa su podsegmenti
- * slozni; govor, vrata i koraci nisu. Isti izraz racuna i
- * `pc/tools/derive_interference_policy.py`, pa su granica i mjera u istim
- * jedinicama. Populaciona sd (dijeli se sa G), da se poklopi sa numpy.std. */
+ * Trajna promjena na masini je slozna kroz prozor; govor i udarci nisu.
+ * Isti izraz koristi pc/tools/derive_interference_policy.py. */
 static float subsegment_instability(const asd_psd_sidecar_t *sidecar) {
     if (!sidecar) return NAN;
     float total = 0.0f;
@@ -671,10 +627,9 @@ static asd_state_t run_session(unsigned session_index,
                        commissioning.policy.max_settle_windows,
                        0, 0.0f, NAN, NAN, NAN);
 
-    /* SETTLE uses only level, tonalness, feature drift and quality.  Its API
-     * has no score argument, so a pre-center Mahalanobis call cannot be added
-     * accidentally.  Numeric limits are DEVELOPMENT until physical normal-only
-     * validation; no profile from this build is persisted. */
+    /* SETTLE gleda samo nivo, tonalnost, promjenu obiljezja i kvalitet. API
+     * nema argument za ocjenu, pa Mahalanobis prije centra nije moguc. Granice
+     * su DEVELOPMENT; profil iz ovog builda se ne cuva. */
     float previous_settle_feature[DIM];
     int previous_settle_feature_valid = 0;
     int settle_index = 0;
@@ -718,11 +673,8 @@ static asd_state_t run_session(unsigned session_index,
                        commissioning.policy.center_windows,
                        0, 0.0f, NAN, NAN, NAN);
 
-    /* Legacy WAIT quality precheck remains wire-compatible for existing host
-     * captures.  Stabilization authority is the variable-length SETTLE above.
-     * WAIT never contributes a center or threshold. */
-    /* --- 1) cekanje: operater pusta ventilator, provjerava se da mikrofon
-     * stvarno nesto cuje (P3: konstantan score ne dokazuje da mikrofon radi) --- */
+    /* --- 1) WAIT: mikrofon mora nesto cuti (P3). Ostaje radi kompatibilnosti
+     * zapisa; stabilizaciju odlucuje SETTLE, a WAIT ne daje ni centar ni prag. --- */
     static int16_t pcm[HOP];
     int loud = 0;
     for (int h = 0; h < WARM_HOPS; h++) {
@@ -744,8 +696,8 @@ static asd_state_t run_session(unsigned session_index,
         printf("WAIT %d/%d level_dbfs=%.2f spread=0.000 nivo=%.1f dBFS %s\n",
                h + 1, WARM_HOPS, metrics.rms_dbfs, metrics.rms_dbfs,
                reason == ASD_QUALITY_OK ? "cujem" : "nevalidno");
-        /* LOW_LEVEL is allowed during the operator warm-up, but it never
-         * counts as valid and the aggregate gate below must pass. */
+        /* LOW_LEVEL je dozvoljen dok operater pusta ventilator, ali se ne broji
+         * kao validan blok; zbirna provjera ispod mora proci. */
         if (asd_quality_flow_action(reason, ASD_PHASE_WAIT) == ASD_FLOW_STOP)
             return stop_flow("WAIT", ASD_PHASE_WAIT, state, reason);
         if (session_interrupted()) {
@@ -1169,15 +1121,12 @@ profile_ready:
                  t_comp_sum / N_CAL / 1000,
                  10000.0 / ((double)(t_comp_sum / N_CAL) / 1000.0),
                  (unsigned long)audio_dropped_samples());
-    /* Gate prisustva mora biti u serijskom toku, a ne samo u logu: bez njega
-     * host ne moze NEZAVISNO ponoviti odluku Faze 2, nego bi morao vjerovati
-     * firmveru. Isti razlog zbog kojeg se prag emituje kao ADAPTTHR. */
+    /* Gate prisustva ide u serijski tok da host moze sam ponoviti odluku. */
     printf("PRESENCE protocol=%s level_mean_dbfs=%.9g margin_db=%.9g "
            "gate_dbfs=%.9g min_consecutive=%d\n",
            ASD_QUALITY_PROTOCOL, cal_level_mean, presence.absent_margin_db,
            cal_level_mean - presence.absent_margin_db, presence.min_consecutive);
-    /* Isti razlog kao za PRESENCE: bez objavljene vremenske politike host ne
-     * moze ponoviti odluku o odstupanju, nego bi morao vjerovati firmveru. */
+    /* Isto za vremensku politiku. */
     asd_temporal_policy_t temporal = decision.temporal.policy;
     printf("TEMPORAL protocol=%s policy=%s min_consecutive=%d ewma_alpha=%.9g "
            "enter_scale=%.9g exit_scale=%.9g fast_scale=%.9g "
@@ -1187,9 +1136,7 @@ profile_ready:
            temporal.ewma_alpha, temporal.enter_scale, temporal.exit_scale,
            temporal.fast_scale, runtime_profile.threshold_enter,
            runtime_profile.threshold_exit);
-    /* Host i panel moraju vidjeti tacno iz kojih normal-only podataka je
-     * izvedena sesijska HOLD granica; DET ne smije zavisiti od skrivene
-     * apsolutne konstante. */
+    /* I za HOLD granicu: host vidi iz kojih normal-only prozora je izvedena. */
     printf("INTERFERENCE protocol=%s policy=%s source=CAL_NORMAL_ONLY "
            "normal_windows=%lu normal_max=%.9g multiplier=%.9g "
            "threshold=%.9g use_tonalness_delta=%d long_hold_windows=%lu\n",
@@ -1247,15 +1194,9 @@ profile_ready:
         if (!clamp_nonnegative_score(&s))
             return stop_flow("DET", ASD_PHASE_DET, state, ASD_QUALITY_NONFINITE);
 
-        /* Jedini izvor odluke od Faze 2. Hijerarhija (zdravlje senzora ->
-         * prisustvo masine -> rezim -> odstupanje) i oba brojaca zive u
-         * `asd_events.c` i pokriveni su host testovima; ovdje se rezultat samo
-         * ispisuje i sprovodi. */
-        /* Do v2 je ovdje stajala tvrda nula, pa je kapija pouzdanosti bila
-         * povezana ali slijepa. Sada dobija stvarnu mjeru iz istog prozora. */
-        /* NE sanira se u nulu: nula znaci "podsegmenti su savrseno slozni", pa
-         * bi pokvaren sidecar tiho PROSAO kapiju. `asd_decide` vec ima
-         * fail-closed granu za nekonacnu nestabilnost i ona mora da je vidi. */
+        /* Jedini izvor odluke. Hijerarhija senzor -> prisustvo -> pouzdanost ->
+         * odstupanje zivi u asd_events.c. Nestabilnost se ne svodi na nulu: pokvaren
+         * sidecar bi tada tiho prosao kapiju, a asd_decide odbija NaN. */
         float instability = subsegment_instability(&window_sidecar);
         asd_observation_t obs = {
             reason, ASD_PHASE_DET, metrics.rms_dbfs, s,
@@ -1268,11 +1209,8 @@ profile_ready:
         i++;
         ui_state = decided.state;
 
-        /* 9 significant digits round-trip a binary32 value, so the host can
-         * independently verify score > threshold without decimal ambiguity. */
-        /* `hold=` postoji od q1.6.0. Bez njega host ne moze da reprodukuje
-         * `uzastopnih=0` u prozoru koji je kapija proglasila nepouzdanim, pa bi
-         * svaki HOLD prozor izgledao kao neslaganje sa firmverom. */
+        /* %.9g tacno prenosi float32, pa host sam provjerava score > prag.
+         * `hold=` (od q1.6.0) omogucava hostu da reprodukuje uzastopnih=0. */
         printf("DET %d score=%.9g lo=0 hi=%.9g led=%d anom=%d total_anom=%d "
                "hold=%d %s (uzastopnih=%d nivo=%.1f dBFS racun=%lld ms)\n",
                i, s, threshold_enter, !alarm, alarm, n_alarm,
@@ -1289,8 +1227,7 @@ profile_ready:
                              metrics.rms_dbfs, tonalness);
 #endif
 
-        /* DET consumes the immediately preceding QUALITY token.  State/event
-         * transitions are emitted only after that pair is complete. */
+        /* DET ide odmah iza svog QUALITY zapisa; STATE i EVENT tek poslije para. */
         if (decided.state_changed) {
             const char *why = decided.state == ASD_STATE_ANOMALY
                 ? "THRESHOLD_PERSISTENCE"
@@ -1397,10 +1334,8 @@ void psd_live_run(void) {
     BaseType_t ui_task_result =
         xTaskCreatePinnedToCore(ui_task, "asd_ui", 4096, NULL, 4, NULL, 0);
     if (ui_task_result != pdPASS) {
-        /* Bez UI taska taster se ne cita. Posto vise nema autostarta, nastavak
-         * bi ostavio prividno ziv detektor koji nikad ne moze poceti ucenje.
-         * Isti ESP_ERROR_CHECK put kao za I2S init/start u app_main.c zavrsava
-         * tok fail-closed; zakljucana panic politika zatim restartuje uredjaj. */
+        /* Bez UI taska taster se ne cita i ucenje nikad ne pocinje. Fail-closed
+         * kao I2S init u app_main.c: ESP_ERROR_CHECK i restart. */
         ESP_LOGE(TAG, "UI task nije pokrenut; taster nije dostupan, restartujem");
         ESP_ERROR_CHECK(ESP_ERR_NO_MEM);
     }
@@ -1435,11 +1370,8 @@ void psd_live_run(void) {
         asd_workflow_t workflow = use_persisted_profile
             ? ASD_WORKFLOW_DEFAULT : asd_cmd_take_workflow();
         asd_cmd_set_session_active(1);
-        /* Baci sve sto se nakupilo dok je uredjaj cekao pritisak, i nuliraj
-         * `dropped`. Mora PRIJE `emit_session("STARTED")`: host na tom zapisu
-         * resetuje svoj `max_dropped`, pa svaki sljedeci FLAGS -- ukljucujuci
-         * onaj koji UI task posalje cim mode postane LEARNING -- vec mora
-         * nositi brojac ove sesije. Vidi audio_flush() u audio_i2s.c. */
+        /* Baci zvuk iz cekanja i nuliraj `dropped` PRIJE SESSION STARTED: host tu
+         * resetuje max_dropped, pa svaki sljedeci FLAGS nosi brojac ove sesije. */
         size_t stale = audio_flush();
         if (stale)
             ESP_LOGI(TAG, "odbacen ustajali zvuk iz cekanja: %u uzoraka",
