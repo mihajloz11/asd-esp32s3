@@ -1,7 +1,7 @@
 """Koliko kvar mora biti izrazen da ga uredjaj cuje kroz zvucnik i mikrofon?
 
 Ranije je izmjereno da akusticki kanal pravi rasipanje reda velicine vece od
-DCASE anomalije (docs/hardver-verifikacija.md). Ovaj test odgovara na pitanje
+DCASE anomalije (docs/uredjaj/hardver-verifikacija.md). Ovaj test odgovara na pitanje
 KOLIKO grublji kvar mora biti da bi prosao kroz taj kanal.
 
 Na stvaran snimak ispravnog ventilatora dodaje se KONTROLISAN kvar rastuce

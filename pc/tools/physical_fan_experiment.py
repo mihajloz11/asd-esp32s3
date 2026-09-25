@@ -13,7 +13,7 @@ Primjeri (iz korijena repozitorija):
 
 Tokom runa unesite ``condition <oznaka> [biljeska]``, ``note <tekst>``,
 ``abort <razlog>`` ili ``stop``. Dozvoljene oznake i bezbjednosna ogranicenja su u
-docs/protokol-fizicki-ventilator.md.
+docs/probe/protokol-fizicki-ventilator.md.
 """
 from __future__ import annotations
 

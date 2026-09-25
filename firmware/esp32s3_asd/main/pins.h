@@ -1,4 +1,4 @@
-/* Pin-plan — per-target (plan 5.6 + docs/hardware.md). FIKSIRANO PRIJE LEMLJENJA.
+/* Pin-plan — per-target. FIKSIRANO PRIJE LEMLJENJA.
  *
  * ESP32-S3 N32R16V: ZABRANJENI GPIO 35/36/37 (oktalni PSRAM);
  *                   strapping 0, 3, 45, 46 — izbjegavati.
