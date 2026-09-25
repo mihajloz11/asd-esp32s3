@@ -1,7 +1,6 @@
-/* Visokorezolucioni PSD otisak ventilatora.
- * PC referenca: pc/tools/bench_periodicity.py::periodic_features.
- * Ovaj modul je za sada izolovan od zivog app_main toka dok PC<->C test i
- * on-device latencija ne budu zatvoreni. */
+/* Visokorezolucioni PSD otisak: Welch 8192, 96 log traka 10 Hz - 4 kHz,
+ * oduzeta srednja vrijednost. PC referenca:
+ * pc/tools/bench_periodicity.py::periodic_features. */
 #ifndef ASD_PSD_FEATURES_C_H
 #define ASD_PSD_FEATURES_C_H
 
@@ -28,11 +27,10 @@ void asd_psd_init(void);
  * odnosno 0 ako je signal kraći od jednog FFT prozora. */
 int asd_psd_extract(const float *signal, int n_samples, float *out_feature);
 
-/* Streaming varijanta istog računa, za živi rad: FFT se izvrši čim se skupi
- * prozor, pa se račun preklapa sa snimanjem i nije potreban bafer od 10 s.
- * Rezultat je identičan asd_psd_extract nad istim uzorcima — Welch prozor je
- * tačno dva hopa (8192 = 2 x 4096), pa hop k zatvara segment k-1.
- * Provjereno testom pc/tests/test_psd_features_c.py::test_psd_stream_matches_batch. */
+/* Streaming varijanta istog racuna: FFT se izvrsi cim se skupi segment, pa
+ * nije potreban bafer od 10 s. Rezultat je identican asd_psd_extract, jer je
+ * Welch segment tacno dva hopa (8192 = 2 x 4096)
+ * (test_psd_features_c.py::test_psd_stream_matches_batch). */
 void asd_psd_stream_reset(void);
 int  asd_psd_stream_push_hop(const float *hop);   /* 1 = segment obrađen */
 int  asd_psd_stream_finish(float *out_feature);   /* -> broj segmenata */

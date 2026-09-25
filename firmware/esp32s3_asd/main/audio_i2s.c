@@ -16,21 +16,11 @@ static const char *TAG = "audio";
 #define DMA_DESC_NUM   4
 #define READ_CHUNK     1024   /* uzoraka po i2s_channel_read pozivu */
 
-/* INMP441 i I2S se sliježu poslije uključenja. Izmjereno na pločici 11.08.2026,
- * prva tri bloka od 256 ms daju rms -4,1 / -18,0 / -35,4 dBFS uz dc
- * -6410 / -7378 / -1011 i peak 29968 / 17047 / 2325, dok je ustaljeno stanje
- * rms ~-46 dBFS uz dc ~-0,4 (mjereno 06.08.2026). Amplituda tranzijenta se
- * mijenja od reseta do reseta, pa se ne može tolerisati pragom.
- *
- * Tranzijent nije zvuk i odbacuje se jednokratno NA IZVORU, prije nego uđe u
- * ring buffer, u `raw_peak` ili u ocjenu kvaliteta. Dva razloga:
- *   1. fail-closed gate iz Faze 1 ocjenjuje i prvi WAIT blok, pa je prolaz
- *      padao na `CLIPPING` u tri od četiri reseta;
- *   2. `raw_peak` je dokaz kojim je zatvoren rizik C1 (rezerva do klipovanja) —
- *      tranzijent od 29968 bi tu rezervu prikazao lažno malom.
- *
- * Ovo nije `warn and continue` i ne popušta ni jedan gate: mjerni prozor počinje
- * kad se senzor ustali, a svaki blok koji uđe u lanac se i dalje ocjenjuje. */
+/* INMP441 i I2S se slijezu poslije ukljucenja: prva tri bloka od 256 ms
+ * imaju rms do -4 dBFS i dc do -7400 (11.08.2026, P15), a amplituda se
+ * mijenja od reseta do reseta. Tranzijent se zato odbacuje jednom, NA IZVORU,
+ * prije ring buffera, raw_peak i ocjene kvaliteta. Nijedan gate se ne
+ * popusta: mjerenje pocinje kad se senzor ustali. */
 #define SETTLE_SAMPLES (AUDIO_SR)   /* 1,0 s */
 
 static i2s_chan_handle_t rx_chan;
@@ -55,11 +45,9 @@ static void capture_task(void *arg) {
     static int16_t pcm[READ_CHUNK];
     size_t nbytes;
     while (1) {
-        /* i2s_channel_read prima timeout u MILISEKUNDAMA, ne u tickovima.
-         * pdMS_TO_TICKS(250) na 100 Hz ticku = 25, sto je driver citao kao
-         * 25 ms — krace od jednog DMA deskriptora (1023 uzorka ~ 64 ms), pa je
-         * svako citanje isticalo prije prvog bloka i ring je ostajao prazan
-         * (izmjereno 21.08.2026: dropped=0 kroz cijeli run, level_dbfs=-999). */
+        /* Timeout je u MILISEKUNDAMA, ne u tickovima. pdMS_TO_TICKS(250) = 25
+         * driver je citao kao 25 ms, krace od jednog DMA bloka, pa je ring ostajao
+         * prazan (21.08.2026). */
         esp_err_t read_error = i2s_channel_read(
             rx_chan, raw, sizeof(raw), &nbytes,
             AUDIO_I2S_CAPTURE_WAIT_MS);
@@ -193,28 +181,13 @@ size_t audio_read(int16_t *dst, size_t n_samples) {
     return got;
 }
 
-/* Prazni sve sto se nakupilo dok niko nije citao.
+/* Prazni sve sto se nakupilo dok niko nije citao i nulira `dropped`.
  *
- * ZASTO POSTOJI. Otkako ucenje pokrece operater, uredjaj izmedju boota i
- * pritiska ne cita ni jedan uzorak, a capture task i dalje puni ring. Poslije
- * dvije sekunde ring je pun i `dropped` raste sve vrijeme cekanja. Prvi WAIT
- * blok bi taj nakupljeni dug vidio kao svoj `dropped_delta` i fail-closed bi
- * oborio sesiju u SENSOR_ERROR -- to jest, sto duze operater ceka da ustali
- * ventilator, to je sigurnije da sesija ne moze ni poceti (izmjereno 16.08.2026,
- * 4,5 min cekanja -> dropped_delta=1024 na prvom bloku).
- *
- * Prazni se NA POCETKU SESIJE, ne u toku: odbaceni uzorci tokom mjerenja su i
- * dalje kvar senzora i i dalje ruse tok. Ovo samo kaze da ono sto je palo prije
- * nego sto je mjerenje pocelo nije dokaz ni o cemu.
- *
- * Iz istog razloga se ovdje nulira i `dropped`. FLAGS taj brojac objavljuje, a
- * host ga na `SESSION action=STARTED` ocekuje kao nulu i mjeri samo ono sto
- * padne TOKOM sesije (pc/tests/test_guided25_workflow.py::
- * test_session_started_resets_stale_guided_evidence). Kumulativni brojac od
- * boota je tu nespojiv: dok uredjaj ceka pritisak niko ne cita ring, pa
- * `dropped` raste 16000 uzoraka/s (izmjereno 21.08.2026: 10.272.768 poslije
- * nekoliko minuta cekanja) i guided25 verdikt bi uvijek pao na
- * `missing_or_nonzero_DROPPED`. */
+ * Izmedju boota i pritiska tastera capture task puni ring, pa bi prvi WAIT
+ * blok vidio nakupljeni `dropped_delta` i fail-closed oborio sesiju. Zove se
+ * samo na pocetku sesije: gubitak tokom mjerenja i dalje je kvar senzora.
+ * Host na SESSION STARTED ocekuje `dropped=0`
+ * (test_guided25_workflow.py::test_session_started_resets_stale_guided_evidence). */
 size_t audio_flush(void) {
     size_t flushed = 0;
     for (;;) {

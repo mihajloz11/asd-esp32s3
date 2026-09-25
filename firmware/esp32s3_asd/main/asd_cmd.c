@@ -19,13 +19,9 @@
 #define CMD_TICK_MS   20   /* isti period kao UI task; komande su rijetke */
 #define CMD_MAX_LEN   16   /* najduža komanda je "GUIDED25" */
 
-/* Dva porta su dva NEZAVISNA toka i moraju imati dva odvojena bafera reda.
- *
- * Sa jednim zajednickim baferom, ista komanda koja stigne na oba porta u istom
- * trenutku isprepletala je bajtove: "HOLD" + "HOLD" -> "HHOOLLDD", pa
- * `unknown_command`. To se desilo cim je host poceo da salje na oba porta
- * (izmjereno 16.08.2026, run `cold-start-06`) -- dotad je USB put bio mrtav pa
- * se sudar nije mogao vidjeti. */
+/* Dva porta su dva nezavisna toka, pa imaju odvojene bafere reda. Sa
+ * zajednickim baferom ista komanda sa oba porta dala je "HHOOLLDD"
+ * (16.08.2026). */
 typedef enum { SRC_USB = 0, SRC_UART, SRC_COUNT } cmd_source_t;
 
 typedef struct {
@@ -39,11 +35,9 @@ static _Atomic int pending_workflow = ASD_WORKFLOW_DEFAULT;
 static _Atomic int session_active;
 static cmd_line_t lines[SRC_COUNT];
 
-/* Provenijencija. Zaključani host parser ne prepoznaje `VBUTTON` i uredno ga
- * preskače (u regexu nema granice riječi ispred `BUTTON`), pa red ne može
- * pokvariti prolaz — a ostaje u `serial.raw` i `serial.log` kao dokaz da je
- * pritisak stigao sa hosta, a ne sa pina. Sam pritisak se poslije prijavljuje
- * običnim `BUTTON` redom, isto kao fizički. */
+/* Porijeklo pritiska. Host parser preskace VBUTTON, a red ostaje u
+ * serial.log kao dokaz da je pritisak stigao sa hosta. Sam pritisak se
+ * zatim prijavljuje obicnim BUTTON redom. */
 static void emit_vbutton(const char *event, const char *result) {
     printf("VBUTTON protocol=%s source=console event=%s result=%s\n",
            ASD_QUALITY_PROTOCOL, event, result);
@@ -97,10 +91,8 @@ static void poll_sources(void) {
     uint8_t buf[32];
 
 #if SOC_USB_SERIAL_JTAG_SUPPORTED
-    /* Periferija drzi primljeni OUT paket dok se status prijema ne obrise, i
-     * do tada NE prima sljedeci. Bez ovog brisanja radi samo prva komanda
-     * poslije boota, a svaka sljedeca nikad ne stigne (izmjereno 16.08.2026:
-     * dva `PRESS` preko COM3 bez ijednog `VBUTTON`). */
+    /* Periferija ne prima sljedeci OUT paket dok se status prijema ne
+     * obrise; bez ovoga radi samo prva komanda poslije boota. */
     int total = 0;
     while (usb_serial_jtag_ll_rxfifo_data_available()) {
         int n = usb_serial_jtag_ll_read_rxfifo(buf, sizeof(buf));

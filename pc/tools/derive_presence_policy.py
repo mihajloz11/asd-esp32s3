@@ -180,7 +180,7 @@ def main() -> None:
     margin_observed = abs(worst_run) + 3.0
     absent_margin = float(np.ceil(max(margin_6s, margin_observed)))
 
-    print(f"\nsd po klipu se NE koristi (DCASE je normalizovao nivo, sd 0,02 dB)")
+    print("\nsd po klipu se NE koristi (DCASE je normalizovao nivo, sd 0,02 dB)")
     print(f"sd po trojki prozora (max):          {sd_run:5.2f} dB")
     print(f"6 sigma po trojki:                   {margin_6s:5.2f} dB")
     print(f"najgori normalan pojedinacni prozor: {worst_window:5.2f} dB")

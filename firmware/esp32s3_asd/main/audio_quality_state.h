@@ -1,8 +1,6 @@
-/* Host-testable audio quality and fail-closed state decisions.
- *
- * This module deliberately has no ESP-IDF, I2S or PSD dependencies.  The live
- * firmware feeds it PCM blocks and dropped counters; host tests feed the same
- * API deterministic fixtures.
+/* Kvalitet zvuka i fail-closed odluke, bez ESP-IDF, I2S i PSD zavisnosti.
+ * Firmware dovodi PCM blokove i brojac gubitaka, host testovi iste ulaze
+ * kao fixture.
  */
 #ifndef ASD_AUDIO_QUALITY_STATE_H
 #define ASD_AUDIO_QUALITY_STATE_H
