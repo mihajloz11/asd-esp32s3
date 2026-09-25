@@ -51,3 +51,10 @@ endif()
 if(DEFINED ENV{ASD_PSD_VERIFY})
     target_compile_definitions(${COMPONENT_LIB} PRIVATE ASD_PSD_VERIFY)
 endif()
+
+# Eksperiment, neprazne PSD trake i njihov model; samo uz ASD_PSD_LIVE:
+#   set ASD_PSD_NONEMPTY_BANDS=1  pa idf.py reconfigure build
+# Novi centar i pragovi uce se ponovo; stari profil se ne prenosi.
+if(DEFINED ENV{ASD_PSD_NONEMPTY_BANDS})
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE ASD_PSD_NONEMPTY_BANDS=1)
+endif()

@@ -27,7 +27,12 @@
 #include "asd_profile_store.h"
 #include "asd_temporal.h"
 #include "psd_features_c.h"
+/* Eksperimentalni front-end nosi svoj model; oba zaglavlja daju ista imena. */
+#ifdef ASD_PSD_NONEMPTY_BANDS
+#include "psd_model_nonempty_data.h"
+#else
 #include "psd_model_data.h"
+#endif
 
 static const char *TAG = "psdlive";
 
@@ -1341,6 +1346,12 @@ void psd_live_run(void) {
     }
 
     ESP_LOGI(TAG, "=== SAMOSTALNI PSD DETEKTOR ===");
+#ifdef ASD_PSD_NONEMPTY_BANDS
+    /* Porijeklo mjerenja: novi front-end trazi novu kalibraciju i ne smije se
+     * mijesati sa runovima starog builda. */
+    ESP_LOGW(TAG, "EXPERIMENTAL frontend=nonempty_log96 model=%s",
+             ASD_PSD_MODEL_FINGERPRINT_HEX);
+#endif
     /* Statusni ispis je namjerno ASCII (pouka P12): serijski tok cita PC alat
      * cija konzolna kodna stranica ne mora podrzavati nasa slova. */
     ESP_LOGI(TAG, "model: %d traka, matrica %dx%d iz flesa, naucen na 990 "
