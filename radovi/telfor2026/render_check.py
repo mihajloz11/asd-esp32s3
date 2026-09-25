@@ -1,12 +1,18 @@
-"""Konvertuje rad u PDF preko Worda i renderuje strane u slike za provjeru.
+"""Pravi PDF rada i slike strana za vizuelnu provjeru.
 
-Pokretanje:
-    ..\\..\\.venv\\Scripts\\python.exe render_check.py
+Na Windowsu koristi Word (isti prelom kao pri predaji), inace LibreOffice.
+
+Pokretanje iz korijena repoa:
+    python radovi/telfor2026/render_check.py [--no-render]
 """
 
 from __future__ import annotations
 
+import os
+import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -17,7 +23,7 @@ PREVIEW = HERE / "preview"
 WD_FORMAT_PDF = 17
 
 
-def to_pdf() -> Path:
+def word_to_pdf() -> None:
     import win32com.client as win32
 
     word = win32.DispatchEx("Word.Application")
@@ -31,26 +37,41 @@ def to_pdf() -> Path:
         doc.Close(SaveChanges=0)
     finally:
         word.Quit()
-    print(f"pages={pages} words={words}")
-    return PDF
+    print(f"Word: pages={pages} words={words}")
 
 
-def render(pdf: Path) -> None:
+def soffice_to_pdf() -> None:
+    soffice = shutil.which("soffice") or shutil.which("libreoffice")
+    if not soffice:
+        raise RuntimeError("nema ni Worda ni LibreOffice-a")
+    with tempfile.TemporaryDirectory(prefix="telfor-") as tmp:
+        env = dict(os.environ, HOME=tmp)
+        subprocess.run([soffice, "--headless", "--norestore", "--convert-to", "pdf",
+                        "--outdir", tmp, str(DOCX)], check=True, env=env,
+                       capture_output=True)
+        shutil.copyfile(Path(tmp) / PDF.name, PDF)
+    print("LibreOffice: prelom moze malo odstupati od Worda")
+
+
+def render() -> None:
     try:
-        import fitz
+        import pymupdf
     except ImportError:
-        print("PyMuPDF nije instaliran; preskacem renderovanje slika")
+        print("PyMuPDF nije instaliran; preskacem slike strana")
         return
     PREVIEW.mkdir(exist_ok=True)
-    doc = fitz.open(str(pdf))
+    doc = pymupdf.open(str(PDF))
+    print(f"strana: {len(doc)}")
     for i, page in enumerate(doc, start=1):
-        pix = page.get_pixmap(dpi=110)
         out = PREVIEW / f"page{i}.png"
-        pix.save(str(out))
+        page.get_pixmap(dpi=110).save(str(out))
         print(f"  {out.name}")
 
 
 if __name__ == "__main__":
-    pdf = to_pdf()
+    if sys.platform == "win32":
+        word_to_pdf()
+    else:
+        soffice_to_pdf()
     if "--no-render" not in sys.argv:
-        render(pdf)
+        render()

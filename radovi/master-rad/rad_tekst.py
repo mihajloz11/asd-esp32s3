@@ -1391,8 +1391,9 @@ def _rezultati(r) -> None:
         "odgovara implementiranoj logici, ali time nije ispunjen cilj eksperimenta."
         " Držanje papirića rukom je moguće objašnjenje nestabilnosti; bez "
         "nezavisnog mjerenja pobude nije potvrđen jedini uzrok. U skupu "
-        "prihvatljivih prozora oporavak sadrži jedan alarmni prozor, uz prijavljenu"
-        " medijanu oporavka 10,08 s.")
+        "prihvatljivih prozora oporavak sadrži jedan alarmni prozor. Uređaj je "
+        "prijavio jednu alarmnu epizodu, koja se ugasila u trećem prozoru "
+        "oporavka.")
     r.pasus(
         "U označenim blokovima razgovora i vrata nema alarma. Medijane "
         "prihvatljivih prozora iznose 38 307 i 49 549. Sva četiri prozora razgovora"
@@ -1452,8 +1453,8 @@ def _rezultati(r) -> None:
             ["Koeficijent varijacije", "0,84 → 0,43", "0,43"],
             ["Prag ulaska / izlaska", "8 084 / 3 707", "21 810 / 10 905"],
             ["DET prozora ukupno / u metrici", "65 / 43", "115 / 99"],
-            ["Alarmnih prozora / epizoda", "3 / 2", "64 / 2"],
-            ["Medijana oporavka", "10,1 s", "nije izmjerena"],
+            ["Alarmnih prozora / epizoda", "3 / 1", "64 / 1"],
+            ["Gašenje alarma", "2 prozora poslije bloka", "nije izmjereno"],
             ["Izgubljenih uzoraka", "0", "0"],
             ["Trajno odstupanje prijavljeno", "ne", "da"],
         ])

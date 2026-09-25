@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FILES = [
     ("master-rad/master_rad_asd_esp32s3_cir", 6, 20, 12),
     ("master-rad/master_rad_asd_esp32s3_lat", 6, 20, 12),
-    ("telfor2026/telfor2026_asd_esp32s3", 2, 3, 6),
+    ("telfor2026/telfor2026_asd_esp32s3", 3, 2, 9),
 ]
 
 
@@ -22,9 +22,7 @@ def check(relative, figures, tables, references):
     document = Document(base.with_suffix(".docx"))
     reader = PdfReader(base.with_suffix(".pdf"))
     pages = [page.extract_text() for page in reader.pages]
-    paragraphs = [p.text for p in document.paragraphs]
     full_text = "\n".join(pages)
-    body = "\n".join(paragraphs)
     cited_paragraphs = []
     for paragraph in document.paragraphs:
         if paragraph.text.strip().upper() in {"REFERENCES", "LITERATURA", "ЛИТЕРАТУРА"}:
@@ -62,8 +60,10 @@ def check(relative, figures, tables, references):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("only", nargs="*", help="dio putanje, npr. telfor2026")
     args = parser.parse_args()
-    result = [check(*entry) for entry in FILES]
+    result = [check(*entry) for entry in FILES
+              if not args.only or any(part in entry[0] for part in args.only)]
     args.output.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for item in result:
         print(json.dumps({k:v for k,v in item.items() if k != "page_text_lengths"}, ensure_ascii=False))
