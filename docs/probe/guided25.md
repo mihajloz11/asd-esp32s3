@@ -36,7 +36,7 @@ novi bin:
 
 ```powershell
 Set-Location "$HOME\Desktop\master new"
-.\POKRENI-GUIDED25.cmd preflight
+.\scripts\POKRENI-GUIDED25.cmd preflight
 ```
 
 SHA-256 mjerodavnog builda je
@@ -60,7 +60,7 @@ drugi heš, source/build i ploča više nisu isti dokaz.
 ### Dvoklik
 
 1. Priključi ploču i provjeri da je `COM3`.
-2. Dvaput klikni `POKRENI-GUIDED25.cmd` u korijenu projekta.
+2. Dvaput klikni `POKRENI-GUIDED25.cmd` u folderu `scripts/`.
 3. Izaberi `2`, prihvati ponuđeni `fan02` ili unesi svoj ID, unesi broj
    pokušaja (`1` do `5`), pa upiši `DA` tek poslije svoje provjere montaže.
 4. Ne zatvaraj PowerShell prozor. To je glavni host proces i u njemu se odmah
@@ -83,9 +83,9 @@ Iz korijena repoa:
 
 ```powershell
 $env:PYTHONUTF8 = "1"
-.\POKRENI-GUIDED25.cmd preflight
-.\POKRENI-GUIDED25.cmd preview
-.\POKRENI-GUIDED25.cmd test
+.\scripts\POKRENI-GUIDED25.cmd preflight
+.\scripts\POKRENI-GUIDED25.cmd preview
+.\scripts\POKRENI-GUIDED25.cmd test
 ```
 
 Launcher pravi jedinstven `session-id` iz datuma i vremena. Sa eksplicitnim
@@ -227,7 +227,7 @@ results\physical_fan\run_<UTC>_<fan-id>_<session-id>\
 Praćenje uživo u drugom PowerShell prozoru:
 
 ```powershell
-.\POKRENI-GUIDED25.cmd logs
+.\scripts\POKRENI-GUIDED25.cmd logs
 ```
 
 ili ručno:

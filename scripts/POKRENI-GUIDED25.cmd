@@ -1,8 +1,8 @@
 @echo off
 setlocal
-cd /d "%~dp0"
+cd /d "%~dp0.."
 set PYTHONUTF8=1
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0pc\tools\guided25_launcher.ps1" %*
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\pc\tools\guided25_launcher.ps1" %*
 set "GUIDED25_EXIT=%ERRORLEVEL%"
 if not "%GUIDED25_EXIT%"=="0" (
   echo.

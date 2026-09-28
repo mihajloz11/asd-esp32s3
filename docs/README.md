@@ -12,7 +12,7 @@ odbačene smjerove i ne opisuju trenutno stanje.
 
 | Dokument | Sadržaj |
 |---|---|
-| [`../README.md`](../README.md) | projekat ukratko, rezultati, build i provjere |
+| [`pregled-projekta.md`](pregled-projekta.md) | projekat ukratko, rezultati, build i provjere |
 | [`probe/rezultat-finalna-validacija-2026-08-27.md`](probe/rezultat-finalna-validacija-2026-08-27.md) | **završne probe na ventilatoru**: dva validna runa, odbačeni pokušaji, granice tvrdnje |
 | [`model/cilj-modela.md`](model/cilj-modela.md) | cilj i kriterij uspjeha |
 | [`model/odluka-finalni-model.md`](model/odluka-finalni-model.md) | finalni model, rezerva, kriteriji prihvatanja |

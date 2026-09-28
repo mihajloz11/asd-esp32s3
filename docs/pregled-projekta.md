@@ -7,7 +7,7 @@ lokalni centar i pragovi uče se na uređaju iz normalnog rada konkretne postavk
 
 <!-- privatno:start -->
 > Privatni repo. Lični materijal (uputstva, učenje, planovi, dnevnici,
-> elektronika) je u [privatno/](privatno/README.md), rukopisi u [radovi/](radovi/).
+> elektronika) je u [privatno/](../privatno/README.md), rukopisi u [../radovi](../radovi).
 > Kopiju za predaju pravi `python pc/tools/napravi_predaju.py`; ovaj blok,
 > `privatno/` i `radovi/` u nju ne ulaze.
 <!-- privatno:end -->
@@ -21,7 +21,7 @@ lokalni centar i pragovi uče se na uređaju iz normalnog rada konkretne postavk
 | Fizička proba papirićem | Prihvaćena kalibracija; GUIDED25 **FAIL**, detektovan 1/3 blokova i alarm prenesen u oporavak |
 | Fizička proba tonom od 1 kHz | Alarm i `ANOMALY_SUSTAINED`; kašnjenje od početka tona i završni oporavak nisu izmjereni |
 | Obrada na uređaju | Oko 716 ms za obilježje i ocjenu po prozoru od 10 s; nije vrijeme cijelog toka |
-| Naknadna analiza obilježja | Papirić i ton detektovani po obliku spektra; ton je svirao još 36 prozora poslije oznake kraja; [detalji](results/trial_features/2026-09-25/README.md) |
+| Naknadna analiza obilježja | Papirić i ton detektovani po obliku spektra; ton je svirao još 36 prozora poslije oznake kraja; [detalji](../results/trial_features/2026-09-25/README.md) |
 | Automatske provjere | 478 testova prolazi na računaru sa DCASE podacima; provjera protokola prolazi |
 
 Obje završne probe imaju `valid_physical_result`: to označava upotrebljiv
@@ -30,21 +30,24 @@ uzoraka. Jedan ventilator, jedna prostorija i vještačke pobude ne potvrđuju
 dijagnozu kvara niti dugoročnu pouzdanost. Razvojni rezultati nisu nezavisni
 test konačnog izbora modela.
 
-Brojke i izvori: [završne fizičke probe](docs/probe/rezultat-finalna-validacija-2026-08-27.md).
-Mapa dokumentacije: [docs/README.md](docs/README.md).
+Brojke i izvori: [završne fizičke probe](probe/rezultat-finalna-validacija-2026-08-27.md).
+Mapa dokumentacije: [README.md](README.md).
 
 ## Struktura
 
 | Putanja | Sadržaj |
 |---|---|
-| [firmware/esp32s3_asd](firmware/esp32s3_asd/) | ESP-IDF firmware; konačni režim `ASD_PSD_LIVE` |
-| [pc/asd](pc/asd/) | obrada, evaluacija, protokol i host alati |
-| [pc/tools](pc/tools/README.md) | pokretanje proba, analiza i izvoznici modela; aktuelni i istorijski alati |
-| [pc/tests](pc/tests/) | host provjere i poređenje sa C implementacijom |
-| [pc/config](pc/config/) | zaključane politike izvedene iz normalnih podataka |
-| [results](results/README.md) | rezultati, sirovi zapisi i mapa dokaza |
-| [models](models/) | metapodaci modela; veliki modeli i keševi nisu u Gitu |
-| [docs](docs/README.md) | odluke, protokoli, rezultati i razvojna istorija |
+| [firmware/esp32s3_asd](../firmware/esp32s3_asd) | ESP-IDF firmware; konačni režim `ASD_PSD_LIVE` |
+| [pc/asd](../pc/asd) | obrada, evaluacija, protokol i host alati |
+| [pc/tools](../pc/tools/README.md) | pokretanje proba, analiza i izvoznici modela; aktuelni i istorijski alati |
+| [scripts](../scripts/) | pokretač GUIDED25 |
+| [pc/tests](../pc/tests) | host provjere i poređenje sa C implementacijom |
+| [pc/config](../pc/config) | zaključane politike izvedene iz normalnih podataka |
+| [results](../results/README.md) | rezultati, sirovi zapisi i mapa dokaza |
+| [models](../models) | metapodaci modela; veliki modeli i keševi nisu u Gitu |
+| [docs](README.md) | odluke, protokoli, rezultati i razvojna istorija |
+
+Komande u nastavku pokreću se iz korijena projekta.
 
 ## PC provjere
 
@@ -59,7 +62,7 @@ python -m venv .venv
 
 Testovi koji traže DCASE snimke preskaču se u svježem klonu. Za trening i
 istorijski autoenkoder koriste se pune zavisnosti iz
-[requirements.txt](requirements.txt). DCASE podaci preuzimaju se zasebno iz
+[../pc/requirements.txt](../pc/requirements.txt). DCASE podaci preuzimaju se zasebno iz
 [zapisa skupa](https://zenodo.org/records/19336329) u
 `data/dcase2026_dev/<masina>/{train,test}` uz uslove licence tog skupa.
 
@@ -86,4 +89,4 @@ idf.py -B build -DIDF_TARGET=esp32s3 reconfigure build
 Poslije svake promjene env varijabli obavezan je `reconfigure`. Ostali režimi
 (`ASD_MIC_TEST`, `ASD_INA_TEST`, `ASD_PSD_VERIFY` i TFLM) služe pojedinačnim
 provjerama ili ranijim eksperimentima. Pinovi su u
-[pins.h](firmware/esp32s3_asd/main/pins.h).
+[pins.h](../firmware/esp32s3_asd/main/pins.h).

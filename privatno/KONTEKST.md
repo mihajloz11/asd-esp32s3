@@ -4,7 +4,7 @@ Ovaj fajl je **ulazna tačka** u projekat. Cilj mu je da se rad nikad ne nastavi
 od pogrešnog ili zastarjelog stanja.
 
 **Revizija 06.09.2026.** Aktuelan pregled je u
-[README-u](../README.md), [nalazima revizije](../results/repository_audit/2026-09-06/README.md)
+[README-u](../docs/pregled-projekta.md), [nalazima revizije](../results/repository_audit/2026-09-06/README.md)
 i [preostalim stavkama](PREOSTALO.md). Stariji sažeci ispod ostaju kontekst
 razvoja; kod i sirovi artefakti imaju prednost. Papirić ima GUIDED25 FAIL,
 validna telemetrija nije prolaz probe, a oporavak nakon tona nije izmjeren.
@@ -73,7 +73,7 @@ autoriteta je ovaj:
 |---|---|
 | Šta još treba uraditi | [`privatno/PREOSTALO.md`](PREOSTALO.md) |
 | **Finalna validacija firmvera na pločici** | [`docs/probe/rezultat-finalna-validacija-2026-08-27.md`](../docs/probe/rezultat-finalna-validacija-2026-08-27.md) |
-| Gdje je projekat sada, ukratko | [`README.md`](../README.md) |
+| Gdje je projekat sada, ukratko | [`README.md`](../docs/pregled-projekta.md) |
 | Konsolidacija svih faza poslije FAN01 | [`docs/uredjaj/dorada-poslije-fan01.md`](../docs/uredjaj/dorada-poslije-fan01.md) |
 | Status kritičnih nalaza revizije | [`privatno/revizije/REVIEW-KRITICNO-2026-08-20.md`](revizije/REVIEW-KRITICNO-2026-08-20.md) |
 | Zaključani protokol fizičkog runa | [`docs/probe/protokol-fizicki-ventilator.md`](../docs/probe/protokol-fizicki-ventilator.md) |
@@ -133,7 +133,7 @@ Razvoj je **Windows-native** (ESP-IDF, PowerShell, `.venv`), i CI je namjerno
 ```powershell
 # Windows, iz korijena repoa
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt   # puni (TensorFlow)
+.\.venv\Scripts\python.exe -m pip install -r pc/requirements.txt   # puni (TensorFlow)
 # ili samo ono što testovi traže:
 .\.venv\Scripts\python.exe -m pip install -r pc\requirements-ci.txt
 
@@ -147,9 +147,9 @@ BrechtSanders.WinLibs.POSIX.UCRT`, ili MinGW-w64 kao u CI-ju).
 DCASE 2026 dev skup: 7 zipova sa <https://zenodo.org/records/19336329>, raspakovati u
 `data/dcase2026_dev/<masina>/{train,test}`. `data/` je gitignorovan.
 
-Trening/evaluacija/artefakti za firmware: vidi „Workflow" u [`README.md`](../README.md).
+Trening/evaluacija/artefakti za firmware: vidi „Workflow" u [`README.md`](../docs/pregled-projekta.md).
 
-Fizički vođeni test: `POKRENI-GUIDED25.cmd` → `pc/tools/guided25_launcher.ps1`;
+Fizički vođeni test: `scripts\POKRENI-GUIDED25.cmd` → `pc/tools/guided25_launcher.ps1`;
 uputstvo za operatera u
 [`docs/probe/guided25.md`](../docs/probe/guided25.md).
 

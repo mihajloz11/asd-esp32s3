@@ -46,7 +46,7 @@ Ovo je kratka lista onoga bez čega projekat ne postoji.
 | Fajl | Zašto |
 |---|---|
 | [`../../KONTEKST.md`](../KONTEKST.md) | pravila rada, zlatna pravila dokaza, gdje je istina |
-| [`../../README.md`](../../README.md) | gdje je projekat sada, u jednoj strani |
+| [`../../docs/pregled-projekta.md`](../../docs/pregled-projekta.md) | gdje je projekat sada, u jednoj strani |
 | [`README.md`](../../docs/README.md) | mapa cijele dokumentacije: aktuelno vs istorijsko |
 | [`cilj-modela.md`](../../docs/model/cilj-modela.md) | nepromjenjivi cilj i kriterij uspjeha (AUC ≥ 0,80) |
 | [`../../plan-master-rada.md`](../istorija/planovi/plan-master-rada-jul.md) | originalni plan i metodologija (jul 2026) |
@@ -349,7 +349,7 @@ Postavka:
 
 ```bash
 python -m venv .venv
-.venv/Scripts/python.exe -m pip install -r requirements.txt
+.venv/Scripts/python.exe -m pip install -r pc/requirements.txt
 ```
 
 Testovi (traže `gcc` u PATH-u zbog C parity dijela):
@@ -379,7 +379,7 @@ cd firmware/esp32s3_asd && idf.py set-target esp32s3 && idf.py reconfigure build
 > ⚠ Pri **svakoj** promjeni build moda obavezan `idf.py reconfigure` — inače
 > build tiho ostane u starom modu. To je P2 i već je koštalo vremena.
 
-Vođeni fizički test sa ventilatorom: pokrenuti `POKRENI-GUIDED25.cmd`, uputstvo
+Vođeni fizički test sa ventilatorom: pokrenuti `scripts\POKRENI-GUIDED25.cmd`, uputstvo
 za operatera u [`guided25.md`](../../docs/probe/guided25.md).
 
 ---
