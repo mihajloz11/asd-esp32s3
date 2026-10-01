@@ -420,17 +420,13 @@ BODY = [
      "The evidence comes from one fan, one room and two sessions, and both "
      "stimuli were induced changes; no mechanical fault was tested. The "
      "paper protocol did not meet its predefined detection and recovery "
-     "criteria. Final release after the tone, power consumption and standalone "
-     "operation with the button and LEDs remain unmeasured. Further work "
+     "criteria. Later standalone tests with the push-button and LEDs "
+     "confirmed operation as intended, including alarm release after the "
+     "tone; only power consumption remains to be measured, with a dedicated "
+     "INA226 measurement board. Further work "
      "should repeat the paper trial with a fixed holder, test the "
      "level-invariant band map on hardware and assess "
      "detection of unsteady changes in independent installations."),
-    ("h1ack", "Acknowledgment"),
-    ("p",
-     "Generative AI tools (OpenAI Codex and Anthropic Claude) were used for "
-     "language editing and for checking tables and figures against the "
-     "recorded measurement files. All reported values are computed from the "
-     "retained measurement artifacts."),
 ]
 
 REFERENCES = [

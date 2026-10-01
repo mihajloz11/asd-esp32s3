@@ -27,7 +27,7 @@ III  Commissioning on the device: zašto 10 prozora nije dosta, CAL/DERIVE/VERIF
 IV   Runtime decision chain: quality, presence, reliability (HOLD), temporal
 V    Trials on a physical fan (Tab. II, Sl. 2, Sl. 3): papirić, ton,
      šta pobuda mijenja, zavisnost od nivoa
-VI   Discussion   VII Conclusion   Acknowledgment   References [1]-[9]
+VI   Discussion   VII Conclusion   References [1]-[9]
 ```
 
 Ugao rada: kompletan detektor na mikrokontroleru koji sam uči centar i

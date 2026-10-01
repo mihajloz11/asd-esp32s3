@@ -1,7 +1,8 @@
 # TELFOR 2026 — stanje pred predaju
 
 Revizija: 01.10.2026. Word i PDF su usaglašeni: tri slike iz mjerenja,
-dvije tabele, devet referenci i **4 A4 strane**. PDF je izvezen iz Worda.
+dvije tabele, devet referenci i **4 A4 strane**. PDF je izvezen iz
+LibreOffice-a; za predaju ga je bolje izvesti iz Worda (`render_check.py` na Windowsu).
 Opis alarma, histereze i promjenljive pobude usklađen je sa završnim
 probama i ponavljanjem svih 180 odluka, bez neslaganja.
 Provjera tehničkih tvrdnji i ciljane jezičke izmjene opisane su u
@@ -49,7 +50,11 @@ Izvori brojki: [HANDOFF.md](HANDOFF.md).
 - Registracija, uplata i prezentacija prema
   [uputstvu organizatora](https://registration.telfor.rs/Info/InstructionsForAuthors).
 
-Zahvalnica navodi korišćenje alata OpenAI Codex i Anthropic Claude za
-jezičku redakciju i provjeru tabela, prema
-[IEEE smjernici](https://open.ieee.org/author-guidelines-for-artificial-intelligence-ai-generated-text/).
-Ako se izmijeni, izjava mora ostati tačna.
+Zahvalnica o AI alatima je izbačena 01.10. TELFOR uputstvo ne traži takvu
+izjavu, a [IEEE smjernica](https://open.ieee.org/author-guidelines-for-artificial-intelligence-ai-generated-text/)
+je za jezičku redakciju samo preporučuje. Obavezna je ako je AI generisao
+sadržaj rada (tekst, slike, kod); tada se zahvalnica vraća sa tačnim opisom.
+
+Zaključak od 01.10. navodi da su samostalne probe sa dugmetom i LED-ovima,
+uključujući gašenje alarma poslije tona, prošle kako je predviđeno. Ostaje
+samo mjerenje potrošnje na mjernoj ploči (INA226).
