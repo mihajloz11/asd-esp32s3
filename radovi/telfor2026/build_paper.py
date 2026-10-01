@@ -50,13 +50,14 @@ ABSTRACT = (
     "ESP32-S3 microcontroller with one MEMS microphone. A 96-band log spectrum "
     "from an 8192-point Welch estimate is scored by a squared Mahalanobis "
     "distance, using a Ledoit-Wolf precision matrix learned offline from normal "
-    "DCASE 2026 recordings and a center learned on the device. On the fan target "
-    "domain the detector reaches an AUC of 0.863 with ten calibration windows, "
+    "DCASE 2026 recordings and a center learned on the device. In offline "
+    "evaluation on the fan target domain, the design reaches an AUC of 0.863 "
+    "with ten calibration windows, "
     "against 0.470 for the evaluated autoencoder baseline, and needs 716 ms of "
     "computation per 10 s window. In the reported trials the device learns the "
     "center, derives entry and release thresholds from 44 normal windows and "
     "checks them on 22 further windows before it starts monitoring. A "
-    "reliability gate holds the decision on windows whose sub-window spectra "
+    "reliability gate holds the decision on high-scoring windows whose sub-window spectra "
     "disagree. Physical trials confirmed local commissioning, detection of a "
     "sustained 1 kHz tone and alarm retention under hysteresis. A manually held "
     "paper strip produced variable spectra; one of three blocks raised an "
@@ -109,9 +110,9 @@ BODY = [
      "a threshold for one particular installation, reject audio it cannot "
      "trust, and decide when a deviation has lasted long enough to report. None"
      " of these steps may rely on fault examples, because a new installation "
-     "has none. TinyML benchmarks show that anomaly detection models fit on "
-     "microcontrollers [9], but they report the accuracy and latency of the "
-     "model alone."),
+     "has none. MLPerf Tiny includes anomaly detection on microcontrollers "
+     "and measures inference accuracy, latency and energy [9]. Here the focus "
+     "also includes commissioning and alarm decisions for one installation."),
     ("p",
      "This paper describes a complete detector for fans on an ESP32-S3 and what"
      " happened when it was tested on a physical fan. The contributions are: 1)"
@@ -141,7 +142,7 @@ BODY = [
     ("figure", ("FIG_SYSTEM",
                 "Signal path and decision chain. Shaded blocks are fail-closed "
                 "gates. Calibration, thresholds and alarms are computed on the "
-                "device; the PC only logs telemetry and operator labels.")),
+                "device; the PC logs telemetry and sends operator commands.")),
     ("h2", "Spectral feature"),
     ("p",
      "Each 10 s window of 159,744 samples is split into 38 Welch segments [6] of"
@@ -167,16 +168,19 @@ BODY = [
      "and the normalization 768 B."),
     ("p",
      "The same C source computes features on the PC and on the device. The "
-     "host-to-C difference is at most 9.5·10⁻⁷ on a benchmark file, and the "
-     "host-to-device difference on a live microphone capture is at most "
-     "1.7·10⁻⁶. Offline results therefore describe the same computation that "
-     "runs on the device."),
+     "maximum absolute feature difference between the Python reference and C "
+     "is about 9.54·10⁻⁷ on a benchmark file, and the host-to-device "
+     "difference on a live microphone capture is about 1.70·10⁻⁶. These "
+     "checks confirm agreement of the feature computation on the tested audio."),
     ("h2", "Offline comparison"),
     ("p",
-     "Table I compares the deployed detector with the DCASE autoencoder "
+     "Table I compares the PSD detector design with the DCASE autoencoder "
      "baseline [2] and with log-mel statistics scored by the same Mahalanobis "
-     "backend. Rows with a local center use the same 100 random calibration "
-     "splits, and calibration windows are never scored. The autoencoders follow"
+     "backend. Local-center results use 100 random calibration splits for "
+     "each center size; the two 20-window rows share the same splits. "
+     "Calibration windows are never scored. Offline PSD fits use canonical "
+     "normalization, while the firmware export adds 10⁻⁸ to the standard "
+     "deviation. The autoencoders follow"
      " the DCASE recipe without a local center, so their rows serve only as a "
      "reference point. With the same backend, the PSD "
      "front end gains 0.24 AUC over log-mel statistics. On the device it needs "
@@ -224,8 +228,8 @@ BODY = [
      "reliability holds. A single alarm episode rejects commissioning. "
      "Including settling, this setting needs at least 80 windows, about "
      "800 s of audio, and took "
-     "13.6 min in both trials. The center is never updated afterwards, so a "
-     "slowly developing fault cannot be absorbed as normal."),
+     "13.6 min in both trials. The center is never updated afterwards, so "
+     "a slowly developing change cannot shift this reference automatically."),
     ("p",
      "The verification step rejected a threshold that was too low. A robust "
      "candidate, the smaller of the empirical Q0.99 and median + 3·1.4826·MAD "
@@ -244,8 +248,8 @@ BODY = [
      "instead of producing a score. The presence gate treats the machine as "
      "running while the window level is no more than 11 dB below the calibrated "
      "level, and as stopped after three consecutive windows below this limit. A "
-     "stopped fan and a changed fan are both far from the center, and only "
-     "the level separates them."),
+     "stopped fan can also score highly, so this check prevents low-level "
+     "windows from triggering an anomaly alarm."),
     ("p",
      "The reliability gate uses five sub-windows of each 10 s window, formed "
      "from the same Welch segments without extra FFTs. Its instability measure "
@@ -255,8 +259,8 @@ BODY = [
      " the ten calibration windows, the window is put on OBSERVATION_HOLD. A "
      "held window neither counts toward an alarm nor clears an active one, and"
      " it does not change the profile. Six consecutive holds raise a warning. "
-     "The gate makes no claim about the cause, since one microphone cannot "
-     "tell speech from a knock on the housing."),
+     "The gate measures instability without identifying its cause, such as "
+     "speech or a knock on the housing."),
     ("p",
      "An alarm requires three consecutive reliable windows above the entry "
      "threshold and is released at the first window at or below the release "
@@ -283,7 +287,7 @@ BODY = [
      "summarizes both sessions and Fig. 2 shows every window."),
     ("table", "T2"),
     ("figure", ("FIG_TRIALS",
-                "Complete sessions on the physical fan, one point per 10 s "
+                "Sessions from center learning through monitoring, one point per 10 s "
                 "window: (a) paper strip (P), speech (S) and door (D); (b) "
                 "1 kHz tone. Shading follows operator labels, not independently "
                 "measured stimulus boundaries; the tone continued beyond its "
@@ -321,7 +325,7 @@ BODY = [
      "entered after three reliable windows, and the sustained-deviation event "
      "followed 130 s later. The operator marked the end of the tone at "
      "23.3 min, but the 1 kHz band stayed about 42 standardized units above "
-     "the center for another 36 windows, so the tone was still playing until "
+     "the center for another 36 windows, indicating continued tonal sound until "
      "about 29.4 min. After that the scores settled between 12,266 and 19,561,"
      " below the entry threshold but above the release threshold of 10,905. "
      "The alarm therefore remained active as specified by hysteresis, which "
@@ -368,14 +372,16 @@ BODY = [
      "scores within a relative error of 10⁻⁶. We then separately reset each "
      "window's band level to the calibration value and rescored it. The "
      "medians of the paper-strip blocks "
-     "and of the tone change by less than 4 %, so their detection rests on "
-     "spectral shape. Speech and door medians drop by 26 % and 34 % and remain"
+     "and of the tone change by less than 4 %, indicating that their high "
+     "scores mainly reflect spectral shape. Speech and door medians drop by "
+     "26 % and 34 % and remain"
      " several times above the entry threshold."),
     ("p",
      "A band map that advances every band edge by at least one bin keeps 96 "
-     "bands over the same range and has no empty bands. It is level invariant "
-     "by construction: the C feature changes by less than 3·10⁻⁶ for gains "
-     "from 0.25 to 4, and the AUC rises to 0.878, higher in 98 of 100 splits. "
+     "bands over the same range and has no empty bands. It removes this source "
+     "of level dependence: on six normal clips and one broadband signal, "
+     "the C feature changes by less than 3·10⁻⁶ for gains from 0.25 to 4. "
+     "The AUC rises to 0.878, higher in 98 of 100 splits. "
      "It needs a new precision matrix and a new commissioning, and it has not "
      "yet been tested on the fan."),
 
@@ -401,7 +407,7 @@ BODY = [
 
     ("h1", "Conclusion"),
     ("p",
-     "A statistical detector with a 37.6 kB model runs on the ESP32-S3 in "
+     "A statistical detector with 37.6 kB of fixed model parameters runs on the ESP32-S3 in "
      "716 ms per 10 s window and achieves higher AUC on the DCASE fan "
      "development data than "
      "the evaluated autoencoder baselines. Physical trials demonstrated "
@@ -474,7 +480,7 @@ TABLES = {
             ["Autoencoder, 45k param., int8", "none", "0.453 ± 0.005", "1.54 s"],
             ["Log-mel statistics + LW", "20 windows", "0.627 ± 0.035", "-"],
             ["PSD, 96 bands + LW", "20 windows", "0.867 ± 0.027", "-"],
-            ["PSD + LW, deployed", "10 windows", "0.863 ± 0.028", "0.72 s"],
+            ["PSD, 96 bands + LW", "10 windows", "0.863 ± 0.028", "0.72 s"],
         ],
         "note": "± is the standard deviation over five training seeds for the "
                 "autoencoders and over 100 calibration splits otherwise. LW: "
