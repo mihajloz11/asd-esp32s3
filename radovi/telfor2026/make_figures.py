@@ -115,7 +115,7 @@ def fig_system():
     arrow([(87, 58), (97.5, 58), (97.5, 26), (92, 26)], dashed=True)
     label(90.5, 56.2, "start")
 
-    box(0, 2, 22, 14, "presence gate\nwithin 11 dB of\ncalibrated level", gate=True)
+    box(0, 2, 22, 14, "presence gate\nat most 11 dB\nbelow cal. level", gate=True)
     box(26, 2, 22, 14, "reliability gate\nunstable high\nwindow: HOLD", gate=True)
     box(52, 2, 23, 14, "temporal rule\n3 reliable highs,\nrelease threshold", gate=True)
     box(79, 2, 21, 14, "alarm LED\nand events", bold=True)

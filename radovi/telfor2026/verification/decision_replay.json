@@ -1,0 +1,22 @@
+{
+  "scope": "post-hoc replay; no new physical measurements",
+  "temporal_c_sha256": "c8c8457b3bcb2d6fcb08e28154c6de9a9ce90fb7f97e234134cc7e90fc554fcd",
+  "runs": {
+    "paper": {
+      "run": "run_20260827T213148_fan02_guided25-20260827-v3recovery5d",
+      "monitoring_windows": 65,
+      "source_hash_matches_provenance": true,
+      "hold_mismatches": [],
+      "alarm_mismatches": [],
+      "max_relative_score_error": 9.025033451144722e-07
+    },
+    "tone": {
+      "run": "run_20260827T220338_fan02_tone-validation-20260827-final",
+      "monitoring_windows": 115,
+      "source_hash_matches_provenance": true,
+      "hold_mismatches": [],
+      "alarm_mismatches": [],
+      "max_relative_score_error": 4.156188729740946e-07
+    }
+  }
+}

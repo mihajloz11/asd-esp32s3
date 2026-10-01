@@ -1,8 +1,11 @@
 # TELFOR 2026 — stanje pred predaju
 
-Revizija: 25.09.2026. Rad je prepisan: novi naslov, nova struktura, tri
-slike iz mjerenja, dvije tabele, devet referenci. LibreOffice izvoz daje
-**4 A4 strane** sa oko pola kolone rezerve; Word prelom treba potvrditi.
+Revizija: 01.10.2026. Word i PDF su usaglašeni: tri slike iz mjerenja,
+dvije tabele, devet referenci i **4 A4 strane**. PDF je izvezen iz Worda.
+Opis alarma, histereze i promjenljive pobude usklađen je sa završnim
+probama i ponavljanjem svih 180 odluka, bez neslaganja.
+Provjera tehničkih tvrdnji i ciljane jezičke izmjene opisane su u
+[bilješci o reviziji](PROVJERA-2026-10-01.md).
 
 **Rok je 4. oktobar 2026.** ([telfor.rs](https://www.telfor.rs/en/),
 [uputstvo za autore](https://www.telfor.rs/sr/autori/))
@@ -40,9 +43,8 @@ Izvori brojki: [HANDOFF.md](HANDOFF.md).
 ## Preostalo prije predaje
 
 - Mentor i koautor pregledaju i odobre rukopis i autorstvo.
-- Otvoriti DOCX u Wordu, provjeriti prelom (4 strane) i izvesti PDF.
 - Copyright oznaku iz registracionog sistema unijeti u podnožje prve strane
-  (jedina `[TODO]` oznaka). Broj se ne pretpostavlja.
+  kada bude dostupna. Privremena oznaka je uklonjena; broj se ne pretpostavlja.
 - PDF provjeriti kroz IEEE PDF eXpress.
 - Registracija, uplata i prezentacija prema
   [uputstvu organizatora](https://registration.telfor.rs/Info/InstructionsForAuthors).
