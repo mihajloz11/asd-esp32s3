@@ -63,8 +63,8 @@ ABSTRACT = (
     "paper strip produced variable spectra; one of three blocks raised an "
     "alarm, which was subsequently released. Offline replay reproduced the "
     "reliability and alarm decisions in all 180 monitoring windows. These "
-    "results demonstrate the implemented detector and identify its limits "
-    "for unsteady changes and shifts in sound level."
+    "results demonstrate the detector's operation and highlight its limitations "
+    "under time-varying acoustic conditions and changes in sound level."
 )
 
 KEYWORDS = (
