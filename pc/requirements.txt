@@ -1,0 +1,11 @@
+numpy>=1.26,<2.1
+scipy>=1.11
+scikit-learn>=1.4
+soundfile>=0.12
+librosa>=0.10
+tensorflow>=2.16,<2.20
+matplotlib>=3.8
+tqdm>=4.66
+pandas>=2.1
+requests>=2.31
+pytest>=8.0
